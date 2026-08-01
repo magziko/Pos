@@ -3,187 +3,698 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>تسجيل الدخول — نظام نقاط البيع</title>
-<link rel="stylesheet" href="css/style.css">
+<title>نظام نقاط البيع</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  .login-screen {
-    min-height: 100vh;
-    display: grid;
-    grid-template-columns: 1fr;
-    place-items: center;
-    padding: 24px;
-    background:
-      radial-gradient(circle at 15% 15%, var(--teal-100) 0%, transparent 45%),
-      var(--bg);
-  }
+/* ============================================================
+   Design tokens
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=Inter:wght@400;500;600;700&display=swap');
 
-  .login-card {
-    width: 100%;
-    max-width: 380px;
-    background: var(--surface);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-card);
-    padding: 36px 32px 32px;
-    border: 1px solid var(--border);
-  }
+:root {
+  --bg: #F5F6F5;
+  --surface: #FFFFFF;
+  --surface-sunken: #EEF1EF;
+  --ink: #16211D;
+  --ink-soft: #5B6B63;
+  --border: #DEE3E0;
+  --teal-900: #0B4A40;
+  --teal-700: #0F6B5C;
+  --teal-500: #16876F;
+  --teal-100: #E1F1EC;
+  --amber-600: #C97A1A;
+  --amber-100: #FBEBD4;
+  --danger: #C13B3B;
+  --danger-100: #FBE7E7;
+  --font-ar: 'Tajawal', sans-serif;
+  --font-num: 'Inter', sans-serif;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --shadow-card: 0 1px 2px rgba(16, 30, 25, 0.06), 0 4px 12px rgba(16, 30, 25, 0.05);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: var(--font-ar); direction: rtl; -webkit-font-smoothing: antialiased; }
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; direction: ltr; display: inline-block; }
+button { font-family: inherit; cursor: pointer; border: none; outline: none; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--teal-500); outline-offset: 2px; }
+input, select { font-family: inherit; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); }
+::placeholder { color: #9AA6A0; }
+a { color: inherit; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: #CBD3CF; border-radius: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
 
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 28px;
-  }
+.view { display: none; }
+.view.active { display: block; }
 
-  .brand-mark {
-    width: 42px;
-    height: 42px;
-    border-radius: var(--radius-md);
-    background: var(--teal-700);
-    display: grid;
-    place-items: center;
-    color: white;
-    font-weight: 900;
-    font-size: 18px;
-    font-family: var(--font-num);
-    flex-shrink: 0;
-  }
+/* -------- Login / Register shared -------- */
+.auth-screen {
+  min-height: 100vh; display: grid; place-items: center; padding: 24px;
+  background: radial-gradient(circle at 15% 15%, var(--teal-100) 0%, transparent 45%), var(--bg);
+}
+.auth-card {
+  width: 100%; max-width: 400px; background: var(--surface); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card); padding: 36px 32px 32px; border: 1px solid var(--border);
+}
+.brand { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+.brand-mark { width: 42px; height: 42px; border-radius: var(--radius-md); background: var(--teal-700); display: grid; place-items: center; color: white; font-weight: 900; font-size: 18px; font-family: var(--font-num); flex-shrink: 0; }
+.brand-text h1 { font-size: 16px; margin: 0; font-weight: 700; }
+.brand-text p { font-size: 12.5px; color: var(--ink-soft); margin: 2px 0 0; }
+.notice { background: var(--amber-100); color: var(--amber-600); font-size: 12.5px; padding: 10px 12px; border-radius: var(--radius-sm); margin-bottom: 20px; line-height: 1.6; }
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 13px; font-weight: 500; color: var(--ink-soft); margin-bottom: 6px; }
+.field input { width: 100%; padding: 12px 14px; font-size: 14.5px; }
+.field input[type="email"] { direction: ltr; text-align: right; }
+.submit-btn { width: 100%; background: var(--teal-700); color: white; padding: 13px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 700; margin-top: 6px; transition: background 0.15s ease; }
+.submit-btn:hover { background: var(--teal-900); }
+.submit-btn:disabled { background: #A9B5AF; cursor: not-allowed; }
+.error-msg, .success-msg { font-size: 13px; padding: 10px 12px; border-radius: var(--radius-sm); margin-bottom: 16px; display: none; line-height: 1.6; }
+.error-msg { background: var(--danger-100); color: var(--danger); }
+.success-msg { background: var(--teal-100); color: var(--teal-900); }
+.error-msg.show, .success-msg.show { display: block; }
+.footnote { text-align: center; font-size: 12.5px; color: var(--ink-soft); margin-top: 20px; }
+.footnote a, .footnote button.link-btn { color: var(--teal-700); font-weight: 600; text-decoration: none; background: none; padding: 0; font-size: inherit; }
 
-  .brand-text h1 {
-    font-size: 16px;
-    margin: 0;
-    font-weight: 700;
-  }
-  .brand-text p {
-    font-size: 12.5px;
-    color: var(--ink-soft);
-    margin: 2px 0 0;
-  }
-
-  .field { margin-bottom: 16px; }
-  .field label {
-    display: block;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--ink-soft);
-    margin-bottom: 6px;
-  }
-  .field input {
-    width: 100%;
-    padding: 12px 14px;
-    font-size: 14.5px;
-  }
-  .field input[type="email"] { direction: ltr; text-align: right; }
-
-  .submit-btn {
-    width: 100%;
-    background: var(--teal-700);
-    color: white;
-    padding: 13px;
-    border-radius: var(--radius-sm);
-    font-size: 15px;
-    font-weight: 700;
-    margin-top: 6px;
-    transition: background 0.15s ease;
-  }
-  .submit-btn:hover { background: var(--teal-900); }
-  .submit-btn:disabled { background: #A9B5AF; cursor: not-allowed; }
-
-  .error-msg {
-    background: var(--danger-100);
-    color: var(--danger);
-    font-size: 13px;
-    padding: 10px 12px;
-    border-radius: var(--radius-sm);
-    margin-bottom: 16px;
-    display: none;
-  }
-  .error-msg.show { display: block; }
-
-  .footnote {
-    text-align: center;
-    font-size: 11.5px;
-    color: var(--ink-soft);
-    margin-top: 22px;
-  }
+/* -------- POS screen -------- */
+.app { display: grid; grid-template-rows: auto 1fr; height: 100vh; overflow: hidden; }
+.topbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; background: var(--teal-900); color: white; }
+.topbar-left { display: flex; align-items: center; gap: 14px; }
+.topbar-brand { font-weight: 700; font-size: 15px; }
+.topbar-branch { font-size: 12.5px; background: rgba(255,255,255,0.12); padding: 4px 10px; border-radius: 20px; }
+.topbar-right { display: flex; align-items: center; gap: 14px; font-size: 13px; }
+.topbar-clock { font-family: var(--font-num); direction: ltr; opacity: 0.9; }
+.logout-btn { background: rgba(255,255,255,0.12); color: white; padding: 7px 14px; border-radius: var(--radius-sm); font-size: 13px; }
+.logout-btn:hover { background: rgba(255,255,255,0.22); }
+.main { display: grid; grid-template-columns: 1fr 380px; overflow: hidden; }
+.product-side { display: flex; flex-direction: column; overflow: hidden; padding: 16px 18px; }
+.search-row { display: flex; gap: 10px; margin-bottom: 14px; }
+.search-row input { flex: 1; padding: 12px 16px; font-size: 15px; border-radius: var(--radius-md); }
+.search-row input:focus { border-color: var(--teal-500); }
+.categories { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px; margin-bottom: 6px; }
+.cat-chip { flex-shrink: 0; background: var(--surface); border: 1px solid var(--border); color: var(--ink-soft); padding: 8px 16px; border-radius: 20px; font-size: 13.5px; font-weight: 500; white-space: nowrap; }
+.cat-chip.active { background: var(--teal-700); border-color: var(--teal-700); color: white; }
+.product-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; align-content: start; padding-bottom: 12px; }
+.product-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; text-align: right; transition: border-color 0.12s ease, transform 0.06s ease; display: flex; flex-direction: column; gap: 8px; }
+.product-card:hover { border-color: var(--teal-500); }
+.product-card:active { transform: scale(0.98); }
+.product-thumb { width: 100%; aspect-ratio: 1; border-radius: var(--radius-sm); background: var(--surface-sunken); display: grid; place-items: center; font-size: 26px; color: var(--teal-700); overflow: hidden; }
+.product-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.product-name { font-size: 13px; font-weight: 500; line-height: 1.35; min-height: 2.6em; }
+.product-price { font-family: var(--font-num); direction: ltr; text-align: right; font-weight: 700; color: var(--teal-700); font-size: 14px; }
+.empty-state { grid-column: 1 / -1; text-align: center; color: var(--ink-soft); padding: 60px 20px; font-size: 14px; }
+.cart-side { background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+.cart-header { padding: 16px 18px 10px; border-bottom: 1px solid var(--border); }
+.cart-title { font-weight: 700; font-size: 14.5px; margin-bottom: 8px; }
+.customer-select { width: 100%; padding: 9px 10px; font-size: 13px; }
+.cart-items { flex: 1; overflow-y: auto; padding: 8px 14px; }
+.cart-empty { text-align: center; color: var(--ink-soft); font-size: 13px; padding: 40px 10px; }
+.cart-line { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; padding: 10px 4px; border-bottom: 1px solid var(--surface-sunken); }
+.cart-line-name { font-size: 13px; font-weight: 500; }
+.cart-line-total { font-family: var(--font-num); direction: ltr; font-weight: 700; font-size: 13.5px; }
+.cart-line-controls { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; }
+.qty-btn { width: 24px; height: 24px; border-radius: 6px; background: var(--surface-sunken); font-size: 14px; font-weight: 700; color: var(--ink); display: grid; place-items: center; }
+.qty-btn:hover { background: var(--teal-100); color: var(--teal-700); }
+.qty-value { font-family: var(--font-num); font-size: 13px; min-width: 28px; text-align: center; }
+.unit-price { font-family: var(--font-num); direction: ltr; font-size: 11.5px; color: var(--ink-soft); margin-inline-start: auto; }
+.remove-btn { color: var(--danger); background: none; font-size: 12px; padding: 2px 6px; }
+.cart-footer { border-top: 1px solid var(--border); padding: 14px 18px 18px; }
+.totals-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-soft); margin-bottom: 6px; }
+.totals-row.grand { font-size: 17px; font-weight: 700; color: var(--ink); margin-top: 8px; padding-top: 10px; border-top: 1px dashed var(--border); }
+.totals-row .num { font-weight: 700; }
+.discount-row { display: flex; gap: 8px; margin: 10px 0; }
+.discount-row input { flex: 1; padding: 8px 10px; font-size: 12.5px; text-align: center; }
+.action-row { display: flex; gap: 8px; margin-top: 12px; }
+.btn-secondary { flex: 1; background: var(--surface-sunken); color: var(--ink); padding: 11px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; }
+.btn-secondary:hover { background: var(--amber-100); color: var(--amber-600); }
+.checkout-btn { width: 100%; background: var(--teal-700); color: white; padding: 14px; border-radius: var(--radius-sm); font-size: 15.5px; font-weight: 700; margin-top: 10px; }
+.checkout-btn:hover { background: var(--teal-900); }
+.checkout-btn:disabled { background: #A9B5AF; cursor: not-allowed; }
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: white; padding: 12px 20px; border-radius: var(--radius-sm); font-size: 13.5px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease; z-index: 50; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.error { background: var(--danger); }
+@media (max-width: 860px) {
+  .main { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+  .cart-side { border-right: none; border-top: 1px solid var(--border); max-height: 50vh; }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
 
-<div class="login-screen">
-  <div class="login-card">
-    <div class="brand">
-      <div class="brand-mark">P</div>
-      <div class="brand-text">
-        <h1>نظام نقاط البيع</h1>
-        <p>سجّل الدخول للمتابعة</p>
+<!-- ============================================================
+     VIEW: تسجيل الدخول
+     ============================================================ -->
+<div class="view active" id="view-login">
+  <div class="auth-screen">
+    <div class="auth-card">
+      <div class="brand">
+        <div class="brand-mark">P</div>
+        <div class="brand-text"><h1>نظام نقاط البيع</h1><p>سجّل الدخول للمتابعة</p></div>
       </div>
+      <div class="error-msg" id="loginError"></div>
+      <form id="loginForm">
+        <div class="field"><label for="loginEmail">البريد الإلكتروني</label>
+          <input type="email" id="loginEmail" required autocomplete="username" placeholder="name@example.com"></div>
+        <div class="field"><label for="loginPassword">كلمة المرور</label>
+          <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="••••••••"></div>
+        <button type="submit" class="submit-btn" id="loginSubmitBtn">دخول</button>
+      </form>
+      <p class="footnote">لو نسيت بيانات الدخول، تواصل مع مدير النظام</p>
+      <p class="footnote"><button class="link-btn" onclick="showView('register')">أول مرة تستخدم النظام؟ أنشئ حساب أدمن</button></p>
     </div>
-
-    <div class="error-msg" id="errorMsg"></div>
-
-    <form id="loginForm">
-      <div class="field">
-        <label for="email">البريد الإلكتروني</label>
-        <input type="email" id="email" required autocomplete="username" placeholder="name@example.com">
-      </div>
-      <div class="field">
-        <label for="password">كلمة المرور</label>
-        <input type="password" id="password" required autocomplete="current-password" placeholder="••••••••">
-      </div>
-      <button type="submit" class="submit-btn" id="submitBtn">دخول</button>
-    </form>
-
-    <p class="footnote">لو نسيت بيانات الدخول، تواصل مع مدير النظام</p>
-    <p class="footnote"><a href="register.html">أول مرة تستخدم النظام؟ أنشئ حساب أدمن</a></p>
   </div>
 </div>
 
-<script src="js/supabase-client.js"></script>
+<!-- ============================================================
+     VIEW: إنشاء حساب
+     ============================================================ -->
+<div class="view" id="view-register">
+  <div class="auth-screen">
+    <div class="auth-card">
+      <div class="brand">
+        <div class="brand-mark">P</div>
+        <div class="brand-text"><h1>إنشاء حساب جديد</h1><p>أول حساب هيتعمل هيكون أدمن تلقائيًا</p></div>
+      </div>
+      <div class="notice">الصفحة دي للإعداد الأولي بس. بعد ما تعمل حسابك، الأفضل تشيل اللينك ده، وباقي حسابات الموظفين تتعمل من لوحة التحكم بعد كده.</div>
+      <div class="error-msg" id="regError"></div>
+      <div class="success-msg" id="regSuccess"></div>
+      <form id="registerForm">
+        <div class="field"><label for="regFullName">الاسم الكامل</label>
+          <input type="text" id="regFullName" required placeholder="مثال: أحمد محمد"></div>
+        <div class="field"><label for="regBranchName">اسم الفرع</label>
+          <input type="text" id="regBranchName" required placeholder="مثال: الفرع الرئيسي"></div>
+        <div class="field"><label for="regEmail">البريد الإلكتروني</label>
+          <input type="email" id="regEmail" required autocomplete="username" placeholder="name@example.com"></div>
+        <div class="field"><label for="regPassword">كلمة المرور</label>
+          <input type="password" id="regPassword" required autocomplete="new-password" placeholder="6 أحرف على الأقل" minlength="6"></div>
+        <button type="submit" class="submit-btn" id="regSubmitBtn">إنشاء الحساب</button>
+      </form>
+      <p class="footnote">عندك حساب بالفعل؟ <button class="link-btn" onclick="showView('login')">سجّل الدخول</button></p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     VIEW: شاشة المبيعات
+     ============================================================ -->
+<div class="view" id="view-pos">
+  <div class="app">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-brand">نظام نقاط البيع</div>
+        <div class="topbar-branch" id="branchLabel">—</div>
+      </div>
+      <div class="topbar-right">
+        <span id="cashierLabel">—</span>
+        <span class="topbar-clock" id="clockLabel">--:--</span>
+        <button class="logout-btn" id="logoutBtn">تسجيل الخروج</button>
+      </div>
+    </div>
+    <div class="main">
+      <div class="product-side">
+        <div class="search-row"><input type="text" id="searchInput" placeholder="ابحث بالاسم أو امسح الباركود..."></div>
+        <div class="categories" id="categoriesRow"><button class="cat-chip active" data-cat="all">الكل</button></div>
+        <div class="product-grid" id="productGrid"><div class="empty-state">جاري تحميل الأصناف...</div></div>
+      </div>
+      <div class="cart-side">
+        <div class="cart-header">
+          <div class="cart-title">الفاتورة الحالية</div>
+          <select class="customer-select" id="customerSelect"><option value="">عميل نقدي (بدون تسجيل)</option></select>
+        </div>
+        <div class="cart-items" id="cartItems"><div class="cart-empty">لسه مفيش أصناف مضافة للفاتورة</div></div>
+        <div class="cart-footer">
+          <div class="totals-row"><span>الإجمالي الفرعي</span><span class="num" id="subtotalLabel">0.00</span></div>
+          <div class="discount-row"><input type="number" id="discountInput" placeholder="خصم (قيمة)" min="0" value="0"></div>
+          <div class="totals-row grand"><span>الإجمالي</span><span class="num" id="totalLabel">0.00</span></div>
+          <div class="action-row">
+            <button class="btn-secondary" id="holdBtn">تعليق</button>
+            <button class="btn-secondary" id="recallBtn">استرجاع (<span id="heldCount">0</span>)</button>
+          </div>
+          <button class="checkout-btn" id="checkoutBtn" disabled>إتمام البيع</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script>
-  const form = document.getElementById('loginForm');
-  const errorMsg = document.getElementById('errorMsg');
-  const submitBtn = document.getElementById('submitBtn');
+// ============================================================
+// Supabase client — عدّل القيم دي بمشروعك من Supabase Dashboard
+// Settings > API > Project URL / anon public key
+// ============================================================
+const SUPABASE_URL = 'https://aagyaxicphooldhwycko.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhZ3lheGljcGhvb2xkaHd5Y2tvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1ODI0MTQsImV4cCI6MjEwMTE1ODQxNH0.IXId6VALd6WwufMwyHjwK12zYXAozPOXUdyjM4omUh4';
 
-  // لو فيه جلسة شغالة بالفعل، روح على شاشة المبيعات على طول
-  (async () => {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (session) window.location.href = 'pos.html';
-  })();
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    errorMsg.classList.remove('show');
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'جاري الدخول...';
+let currentProfile = null;
 
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+}
 
-    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+function showToast(msg, isError = false) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.toggle('error', isError);
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2600);
+}
 
-    if (error) {
-      errorMsg.textContent = 'بيانات الدخول غير صحيحة، حاول مرة أخرى';
-      errorMsg.classList.add('show');
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'دخول';
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+async function getUserProfile(userId) {
+  const { data, error } = await supabaseClient
+    .from('users_profile')
+    .select('*, roles(name, permissions), branches(id, name)')
+    .eq('id', userId)
+    .single();
+  if (error) { console.error('getUserProfile error', error); return null; }
+  return data;
+}
+
+// ------------------------------------------------------------
+// عند فتح الصفحة: هل فيه جلسة شغّالة؟
+// ------------------------------------------------------------
+(async function boot() {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session) {
+    currentProfile = await getUserProfile(session.user.id);
+    if (currentProfile && currentProfile.is_active) {
+      enterPos();
+      return;
+    }
+  }
+  showView('login');
+})();
+
+// ------------------------------------------------------------
+// تسجيل الدخول
+// ------------------------------------------------------------
+const loginForm = document.getElementById('loginForm');
+const loginError = document.getElementById('loginError');
+const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  loginError.classList.remove('show');
+  loginSubmitBtn.disabled = true;
+  loginSubmitBtn.textContent = 'جاري الدخول...';
+
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  if (error) {
+    loginError.textContent = 'بيانات الدخول غير صحيحة، حاول مرة أخرى';
+    loginError.classList.add('show');
+    loginSubmitBtn.disabled = false;
+    loginSubmitBtn.textContent = 'دخول';
+    return;
+  }
+
+  const profile = await getUserProfile(data.user.id);
+  if (!profile || !profile.is_active) {
+    loginError.textContent = 'الحساب غير مفعّل، تواصل مع مدير النظام';
+    loginError.classList.add('show');
+    await supabaseClient.auth.signOut();
+    loginSubmitBtn.disabled = false;
+    loginSubmitBtn.textContent = 'دخول';
+    return;
+  }
+
+  currentProfile = profile;
+  loginSubmitBtn.disabled = false;
+  loginSubmitBtn.textContent = 'دخول';
+  enterPos();
+});
+
+// ------------------------------------------------------------
+// إنشاء حساب
+// ------------------------------------------------------------
+const registerForm = document.getElementById('registerForm');
+const regError = document.getElementById('regError');
+const regSuccess = document.getElementById('regSuccess');
+const regSubmitBtn = document.getElementById('regSubmitBtn');
+
+registerForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  regError.classList.remove('show');
+  regSuccess.classList.remove('show');
+  regSubmitBtn.disabled = true;
+  regSubmitBtn.textContent = 'جاري الإنشاء...';
+
+  const fullName = document.getElementById('regFullName').value.trim();
+  const branchName = document.getElementById('regBranchName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+
+  try {
+    const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email, password });
+    if (signUpError) throw signUpError;
+
+    if (!signUpData.session) {
+      regSuccess.textContent = 'اتعمل الحساب. لو مفعّل تأكيد البريد الإلكتروني في إعدادات Supabase، تحقق من بريدك وفعّل الحساب قبل ما تسجّل دخول.';
+      regSuccess.classList.add('show');
+      regSubmitBtn.disabled = false;
+      regSubmitBtn.textContent = 'إنشاء الحساب';
       return;
     }
 
-    // تأكد إن للمستخدم ده profile مفعّل قبل ما يدخل
-    const profile = await getUserProfile(data.user.id);
-    if (!profile || !profile.is_active) {
-      errorMsg.textContent = 'الحساب غير مفعّل، تواصل مع مدير النظام';
-      errorMsg.classList.add('show');
-      await supabaseClient.auth.signOut();
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'دخول';
-      return;
+    const userId = signUpData.user.id;
+
+    const { count: existingUsersCount } = await supabaseClient
+      .from('users_profile').select('id', { count: 'exact', head: true });
+    const isFirstUser = !existingUsersCount || existingUsersCount === 0;
+
+    let branchId;
+    const { data: existingBranch } = await supabaseClient
+      .from('branches').select('id').eq('name', branchName).maybeSingle();
+    if (existingBranch) {
+      branchId = existingBranch.id;
+    } else {
+      const { data: newBranch, error: branchError } = await supabaseClient
+        .from('branches').insert({ name: branchName }).select().single();
+      if (branchError) throw branchError;
+      branchId = newBranch.id;
     }
 
-    window.location.href = 'pos.html';
+    const roleName = isFirstUser ? 'admin' : 'cashier';
+    let roleId;
+    const { data: existingRole } = await supabaseClient
+      .from('roles').select('id').eq('name', roleName).maybeSingle();
+    if (existingRole) {
+      roleId = existingRole.id;
+    } else {
+      const permissions = isFirstUser ? { all: true } : { sales: true };
+      const { data: newRole, error: roleError } = await supabaseClient
+        .from('roles').insert({ name: roleName, permissions }).select().single();
+      if (roleError) throw roleError;
+      roleId = newRole.id;
+    }
+
+    const { error: profileError } = await supabaseClient
+      .from('users_profile')
+      .insert({ id: userId, full_name: fullName, role_id: roleId, branch_id: branchId, is_active: true });
+    if (profileError) throw profileError;
+
+    regSuccess.textContent = isFirstUser
+      ? 'اتعمل حساب الأدمن بنجاح! هتتحول لشاشة المبيعات...'
+      : 'اتعمل الحساب بنجاح! هتتحول لشاشة المبيعات...';
+    regSuccess.classList.add('show');
+
+    currentProfile = await getUserProfile(userId);
+    setTimeout(() => enterPos(), 1000);
+
+  } catch (err) {
+    console.error(err);
+    regError.textContent = err.message || 'حصل خطأ أثناء إنشاء الحساب، حاول تاني';
+    regError.classList.add('show');
+    regSubmitBtn.disabled = false;
+    regSubmitBtn.textContent = 'إنشاء الحساب';
+  }
+});
+
+// ------------------------------------------------------------
+// شاشة المبيعات
+// ------------------------------------------------------------
+let allProducts = [];
+let allCategories = [];
+let activeCategory = 'all';
+let cart = [];
+let heldOrders = JSON.parse(localStorage.getItem('pos_held_orders') || '[]');
+let posInitialized = false;
+
+const posEls = {};
+
+function cachePosEls() {
+  posEls.branchLabel = document.getElementById('branchLabel');
+  posEls.cashierLabel = document.getElementById('cashierLabel');
+  posEls.clockLabel = document.getElementById('clockLabel');
+  posEls.logoutBtn = document.getElementById('logoutBtn');
+  posEls.searchInput = document.getElementById('searchInput');
+  posEls.categoriesRow = document.getElementById('categoriesRow');
+  posEls.productGrid = document.getElementById('productGrid');
+  posEls.customerSelect = document.getElementById('customerSelect');
+  posEls.cartItems = document.getElementById('cartItems');
+  posEls.subtotalLabel = document.getElementById('subtotalLabel');
+  posEls.totalLabel = document.getElementById('totalLabel');
+  posEls.discountInput = document.getElementById('discountInput');
+  posEls.holdBtn = document.getElementById('holdBtn');
+  posEls.recallBtn = document.getElementById('recallBtn');
+  posEls.heldCount = document.getElementById('heldCount');
+  posEls.checkoutBtn = document.getElementById('checkoutBtn');
+}
+
+async function enterPos() {
+  showView('pos');
+  if (!posInitialized) {
+    cachePosEls();
+    bindPosEvents();
+    posInitialized = true;
+  }
+  posEls.branchLabel.textContent = currentProfile.branches?.name || 'بدون فرع';
+  posEls.cashierLabel.textContent = currentProfile.full_name;
+  startClock();
+  updateHeldCount();
+  renderCart();
+  await Promise.all([loadCategories(), loadProducts(), loadCustomers()]);
+  renderCategories();
+  renderProducts();
+}
+
+function startClock() {
+  const tick = () => { posEls.clockLabel.textContent = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }); };
+  tick();
+  if (window._clockInterval) clearInterval(window._clockInterval);
+  window._clockInterval = setInterval(tick, 1000 * 30);
+}
+
+function bindPosEvents() {
+  posEls.logoutBtn.addEventListener('click', async () => {
+    await supabaseClient.auth.signOut();
+    currentProfile = null;
+    cart = [];
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('loginPassword').value = '';
+    showView('login');
   });
-</script>
 
+  posEls.searchInput.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    const q = posEls.searchInput.value.trim();
+    if (!q) return;
+    const exact = allProducts.find(p => (p.product_barcodes || []).some(b => b.barcode === q));
+    if (exact) { addToCart(exact); posEls.searchInput.value = ''; renderProducts(); }
+  });
+  posEls.searchInput.addEventListener('input', renderProducts);
+  posEls.discountInput.addEventListener('input', renderCart);
+
+  posEls.holdBtn.addEventListener('click', () => {
+    if (cart.length === 0) return showToast('الفاتورة فاضية، مفيش حاجة تتعلّق', true);
+    heldOrders.push({
+      id: crypto.randomUUID(), time: new Date().toISOString(),
+      cart: cart.map(l => ({ productId: l.product.id, name: l.product.name, quantity: l.quantity, unitPrice: l.unitPrice })),
+      discount: Number(posEls.discountInput.value) || 0,
+      customerId: posEls.customerSelect.value || null,
+    });
+    localStorage.setItem('pos_held_orders', JSON.stringify(heldOrders));
+    cart = []; posEls.discountInput.value = 0;
+    renderCart(); updateHeldCount();
+    showToast('اتعلّقت الفاتورة');
+  });
+
+  posEls.recallBtn.addEventListener('click', () => {
+    if (heldOrders.length === 0) return showToast('مفيش فواتير معلّقة', true);
+    const last = heldOrders.pop();
+    localStorage.setItem('pos_held_orders', JSON.stringify(heldOrders));
+    cart = last.cart.map(l => ({
+      product: allProducts.find(p => p.id === l.productId) || { id: l.productId, name: l.name, sale_price: l.unitPrice },
+      quantity: l.quantity, unitPrice: l.unitPrice,
+    }));
+    posEls.discountInput.value = last.discount || 0;
+    if (last.customerId) posEls.customerSelect.value = last.customerId;
+    renderCart(); updateHeldCount();
+    showToast('استرجعت آخر فاتورة معلّقة');
+  });
+
+  posEls.checkoutBtn.addEventListener('click', doCheckout);
+}
+
+async function loadCategories() {
+  const { data, error } = await supabaseClient.from('categories').select('id, name').eq('is_active', true).order('name');
+  if (error) { console.error(error); return; }
+  allCategories = data || [];
+}
+
+async function loadProducts() {
+  const { data, error } = await supabaseClient
+    .from('products')
+    .select('id, name, category_id, sale_price, unit_type, image_url, product_barcodes(barcode)')
+    .eq('is_active', true).order('name');
+  if (error) {
+    console.error(error);
+    posEls.productGrid.innerHTML = `<div class="empty-state">تعذر تحميل الأصناف — تأكد من إعداد Supabase في أعلى الكود (SUPABASE_URL / SUPABASE_ANON_KEY)</div>`;
+    return;
+  }
+  allProducts = data || [];
+}
+
+async function loadCustomers() {
+  const { data, error } = await supabaseClient.from('customers').select('id, name').order('name').limit(200);
+  if (error) { console.error(error); return; }
+  (data || []).forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id; opt.textContent = c.name;
+    posEls.customerSelect.appendChild(opt);
+  });
+}
+
+function renderCategories() {
+  posEls.categoriesRow.innerHTML = '';
+  posEls.categoriesRow.appendChild(makeCatChip('الكل', 'all'));
+  allCategories.forEach(cat => posEls.categoriesRow.appendChild(makeCatChip(cat.name, cat.id)));
+}
+
+function makeCatChip(label, id) {
+  const btn = document.createElement('button');
+  btn.className = 'cat-chip' + (activeCategory === id ? ' active' : '');
+  btn.textContent = label; btn.dataset.cat = id;
+  btn.addEventListener('click', () => {
+    activeCategory = id;
+    document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    renderProducts();
+  });
+  return btn;
+}
+
+function renderProducts() {
+  const q = posEls.searchInput.value.trim().toLowerCase();
+  const filtered = allProducts.filter(p => {
+    const matchesCat = activeCategory === 'all' || p.category_id === activeCategory;
+    if (!matchesCat) return false;
+    if (!q) return true;
+    const nameMatch = p.name.toLowerCase().includes(q);
+    const barcodeMatch = (p.product_barcodes || []).some(b => b.barcode === q);
+    return nameMatch || barcodeMatch;
+  });
+  if (filtered.length === 0) { posEls.productGrid.innerHTML = `<div class="empty-state">مفيش أصناف مطابقة</div>`; return; }
+  posEls.productGrid.innerHTML = '';
+  filtered.forEach(p => {
+    const card = document.createElement('button');
+    card.className = 'product-card';
+    card.innerHTML = `
+      <div class="product-thumb">${p.image_url ? `<img src="${p.image_url}" alt="">` : '🛒'}</div>
+      <div class="product-name">${escapeHtml(p.name)}</div>
+      <div class="product-price"><span class="num">${Number(p.sale_price).toFixed(2)}</span></div>`;
+    card.addEventListener('click', () => addToCart(p));
+    posEls.productGrid.appendChild(card);
+  });
+}
+
+function addToCart(product) {
+  const existing = cart.find(l => l.product.id === product.id);
+  if (existing) existing.quantity += 1;
+  else cart.push({ product, quantity: 1, unitPrice: Number(product.sale_price) });
+  renderCart();
+}
+
+function changeQty(productId, delta) {
+  const line = cart.find(l => l.product.id === productId);
+  if (!line) return;
+  line.quantity += delta;
+  if (line.quantity <= 0) cart = cart.filter(l => l.product.id !== productId);
+  renderCart();
+}
+
+function removeLine(productId) { cart = cart.filter(l => l.product.id !== productId); renderCart(); }
+function calcSubtotal() { return cart.reduce((s, l) => s + l.quantity * l.unitPrice, 0); }
+function calcTotal() { const d = Number(posEls.discountInput.value) || 0; return Math.max(0, calcSubtotal() - d); }
+
+function renderCart() {
+  if (cart.length === 0) {
+    posEls.cartItems.innerHTML = `<div class="cart-empty">لسه مفيش أصناف مضافة للفاتورة</div>`;
+  } else {
+    posEls.cartItems.innerHTML = '';
+    cart.forEach(line => {
+      const row = document.createElement('div');
+      row.className = 'cart-line';
+      const lineTotal = (line.quantity * line.unitPrice).toFixed(2);
+      row.innerHTML = `
+        <div class="cart-line-name">${escapeHtml(line.product.name)}</div>
+        <div class="cart-line-total"><span class="num">${lineTotal}</span></div>
+        <div class="cart-line-controls">
+          <button class="qty-btn" data-action="dec">−</button>
+          <span class="qty-value num">${line.quantity}</span>
+          <button class="qty-btn" data-action="inc">+</button>
+          <span class="unit-price num">${line.unitPrice.toFixed(2)} / وحدة</span>
+          <button class="remove-btn" data-action="remove">حذف</button>
+        </div>`;
+      row.querySelector('[data-action="inc"]').addEventListener('click', () => changeQty(line.product.id, 1));
+      row.querySelector('[data-action="dec"]').addEventListener('click', () => changeQty(line.product.id, -1));
+      row.querySelector('[data-action="remove"]').addEventListener('click', () => removeLine(line.product.id));
+      posEls.cartItems.appendChild(row);
+    });
+  }
+  posEls.subtotalLabel.textContent = calcSubtotal().toFixed(2);
+  posEls.totalLabel.textContent = calcTotal().toFixed(2);
+  posEls.checkoutBtn.disabled = cart.length === 0;
+}
+
+function updateHeldCount() { posEls.heldCount.textContent = heldOrders.length; }
+
+async function doCheckout() {
+  if (cart.length === 0) return;
+  posEls.checkoutBtn.disabled = true;
+  posEls.checkoutBtn.textContent = 'جاري إتمام البيع...';
+  try {
+    const subtotal = calcSubtotal();
+    const discount = Number(posEls.discountInput.value) || 0;
+    const total = calcTotal();
+    const customerId = posEls.customerSelect.value || null;
+
+    const { data: sale, error: saleError } = await supabaseClient
+      .from('sales')
+      .insert({
+        branch_id: currentProfile.branch_id, user_id: currentProfile.id, customer_id: customerId,
+        status: 'completed', subtotal, discount, tax: 0, total, paid_amount: total, remaining: 0,
+      }).select().single();
+    if (saleError) throw saleError;
+
+    const saleItems = cart.map(l => ({
+      sale_id: sale.id, product_id: l.product.id, quantity: l.quantity,
+      unit_price: l.unitPrice, discount: 0, total: l.quantity * l.unitPrice,
+    }));
+    const { error: itemsError } = await supabaseClient.from('sale_items').insert(saleItems);
+    if (itemsError) throw itemsError;
+
+    const stockRows = cart.map(l => ({
+      product_id: l.product.id, branch_id: currentProfile.branch_id,
+      quantity: -l.quantity, type: 'sale', reference_id: sale.id, user_id: currentProfile.id,
+    }));
+    const { error: stockError } = await supabaseClient.from('stock_transactions').insert(stockRows);
+    if (stockError) throw stockError;
+
+    showToast(`تمت الفاتورة رقم ${sale.invoice_number} بنجاح`);
+    cart = []; posEls.discountInput.value = 0; posEls.customerSelect.value = '';
+    renderCart();
+  } catch (err) {
+    console.error(err);
+    showToast('حصل خطأ أثناء إتمام البيع، حاول تاني', true);
+  } finally {
+    posEls.checkoutBtn.disabled = cart.length === 0;
+    posEls.checkoutBtn.textContent = 'إتمام البيع';
+  }
+}
+</script>
 </body>
 </html>
