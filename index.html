@@ -182,6 +182,34 @@ a { color: inherit; }
 .barcode-add-row input { flex: 1; padding: 8px 10px; font-size: 12.5px; }
 .barcode-add-row button { background: var(--teal-100); color: var(--teal-700); padding: 8px 14px; border-radius: var(--radius-sm); font-size: 12.5px; font-weight: 600; }
 
+/* -------- Reports -------- */
+.report-filters { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+.report-filters .field { margin-bottom: 0; }
+.report-filters .field label { margin-bottom: 5px; }
+.report-filters input[type="date"] { padding: 9px 10px; font-size: 13px; }
+.quick-range-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.quick-range-btn { background: var(--surface); border: 1px solid var(--border); color: var(--ink-soft); padding: 8px 13px; border-radius: 20px; font-size: 12.5px; font-weight: 500; }
+.quick-range-btn:hover, .quick-range-btn.active { background: var(--teal-700); border-color: var(--teal-700); color: white; }
+.report-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 22px; }
+.report-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px 18px; }
+.report-card-label { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 8px; }
+.report-card-value { font-family: var(--font-num); font-size: 22px; font-weight: 700; direction: ltr; text-align: right; }
+.report-card-value.positive { color: var(--teal-700); }
+.report-card-value.negative { color: var(--danger); }
+.report-subtitle { font-size: 14px; font-weight: 700; margin: 22px 0 12px; }
+
+/* -------- Purchases -------- */
+.modal-box.wide { max-width: 680px; }
+.purchase-lines-wrap { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 6px; }
+.purchase-line-row { display: grid; grid-template-columns: 1fr 90px 100px 90px 32px; gap: 8px; padding: 8px 10px; align-items: center; border-bottom: 1px solid var(--surface-sunken); }
+.purchase-line-row.header-row { background: var(--surface-sunken); font-size: 11.5px; font-weight: 600; color: var(--ink-soft); padding: 8px 10px; }
+.purchase-line-row select, .purchase-line-row input { padding: 7px 8px; font-size: 12.5px; width: 100%; }
+.purchase-line-total { font-family: var(--font-num); direction: ltr; text-align: right; font-size: 12.5px; font-weight: 600; }
+.purchase-line-remove { color: var(--danger); background: none; font-size: 16px; font-weight: 700; }
+.add-line-btn { background: var(--teal-100); color: var(--teal-700); padding: 9px; border-radius: var(--radius-sm); font-size: 12.5px; font-weight: 600; width: 100%; margin-top: 8px; }
+.purchase-totals-row { display: flex; justify-content: flex-end; gap: 22px; margin: 14px 0; font-size: 13.5px; }
+.purchase-totals-row .num { font-weight: 700; }
+
 @media (max-width: 760px) {
   .bo-main { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
   .bo-sidebar { border-left: none; border-bottom: 1px solid var(--border); display: flex; overflow-x: auto; }
@@ -189,6 +217,29 @@ a { color: inherit; }
 }
 
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* -------- Receipt -------- */
+.receipt-modal-box { max-width: 340px; padding: 0; overflow: hidden; }
+.receipt-paper { background: white; padding: 20px 18px; font-family: var(--font-num), var(--font-ar); font-size: 12.5px; color: #111; }
+.receipt-paper .r-center { text-align: center; }
+.receipt-paper .r-title { font-size: 15px; font-weight: 700; margin-bottom: 2px; font-family: var(--font-ar); }
+.receipt-paper .r-sub { font-size: 11px; color: #555; margin-bottom: 2px; }
+.receipt-paper .r-divider { border-top: 1px dashed #999; margin: 10px 0; }
+.receipt-paper .r-row { display: flex; justify-content: space-between; font-size: 11.5px; margin-bottom: 3px; direction: rtl; }
+.receipt-paper .r-item-row { margin-bottom: 6px; }
+.receipt-paper .r-item-name { font-family: var(--font-ar); font-size: 12px; margin-bottom: 1px; }
+.receipt-paper .r-item-meta { display: flex; justify-content: space-between; font-size: 11px; color: #444; direction: ltr; }
+.receipt-paper .r-total-row { display: flex; justify-content: space-between; font-size: 14px; font-weight: 700; margin-top: 6px; direction: rtl; }
+.receipt-paper .r-footer { text-align: center; font-size: 11px; color: #555; margin-top: 14px; }
+.receipt-actions { display: flex; gap: 8px; padding: 14px 18px 18px; background: var(--surface-sunken); }
+
+@media print {
+  body * { visibility: hidden; }
+  #receiptModalOverlay, #receiptModalOverlay * { visibility: visible; }
+  #receiptModalOverlay { position: absolute; inset: 0; background: white; padding: 0; }
+  .receipt-actions { display: none; }
+  .receipt-modal-box { max-width: 100%; box-shadow: none; border: none; }
+}
 </style>
 </head>
 <body>
@@ -310,9 +361,10 @@ a { color: inherit; }
       <div class="bo-sidebar">
         <button class="bo-nav-item active" data-section="products">الأصناف</button>
         <button class="bo-nav-item" data-section="categories">المجموعات</button>
-        <button class="bo-nav-item" data-section="soon">العملاء (قريبًا)</button>
-        <button class="bo-nav-item" data-section="soon">الموردون (قريبًا)</button>
-        <button class="bo-nav-item" data-section="soon">التقارير (قريبًا)</button>
+        <button class="bo-nav-item" data-section="customers">العملاء</button>
+        <button class="bo-nav-item" data-section="suppliers">الموردون</button>
+        <button class="bo-nav-item" data-section="purchases">فواتير الشراء</button>
+        <button class="bo-nav-item" data-section="reports">التقارير</button>
       </div>
 
       <div class="bo-content">
@@ -360,6 +412,136 @@ a { color: inherit; }
 
         <div id="bo-section-soon" style="display:none;">
           <div class="bo-empty" style="padding: 80px 20px;">القسم ده لسه هيتضاف قريب</div>
+        </div>
+
+        <!-- قسم العملاء -->
+        <div id="bo-section-customers" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">إدارة العملاء</div>
+            <button class="bo-add-btn" id="addCustomerBtn">+ عميل جديد</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="customerSearchInput" placeholder="ابحث بالاسم أو رقم التليفون...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>الاسم</th>
+                  <th>التليفون</th>
+                  <th>العنوان</th>
+                  <th>الرصيد</th>
+                  <th>نقاط الولاء</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="customersTableBody">
+                <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم الموردون -->
+        <div id="bo-section-suppliers" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">إدارة الموردين</div>
+            <button class="bo-add-btn" id="addSupplierBtn">+ مورد جديد</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="supplierSearchInput" placeholder="ابحث بالاسم أو رقم التليفون...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>الاسم</th>
+                  <th>التليفون</th>
+                  <th>العنوان</th>
+                  <th>الرصيد (مستحق للمورد)</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="suppliersTableBody">
+                <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم فواتير الشراء -->
+        <div id="bo-section-purchases" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">فواتير الشراء</div>
+            <button class="bo-add-btn" id="addPurchaseBtn">+ فاتورة شراء جديدة</button>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>رقم الفاتورة</th>
+                  <th>المورد</th>
+                  <th>الإجمالي</th>
+                  <th>المدفوع</th>
+                  <th>المتبقي</th>
+                  <th>التاريخ</th>
+                </tr>
+              </thead>
+              <tbody id="purchasesTableBody">
+                <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم التقارير -->
+        <div id="bo-section-reports" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">التقارير الأساسية</div>
+          </div>
+
+          <div class="quick-range-row" id="quickRangeRow" style="margin-bottom:12px;">
+            <button class="quick-range-btn active" data-range="today">اليوم</button>
+            <button class="quick-range-btn" data-range="yesterday">أمس</button>
+            <button class="quick-range-btn" data-range="7days">آخر 7 أيام</button>
+            <button class="quick-range-btn" data-range="30days">آخر 30 يوم</button>
+            <button class="quick-range-btn" data-range="month">الشهر الحالي</button>
+          </div>
+
+          <div class="report-filters">
+            <div class="field"><label>من تاريخ</label><input type="date" id="reportFromDate"></div>
+            <div class="field"><label>إلى تاريخ</label><input type="date" id="reportToDate"></div>
+            <button class="bo-add-btn" id="runReportBtn">تحديث</button>
+          </div>
+
+          <div class="report-cards">
+            <div class="report-card">
+              <div class="report-card-label">إجمالي المبيعات</div>
+              <div class="report-card-value num positive" id="reportTotalSales">0.00</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">عدد الفواتير</div>
+              <div class="report-card-value num" id="reportInvoiceCount">0</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">متوسط الفاتورة</div>
+              <div class="report-card-value num" id="reportAvgInvoice">0.00</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">صافي الربح التقريبي</div>
+              <div class="report-card-value num positive" id="reportProfit">0.00</div>
+            </div>
+          </div>
+
+          <div class="report-subtitle">الأصناف الأكثر مبيعًا</div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>الصنف</th><th>الكمية المباعة</th><th>الإيراد</th></tr></thead>
+              <tbody id="topProductsTableBody">
+                <tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -428,6 +610,98 @@ a { color: inherit; }
         <button type="submit" class="submit-btn" id="saveCategoryBtn">حفظ</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Modal: إضافة / تعديل عميل -->
+<div class="modal-overlay" id="customerModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="customerModalTitle">عميل جديد</div>
+    <form id="customerForm">
+      <input type="hidden" id="customerId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>اسم العميل</label><input type="text" id="customerName" required></div>
+        <div class="field"><label>رقم التليفون</label><input type="text" id="customerPhone" style="direction:ltr; text-align:right;"></div>
+        <div class="field"><label>نقاط الولاء</label><input type="number" id="customerLoyalty" step="0.01" value="0"></div>
+        <div class="field field-full"><label>العنوان</label><input type="text" id="customerAddress"></div>
+        <div class="field field-full"><label>الرصيد الافتتاحي</label><input type="number" id="customerBalance" step="0.01" value="0"></div>
+      </div>
+      <div class="error-msg" id="customerModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelCustomerBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveCustomerBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: إضافة / تعديل مورد -->
+<div class="modal-overlay" id="supplierModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="supplierModalTitle">مورد جديد</div>
+    <form id="supplierForm">
+      <input type="hidden" id="supplierId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>اسم المورد</label><input type="text" id="supplierName" required></div>
+        <div class="field"><label>رقم التليفون</label><input type="text" id="supplierPhone" style="direction:ltr; text-align:right;"></div>
+        <div class="field"><label>الرصيد الافتتاحي</label><input type="number" id="supplierBalance" step="0.01" value="0"></div>
+        <div class="field field-full"><label>العنوان</label><input type="text" id="supplierAddress"></div>
+      </div>
+      <div class="error-msg" id="supplierModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelSupplierBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveSupplierBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: فاتورة شراء جديدة -->
+<div class="modal-overlay" id="purchaseModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title">فاتورة شراء جديدة</div>
+    <form id="purchaseForm">
+      <div class="field">
+        <label>المورد</label>
+        <select id="purchaseSupplier" required><option value="">اختر مورد...</option></select>
+      </div>
+
+      <div style="margin-top:14px;">
+        <label style="display:block; font-size:13px; font-weight:500; color:var(--ink-soft); margin-bottom:6px;">الأصناف</label>
+        <div class="purchase-line-row header-row">
+          <div>الصنف</div><div>الكمية</div><div>سعر الشراء</div><div>الإجمالي</div><div></div>
+        </div>
+        <div class="purchase-lines-wrap" id="purchaseLinesWrap"></div>
+        <button type="button" class="add-line-btn" id="addPurchaseLineBtn">+ إضافة صنف</button>
+      </div>
+
+      <div class="purchase-totals-row">
+        <div>إجمالي الفاتورة: <span class="num" id="purchaseTotalLabel">0.00</span></div>
+      </div>
+
+      <div class="modal-grid">
+        <div class="field"><label>المبلغ المدفوع الآن</label><input type="number" id="purchasePaid" step="0.01" min="0" value="0"></div>
+        <div class="field"><label>المتبقي (على الحساب)</label><input type="text" id="purchaseRemaining" class="num" value="0.00" disabled></div>
+      </div>
+
+      <div class="error-msg" id="purchaseModalError"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelPurchaseBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="savePurchaseBtn">حفظ الفاتورة</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: فاتورة البيع (للطباعة) -->
+<div class="modal-overlay" id="receiptModalOverlay">
+  <div class="modal-box receipt-modal-box">
+    <div class="receipt-paper" id="receiptContent"></div>
+    <div class="receipt-actions">
+      <button type="button" class="modal-cancel-btn" id="closeReceiptBtn">إغلاق</button>
+      <button type="button" class="submit-btn" id="printReceiptBtn" style="margin-top:0;">طباعة</button>
+    </div>
   </div>
 </div>
 
@@ -660,7 +934,7 @@ async function enterPos() {
   startClock();
   updateHeldCount();
   renderCart();
-  await Promise.all([loadCategories(), loadProducts(), loadCustomers()]);
+  await Promise.all([loadCategories(), loadProducts(), loadCustomers(), loadStockBalances()]);
   renderCategories();
   renderProducts();
 }
@@ -715,6 +989,11 @@ function bindPosEvents() {
   });
 
   posEls.checkoutBtn.addEventListener('click', doCheckout);
+
+  document.getElementById('closeReceiptBtn').addEventListener('click', () => {
+    document.getElementById('receiptModalOverlay').classList.remove('show');
+  });
+  document.getElementById('printReceiptBtn').addEventListener('click', () => window.print());
 }
 
 async function loadCategories() {
@@ -739,11 +1018,29 @@ async function loadProducts() {
 async function loadCustomers() {
   const { data, error } = await supabaseClient.from('customers').select('id, name').order('name').limit(200);
   if (error) { console.error(error); return; }
+  posEls.customerSelect.innerHTML = '<option value="">عميل نقدي (بدون تسجيل)</option>';
   (data || []).forEach(c => {
     const opt = document.createElement('option');
     opt.value = c.id; opt.textContent = c.name;
     posEls.customerSelect.appendChild(opt);
   });
+}
+
+let stockMap = {}; // productId -> الكمية المتاحة في الفرع الحالي
+
+async function loadStockBalances() {
+  if (!currentProfile?.branch_id) { stockMap = {}; return; }
+  const { data, error } = await supabaseClient
+    .from('stock_balances')
+    .select('product_id, quantity')
+    .eq('branch_id', currentProfile.branch_id);
+  if (error) { console.error(error); return; }
+  stockMap = {};
+  (data || []).forEach(row => { stockMap[row.product_id] = Number(row.quantity); });
+}
+
+function availableStock(productId) {
+  return stockMap[productId] ?? 0;
 }
 
 function renderCategories() {
@@ -780,10 +1077,15 @@ function renderProducts() {
   filtered.forEach(p => {
     const card = document.createElement('button');
     card.className = 'product-card';
+    const stock = availableStock(p.id);
+    const stockLabel = stock <= 0
+      ? `<span style="color:var(--danger);">لا يوجد رصيد</span>`
+      : `<span style="color:var(--ink-soft);">متاح: <span class="num">${stock}</span></span>`;
     card.innerHTML = `
       <div class="product-thumb">${p.image_url ? `<img src="${p.image_url}" alt="">` : '🛒'}</div>
       <div class="product-name">${escapeHtml(p.name)}</div>
-      <div class="product-price"><span class="num">${Number(p.sale_price).toFixed(2)}</span></div>`;
+      <div class="product-price"><span class="num">${Number(p.sale_price).toFixed(2)}</span></div>
+      <div style="font-size:11px;">${stockLabel}</div>`;
     card.addEventListener('click', () => addToCart(p));
     posEls.productGrid.appendChild(card);
   });
@@ -791,17 +1093,29 @@ function renderProducts() {
 
 function addToCart(product) {
   const existing = cart.find(l => l.product.id === product.id);
+  const requestedQty = existing ? existing.quantity + 1 : 1;
+  if (!confirmStockIfNeeded(product, requestedQty)) return;
   if (existing) existing.quantity += 1;
   else cart.push({ product, quantity: 1, unitPrice: Number(product.sale_price) });
   renderCart();
+  renderProducts();
 }
 
 function changeQty(productId, delta) {
   const line = cart.find(l => l.product.id === productId);
   if (!line) return;
+  if (delta > 0 && !confirmStockIfNeeded(line.product, line.quantity + delta)) return;
   line.quantity += delta;
   if (line.quantity <= 0) cart = cart.filter(l => l.product.id !== productId);
   renderCart();
+  renderProducts();
+}
+
+// بيرجع true لو تمام نكمل، أو false لو المستخدم لغى العملية بعد التنبيه
+function confirmStockIfNeeded(product, requestedQty) {
+  const available = availableStock(product.id);
+  if (requestedQty <= available) return true;
+  return confirm(`الرصيد المتاح من "${product.name}" هو ${available} بس، وطالب ${requestedQty}. متأكد عايز تكمل البيع؟`);
 }
 
 function removeLine(productId) { cart = cart.filter(l => l.product.id !== productId); renderCart(); }
@@ -882,8 +1196,24 @@ async function doCheckout() {
     if (stockError) throw stockError;
 
     showToast(`تمت الفاتورة رقم ${sale.invoice_number} بنجاح`);
+
+    const customerName = customerId
+      ? (posEls.customerSelect.selectedOptions[0]?.textContent || '')
+      : '';
+    showReceipt({
+      invoiceNumber: sale.invoice_number,
+      createdAt: sale.created_at,
+      cashierName: currentProfile.full_name,
+      branchName: currentProfile.branches?.name || '',
+      customerName,
+      lines: cart.map(l => ({ name: l.product.name, quantity: l.quantity, unitPrice: l.unitPrice })),
+      subtotal, discount, total,
+    });
+
     cart = []; posEls.discountInput.value = 0; posEls.customerSelect.value = '';
     renderCart();
+    await loadStockBalances();
+    renderProducts();
   } catch (err) {
     console.error(err);
     showToast('حصل خطأ أثناء إتمام البيع، حاول تاني', true);
@@ -891,6 +1221,41 @@ async function doCheckout() {
     posEls.checkoutBtn.disabled = cart.length === 0;
     posEls.checkoutBtn.textContent = 'إتمام البيع';
   }
+}
+
+function showReceipt(sale) {
+  const dateStr = new Date(sale.createdAt).toLocaleString('ar-EG', {
+    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+  });
+
+  const itemsHtml = sale.lines.map(l => `
+    <div class="r-item-row">
+      <div class="r-item-name">${escapeHtml(l.name)}</div>
+      <div class="r-item-meta">
+        <span>${l.quantity} × ${l.unitPrice.toFixed(2)}</span>
+        <span>${(l.quantity * l.unitPrice).toFixed(2)}</span>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('receiptContent').innerHTML = `
+    <div class="r-center">
+      <div class="r-title">${escapeHtml(sale.branchName || 'نظام نقاط البيع')}</div>
+      <div class="r-sub">فاتورة رقم #${sale.invoiceNumber}</div>
+      <div class="r-sub num">${dateStr}</div>
+    </div>
+    <div class="r-divider"></div>
+    <div class="r-row"><span>الكاشير</span><span>${escapeHtml(sale.cashierName)}</span></div>
+    ${sale.customerName ? `<div class="r-row"><span>العميل</span><span>${escapeHtml(sale.customerName)}</span></div>` : ''}
+    <div class="r-divider"></div>
+    ${itemsHtml}
+    <div class="r-divider"></div>
+    <div class="r-row"><span>الإجمالي الفرعي</span><span class="num">${sale.subtotal.toFixed(2)}</span></div>
+    ${sale.discount > 0 ? `<div class="r-row"><span>الخصم</span><span class="num">-${sale.discount.toFixed(2)}</span></div>` : ''}
+    <div class="r-total-row"><span>الإجمالي</span><span class="num">${sale.total.toFixed(2)}</span></div>
+    <div class="r-footer">شكرًا لتعاملكم معنا 🌿</div>
+  `;
+
+  document.getElementById('receiptModalOverlay').classList.add('show');
 }
 
 // ------------------------------------------------------------
@@ -911,8 +1276,14 @@ async function enterBackoffice() {
   }
   await loadBoCategories();
   await loadBoProducts();
+  await loadBoCustomers();
+  await loadBoSuppliers();
+  await loadBoPurchases();
   renderProductsTable();
   renderCategoriesTable();
+  renderCustomersTable();
+  renderSuppliersTable();
+  renderPurchasesTable();
   populateProductCategorySelect();
 }
 
@@ -927,7 +1298,12 @@ function bindBackofficeEvents() {
       const section = btn.dataset.section;
       document.getElementById('bo-section-products').style.display = section === 'products' ? 'block' : 'none';
       document.getElementById('bo-section-categories').style.display = section === 'categories' ? 'block' : 'none';
+      document.getElementById('bo-section-customers').style.display = section === 'customers' ? 'block' : 'none';
+      document.getElementById('bo-section-suppliers').style.display = section === 'suppliers' ? 'block' : 'none';
+      document.getElementById('bo-section-purchases').style.display = section === 'purchases' ? 'block' : 'none';
+      document.getElementById('bo-section-reports').style.display = section === 'reports' ? 'block' : 'none';
       document.getElementById('bo-section-soon').style.display = section === 'soon' ? 'block' : 'none';
+      if (section === 'reports' && !reportsLoadedOnce) { runReport(); reportsLoadedOnce = true; }
     });
   });
 
@@ -950,6 +1326,46 @@ function bindBackofficeEvents() {
     if (e.target.id === 'categoryModalOverlay') closeCategoryModal();
   });
   document.getElementById('categoryForm').addEventListener('submit', saveCategory);
+
+  // ---- Customer modal ----
+  document.getElementById('addCustomerBtn').addEventListener('click', () => openCustomerModal(null));
+  document.getElementById('cancelCustomerBtn').addEventListener('click', closeCustomerModal);
+  document.getElementById('customerModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'customerModalOverlay') closeCustomerModal();
+  });
+  document.getElementById('customerForm').addEventListener('submit', saveCustomer);
+  document.getElementById('customerSearchInput').addEventListener('input', renderCustomersTable);
+
+  // ---- Supplier modal ----
+  document.getElementById('addSupplierBtn').addEventListener('click', () => openSupplierModal(null));
+  document.getElementById('cancelSupplierBtn').addEventListener('click', closeSupplierModal);
+  document.getElementById('supplierModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'supplierModalOverlay') closeSupplierModal();
+  });
+  document.getElementById('supplierForm').addEventListener('submit', saveSupplier);
+  document.getElementById('supplierSearchInput').addEventListener('input', renderSuppliersTable);
+
+  // ---- Purchase modal ----
+  document.getElementById('addPurchaseBtn').addEventListener('click', openPurchaseModal);
+  document.getElementById('cancelPurchaseBtn').addEventListener('click', closePurchaseModal);
+  document.getElementById('purchaseModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'purchaseModalOverlay') closePurchaseModal();
+  });
+  document.getElementById('addPurchaseLineBtn').addEventListener('click', () => addPurchaseLine());
+  document.getElementById('purchasePaid').addEventListener('input', updatePurchaseTotals);
+  document.getElementById('purchaseForm').addEventListener('submit', savePurchase);
+
+  // ---- Reports ----
+  setQuickRange('today');
+  document.getElementById('runReportBtn').addEventListener('click', () => runReport());
+  document.querySelectorAll('.quick-range-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.quick-range-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      setQuickRange(btn.dataset.range);
+      runReport();
+    });
+  });
 }
 
 async function loadBoProducts() {
@@ -1213,6 +1629,524 @@ async function toggleCategoryActive(category) {
   await loadBoCategories();
   renderCategoriesTable();
   populateProductCategorySelect();
+}
+
+// ---- Customers ----
+let boCustomers = [];
+
+async function loadBoCustomers() {
+  const { data, error } = await supabaseClient.from('customers').select('*').order('name');
+  if (error) { console.error(error); showToast('تعذر تحميل العملاء', true); return; }
+  boCustomers = data || [];
+}
+
+function renderCustomersTable() {
+  const tbody = document.getElementById('customersTableBody');
+  const q = (document.getElementById('customerSearchInput').value || '').trim().toLowerCase();
+  const filtered = boCustomers.filter(c => {
+    if (!q) return true;
+    return c.name.toLowerCase().includes(q) || (c.phone || '').includes(q);
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">${boCustomers.length === 0 ? 'لسه مفيش عملاء مضافين' : 'مفيش عملاء مطابقين للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(c => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(c.name)}</td>
+      <td class="num">${escapeHtml(c.phone || '—')}</td>
+      <td>${escapeHtml(c.address || '—')}</td>
+      <td class="num">${Number(c.balance).toFixed(2)}</td>
+      <td class="num">${Number(c.loyalty_points).toFixed(2)}</td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openCustomerModal(c));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteCustomer(c));
+    tbody.appendChild(tr);
+  });
+}
+
+function openCustomerModal(customer) {
+  document.getElementById('customerModalTitle').textContent = customer ? 'تعديل عميل' : 'عميل جديد';
+  document.getElementById('customerId').value = customer ? customer.id : '';
+  document.getElementById('customerName').value = customer ? customer.name : '';
+  document.getElementById('customerPhone').value = customer?.phone || '';
+  document.getElementById('customerAddress').value = customer?.address || '';
+  document.getElementById('customerLoyalty').value = customer ? customer.loyalty_points : 0;
+  document.getElementById('customerBalance').value = customer ? customer.balance : 0;
+  document.getElementById('customerModalError').classList.remove('show');
+  document.getElementById('customerModalOverlay').classList.add('show');
+}
+
+function closeCustomerModal() {
+  document.getElementById('customerModalOverlay').classList.remove('show');
+}
+
+async function saveCustomer(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('customerModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveCustomerBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('customerId').value || null;
+  const payload = {
+    name: document.getElementById('customerName').value.trim(),
+    phone: document.getElementById('customerPhone').value.trim() || null,
+    address: document.getElementById('customerAddress').value.trim() || null,
+    loyalty_points: Number(document.getElementById('customerLoyalty').value) || 0,
+    balance: Number(document.getElementById('customerBalance').value) || 0,
+  };
+
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('customers').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('customers').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'اتحدّثت بيانات العميل' : 'اتضاف العميل بنجاح');
+    closeCustomerModal();
+    await loadBoCustomers();
+    renderCustomersTable();
+    await loadCustomers(); // حدّث قائمة العملاء في شاشة المبيعات كمان
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حصل خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function deleteCustomer(customer) {
+  if (!confirm(`متأكد إنك عايز تحذف "${customer.name}"؟`)) return;
+  const { error } = await supabaseClient.from('customers').delete().eq('id', customer.id);
+  if (error) {
+    console.error(error);
+    showToast('تعذر حذف العميل — على الأرجح مرتبط بفواتير سابقة', true);
+    return;
+  }
+  showToast('اتحذف العميل');
+  await loadBoCustomers();
+  renderCustomersTable();
+  await loadCustomers();
+}
+
+// ---- Suppliers ----
+let boSuppliers = [];
+
+async function loadBoSuppliers() {
+  const { data, error } = await supabaseClient.from('suppliers').select('*').order('name');
+  if (error) { console.error(error); showToast('تعذر تحميل الموردين', true); return; }
+  boSuppliers = data || [];
+}
+
+function renderSuppliersTable() {
+  const tbody = document.getElementById('suppliersTableBody');
+  const q = (document.getElementById('supplierSearchInput').value || '').trim().toLowerCase();
+  const filtered = boSuppliers.filter(s => {
+    if (!q) return true;
+    return s.name.toLowerCase().includes(q) || (s.phone || '').includes(q);
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">${boSuppliers.length === 0 ? 'لسه مفيش موردين مضافين' : 'مفيش موردين مطابقين للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(s => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(s.name)}</td>
+      <td class="num">${escapeHtml(s.phone || '—')}</td>
+      <td>${escapeHtml(s.address || '—')}</td>
+      <td class="num">${Number(s.balance).toFixed(2)}</td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openSupplierModal(s));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteSupplier(s));
+    tbody.appendChild(tr);
+  });
+}
+
+function openSupplierModal(supplier) {
+  document.getElementById('supplierModalTitle').textContent = supplier ? 'تعديل مورد' : 'مورد جديد';
+  document.getElementById('supplierId').value = supplier ? supplier.id : '';
+  document.getElementById('supplierName').value = supplier ? supplier.name : '';
+  document.getElementById('supplierPhone').value = supplier?.phone || '';
+  document.getElementById('supplierAddress').value = supplier?.address || '';
+  document.getElementById('supplierBalance').value = supplier ? supplier.balance : 0;
+  document.getElementById('supplierModalError').classList.remove('show');
+  document.getElementById('supplierModalOverlay').classList.add('show');
+}
+
+function closeSupplierModal() {
+  document.getElementById('supplierModalOverlay').classList.remove('show');
+}
+
+async function saveSupplier(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('supplierModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveSupplierBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('supplierId').value || null;
+  const payload = {
+    name: document.getElementById('supplierName').value.trim(),
+    phone: document.getElementById('supplierPhone').value.trim() || null,
+    address: document.getElementById('supplierAddress').value.trim() || null,
+    balance: Number(document.getElementById('supplierBalance').value) || 0,
+  };
+
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('suppliers').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('suppliers').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'اتحدّثت بيانات المورد' : 'اتضاف المورد بنجاح');
+    closeSupplierModal();
+    await loadBoSuppliers();
+    renderSuppliersTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حصل خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function deleteSupplier(supplier) {
+  if (!confirm(`متأكد إنك عايز تحذف "${supplier.name}"؟`)) return;
+  const { error } = await supabaseClient.from('suppliers').delete().eq('id', supplier.id);
+  if (error) {
+    console.error(error);
+    showToast('تعذر حذف المورد — على الأرجح مرتبط بفواتير شراء سابقة', true);
+    return;
+  }
+  showToast('اتحذف المورد');
+  await loadBoSuppliers();
+  renderSuppliersTable();
+}
+
+// ---- Purchases ----
+let boPurchases = [];
+let purchaseLines = []; // [{ productId, quantity, unitCost }]
+
+async function loadBoPurchases() {
+  const { data, error } = await supabaseClient
+    .from('purchases')
+    .select('*, suppliers(name)')
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (error) { console.error(error); showToast('تعذر تحميل فواتير الشراء', true); return; }
+  boPurchases = data || [];
+}
+
+function renderPurchasesTable() {
+  const tbody = document.getElementById('purchasesTableBody');
+  if (boPurchases.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">لسه مفيش فواتير شراء مسجّلة</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boPurchases.forEach(p => {
+    const tr = document.createElement('tr');
+    const date = new Date(p.created_at).toLocaleDateString('ar-EG');
+    tr.innerHTML = `
+      <td class="num">#${p.invoice_number}</td>
+      <td>${escapeHtml(p.suppliers?.name || '—')}</td>
+      <td class="num">${Number(p.total).toFixed(2)}</td>
+      <td class="num">${Number(p.paid_amount).toFixed(2)}</td>
+      <td class="num">${Number(p.remaining).toFixed(2)}</td>
+      <td class="num">${date}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function openPurchaseModal() {
+  const supplierSel = document.getElementById('purchaseSupplier');
+  supplierSel.innerHTML = '<option value="">اختر مورد...</option>';
+  boSuppliers.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id; opt.textContent = s.name;
+    supplierSel.appendChild(opt);
+  });
+
+  purchaseLines = [];
+  addPurchaseLine();
+  document.getElementById('purchasePaid').value = 0;
+  document.getElementById('purchaseModalError').classList.remove('show');
+  document.getElementById('purchaseModalOverlay').classList.add('show');
+}
+
+function closePurchaseModal() {
+  document.getElementById('purchaseModalOverlay').classList.remove('show');
+}
+
+function addPurchaseLine() {
+  purchaseLines.push({ productId: '', quantity: 1, unitCost: 0 });
+  renderPurchaseLines();
+}
+
+function removePurchaseLine(idx) {
+  purchaseLines.splice(idx, 1);
+  renderPurchaseLines();
+}
+
+function renderPurchaseLines() {
+  const wrap = document.getElementById('purchaseLinesWrap');
+  wrap.innerHTML = '';
+  purchaseLines.forEach((line, idx) => {
+    const row = document.createElement('div');
+    row.className = 'purchase-line-row';
+
+    const productSelect = document.createElement('select');
+    productSelect.innerHTML = '<option value="">اختر صنف...</option>' +
+      boProducts.map(p => `<option value="${p.id}" ${p.id === line.productId ? 'selected' : ''}>${escapeHtml(p.name)}</option>`).join('');
+    productSelect.addEventListener('change', () => {
+      line.productId = productSelect.value;
+      const prod = boProducts.find(p => p.id === line.productId);
+      if (prod && Number(line.unitCost) === 0) {
+        line.unitCost = Number(prod.cost_price) || 0;
+        renderPurchaseLines();
+      }
+    });
+
+    const qtyInput = document.createElement('input');
+    qtyInput.type = 'number'; qtyInput.min = '0.001'; qtyInput.step = '0.001'; qtyInput.value = line.quantity;
+    qtyInput.addEventListener('input', () => { line.quantity = Number(qtyInput.value) || 0; updateLineTotal(row, line); updatePurchaseTotals(); });
+
+    const costInput = document.createElement('input');
+    costInput.type = 'number'; costInput.min = '0'; costInput.step = '0.01'; costInput.value = line.unitCost;
+    costInput.addEventListener('input', () => { line.unitCost = Number(costInput.value) || 0; updateLineTotal(row, line); updatePurchaseTotals(); });
+
+    const totalDiv = document.createElement('div');
+    totalDiv.className = 'purchase-line-total num';
+    totalDiv.textContent = (line.quantity * line.unitCost).toFixed(2);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button'; removeBtn.className = 'purchase-line-remove'; removeBtn.textContent = '×';
+    removeBtn.addEventListener('click', () => removePurchaseLine(idx));
+
+    row.appendChild(productSelect);
+    row.appendChild(qtyInput);
+    row.appendChild(costInput);
+    row.appendChild(totalDiv);
+    row.appendChild(removeBtn);
+    wrap.appendChild(row);
+  });
+  updatePurchaseTotals();
+}
+
+function updateLineTotal(row, line) {
+  row.querySelector('.purchase-line-total').textContent = (line.quantity * line.unitCost).toFixed(2);
+}
+
+function calcPurchaseTotal() {
+  return purchaseLines.reduce((sum, l) => sum + (Number(l.quantity) || 0) * (Number(l.unitCost) || 0), 0);
+}
+
+function updatePurchaseTotals() {
+  const total = calcPurchaseTotal();
+  const paid = Number(document.getElementById('purchasePaid').value) || 0;
+  document.getElementById('purchaseTotalLabel').textContent = total.toFixed(2);
+  document.getElementById('purchaseRemaining').value = Math.max(0, total - paid).toFixed(2);
+}
+
+async function savePurchase(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('purchaseModalError');
+  errEl.classList.remove('show');
+
+  const supplierId = document.getElementById('purchaseSupplier').value;
+  if (!supplierId) { errEl.textContent = 'اختار المورد الأول'; errEl.classList.add('show'); return; }
+
+  const validLines = purchaseLines.filter(l => l.productId && l.quantity > 0);
+  if (validLines.length === 0) { errEl.textContent = 'ضيف صنف واحد على الأقل بكمية صحيحة'; errEl.classList.add('show'); return; }
+
+  const saveBtn = document.getElementById('savePurchaseBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  try {
+    const total = calcPurchaseTotal();
+    const paid = Number(document.getElementById('purchasePaid').value) || 0;
+    const remaining = Math.max(0, total - paid);
+
+    const { data: purchase, error: purchaseError } = await supabaseClient
+      .from('purchases')
+      .insert({
+        branch_id: currentProfile.branch_id, user_id: currentProfile.id, supplier_id: supplierId,
+        status: 'completed', total, paid_amount: paid, remaining,
+      }).select().single();
+    if (purchaseError) throw purchaseError;
+
+    const purchaseItems = validLines.map(l => ({
+      purchase_id: purchase.id, product_id: l.productId, quantity: l.quantity,
+      unit_cost: l.unitCost, total: l.quantity * l.unitCost,
+    }));
+    const { error: itemsError } = await supabaseClient.from('purchase_items').insert(purchaseItems);
+    if (itemsError) throw itemsError;
+
+    const stockRows = validLines.map(l => ({
+      product_id: l.productId, branch_id: currentProfile.branch_id,
+      quantity: l.quantity, type: 'purchase', reference_id: purchase.id, user_id: currentProfile.id,
+    }));
+    const { error: stockError } = await supabaseClient.from('stock_transactions').insert(stockRows);
+    if (stockError) throw stockError;
+
+    // تحديث سعر الشراء الحالي للصنف (اختياري لكن مفيد)
+    for (const l of validLines) {
+      await supabaseClient.from('products').update({ cost_price: l.unitCost }).eq('id', l.productId);
+    }
+
+    // لو فيه مبلغ متبقي، يتضاف على رصيد المورد (مديونية علينا)
+    if (remaining > 0) {
+      const supplier = boSuppliers.find(s => s.id === supplierId);
+      const newBalance = (Number(supplier?.balance) || 0) + remaining;
+      await supabaseClient.from('suppliers').update({ balance: newBalance }).eq('id', supplierId);
+    }
+
+    showToast(`اتسجّلت فاتورة الشراء رقم ${purchase.invoice_number} وتحدّث المخزون تلقائيًا`);
+    closePurchaseModal();
+    await Promise.all([loadBoPurchases(), loadBoProducts(), loadBoSuppliers()]);
+    renderPurchasesTable();
+    renderProductsTable();
+    renderSuppliersTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حصل خطأ أثناء حفظ الفاتورة';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ الفاتورة';
+  }
+}
+
+// ---- Reports ----
+let reportsLoadedOnce = false;
+
+function toDateInputValue(d) {
+  return d.toISOString().split('T')[0];
+}
+
+function setQuickRange(range) {
+  const today = new Date();
+  let from = new Date(today);
+  let to = new Date(today);
+
+  if (range === 'yesterday') {
+    from.setDate(from.getDate() - 1);
+    to.setDate(to.getDate() - 1);
+  } else if (range === '7days') {
+    from.setDate(from.getDate() - 6);
+  } else if (range === '30days') {
+    from.setDate(from.getDate() - 29);
+  } else if (range === 'month') {
+    from = new Date(today.getFullYear(), today.getMonth(), 1);
+  }
+  // 'today' يسيب from = to = النهاردة
+
+  document.getElementById('reportFromDate').value = toDateInputValue(from);
+  document.getElementById('reportToDate').value = toDateInputValue(to);
+}
+
+async function runReport() {
+  const fromDate = document.getElementById('reportFromDate').value;
+  const toDate = document.getElementById('reportToDate').value;
+  if (!fromDate || !toDate) return;
+
+  const fromISO = `${fromDate}T00:00:00`;
+  const toISO = `${toDate}T23:59:59`;
+
+  document.getElementById('topProductsTableBody').innerHTML = `<tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>`;
+
+  try {
+    // ملخص الفواتير
+    const { data: sales, error: salesError } = await supabaseClient
+      .from('sales')
+      .select('id, total')
+      .eq('status', 'completed')
+      .gte('created_at', fromISO)
+      .lte('created_at', toISO);
+    if (salesError) throw salesError;
+
+    const totalSales = (sales || []).reduce((sum, s) => sum + Number(s.total), 0);
+    const invoiceCount = (sales || []).length;
+    const avgInvoice = invoiceCount > 0 ? totalSales / invoiceCount : 0;
+
+    document.getElementById('reportTotalSales').textContent = totalSales.toFixed(2);
+    document.getElementById('reportInvoiceCount').textContent = invoiceCount;
+    document.getElementById('reportAvgInvoice').textContent = avgInvoice.toFixed(2);
+
+    // الأصناف الأكثر مبيعًا + الربح التقريبي
+    const { data: items, error: itemsError } = await supabaseClient
+      .from('sale_items')
+      .select('quantity, total, product_id, products(name, cost_price), sales!inner(created_at, status)')
+      .eq('sales.status', 'completed')
+      .gte('sales.created_at', fromISO)
+      .lte('sales.created_at', toISO);
+    if (itemsError) throw itemsError;
+
+    const grouped = {};
+    let totalCost = 0;
+    (items || []).forEach(it => {
+      const key = it.product_id;
+      if (!grouped[key]) {
+        grouped[key] = { name: it.products?.name || 'صنف محذوف', quantity: 0, revenue: 0 };
+      }
+      grouped[key].quantity += Number(it.quantity);
+      grouped[key].revenue += Number(it.total);
+      totalCost += Number(it.quantity) * Number(it.products?.cost_price || 0);
+    });
+
+    const profit = totalSales - totalCost;
+    const profitEl = document.getElementById('reportProfit');
+    profitEl.textContent = profit.toFixed(2);
+    profitEl.classList.toggle('positive', profit >= 0);
+    profitEl.classList.toggle('negative', profit < 0);
+
+    const topProducts = Object.values(grouped).sort((a, b) => b.revenue - a.revenue).slice(0, 10);
+    const tbody = document.getElementById('topProductsTableBody');
+    if (topProducts.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">مفيش مبيعات في الفترة دي</td></tr>`;
+    } else {
+      tbody.innerHTML = '';
+      topProducts.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${escapeHtml(p.name)}</td>
+          <td class="num">${p.quantity}</td>
+          <td class="num">${p.revenue.toFixed(2)}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحميل التقرير', true);
+  }
 }
 </script>
 </body>
