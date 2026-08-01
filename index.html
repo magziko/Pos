@@ -137,6 +137,57 @@ a { color: inherit; }
   .main { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
   .cart-side { border-right: none; border-top: 1px solid var(--border); max-height: 50vh; }
 }
+
+/* -------- Back office -------- */
+.bo-app { display: grid; grid-template-rows: auto 1fr; height: 100vh; overflow: hidden; }
+.bo-main { display: grid; grid-template-columns: 220px 1fr; overflow: hidden; }
+.bo-sidebar { background: var(--surface); border-left: 1px solid var(--border); padding: 16px 10px; overflow-y: auto; }
+.bo-nav-item { width: 100%; text-align: right; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 500; color: var(--ink-soft); background: none; margin-bottom: 4px; display: block; }
+.bo-nav-item:hover { background: var(--surface-sunken); color: var(--ink); }
+.bo-nav-item.active { background: var(--teal-100); color: var(--teal-900); font-weight: 700; }
+.bo-content { overflow-y: auto; padding: 22px 28px; }
+.bo-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.bo-section-title { font-size: 18px; font-weight: 700; }
+.bo-add-btn { background: var(--teal-700); color: white; padding: 10px 18px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 600; }
+.bo-add-btn:hover { background: var(--teal-900); }
+.bo-table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+.bo-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.bo-table th { text-align: right; background: var(--surface-sunken); color: var(--ink-soft); font-weight: 600; padding: 10px 14px; font-size: 12.5px; }
+.bo-table td { padding: 10px 14px; border-top: 1px solid var(--surface-sunken); vertical-align: middle; }
+.bo-table tr:hover td { background: #FAFBFA; }
+.bo-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; }
+.bo-badge.active { background: var(--teal-100); color: var(--teal-900); }
+.bo-badge.inactive { background: var(--danger-100); color: var(--danger); }
+.bo-row-actions { display: flex; gap: 6px; }
+.bo-icon-btn { background: var(--surface-sunken); color: var(--ink-soft); padding: 6px 10px; border-radius: 6px; font-size: 12px; }
+.bo-icon-btn:hover { background: var(--teal-100); color: var(--teal-700); }
+.bo-icon-btn.danger:hover { background: var(--danger-100); color: var(--danger); }
+.bo-empty { text-align: center; color: var(--ink-soft); padding: 50px 20px; font-size: 13.5px; }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(16, 30, 25, 0.45); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
+.modal-overlay.show { display: flex; }
+.modal-box { background: var(--surface); border-radius: var(--radius-lg); width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; padding: 26px 26px 22px; box-shadow: var(--shadow-card); }
+.modal-title { font-size: 16px; font-weight: 700; margin-bottom: 18px; }
+.modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 10px; }
+.modal-grid .field-full { grid-column: 1 / -1; }
+.modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+.modal-actions .submit-btn { margin-top: 0; }
+.modal-cancel-btn { flex: 1; background: var(--surface-sunken); color: var(--ink); padding: 13px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; }
+.modal-cancel-btn:hover { background: #E2E7E4; }
+
+.barcode-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.barcode-chip { display: flex; align-items: center; gap: 6px; background: var(--surface-sunken); padding: 5px 10px; border-radius: 16px; font-size: 12px; font-family: var(--font-num); direction: ltr; }
+.barcode-chip button { color: var(--danger); font-weight: 700; font-size: 13px; }
+.barcode-add-row { display: flex; gap: 6px; }
+.barcode-add-row input { flex: 1; padding: 8px 10px; font-size: 12.5px; }
+.barcode-add-row button { background: var(--teal-100); color: var(--teal-700); padding: 8px 14px; border-radius: var(--radius-sm); font-size: 12.5px; font-weight: 600; }
+
+@media (max-width: 760px) {
+  .bo-main { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .bo-sidebar { border-left: none; border-bottom: 1px solid var(--border); display: flex; overflow-x: auto; }
+  .bo-nav-item { white-space: nowrap; }
+}
+
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 </head>
@@ -208,6 +259,7 @@ a { color: inherit; }
       <div class="topbar-right">
         <span id="cashierLabel">—</span>
         <span class="topbar-clock" id="clockLabel">--:--</span>
+        <button class="logout-btn" id="backofficeBtn" style="display:none;">لوحة التحكم</button>
         <button class="logout-btn" id="logoutBtn">تسجيل الخروج</button>
       </div>
     </div>
@@ -238,6 +290,147 @@ a { color: inherit; }
   </div>
 </div>
 
+<!-- ============================================================
+     VIEW: المكتب الخلفي (لوحة التحكم)
+     ============================================================ -->
+<div class="view" id="view-backoffice">
+  <div class="bo-app">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-brand">لوحة التحكم</div>
+        <div class="topbar-branch" id="boBranchLabel">—</div>
+      </div>
+      <div class="topbar-right">
+        <span id="boCashierLabel">—</span>
+        <button class="logout-btn" id="backToPosBtn">شاشة المبيعات</button>
+        <button class="logout-btn" id="boLogoutBtn">تسجيل الخروج</button>
+      </div>
+    </div>
+    <div class="bo-main">
+      <div class="bo-sidebar">
+        <button class="bo-nav-item active" data-section="products">الأصناف</button>
+        <button class="bo-nav-item" data-section="categories">المجموعات</button>
+        <button class="bo-nav-item" data-section="soon">العملاء (قريبًا)</button>
+        <button class="bo-nav-item" data-section="soon">الموردون (قريبًا)</button>
+        <button class="bo-nav-item" data-section="soon">التقارير (قريبًا)</button>
+      </div>
+
+      <div class="bo-content">
+        <!-- قسم الأصناف -->
+        <div id="bo-section-products">
+          <div class="bo-section-header">
+            <div class="bo-section-title">إدارة الأصناف</div>
+            <button class="bo-add-btn" id="addProductBtn">+ صنف جديد</button>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>الصنف</th>
+                  <th>المجموعة</th>
+                  <th>سعر البيع</th>
+                  <th>سعر الشراء</th>
+                  <th>الباركود</th>
+                  <th>الحالة</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="productsTableBody">
+                <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم المجموعات -->
+        <div id="bo-section-categories" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">المجموعات</div>
+            <button class="bo-add-btn" id="addCategoryBtn">+ مجموعة جديدة</button>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>اسم المجموعة</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="categoriesTableBody">
+                <tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="bo-section-soon" style="display:none;">
+          <div class="bo-empty" style="padding: 80px 20px;">القسم ده لسه هيتضاف قريب</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: إضافة / تعديل صنف -->
+<div class="modal-overlay" id="productModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="productModalTitle">صنف جديد</div>
+    <form id="productForm">
+      <input type="hidden" id="productId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>اسم الصنف</label><input type="text" id="productName" required></div>
+        <div class="field"><label>المجموعة</label><select id="productCategory"><option value="">بدون مجموعة</option></select></div>
+        <div class="field"><label>نوع البيع</label>
+          <select id="productUnitType"><option value="piece">بالقطعة</option><option value="weight">بالوزن</option></select>
+        </div>
+        <div class="field"><label>سعر الشراء</label><input type="number" id="productCost" step="0.01" min="0" value="0"></div>
+        <div class="field"><label>سعر البيع</label><input type="number" id="productPrice" step="0.01" min="0" required value="0"></div>
+        <div class="field"><label>سعر بيع 2 (اختياري)</label><input type="number" id="productPrice2" step="0.01" min="0"></div>
+        <div class="field"><label>حد إعادة الطلب</label><input type="number" id="productReorder" step="0.01" min="0" value="0"></div>
+        <div class="field field-full"><label>رابط صورة (اختياري)</label><input type="text" id="productImage" placeholder="https://..."></div>
+
+        <div class="field field-full">
+          <label>الباركود</label>
+          <div class="barcode-list" id="barcodeList"></div>
+          <div class="barcode-add-row">
+            <input type="text" id="newBarcodeInput" placeholder="امسح أو اكتب باركود واضغط إضافة">
+            <button type="button" id="addBarcodeBtn">إضافة</button>
+          </div>
+        </div>
+
+        <div class="field field-full">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="productActive" checked style="width:auto;"> الصنف مفعّل ويظهر في شاشة المبيعات
+          </label>
+        </div>
+      </div>
+
+      <div class="error-msg" id="productModalError"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelProductBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveProductBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: إضافة / تعديل مجموعة -->
+<div class="modal-overlay" id="categoryModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="categoryModalTitle">مجموعة جديدة</div>
+    <form id="categoryForm">
+      <input type="hidden" id="categoryId">
+      <div class="field field-full"><label>اسم المجموعة</label><input type="text" id="categoryName" required></div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="categoryActive" checked style="width:auto;"> مفعّلة
+        </label>
+      </div>
+      <div class="error-msg" id="categoryModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelCategoryBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveCategoryBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -247,7 +440,6 @@ a { color: inherit; }
 // ============================================================
 const SUPABASE_URL = 'https://aagyaxicphooldhwycko.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhZ3lheGljcGhvb2xkaHd5Y2tvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1ODI0MTQsImV4cCI6MjEwMTE1ODQxNH0.IXId6VALd6WwufMwyHjwK12zYXAozPOXUdyjM4omUh4';
-
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentProfile = null;
@@ -463,6 +655,8 @@ async function enterPos() {
   }
   posEls.branchLabel.textContent = currentProfile.branches?.name || 'بدون فرع';
   posEls.cashierLabel.textContent = currentProfile.full_name;
+  const isAdmin = currentProfile.roles?.name === 'admin';
+  document.getElementById('backofficeBtn').style.display = isAdmin ? 'inline-block' : 'none';
   startClock();
   updateHeldCount();
   renderCart();
@@ -479,14 +673,8 @@ function startClock() {
 }
 
 function bindPosEvents() {
-  posEls.logoutBtn.addEventListener('click', async () => {
-    await supabaseClient.auth.signOut();
-    currentProfile = null;
-    cart = [];
-    document.getElementById('loginEmail').value = '';
-    document.getElementById('loginPassword').value = '';
-    showView('login');
-  });
+  posEls.logoutBtn.addEventListener('click', doLogout);
+  document.getElementById('backofficeBtn').addEventListener('click', enterBackoffice);
 
   posEls.searchInput.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter') return;
@@ -652,6 +840,15 @@ function renderCart() {
 
 function updateHeldCount() { posEls.heldCount.textContent = heldOrders.length; }
 
+async function doLogout() {
+  await supabaseClient.auth.signOut();
+  currentProfile = null;
+  cart = [];
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginPassword').value = '';
+  showView('login');
+}
+
 async function doCheckout() {
   if (cart.length === 0) return;
   posEls.checkoutBtn.disabled = true;
@@ -694,6 +891,328 @@ async function doCheckout() {
     posEls.checkoutBtn.disabled = cart.length === 0;
     posEls.checkoutBtn.textContent = 'إتمام البيع';
   }
+}
+
+// ------------------------------------------------------------
+// المكتب الخلفي (لوحة التحكم) — إدارة الأصناف والمجموعات
+// ------------------------------------------------------------
+let boInitialized = false;
+let boProducts = [];
+let boCategories = [];
+let currentBarcodes = []; // الباركود المرتبط بالصنف المفتوح حاليًا في المودال
+
+async function enterBackoffice() {
+  showView('backoffice');
+  if (!boInitialized) {
+    document.getElementById('boBranchLabel').textContent = currentProfile.branches?.name || 'بدون فرع';
+    document.getElementById('boCashierLabel').textContent = currentProfile.full_name;
+    bindBackofficeEvents();
+    boInitialized = true;
+  }
+  await loadBoCategories();
+  await loadBoProducts();
+  renderProductsTable();
+  renderCategoriesTable();
+  populateProductCategorySelect();
+}
+
+function bindBackofficeEvents() {
+  document.getElementById('backToPosBtn').addEventListener('click', () => showView('pos'));
+  document.getElementById('boLogoutBtn').addEventListener('click', doLogout);
+
+  document.querySelectorAll('.bo-nav-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.bo-nav-item').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const section = btn.dataset.section;
+      document.getElementById('bo-section-products').style.display = section === 'products' ? 'block' : 'none';
+      document.getElementById('bo-section-categories').style.display = section === 'categories' ? 'block' : 'none';
+      document.getElementById('bo-section-soon').style.display = section === 'soon' ? 'block' : 'none';
+    });
+  });
+
+  // ---- Product modal ----
+  document.getElementById('addProductBtn').addEventListener('click', () => openProductModal(null));
+  document.getElementById('cancelProductBtn').addEventListener('click', closeProductModal);
+  document.getElementById('productModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'productModalOverlay') closeProductModal();
+  });
+  document.getElementById('addBarcodeBtn').addEventListener('click', addBarcodeToCurrentProduct);
+  document.getElementById('newBarcodeInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); addBarcodeToCurrentProduct(); }
+  });
+  document.getElementById('productForm').addEventListener('submit', saveProduct);
+
+  // ---- Category modal ----
+  document.getElementById('addCategoryBtn').addEventListener('click', () => openCategoryModal(null));
+  document.getElementById('cancelCategoryBtn').addEventListener('click', closeCategoryModal);
+  document.getElementById('categoryModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'categoryModalOverlay') closeCategoryModal();
+  });
+  document.getElementById('categoryForm').addEventListener('submit', saveCategory);
+}
+
+async function loadBoProducts() {
+  const { data, error } = await supabaseClient
+    .from('products')
+    .select('*, categories(name), product_barcodes(id, barcode)')
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل الأصناف', true); return; }
+  boProducts = data || [];
+}
+
+async function loadBoCategories() {
+  const { data, error } = await supabaseClient.from('categories').select('*').order('name');
+  if (error) { console.error(error); return; }
+  boCategories = data || [];
+}
+
+function populateProductCategorySelect() {
+  const sel = document.getElementById('productCategory');
+  sel.innerHTML = '<option value="">بدون مجموعة</option>';
+  boCategories.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id; opt.textContent = c.name;
+    sel.appendChild(opt);
+  });
+}
+
+function renderProductsTable() {
+  const tbody = document.getElementById('productsTableBody');
+  if (boProducts.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لسه مفيش أصناف مضافة</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boProducts.forEach(p => {
+    const barcodesText = (p.product_barcodes || []).map(b => b.barcode).join(', ') || '—';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(p.name)}</td>
+      <td>${escapeHtml(p.categories?.name || '—')}</td>
+      <td class="num">${Number(p.sale_price).toFixed(2)}</td>
+      <td class="num">${Number(p.cost_price).toFixed(2)}</td>
+      <td style="font-size:11.5px; color:var(--ink-soft);">${escapeHtml(barcodesText)}</td>
+      <td><span class="bo-badge ${p.is_active ? 'active' : 'inactive'}">${p.is_active ? 'مفعّل' : 'موقّف'}</span></td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="toggle">${p.is_active ? 'إيقاف' : 'تفعيل'}</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openProductModal(p));
+    tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleProductActive(p));
+    tbody.appendChild(tr);
+  });
+}
+
+function openProductModal(product) {
+  currentBarcodes = product ? (product.product_barcodes || []).map(b => ({ id: b.id, barcode: b.barcode })) : [];
+  document.getElementById('productModalTitle').textContent = product ? 'تعديل صنف' : 'صنف جديد';
+  document.getElementById('productId').value = product ? product.id : '';
+  document.getElementById('productName').value = product ? product.name : '';
+  document.getElementById('productCategory').value = product ? (product.category_id || '') : '';
+  document.getElementById('productUnitType').value = product ? product.unit_type : 'piece';
+  document.getElementById('productCost').value = product ? product.cost_price : 0;
+  document.getElementById('productPrice').value = product ? product.sale_price : 0;
+  document.getElementById('productPrice2').value = product?.sale_price_2 || '';
+  document.getElementById('productReorder').value = product ? product.reorder_level : 0;
+  document.getElementById('productImage').value = product?.image_url || '';
+  document.getElementById('productActive').checked = product ? product.is_active : true;
+  document.getElementById('productModalError').classList.remove('show');
+  document.getElementById('newBarcodeInput').value = '';
+  renderBarcodeList();
+  document.getElementById('productModalOverlay').classList.add('show');
+}
+
+function closeProductModal() {
+  document.getElementById('productModalOverlay').classList.remove('show');
+}
+
+function renderBarcodeList() {
+  const wrap = document.getElementById('barcodeList');
+  if (currentBarcodes.length === 0) {
+    wrap.innerHTML = `<span style="font-size:12px; color:var(--ink-soft);">مفيش باركود مضاف لسه</span>`;
+    return;
+  }
+  wrap.innerHTML = '';
+  currentBarcodes.forEach((b, idx) => {
+    const chip = document.createElement('div');
+    chip.className = 'barcode-chip';
+    chip.innerHTML = `<span>${escapeHtml(b.barcode)}</span><button type="button">×</button>`;
+    chip.querySelector('button').addEventListener('click', () => {
+      currentBarcodes.splice(idx, 1);
+      renderBarcodeList();
+    });
+    wrap.appendChild(chip);
+  });
+}
+
+function addBarcodeToCurrentProduct() {
+  const input = document.getElementById('newBarcodeInput');
+  const val = input.value.trim();
+  if (!val) return;
+  if (currentBarcodes.some(b => b.barcode === val)) {
+    showToast('الباركود ده مضاف بالفعل', true);
+    return;
+  }
+  currentBarcodes.push({ id: null, barcode: val });
+  input.value = '';
+  renderBarcodeList();
+}
+
+async function saveProduct(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('productModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveProductBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('productId').value || null;
+  const payload = {
+    name: document.getElementById('productName').value.trim(),
+    category_id: document.getElementById('productCategory').value || null,
+    unit_type: document.getElementById('productUnitType').value,
+    cost_price: Number(document.getElementById('productCost').value) || 0,
+    sale_price: Number(document.getElementById('productPrice').value) || 0,
+    sale_price_2: document.getElementById('productPrice2').value ? Number(document.getElementById('productPrice2').value) : null,
+    reorder_level: Number(document.getElementById('productReorder').value) || 0,
+    image_url: document.getElementById('productImage').value.trim() || null,
+    is_active: document.getElementById('productActive').checked,
+  };
+
+  try {
+    let productId = id;
+    if (id) {
+      const { error } = await supabaseClient.from('products').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { data, error } = await supabaseClient.from('products').insert(payload).select().single();
+      if (error) throw error;
+      productId = data.id;
+    }
+
+    // مزامنة الباركود: احذف اللي اتشال، ضيف اللي جديد
+    const { data: existingBarcodes } = await supabaseClient
+      .from('product_barcodes').select('id, barcode').eq('product_id', productId);
+    const existingIds = (existingBarcodes || []).map(b => b.id);
+    const keptIds = currentBarcodes.filter(b => b.id).map(b => b.id);
+    const removedIds = existingIds.filter(bid => !keptIds.includes(bid));
+    if (removedIds.length > 0) {
+      await supabaseClient.from('product_barcodes').delete().in('id', removedIds);
+    }
+    const newOnes = currentBarcodes.filter(b => !b.id).map(b => ({ product_id: productId, barcode: b.barcode }));
+    if (newOnes.length > 0) {
+      const { error: bcError } = await supabaseClient.from('product_barcodes').insert(newOnes);
+      if (bcError) throw bcError;
+    }
+
+    showToast(id ? 'اتحدّث الصنف بنجاح' : 'اتضاف الصنف بنجاح');
+    closeProductModal();
+    await loadBoProducts();
+    renderProductsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message?.includes('duplicate') || err.code === '23505'
+      ? 'الباركود ده مستخدم في صنف تاني بالفعل'
+      : (err.message || 'حصل خطأ أثناء الحفظ');
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function toggleProductActive(product) {
+  const { error } = await supabaseClient.from('products').update({ is_active: !product.is_active }).eq('id', product.id);
+  if (error) { console.error(error); showToast('تعذر تحديث حالة الصنف', true); return; }
+  showToast(product.is_active ? 'اتوقّف الصنف' : 'اتفعّل الصنف');
+  await loadBoProducts();
+  renderProductsTable();
+}
+
+// ---- Categories ----
+function renderCategoriesTable() {
+  const tbody = document.getElementById('categoriesTableBody');
+  if (boCategories.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">لسه مفيش مجموعات مضافة</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boCategories.forEach(c => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(c.name)}</td>
+      <td><span class="bo-badge ${c.is_active ? 'active' : 'inactive'}">${c.is_active ? 'مفعّلة' : 'موقّفة'}</span></td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="toggle">${c.is_active ? 'إيقاف' : 'تفعيل'}</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openCategoryModal(c));
+    tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleCategoryActive(c));
+    tbody.appendChild(tr);
+  });
+}
+
+function openCategoryModal(category) {
+  document.getElementById('categoryModalTitle').textContent = category ? 'تعديل مجموعة' : 'مجموعة جديدة';
+  document.getElementById('categoryId').value = category ? category.id : '';
+  document.getElementById('categoryName').value = category ? category.name : '';
+  document.getElementById('categoryActive').checked = category ? category.is_active : true;
+  document.getElementById('categoryModalError').classList.remove('show');
+  document.getElementById('categoryModalOverlay').classList.add('show');
+}
+
+function closeCategoryModal() {
+  document.getElementById('categoryModalOverlay').classList.remove('show');
+}
+
+async function saveCategory(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('categoryModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveCategoryBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('categoryId').value || null;
+  const payload = {
+    name: document.getElementById('categoryName').value.trim(),
+    is_active: document.getElementById('categoryActive').checked,
+  };
+
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('categories').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('categories').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'اتحدّثت المجموعة' : 'اتضافت المجموعة');
+    closeCategoryModal();
+    await loadBoCategories();
+    renderCategoriesTable();
+    populateProductCategorySelect();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حصل خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function toggleCategoryActive(category) {
+  const { error } = await supabaseClient.from('categories').update({ is_active: !category.is_active }).eq('id', category.id);
+  if (error) { console.error(error); showToast('تعذر تحديث حالة المجموعة', true); return; }
+  await loadBoCategories();
+  renderCategoriesTable();
+  populateProductCategorySelect();
 }
 </script>
 </body>
