@@ -365,8 +365,10 @@ a { color: inherit; }
     <div class="bo-main">
       <div class="bo-sidebar">
         <button class="bo-nav-item active" data-section="products">الأصناف</button>
-        <button class="bo-nav-item" data-section="categories">المجموعات</button>
+        <button class="bo-nav-item" data-section="categories">مجموعات الاصناف</button>
+        <button class="bo-nav-item" data-section="unit-types">نوع الوحدة</button>
         <button class="bo-nav-item" data-section="customers">العملاء</button>
+        <button class="bo-nav-item" data-section="customer-types">أنواع العملاء</button>
         <button class="bo-nav-item" data-section="suppliers">الموردون</button>
         <button class="bo-nav-item" data-section="purchases">فواتير الشراء</button>
         <button class="bo-nav-item" data-section="reports">التقارير</button>
@@ -411,13 +413,45 @@ a { color: inherit; }
         <!-- قسم المجموعات -->
         <div id="bo-section-categories" style="display:none;">
           <div class="bo-section-header">
-            <div class="bo-section-title">المجموعات</div>
+            <div class="bo-section-title">مجموعات الاصناف</div>
             <button class="bo-add-btn" id="addCategoryBtn">+ مجموعة جديدة</button>
           </div>
           <div class="bo-table-wrap">
             <table class="bo-table">
               <thead><tr><th>اسم المجموعة</th><th>الحالة</th><th></th></tr></thead>
               <tbody id="categoriesTableBody">
+                <tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم أنواع الوحدات -->
+        <div id="bo-section-unit-types" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">نوع الوحدة</div>
+            <button class="bo-add-btn" id="addUnitTypeBtn">+ نوع جديد</button>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>اسم الوحدة</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="unitTypesTableBody">
+                <tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم أنواع العملاء -->
+        <div id="bo-section-customer-types" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">أنواع العملاء</div>
+            <button class="bo-add-btn" id="addCustomerTypeBtn">+ نوع جديد</button>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>اسم النوع</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="customerTypesTableBody">
                 <tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
@@ -928,6 +962,48 @@ a { color: inherit; }
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelExpenseItemBtn">إلغاء</button>
         <button type="submit" class="submit-btn" id="saveExpenseItemBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: إضافة / تعديل نوع وحدة -->
+<div class="modal-overlay" id="unitTypeModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="unitTypeModalTitle">نوع جديد</div>
+    <form id="unitTypeForm">
+      <input type="hidden" id="unitTypeId">
+      <div class="field field-full"><label>اسم الوحدة</label><input type="text" id="unitTypeName" required placeholder="مثال: قطعة، كيلو، لتر..."></div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="unitTypeActive" checked style="width:auto;"> مفعّل
+        </label>
+      </div>
+      <div class="error-msg" id="unitTypeModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelUnitTypeBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveUnitTypeBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: إضافة / تعديل نوع عميل -->
+<div class="modal-overlay" id="customerTypeModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="customerTypeModalTitle">نوع جديد</div>
+    <form id="customerTypeForm">
+      <input type="hidden" id="customerTypeId">
+      <div class="field field-full"><label>اسم النوع</label><input type="text" id="customerTypeName" required placeholder="مثال: عميل عادي، عميل جملة، VIP..."></div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="customerTypeActive" checked style="width:auto;"> مفعّل
+        </label>
+      </div>
+      <div class="error-msg" id="customerTypeModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelCustomerTypeBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveCustomerTypeBtn">حفظ</button>
       </div>
     </form>
   </div>
@@ -1578,6 +1654,8 @@ async function enterBackoffice() {
   await loadBoBranches();
   await loadBoUsers();
   await loadBoExpenseItems();
+  await loadBoUnitTypes();
+  await loadBoCustomerTypes();
   renderProductsTable();
   renderCategoriesTable();
   renderCustomersTable();
@@ -1585,6 +1663,8 @@ async function enterBackoffice() {
   renderPurchasesTable();
   renderUsersTable();
   renderExpenseItemsTable();
+  renderUnitTypesTable();
+  renderCustomerTypesTable();
   populateProductCategorySelect();
 }
 
@@ -1599,6 +1679,8 @@ function bindBackofficeEvents() {
       const section = btn.dataset.section;
       document.getElementById('bo-section-products').style.display = section === 'products' ? 'block' : 'none';
       document.getElementById('bo-section-categories').style.display = section === 'categories' ? 'block' : 'none';
+      document.getElementById('bo-section-unit-types').style.display = section === 'unit-types' ? 'block' : 'none';
+      document.getElementById('bo-section-customer-types').style.display = section === 'customer-types' ? 'block' : 'none';
       document.getElementById('bo-section-customers').style.display = section === 'customers' ? 'block' : 'none';
       document.getElementById('bo-section-suppliers').style.display = section === 'suppliers' ? 'block' : 'none';
       document.getElementById('bo-section-purchases').style.display = section === 'purchases' ? 'block' : 'none';
@@ -1710,6 +1792,22 @@ function bindBackofficeEvents() {
     if (e.target.id === 'expenseItemModalOverlay') closeExpenseItemModal();
   });
   document.getElementById('expenseItemForm').addEventListener('submit', saveExpenseItem);
+
+  // ---- Unit types ----
+  document.getElementById('addUnitTypeBtn').addEventListener('click', () => openUnitTypeModal(null));
+  document.getElementById('cancelUnitTypeBtn').addEventListener('click', closeUnitTypeModal);
+  document.getElementById('unitTypeModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'unitTypeModalOverlay') closeUnitTypeModal();
+  });
+  document.getElementById('unitTypeForm').addEventListener('submit', saveUnitType);
+
+  // ---- Customer types ----
+  document.getElementById('addCustomerTypeBtn').addEventListener('click', () => openCustomerTypeModal(null));
+  document.getElementById('cancelCustomerTypeBtn').addEventListener('click', closeCustomerTypeModal);
+  document.getElementById('customerTypeModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'customerTypeModalOverlay') closeCustomerTypeModal();
+  });
+  document.getElementById('customerTypeForm').addEventListener('submit', saveCustomerType);
 
   // ---- Users ----
   document.getElementById('addUserBtn').addEventListener('click', () => openUserModal(null));
@@ -2640,6 +2738,184 @@ async function toggleExpenseItemActive(item) {
   if (error) { console.error(error); showToast('تعذر تحديث حالة البند', true); return; }
   await loadBoExpenseItems();
   renderExpenseItemsTable();
+}
+
+// ---- Unit types (نوع الوحدة) ----
+let boUnitTypes = [];
+
+async function loadBoUnitTypes() {
+  const { data, error } = await supabaseClient.from('unit_types').select('*').order('name');
+  if (error) { console.error(error); showToast('تعذر تحميل أنواع الوحدات', true); return; }
+  boUnitTypes = data || [];
+}
+
+function renderUnitTypesTable() {
+  const tbody = document.getElementById('unitTypesTableBody');
+  if (boUnitTypes.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">لسه مفيش أنواع وحدات مضافة</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boUnitTypes.forEach(x => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(x.name)}</td>
+      <td><span class="bo-badge ${x.is_active ? 'active' : 'inactive'}">${x.is_active ? 'مفعّل' : 'موقّف'}</span></td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="toggle">${x.is_active ? 'إيقاف' : 'تفعيل'}</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openUnitTypeModal(x));
+    tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleUnitTypeActive(x));
+    tbody.appendChild(tr);
+  });
+}
+
+function openUnitTypeModal(item) {
+  document.getElementById('unitTypeModalTitle').textContent = item ? 'تعديل نوع' : 'نوع جديد';
+  document.getElementById('unitTypeId').value = item ? item.id : '';
+  document.getElementById('unitTypeName').value = item ? item.name : '';
+  document.getElementById('unitTypeActive').checked = item ? item.is_active : true;
+  document.getElementById('unitTypeModalError').classList.remove('show');
+  document.getElementById('unitTypeModalOverlay').classList.add('show');
+}
+
+function closeUnitTypeModal() {
+  document.getElementById('unitTypeModalOverlay').classList.remove('show');
+}
+
+async function saveUnitType(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('unitTypeModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveUnitTypeBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('unitTypeId').value || null;
+  const payload = {
+    name: document.getElementById('unitTypeName').value.trim(),
+    is_active: document.getElementById('unitTypeActive').checked,
+  };
+
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('unit_types').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('unit_types').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'اتحدّث النوع' : 'اتضاف النوع بنجاح');
+    closeUnitTypeModal();
+    await loadBoUnitTypes();
+    renderUnitTypesTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حصل خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function toggleUnitTypeActive(item) {
+  const { error } = await supabaseClient.from('unit_types').update({ is_active: !item.is_active }).eq('id', item.id);
+  if (error) { console.error(error); showToast('تعذر تحديث حالة النوع', true); return; }
+  await loadBoUnitTypes();
+  renderUnitTypesTable();
+}
+
+// ---- Customer types (أنواع العملاء) ----
+let boCustomerTypes = [];
+
+async function loadBoCustomerTypes() {
+  const { data, error } = await supabaseClient.from('customer_types').select('*').order('name');
+  if (error) { console.error(error); showToast('تعذر تحميل أنواع العملاء', true); return; }
+  boCustomerTypes = data || [];
+}
+
+function renderCustomerTypesTable() {
+  const tbody = document.getElementById('customerTypesTableBody');
+  if (boCustomerTypes.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">لسه مفيش أنواع عملاء مضافة</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boCustomerTypes.forEach(x => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(x.name)}</td>
+      <td><span class="bo-badge ${x.is_active ? 'active' : 'inactive'}">${x.is_active ? 'مفعّل' : 'موقّف'}</span></td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="toggle">${x.is_active ? 'إيقاف' : 'تفعيل'}</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openCustomerTypeModal(x));
+    tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleCustomerTypeActive(x));
+    tbody.appendChild(tr);
+  });
+}
+
+function openCustomerTypeModal(item) {
+  document.getElementById('customerTypeModalTitle').textContent = item ? 'تعديل نوع' : 'نوع جديد';
+  document.getElementById('customerTypeId').value = item ? item.id : '';
+  document.getElementById('customerTypeName').value = item ? item.name : '';
+  document.getElementById('customerTypeActive').checked = item ? item.is_active : true;
+  document.getElementById('customerTypeModalError').classList.remove('show');
+  document.getElementById('customerTypeModalOverlay').classList.add('show');
+}
+
+function closeCustomerTypeModal() {
+  document.getElementById('customerTypeModalOverlay').classList.remove('show');
+}
+
+async function saveCustomerType(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('customerTypeModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveCustomerTypeBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('customerTypeId').value || null;
+  const payload = {
+    name: document.getElementById('customerTypeName').value.trim(),
+    is_active: document.getElementById('customerTypeActive').checked,
+  };
+
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('customer_types').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('customer_types').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'اتحدّث النوع' : 'اتضاف النوع بنجاح');
+    closeCustomerTypeModal();
+    await loadBoCustomerTypes();
+    renderCustomerTypesTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حصل خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function toggleCustomerTypeActive(item) {
+  const { error } = await supabaseClient.from('customer_types').update({ is_active: !item.is_active }).eq('id', item.id);
+  if (error) { console.error(error); showToast('تعذر تحديث حالة النوع', true); return; }
+  await loadBoCustomerTypes();
+  renderCustomerTypesTable();
 }
 
 // ---- Users ----
