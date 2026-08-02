@@ -476,6 +476,7 @@ a { color: inherit; }
               <thead>
                 <tr>
                   <th>الاسم</th>
+                  <th>النوع</th>
                   <th>التليفون</th>
                   <th>العنوان</th>
                   <th>الرصيد</th>
@@ -484,7 +485,7 @@ a { color: inherit; }
                 </tr>
               </thead>
               <tbody id="customersTableBody">
-                <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+                <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
@@ -764,7 +765,7 @@ a { color: inherit; }
         <div class="field field-full"><label>اسم الصنف</label><input type="text" id="productName" required></div>
         <div class="field"><label>المجموعة</label><select id="productCategory"><option value="">بدون مجموعة</option></select></div>
         <div class="field"><label>نوع البيع</label>
-          <select id="productUnitType"><option value="piece">بالقطعة</option><option value="weight">بالوزن</option></select>
+          <select id="productUnitType"></select>
         </div>
         <div class="field"><label>سعر الشراء</label><input type="number" id="productCost" step="0.01" min="0" value="0"></div>
         <div class="field"><label>سعر البيع</label><input type="number" id="productPrice" step="0.01" min="0" required value="0"></div>
@@ -828,6 +829,7 @@ a { color: inherit; }
       <div class="modal-grid">
         <div class="field field-full"><label>اسم العميل</label><input type="text" id="customerName" required></div>
         <div class="field"><label>رقم التليفون</label><input type="text" id="customerPhone" style="direction:ltr; text-align:right;"></div>
+        <div class="field"><label>نوع العميل</label><select id="customerType"><option value="">بدون نوع</option></select></div>
         <div class="field"><label>نقاط الولاء</label><input type="number" id="customerLoyalty" step="0.01" value="0"></div>
         <div class="field field-full"><label>العنوان</label><input type="text" id="customerAddress"></div>
         <div class="field field-full"><label>الرصيد الافتتاحي</label><input type="number" id="customerBalance" step="0.01" value="0"></div>
@@ -1855,6 +1857,24 @@ function populateProductCategorySelect() {
   });
 }
 
+function populateProductUnitTypeSelect(currentValue) {
+  const sel = document.getElementById('productUnitType');
+  sel.innerHTML = '';
+  const activeTypes = boUnitTypes.filter(u => u.is_active);
+  activeTypes.forEach(u => {
+    const opt = document.createElement('option');
+    opt.value = u.name; opt.textContent = u.name;
+    sel.appendChild(opt);
+  });
+  // لو الصنف متسجل عليه نوع وحدة قديم مش موجود في القايمة الحالية، ضيفه كخيار عشان القيمة متضيعش
+  if (currentValue && !activeTypes.some(u => u.name === currentValue)) {
+    const opt = document.createElement('option');
+    opt.value = currentValue; opt.textContent = currentValue;
+    sel.appendChild(opt);
+  }
+  sel.value = currentValue || (activeTypes[0]?.name || '');
+}
+
 function exportProductsToExcel() {
   if (boProducts.length === 0) {
     showToast('مفيش أصناف عشان تتصدّر', true);
@@ -1863,7 +1883,7 @@ function exportProductsToExcel() {
   const rows = boProducts.map(p => ({
     'اسم الصنف': p.name || '',
     'المجموعة': p.categories?.name || '',
-    'نوع الوحدة': p.unit_type === 'weight' ? 'بالوزن' : 'بالقطعة',
+    'نوع الوحدة': p.unit_type || '',
     'سعر الشراء': Number(p.cost_price) || 0,
     'سعر البيع': Number(p.sale_price) || 0,
     'سعر بيع 2': p.sale_price_2 != null ? Number(p.sale_price_2) : '',
@@ -1893,6 +1913,19 @@ function findOrCreateCategoryId(name) {
       if (error || !data) return null;
       boCategories.push(data);
       return data.id;
+    });
+}
+
+function findOrCreateUnitTypeName(name) {
+  const clean = (name || '').toString().trim();
+  if (!clean) return Promise.resolve(boUnitTypes.find(u => u.is_active)?.name || 'قطعة');
+  const existing = boUnitTypes.find(u => u.name.trim().toLowerCase() === clean.toLowerCase());
+  if (existing) return Promise.resolve(existing.name);
+  return supabaseClient.from('unit_types').insert({ name: clean, is_active: true }).select().single()
+    .then(({ data, error }) => {
+      if (error || !data) return clean;
+      boUnitTypes.push(data);
+      return data.name;
     });
 }
 
@@ -1926,8 +1959,7 @@ async function handleProductsExcelImport(e) {
       }
       try {
         const categoryId = await findOrCreateCategoryId(row['المجموعة'] || row['category']);
-        const unitRaw = (row['نوع الوحدة'] || row['unit_type'] || '').toString().trim();
-        const unitType = unitRaw === 'بالوزن' || unitRaw.toLowerCase() === 'weight' ? 'weight' : 'piece';
+        const unitType = await findOrCreateUnitTypeName(row['نوع الوحدة'] || row['unit_type']);
         const salePrice2Raw = row['سعر بيع 2'];
         const payload = {
           name,
@@ -2015,7 +2047,7 @@ function openProductModal(product) {
   document.getElementById('productId').value = product ? product.id : '';
   document.getElementById('productName').value = product ? product.name : '';
   document.getElementById('productCategory').value = product ? (product.category_id || '') : '';
-  document.getElementById('productUnitType').value = product ? product.unit_type : 'piece';
+  populateProductUnitTypeSelect(product ? product.unit_type : '');
   document.getElementById('productCost').value = product ? product.cost_price : 0;
   document.getElementById('productPrice').value = product ? product.sale_price : 0;
   document.getElementById('productPrice2').value = product?.sale_price_2 || '';
@@ -2222,7 +2254,7 @@ async function toggleCategoryActive(category) {
 let boCustomers = [];
 
 async function loadBoCustomers() {
-  const { data, error } = await supabaseClient.from('customers').select('*').order('name');
+  const { data, error } = await supabaseClient.from('customers').select('*, customer_types(name)').order('name');
   if (error) { console.error(error); showToast('تعذر تحميل العملاء', true); return; }
   boCustomers = data || [];
 }
@@ -2236,7 +2268,7 @@ function renderCustomersTable() {
   });
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">${boCustomers.length === 0 ? 'لسه مفيش عملاء مضافين' : 'مفيش عملاء مطابقين للبحث'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">${boCustomers.length === 0 ? 'لسه مفيش عملاء مضافين' : 'مفيش عملاء مطابقين للبحث'}</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
@@ -2244,6 +2276,7 @@ function renderCustomersTable() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${escapeHtml(c.name)}</td>
+      <td>${escapeHtml(c.customer_types?.name || '—')}</td>
       <td class="num">${escapeHtml(c.phone || '—')}</td>
       <td>${escapeHtml(c.address || '—')}</td>
       <td class="num">${Number(c.balance).toFixed(2)}</td>
@@ -2265,6 +2298,7 @@ function openCustomerModal(customer) {
   document.getElementById('customerId').value = customer ? customer.id : '';
   document.getElementById('customerName').value = customer ? customer.name : '';
   document.getElementById('customerPhone').value = customer?.phone || '';
+  populateCustomerTypeSelect(customer?.customer_type_id || '');
   document.getElementById('customerAddress').value = customer?.address || '';
   document.getElementById('customerLoyalty').value = customer ? customer.loyalty_points : 0;
   document.getElementById('customerBalance').value = customer ? customer.balance : 0;
@@ -2274,6 +2308,17 @@ function openCustomerModal(customer) {
 
 function closeCustomerModal() {
   document.getElementById('customerModalOverlay').classList.remove('show');
+}
+
+function populateCustomerTypeSelect(currentValue) {
+  const sel = document.getElementById('customerType');
+  sel.innerHTML = '<option value="">بدون نوع</option>';
+  boCustomerTypes.filter(t => t.is_active).forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.id; opt.textContent = t.name;
+    sel.appendChild(opt);
+  });
+  sel.value = currentValue || '';
 }
 
 async function saveCustomer(e) {
@@ -2288,6 +2333,7 @@ async function saveCustomer(e) {
   const payload = {
     name: document.getElementById('customerName').value.trim(),
     phone: document.getElementById('customerPhone').value.trim() || null,
+    customer_type_id: document.getElementById('customerType').value || null,
     address: document.getElementById('customerAddress').value.trim() || null,
     loyalty_points: Number(document.getElementById('customerLoyalty').value) || 0,
     balance: Number(document.getElementById('customerBalance').value) || 0,
