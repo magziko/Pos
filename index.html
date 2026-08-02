@@ -390,6 +390,20 @@ a { color: inherit; }
               <button class="bo-add-btn" id="addProductBtn">+ صنف جديد</button>
             </div>
           </div>
+          <div class="search-row" style="margin-bottom:14px; align-items:center;">
+            <input type="text" id="productSearchInput" placeholder="ابحث بالاسم أو الباركود...">
+            <select id="productCategoryFilter" style="padding: 12px 14px; font-size: 13.5px; min-width: 150px;">
+              <option value="">كل المجموعات</option>
+            </select>
+            <select id="productSortSelect" style="padding: 12px 14px; font-size: 13.5px; min-width: 170px;">
+              <option value="name_asc">الاسم (أ - ي)</option>
+              <option value="name_desc">الاسم (ي - أ)</option>
+              <option value="price_asc">سعر البيع (الأقل أولاً)</option>
+              <option value="price_desc">سعر البيع (الأعلى أولاً)</option>
+              <option value="newest">الأحدث إضافة</option>
+              <option value="oldest">الأقدم إضافة</option>
+            </select>
+          </div>
           <div class="bo-table-wrap">
             <table class="bo-table">
               <thead>
@@ -1708,6 +1722,9 @@ function bindBackofficeEvents() {
   document.getElementById('exportProductsBtn').addEventListener('click', exportProductsToExcel);
   document.getElementById('importProductsBtn').addEventListener('click', () => document.getElementById('productsExcelInput').click());
   document.getElementById('productsExcelInput').addEventListener('change', handleProductsExcelImport);
+  document.getElementById('productSearchInput').addEventListener('input', renderProductsTable);
+  document.getElementById('productCategoryFilter').addEventListener('change', renderProductsTable);
+  document.getElementById('productSortSelect').addEventListener('change', renderProductsTable);
   document.getElementById('cancelProductBtn').addEventListener('click', closeProductModal);
   document.getElementById('productModalOverlay').addEventListener('click', (e) => {
     if (e.target.id === 'productModalOverlay') closeProductModal();
@@ -1863,6 +1880,19 @@ function populateProductCategorySelect() {
     opt.value = c.id; opt.textContent = c.name;
     sel.appendChild(opt);
   });
+  populateProductCategoryFilter();
+}
+
+function populateProductCategoryFilter() {
+  const sel = document.getElementById('productCategoryFilter');
+  const prevValue = sel.value;
+  sel.innerHTML = '<option value="">كل المجموعات</option>';
+  boCategories.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id; opt.textContent = c.name;
+    sel.appendChild(opt);
+  });
+  sel.value = prevValue || '';
 }
 
 function populateProductUnitTypeSelect(currentValue) {
@@ -2026,8 +2056,38 @@ function renderProductsTable() {
     tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لسه مفيش أصناف مضافة</td></tr>`;
     return;
   }
+
+  const q = (document.getElementById('productSearchInput')?.value || '').trim().toLowerCase();
+  const categoryId = document.getElementById('productCategoryFilter')?.value || '';
+  const sortBy = document.getElementById('productSortSelect')?.value || 'name_asc';
+
+  let filtered = boProducts.filter(p => {
+    const matchesSearch = !q
+      || p.name.toLowerCase().includes(q)
+      || (p.product_barcodes || []).some(b => b.barcode.toLowerCase().includes(q));
+    const matchesCategory = !categoryId || p.category_id === categoryId;
+    return matchesSearch && matchesCategory;
+  });
+
+  filtered.sort((a, b) => {
+    switch (sortBy) {
+      case 'name_desc': return b.name.localeCompare(a.name, 'ar');
+      case 'price_asc': return Number(a.sale_price) - Number(b.sale_price);
+      case 'price_desc': return Number(b.sale_price) - Number(a.sale_price);
+      case 'newest': return new Date(b.created_at) - new Date(a.created_at);
+      case 'oldest': return new Date(a.created_at) - new Date(b.created_at);
+      case 'name_asc':
+      default: return a.name.localeCompare(b.name, 'ar');
+    }
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">مفيش أصناف مطابقة للبحث/الفلترة</td></tr>`;
+    return;
+  }
+
   tbody.innerHTML = '';
-  boProducts.forEach(p => {
+  filtered.forEach(p => {
     const barcodesText = (p.product_barcodes || []).map(b => b.barcode).join(', ') || '—';
     const tr = document.createElement('tr');
     tr.innerHTML = `
