@@ -789,12 +789,13 @@ a { color: inherit; }
                     <th>اسم المستخدم</th>
                     <th>الفرع</th>
                     <th>مستوى الصلاحية</th>
+                    <th>الموظف المرتبط</th>
                     <th>الحالة</th>
                     <th></th>
                   </tr>
                 </thead>
                 <tbody id="usersTableBody">
-                  <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+                  <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -1077,7 +1078,7 @@ a { color: inherit; }
         </div>
         <div class="field"><label>الفرع</label><select id="userBranch" required></select></div>
         <div class="field"><label>مستوى الصلاحية</label><select id="userRole" required></select></div>
-        <div class="field"><label>الراتب الأساسي (اختياري)</label><input type="number" id="userBaseSalary" step="0.01" min="0" value="0"></div>
+        <div class="field field-full"><label>الموظف المرتبط (اختياري)</label><select id="userEmployeeLink"><option value="">بدون ربط</option></select></div>
         <div class="field field-full">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
             <input type="checkbox" id="userActive" checked style="width:auto;"> الحساب مفعّل ويقدر يسجّل دخول
@@ -2620,16 +2621,16 @@ async function handleCustomersExcelImport(e) {
 // ---- Salaries (الرواتب) ----
 let boSalaryPayments = [];
 
-function populateSalaryEmployeeSelect(selectedUserId) {
+function populateSalaryEmployeeSelect(selectedEmployeeId) {
   const sel = document.getElementById('salaryEmployeeSelect');
   sel.innerHTML = '';
-  boUsers.forEach(u => {
+  boEmployees.forEach(emp => {
     const opt = document.createElement('option');
-    opt.value = u.id; opt.textContent = u.full_name + (u.is_active ? '' : ' (موقّف)');
-    opt.dataset.baseSalary = u.base_salary || 0;
+    opt.value = emp.id; opt.textContent = emp.full_name;
+    opt.dataset.baseSalary = emp.base_salary || 0;
     sel.appendChild(opt);
   });
-  if (selectedUserId) sel.value = selectedUserId;
+  if (selectedEmployeeId) sel.value = selectedEmployeeId;
   updateSalaryBaseDisplay();
 }
 
@@ -2675,7 +2676,7 @@ async function runSalaryFilter() {
 async function loadBoSalaries(fromDate, toDate) {
   const { data, error } = await supabaseClient
     .from('salary_payments')
-    .select('*, users_profile(full_name, base_salary)')
+    .select('*')
     .gte('payment_date', fromDate)
     .lte('payment_date', toDate)
     .order('payment_date', { ascending: false });
@@ -2695,11 +2696,12 @@ function renderSalariesTable() {
   }
   tbody.innerHTML = '';
   boSalaryPayments.forEach(x => {
+    const emp = boEmployees.find(e => e.id === x.user_id);
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="num">${escapeHtml(x.payment_date)}</td>
-      <td>${escapeHtml(x.users_profile?.full_name || '—')}</td>
-      <td class="num">${Number(x.users_profile?.base_salary || 0).toFixed(2)}</td>
+      <td>${escapeHtml(emp?.full_name || '—')}</td>
+      <td class="num">${Number(emp?.base_salary || 0).toFixed(2)}</td>
       <td class="num">${Number(x.bonus || 0).toFixed(2)}</td>
       <td class="num">${Number(x.deduction || 0).toFixed(2)}</td>
       <td class="num">${Number(x.net_amount).toFixed(2)}</td>
@@ -2726,7 +2728,7 @@ function openSalaryModal(payment) {
   const netInput = document.getElementById('salaryNetAmount');
   netInput.value = payment ? payment.net_amount : 0;
   delete netInput.dataset.touched;
-  populateSalaryEmployeeSelect(payment ? payment.user_id : (boUsers.find(u => u.is_active)?.id || boUsers[0]?.id));
+  populateSalaryEmployeeSelect(payment ? payment.user_id : boEmployees[0]?.id);
   document.getElementById('salaryModalError').classList.remove('show');
   document.getElementById('salaryModalOverlay').classList.add('show');
 }
@@ -3242,10 +3244,21 @@ function populateUserSelects(selectedRoleId, selectedBranchId) {
   if (selectedBranchId) branchSel.value = selectedBranchId;
 }
 
+function populateUserEmployeeSelect(selectedEmployeeId) {
+  const sel = document.getElementById('userEmployeeLink');
+  sel.innerHTML = '<option value="">بدون ربط</option>';
+  boEmployees.forEach(emp => {
+    const opt = document.createElement('option');
+    opt.value = emp.id; opt.textContent = emp.full_name;
+    sel.appendChild(opt);
+  });
+  sel.value = selectedEmployeeId || '';
+}
+
 async function loadBoUsers() {
   const { data, error } = await supabaseClient
     .from('users_profile')
-    .select('*, roles(id, name), branches(id, name)')
+    .select('*, roles(id, name), branches(id, name), employees(id, full_name)')
     .order('created_at', { ascending: false });
   if (error) { console.error(error); showToast('تعذر تحميل المستخدمين', true); return; }
   boUsers = data || [];
@@ -3254,7 +3267,7 @@ async function loadBoUsers() {
 function renderUsersTable() {
   const tbody = document.getElementById('usersTableBody');
   if (boUsers.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">لسه مفيش مستخدمين مضافين</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لسه مفيش مستخدمين مضافين</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
@@ -3266,6 +3279,7 @@ function renderUsersTable() {
       <td class="num">${escapeHtml(u.username || '—')}</td>
       <td>${escapeHtml(u.branches?.name || '—')}</td>
       <td>${escapeHtml(roleLabel)}</td>
+      <td>${escapeHtml(u.employees?.full_name || '—')}</td>
       <td><span class="bo-badge ${u.is_active ? 'active' : 'inactive'}">${u.is_active ? 'مفعّل' : 'موقّف'}</span></td>
       <td>
         <div class="bo-row-actions">
@@ -3289,8 +3303,8 @@ function openUserModal(user) {
   document.getElementById('userPassword').required = !user;
   document.getElementById('userPasswordHint').style.display = user ? 'block' : 'none';
   document.getElementById('userActive').checked = user ? !!user.is_active : true;
-  document.getElementById('userBaseSalary').value = user ? (user.base_salary || 0) : 0;
   populateUserSelects(user?.roles?.id, user?.branches?.id);
+  populateUserEmployeeSelect(user?.employees?.id || user?.employee_id || '');
   document.getElementById('userModalError').classList.remove('show');
   document.getElementById('userModalOverlay').classList.add('show');
 }
@@ -3315,14 +3329,14 @@ async function saveUser(e) {
   const roleId = document.getElementById('userRole').value;
   const branchId = document.getElementById('userBranch').value;
   const isActive = document.getElementById('userActive').checked;
-  const baseSalary = Number(document.getElementById('userBaseSalary').value) || 0;
+  const employeeId = document.getElementById('userEmployeeLink').value || null;
 
   try {
     if (id) {
       // تحديث مستخدم موجود: بيانات البروفايل + تغيير كلمة المرور لو اتكتبت
       const { error } = await supabaseClient
         .from('users_profile')
-        .update({ full_name: fullName, username: username || null, role_id: roleId, branch_id: branchId, is_active: isActive, base_salary: baseSalary })
+        .update({ full_name: fullName, username: username || null, role_id: roleId, branch_id: branchId, is_active: isActive, employee_id: employeeId })
         .eq('id', id);
       if (error) throw error;
 
@@ -3346,7 +3360,7 @@ async function saveUser(e) {
 
       const { error: profileError } = await supabaseClient
         .from('users_profile')
-        .insert({ id: signUpData.user.id, full_name: fullName, username, role_id: roleId, branch_id: branchId, is_active: isActive, base_salary: baseSalary });
+        .insert({ id: signUpData.user.id, full_name: fullName, username, role_id: roleId, branch_id: branchId, is_active: isActive, employee_id: employeeId });
       if (profileError) throw profileError;
 
       await adminCreateClient.auth.signOut(); // تنظيف جلسة العميل المؤقت
