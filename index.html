@@ -125,6 +125,10 @@ a { color: inherit; }
 .totals-row .num { font-weight: 700; }
 .discount-row { display: flex; gap: 8px; margin: 10px 0; }
 .discount-row input { flex: 1; padding: 8px 10px; font-size: 12.5px; text-align: center; }
+.quick-discount-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.quick-discount-btn { background: var(--surface-sunken); color: var(--ink-soft); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.quick-discount-btn:hover { background: var(--teal-100); color: var(--teal-700); }
+.quick-discount-btn.active { background: var(--teal-700); color: white; }
 .action-row { display: flex; gap: 8px; margin-top: 12px; }
 .btn-secondary { flex: 1; background: var(--surface-sunken); color: var(--ink); padding: 11px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; }
 .btn-secondary:hover { background: var(--amber-100); color: var(--amber-600); }
@@ -244,6 +248,11 @@ a { color: inherit; }
   #receiptModalOverlay { position: absolute; inset: 0; background: white; padding: 0; }
   .receipt-actions { display: none; }
   .receipt-modal-box { max-width: 100%; box-shadow: none; border: none; }
+
+  #invoiceDetailModalOverlay.show, #invoiceDetailModalOverlay.show * { visibility: visible; }
+  #invoiceDetailModalOverlay.show { position: absolute; inset: 0; background: white; padding: 0; align-items: flex-start; }
+  #invoiceDetailModalOverlay.show .modal-box { max-width: 100%; box-shadow: none; border: none; }
+  #invoiceDetailModalOverlay.show .invoice-detail-actions { display: none; }
 }
 </style>
 </head>
@@ -267,8 +276,8 @@ a { color: inherit; }
           <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="••••••••"></div>
         <button type="submit" class="submit-btn" id="loginSubmitBtn">دخول</button>
       </form>
-      <p class="footnote">لو نسيت بيانات الدخول، تواصل مع مدير النظام</p>
-      <p class="footnote"><button class="link-btn" onclick="showView('register')">أول مرة تستخدم النظام؟ أنشئ حساب أدمن</button></p>
+      <p class="footnote">إذا نسيت بيانات الدخول، يرجى التواصل مع مدير النظام</p>
+      <p class="footnote"><button class="link-btn" onclick="showView('register')">أول مرة تستخدم النظام؟ أنشئ حساب مدير</button></p>
     </div>
   </div>
 </div>
@@ -281,9 +290,9 @@ a { color: inherit; }
     <div class="auth-card">
       <div class="brand">
         <div class="brand-mark">P</div>
-        <div class="brand-text"><h1>إنشاء حساب جديد</h1><p>أول حساب هيتعمل هيكون أدمن تلقائيًا</p></div>
+        <div class="brand-text"><h1>إنشاء حساب جديد</h1><p>سيتم اعتبار أول حساب يتم إنشاؤه حساب مدير (أدمن) تلقائيًا</p></div>
       </div>
-      <div class="notice">الصفحة دي للإعداد الأولي بس. بعد ما تعمل حسابك، الأفضل تشيل اللينك ده، وباقي حسابات الموظفين تتعمل من لوحة التحكم بعد كده.</div>
+      <div class="notice">هذه الصفحة مخصصة للإعداد الأولي فقط. بعد إنشاء حسابك، يُفضّل إزالة هذا الرابط، وإنشاء باقي حسابات الموظفين من لوحة التحكم بعد ذلك.</div>
       <div class="error-msg" id="regError"></div>
       <div class="success-msg" id="regSuccess"></div>
       <form id="registerForm">
@@ -297,7 +306,7 @@ a { color: inherit; }
           <input type="password" id="regPassword" required autocomplete="new-password" placeholder="6 أحرف على الأقل" minlength="6"></div>
         <button type="submit" class="submit-btn" id="regSubmitBtn">إنشاء الحساب</button>
       </form>
-      <p class="footnote">عندك حساب بالفعل؟ <button class="link-btn" onclick="showView('login')">سجّل الدخول</button></p>
+      <p class="footnote">لديك حساب بالفعل؟ <button class="link-btn" onclick="showView('login')">سجّل الدخول</button></p>
     </div>
   </div>
 </div>
@@ -330,14 +339,17 @@ a { color: inherit; }
           <div class="cart-title">الفاتورة الحالية</div>
           <select class="customer-select" id="customerSelect"><option value="">عميل نقدي (بدون تسجيل)</option></select>
         </div>
-        <div class="cart-items" id="cartItems"><div class="cart-empty">لسه مفيش أصناف مضافة للفاتورة</div></div>
+        <div class="cart-items" id="cartItems"><div class="cart-empty">لا توجد أصناف مضافة للفاتورة حتى الآن</div></div>
         <div class="cart-footer">
           <div class="totals-row"><span>الإجمالي الفرعي</span><span class="num" id="subtotalLabel">0.00</span></div>
+          <div class="quick-discount-row" id="quickDiscountRow"></div>
           <div class="discount-row"><input type="number" id="discountInput" placeholder="خصم (قيمة)" min="0" value="0"></div>
+          <div class="totals-row" id="taxRow" style="display:none;"><span id="taxRowLabel">الضريبة</span><span class="num" id="taxLabel">0.00</span></div>
           <div class="totals-row grand"><span>الإجمالي</span><span class="num" id="totalLabel">0.00</span></div>
           <div class="action-row">
             <button class="btn-secondary" id="holdBtn">تعليق</button>
             <button class="btn-secondary" id="recallBtn">استرجاع (<span id="heldCount">0</span>)</button>
+            <button class="btn-secondary" id="saleReturnBtn">مرتجع بيع</button>
           </div>
           <button class="checkout-btn" id="checkoutBtn" disabled>إتمام البيع</button>
         </div>
@@ -367,10 +379,14 @@ a { color: inherit; }
         <button class="bo-nav-item active" data-section="products">الأصناف</button>
         <button class="bo-nav-item" data-section="categories">مجموعات الاصناف</button>
         <button class="bo-nav-item" data-section="unit-types">نوع الوحدة</button>
+        <button class="bo-nav-item" data-section="tax-rates">الضريبة</button>
+        <button class="bo-nav-item" data-section="quick-discounts">الخصومات</button>
         <button class="bo-nav-item" data-section="customers">العملاء</button>
         <button class="bo-nav-item" data-section="customer-types">أنواع العملاء</button>
         <button class="bo-nav-item" data-section="suppliers">الموردون</button>
         <button class="bo-nav-item" data-section="purchases">فواتير الشراء</button>
+        <button class="bo-nav-item" data-section="purchase-returns">مرتجعات الشراء</button>
+        <button class="bo-nav-item" data-section="sale-returns">مرتجعات البيع</button>
         <button class="bo-nav-item" data-section="reports">التقارير</button>
         <button class="bo-nav-item" data-section="expense-items">بنود المصروفات</button>
         <button class="bo-nav-item" data-section="expenses">المصروفات</button>
@@ -473,8 +489,45 @@ a { color: inherit; }
           </div>
         </div>
 
+        <!-- قسم الضريبة -->
+        <div id="bo-section-tax-rates" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">نسب الضريبة</div>
+            <div style="display:flex; align-items:center; gap:14px;">
+              <label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink-soft); cursor:pointer;">
+                <input type="checkbox" id="taxInclusiveToggle" style="width:auto;"> الأسعار شاملة الضريبة
+              </label>
+              <button class="bo-add-btn" id="addTaxRateBtn">+ نسبة جديدة</button>
+            </div>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>اسم الضريبة</th><th>النسبة %</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="taxRatesTableBody">
+                <tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم الخصومات -->
+        <div id="bo-section-quick-discounts" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">أزرار الخصم السريع (شاشة البيع)</div>
+            <button class="bo-add-btn" id="addQuickDiscountBtn">+ خصم جديد</button>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>التسمية</th><th>النوع</th><th>القيمة</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="quickDiscountsTableBody">
+                <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <div id="bo-section-soon" style="display:none;">
-          <div class="bo-empty" style="padding: 80px 20px;">القسم ده لسه هيتضاف قريب</div>
+          <div class="bo-empty" style="padding: 80px 20px;">هذا القسم سيُضاف قريبًا</div>
         </div>
 
         <!-- قسم العملاء -->
@@ -554,10 +607,62 @@ a { color: inherit; }
                   <th>المدفوع</th>
                   <th>المتبقي</th>
                   <th>التاريخ</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody id="purchasesTableBody">
+                <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم مرتجعات الشراء -->
+        <div id="bo-section-purchase-returns" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">مرتجعات الشراء</div>
+            <button class="bo-add-btn" id="addPurchaseReturnBtn">+ مرتجع شراء جديد</button>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>فاتورة الشراء</th>
+                  <th>المورد</th>
+                  <th>الإجمالي</th>
+                  <th>السبب</th>
+                  <th>التاريخ</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="purchaseReturnsTableBody">
                 <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم مرتجعات البيع -->
+        <div id="bo-section-sale-returns" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">مرتجعات البيع</div>
+            <button class="bo-add-btn" id="addSaleReturnFromBoBtn">+ مرتجع بيع جديد</button>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>فاتورة البيع</th>
+                  <th>العميل</th>
+                  <th>الإجمالي</th>
+                  <th>طريقة الاسترداد</th>
+                  <th>السبب</th>
+                  <th>التاريخ</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="saleReturnsTableBody">
+                <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
@@ -818,6 +923,9 @@ a { color: inherit; }
         <div class="field"><label>نوع البيع</label>
           <select id="productUnitType"></select>
         </div>
+        <div class="field"><label>الضريبة</label>
+          <select id="productTaxRate"><option value="">بدون ضريبة</option></select>
+        </div>
         <div class="field"><label>سعر الشراء</label><input type="number" id="productCost" step="0.01" min="0" value="0"></div>
         <div class="field"><label>سعر البيع</label><input type="number" id="productPrice" step="0.01" min="0" required value="0"></div>
         <div class="field"><label>سعر بيع 2 (اختياري)</label><input type="number" id="productPrice2" step="0.01" min="0"></div>
@@ -828,7 +936,7 @@ a { color: inherit; }
           <label>الباركود</label>
           <div class="barcode-list" id="barcodeList"></div>
           <div class="barcode-add-row">
-            <input type="text" id="newBarcodeInput" placeholder="امسح أو اكتب باركود واضغط إضافة">
+            <input type="text" id="newBarcodeInput" placeholder="امسح أو اكتب الباركود ثم اضغط إضافة">
             <button type="button" id="addBarcodeBtn">إضافة</button>
           </div>
         </div>
@@ -953,6 +1061,104 @@ a { color: inherit; }
   </div>
 </div>
 
+<!-- Modal: مرتجع بيع -->
+<div class="modal-overlay" id="saleReturnModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title">مرتجع بيع</div>
+    <form id="saleReturnForm">
+      <div class="modal-grid">
+        <div class="field">
+          <label>رقم فاتورة البيع</label>
+          <input type="number" id="saleReturnInvoiceInput" placeholder="اكتب رقم الفاتورة...">
+        </div>
+        <div class="field" style="align-self:flex-end;">
+          <button type="button" class="bo-outline-btn" id="saleReturnSearchBtn" style="width:100%;">بحث عن الفاتورة</button>
+        </div>
+      </div>
+
+      <div id="saleReturnInvoiceInfo" style="display:none; font-size:13px; color:var(--ink-soft); margin:4px 0 10px;"></div>
+
+      <div id="saleReturnLinesSection" style="display:none; margin-top:10px;">
+        <label style="display:block; font-size:13px; font-weight:500; color:var(--ink-soft); margin-bottom:6px;">الأصناف التي سيتم إرجاعها</label>
+        <div class="purchase-line-row header-row">
+          <div>الصنف</div><div>الكمية المباعة</div><div>الكمية المرتجعة</div><div>الإجمالي</div><div></div>
+        </div>
+        <div class="purchase-lines-wrap" id="saleReturnLinesWrap"></div>
+
+        <div class="purchase-totals-row">
+          <div>إجمالي المرتجع: <span class="num" id="saleReturnTotalLabel">0.00</span></div>
+        </div>
+
+        <div class="modal-grid">
+          <div class="field">
+            <label>سبب المرتجع (اختياري)</label>
+            <input type="text" id="saleReturnReasonInput" placeholder="مثال: عيب في المنتج">
+          </div>
+          <div class="field">
+            <label>طريقة الاسترداد</label>
+            <select id="saleReturnMethodSelect">
+              <option value="cash">استرداد نقدي</option>
+              <option value="credit">رصيد على حساب العميل</option>
+              <option value="exchange">استبدال بصنف آخر</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="error-msg" id="saleReturnModalError"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelSaleReturnBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveSaleReturnBtn" style="display:none;">حفظ المرتجع</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: مرتجع شراء -->
+<div class="modal-overlay" id="purchaseReturnModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title">مرتجع شراء</div>
+    <form id="purchaseReturnForm">
+      <div class="modal-grid">
+        <div class="field">
+          <label>رقم فاتورة الشراء</label>
+          <input type="number" id="purchaseReturnInvoiceInput" placeholder="اكتب رقم الفاتورة...">
+        </div>
+        <div class="field" style="align-self:flex-end;">
+          <button type="button" class="bo-outline-btn" id="purchaseReturnSearchBtn" style="width:100%;">بحث عن الفاتورة</button>
+        </div>
+      </div>
+
+      <div id="purchaseReturnInvoiceInfo" style="display:none; font-size:13px; color:var(--ink-soft); margin:4px 0 10px;"></div>
+
+      <div id="purchaseReturnLinesSection" style="display:none; margin-top:10px;">
+        <label style="display:block; font-size:13px; font-weight:500; color:var(--ink-soft); margin-bottom:6px;">الأصناف التي سيتم إرجاعها إلى المورد</label>
+        <div class="purchase-line-row header-row">
+          <div>الصنف</div><div>الكمية المشتراة</div><div>الكمية المرتجعة</div><div>الإجمالي</div><div></div>
+        </div>
+        <div class="purchase-lines-wrap" id="purchaseReturnLinesWrap"></div>
+
+        <div class="purchase-totals-row">
+          <div>إجمالي المرتجع: <span class="num" id="purchaseReturnTotalLabel">0.00</span></div>
+        </div>
+
+        <div class="field">
+          <label>سبب المرتجع (اختياري)</label>
+          <input type="text" id="purchaseReturnReasonInput" placeholder="مثال: بضاعة تالفة">
+        </div>
+      </div>
+
+      <div class="error-msg" id="purchaseReturnModalError"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelPurchaseReturnBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="savePurchaseReturnBtn" style="display:none;">حفظ المرتجع</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Modal: إضافة / تعديل دفعة راتب -->
 <div class="modal-overlay" id="salaryModalOverlay">
   <div class="modal-box">
@@ -1062,6 +1268,56 @@ a { color: inherit; }
   </div>
 </div>
 
+<!-- Modal: نسبة ضريبة جديدة/تعديل -->
+<div class="modal-overlay" id="taxRateModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="taxRateModalTitle">نسبة جديدة</div>
+    <form id="taxRateForm">
+      <input type="hidden" id="taxRateId">
+      <div class="field field-full"><label>اسم الضريبة</label><input type="text" id="taxRateName" required placeholder="مثال: ضريبة القيمة المضافة"></div>
+      <div class="field field-full"><label>النسبة %</label><input type="number" id="taxRateValue" step="0.01" min="0" max="100" required value="0"></div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="taxRateActive" checked style="width:auto;"> مفعّل
+        </label>
+      </div>
+      <div class="error-msg" id="taxRateModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelTaxRateBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveTaxRateBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: خصم سريع جديد/تعديل -->
+<div class="modal-overlay" id="quickDiscountModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="quickDiscountModalTitle">خصم جديد</div>
+    <form id="quickDiscountForm">
+      <input type="hidden" id="quickDiscountId">
+      <div class="field field-full"><label>التسمية (تظهر على الزرار)</label><input type="text" id="quickDiscountLabel" required placeholder="مثال: خصم 10%"></div>
+      <div class="field field-full"><label>نوع الخصم</label>
+        <select id="quickDiscountType">
+          <option value="percentage">نسبة %</option>
+          <option value="fixed">مبلغ ثابت</option>
+        </select>
+      </div>
+      <div class="field field-full"><label id="quickDiscountValueLabel">النسبة %</label><input type="number" id="quickDiscountValue" step="0.01" min="0" required value="0"></div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="quickDiscountActive" checked style="width:auto;"> مفعّل
+        </label>
+      </div>
+      <div class="error-msg" id="quickDiscountModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelQuickDiscountBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveQuickDiscountBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Modal: إضافة / تعديل مستخدم -->
 <div class="modal-overlay" id="userModalOverlay">
   <div class="modal-box">
@@ -1074,7 +1330,7 @@ a { color: inherit; }
           <input type="text" id="userUsername" required autocomplete="off" style="direction:ltr; text-align:right;"></div>
         <div class="field field-full" id="userPasswordField"><label>كلمة المرور</label>
           <input type="password" id="userPassword" autocomplete="new-password" placeholder="6 أحرف على الأقل" minlength="6" style="direction:ltr; text-align:right;">
-          <div id="userPasswordHint" style="font-size:12px; color:var(--ink-soft); margin-top:4px; display:none;">اتركها فارغة لو مش عايز تغيّر كلمة المرور</div>
+          <div id="userPasswordHint" style="font-size:12px; color:var(--ink-soft); margin-top:4px; display:none;">اتركها فارغة إذا كنت لا ترغب في تغيير كلمة المرور</div>
         </div>
         <div class="field"><label>الفرع</label><select id="userBranch" required></select></div>
         <div class="field"><label>مستوى الصلاحية</label><select id="userRole" required></select></div>
@@ -1123,6 +1379,18 @@ a { color: inherit; }
   </div>
 </div>
 
+<!-- Modal: عرض تفاصيل فاتورة (شراء / مرتجع شراء / مرتجع بيع) -->
+<div class="modal-overlay" id="invoiceDetailModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title" id="invoiceDetailModalTitle">تفاصيل الفاتورة</div>
+    <div id="invoiceDetailModalBody"></div>
+    <div class="modal-actions invoice-detail-actions" style="margin-top:18px;">
+      <button type="button" class="modal-cancel-btn" id="closeInvoiceDetailBtn">إغلاق</button>
+      <button type="button" class="submit-btn" id="printInvoiceDetailBtn" style="margin-top:0;">طباعة</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: فاتورة البيع (للطباعة) -->
 <div class="modal-overlay" id="receiptModalOverlay">
   <div class="modal-box receipt-modal-box">
@@ -1158,7 +1426,7 @@ function usernameToEmail(username) {
   const normalized = (username || '').trim().toLowerCase().replace(/[^a-z0-9._-]/g, '');
   return normalized + '@' + USERNAME_EMAIL_DOMAIN;
 }
-// خانة تسجيل الدخول بتقبل اسم مستخدم عادي، أو إيميل حقيقي (للحسابات القديمة اللي اتعملت قبل التعديل ده)
+// حقل تسجيل الدخول يقبل اسم مستخدم عادي، أو بريدًا إلكترونيًا حقيقيًا (للحسابات القديمة التي أُنشئت قبل هذا التعديل)
 function loginIdentifierToEmail(identifier) {
   const trimmed = (identifier || '').trim();
   if (trimmed.includes('@')) return trimmed.toLowerCase();
@@ -1239,7 +1507,7 @@ loginForm.addEventListener('submit', async (e) => {
 
   const profile = await getUserProfile(data.user.id);
   if (!profile || !profile.is_active) {
-    loginError.textContent = 'الحساب غير مفعّل، تواصل مع مدير النظام';
+    loginError.textContent = 'الحساب غير مفعّل، يرجى التواصل مع مدير النظام';
     loginError.classList.add('show');
     await supabaseClient.auth.signOut();
     loginSubmitBtn.disabled = false;
@@ -1279,7 +1547,7 @@ registerForm.addEventListener('submit', async (e) => {
     if (signUpError) throw signUpError;
 
     if (!signUpData.session) {
-      regSuccess.textContent = 'اتعمل الحساب. لو مفعّل تأكيد البريد الإلكتروني في إعدادات Supabase، تحقق من بريدك وفعّل الحساب قبل ما تسجّل دخول.';
+      regSuccess.textContent = 'تم إنشاء الحساب. إذا كان تأكيد البريد الإلكتروني مفعّلاً في إعدادات Supabase، فتحقق من بريدك وفعّل الحساب قبل تسجيل الدخول.';
       regSuccess.classList.add('show');
       regSubmitBtn.disabled = false;
       regSubmitBtn.textContent = 'إنشاء الحساب';
@@ -1324,8 +1592,8 @@ registerForm.addEventListener('submit', async (e) => {
     if (profileError) throw profileError;
 
     regSuccess.textContent = isFirstUser
-      ? 'اتعمل حساب الأدمن بنجاح! هتتحول لشاشة المبيعات...'
-      : 'اتعمل الحساب بنجاح! هتتحول لشاشة المبيعات...';
+      ? 'تم إنشاء حساب المدير بنجاح! سيتم التحويل إلى شاشة المبيعات...'
+      : 'تم إنشاء الحساب بنجاح! سيتم التحويل إلى شاشة المبيعات...';
     regSuccess.classList.add('show');
 
     currentProfile = await getUserProfile(userId);
@@ -1333,7 +1601,7 @@ registerForm.addEventListener('submit', async (e) => {
 
   } catch (err) {
     console.error(err);
-    regError.textContent = err.message || 'حصل خطأ أثناء إنشاء الحساب، حاول تاني';
+    regError.textContent = err.message || 'حدث خطأ أثناء إنشاء الحساب، يرجى المحاولة مرة أخرى';
     regError.classList.add('show');
     regSubmitBtn.disabled = false;
     regSubmitBtn.textContent = 'إنشاء الحساب';
@@ -1365,6 +1633,10 @@ function cachePosEls() {
   posEls.subtotalLabel = document.getElementById('subtotalLabel');
   posEls.totalLabel = document.getElementById('totalLabel');
   posEls.discountInput = document.getElementById('discountInput');
+  posEls.taxRow = document.getElementById('taxRow');
+  posEls.taxRowLabel = document.getElementById('taxRowLabel');
+  posEls.taxLabel = document.getElementById('taxLabel');
+  posEls.quickDiscountRow = document.getElementById('quickDiscountRow');
   posEls.holdBtn = document.getElementById('holdBtn');
   posEls.recallBtn = document.getElementById('recallBtn');
   posEls.heldCount = document.getElementById('heldCount');
@@ -1385,9 +1657,10 @@ async function enterPos() {
   startClock();
   updateHeldCount();
   renderCart();
-  await Promise.all([loadCategories(), loadProducts(), loadCustomers(), loadStockBalances()]);
+  await Promise.all([loadCategories(), loadProducts(), loadCustomers(), loadStockBalances(), loadQuickDiscounts(), loadTaxInclusiveSetting()]);
   renderCategories();
   renderProducts();
+  renderQuickDiscountButtons();
 }
 
 function startClock() {
@@ -1412,7 +1685,7 @@ function bindPosEvents() {
   posEls.discountInput.addEventListener('input', renderCart);
 
   posEls.holdBtn.addEventListener('click', () => {
-    if (cart.length === 0) return showToast('الفاتورة فاضية، مفيش حاجة تتعلّق', true);
+    if (cart.length === 0) return showToast('الفاتورة فارغة، لا يوجد ما يمكن تعليقه', true);
     heldOrders.push({
       id: crypto.randomUUID(), time: new Date().toISOString(),
       cart: cart.map(l => ({ productId: l.product.id, name: l.product.name, quantity: l.quantity, unitPrice: l.unitPrice })),
@@ -1421,12 +1694,13 @@ function bindPosEvents() {
     });
     localStorage.setItem('pos_held_orders', JSON.stringify(heldOrders));
     cart = []; posEls.discountInput.value = 0;
+    resetQuickDiscountSelection();
     renderCart(); updateHeldCount();
-    showToast('اتعلّقت الفاتورة');
+    showToast('تم تعليق الفاتورة');
   });
 
   posEls.recallBtn.addEventListener('click', () => {
-    if (heldOrders.length === 0) return showToast('مفيش فواتير معلّقة', true);
+    if (heldOrders.length === 0) return showToast('لا توجد فواتير معلّقة', true);
     const last = heldOrders.pop();
     localStorage.setItem('pos_held_orders', JSON.stringify(heldOrders));
     cart = last.cart.map(l => ({
@@ -1434,9 +1708,10 @@ function bindPosEvents() {
       quantity: l.quantity, unitPrice: l.unitPrice,
     }));
     posEls.discountInput.value = last.discount || 0;
+    resetQuickDiscountSelection();
     if (last.customerId) posEls.customerSelect.value = last.customerId;
     renderCart(); updateHeldCount();
-    showToast('استرجعت آخر فاتورة معلّقة');
+    showToast('تم استرجاع آخر فاتورة معلّقة');
   });
 
   posEls.checkoutBtn.addEventListener('click', doCheckout);
@@ -1445,6 +1720,14 @@ function bindPosEvents() {
     document.getElementById('receiptModalOverlay').classList.remove('show');
   });
   document.getElementById('printReceiptBtn').addEventListener('click', () => window.print());
+
+  document.getElementById('saleReturnBtn').addEventListener('click', openSaleReturnModal);
+  document.getElementById('cancelSaleReturnBtn').addEventListener('click', closeSaleReturnModal);
+  document.getElementById('saleReturnModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'saleReturnModalOverlay') closeSaleReturnModal();
+  });
+  document.getElementById('saleReturnSearchBtn').addEventListener('click', searchSaleForReturn);
+  document.getElementById('saleReturnForm').addEventListener('submit', saveSaleReturn);
 }
 
 async function loadCategories() {
@@ -1456,7 +1739,7 @@ async function loadCategories() {
 async function loadProducts() {
   const { data, error } = await supabaseClient
     .from('products')
-    .select('id, name, category_id, sale_price, unit_type, image_url, product_barcodes(barcode)')
+    .select('id, name, category_id, sale_price, unit_type, image_url, tax_rate_id, tax_rates(rate), product_barcodes(barcode)')
     .eq('is_active', true).order('name');
   if (error) {
     console.error(error);
@@ -1523,7 +1806,7 @@ function renderProducts() {
     const barcodeMatch = (p.product_barcodes || []).some(b => b.barcode === q);
     return nameMatch || barcodeMatch;
   });
-  if (filtered.length === 0) { posEls.productGrid.innerHTML = `<div class="empty-state">مفيش أصناف مطابقة</div>`; return; }
+  if (filtered.length === 0) { posEls.productGrid.innerHTML = `<div class="empty-state">لا توجد أصناف مطابقة</div>`; return; }
   posEls.productGrid.innerHTML = '';
   filtered.forEach(p => {
     const card = document.createElement('button');
@@ -1566,16 +1849,81 @@ function changeQty(productId, delta) {
 function confirmStockIfNeeded(product, requestedQty) {
   const available = availableStock(product.id);
   if (requestedQty <= available) return true;
-  return confirm(`الرصيد المتاح من "${product.name}" هو ${available} بس، وطالب ${requestedQty}. متأكد عايز تكمل البيع؟`);
+  return confirm(`الرصيد المتاح من "${product.name}" هو ${available} فقط، والمطلوب ${requestedQty}. هل تريد إتمام عملية البيع؟`);
 }
 
 function removeLine(productId) { cart = cart.filter(l => l.product.id !== productId); renderCart(); }
 function calcSubtotal() { return cart.reduce((s, l) => s + l.quantity * l.unitPrice, 0); }
-function calcTotal() { const d = Number(posEls.discountInput.value) || 0; return Math.max(0, calcSubtotal() - d); }
+function calcTaxTotal() {
+  return cart.reduce((s, l) => {
+    const rate = Number(l.product.tax_rates?.rate) || 0;
+    if (!rate) return s;
+    const lineTotal = l.quantity * l.unitPrice;
+    // لو الأسعار شاملة الضريبة، الضريبة جزء من السعر مش إضافة عليه
+    if (taxInclusive) return s + lineTotal * (rate / (100 + rate));
+    return s + lineTotal * (rate / 100);
+  }, 0);
+}
+function calcTotal() {
+  const d = Number(posEls.discountInput.value) || 0;
+  const subtotal = calcSubtotal();
+  if (taxInclusive) return Math.max(0, subtotal - d);
+  return Math.max(0, subtotal - d + calcTaxTotal());
+}
+
+let taxInclusive = false;
+async function loadTaxInclusiveSetting() {
+  const { data, error } = await supabaseClient.from('settings').select('value').eq('key', 'tax_inclusive').maybeSingle();
+  if (error) { console.error(error); return; }
+  taxInclusive = data ? (data.value === true || data.value === 'true') : false;
+}
+
+let activeQuickDiscounts = [];
+let selectedQuickDiscount = null;
+async function loadQuickDiscounts() {
+  const { data, error } = await supabaseClient.from('quick_discounts').select('*').eq('is_active', true).order('value');
+  if (error) { console.error(error); activeQuickDiscounts = []; return; }
+  activeQuickDiscounts = data || [];
+}
+function renderQuickDiscountButtons() {
+  if (!posEls.quickDiscountRow) return;
+  posEls.quickDiscountRow.innerHTML = '';
+  activeQuickDiscounts.forEach(d => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'quick-discount-btn';
+    btn.dataset.id = d.id;
+    btn.textContent = d.label;
+    btn.addEventListener('click', () => applyQuickDiscount(d));
+    posEls.quickDiscountRow.appendChild(btn);
+  });
+}
+function applyQuickDiscount(d) {
+  // الضغط على نفس الزرار المفعّل يلغي الخصم ويفك القفل
+  if (selectedQuickDiscount && selectedQuickDiscount.id === d.id) {
+    selectedQuickDiscount = null;
+    posEls.discountInput.value = 0;
+    posEls.discountInput.readOnly = false;
+    document.querySelectorAll('.quick-discount-btn').forEach(b => b.classList.remove('active'));
+    renderCart();
+    return;
+  }
+  selectedQuickDiscount = d;
+  const value = d.discount_type === 'fixed' ? Number(d.value) : calcSubtotal() * (Number(d.value) / 100);
+  posEls.discountInput.value = value.toFixed(2);
+  posEls.discountInput.readOnly = true;
+  document.querySelectorAll('.quick-discount-btn').forEach(b => b.classList.toggle('active', b.dataset.id === d.id));
+  renderCart();
+}
+function resetQuickDiscountSelection() {
+  selectedQuickDiscount = null;
+  posEls.discountInput.readOnly = false;
+  document.querySelectorAll('.quick-discount-btn').forEach(b => b.classList.remove('active'));
+}
 
 function renderCart() {
   if (cart.length === 0) {
-    posEls.cartItems.innerHTML = `<div class="cart-empty">لسه مفيش أصناف مضافة للفاتورة</div>`;
+    posEls.cartItems.innerHTML = `<div class="cart-empty">لا توجد أصناف مضافة للفاتورة حتى الآن</div>`;
   } else {
     posEls.cartItems.innerHTML = '';
     cart.forEach(line => {
@@ -1599,9 +1947,14 @@ function renderCart() {
     });
   }
   posEls.subtotalLabel.textContent = calcSubtotal().toFixed(2);
+  const taxTotal = calcTaxTotal();
+  posEls.taxRow.style.display = taxTotal > 0 ? 'flex' : 'none';
+  posEls.taxRowLabel.textContent = taxInclusive ? 'الضريبة (شاملة ضمن السعر)' : 'الضريبة';
+  posEls.taxLabel.textContent = taxTotal.toFixed(2);
   posEls.totalLabel.textContent = calcTotal().toFixed(2);
   posEls.checkoutBtn.disabled = cart.length === 0;
 }
+
 
 function updateHeldCount() { posEls.heldCount.textContent = heldOrders.length; }
 
@@ -1621,6 +1974,7 @@ async function doCheckout() {
   try {
     const subtotal = calcSubtotal();
     const discount = Number(posEls.discountInput.value) || 0;
+    const tax = calcTaxTotal();
     const total = calcTotal();
     const customerId = posEls.customerSelect.value || null;
 
@@ -1628,7 +1982,7 @@ async function doCheckout() {
       .from('sales')
       .insert({
         branch_id: currentProfile.branch_id, user_id: currentProfile.id, customer_id: customerId,
-        status: 'completed', subtotal, discount, tax: 0, total, paid_amount: total, remaining: 0,
+        status: 'completed', subtotal, discount, tax, total, paid_amount: total, remaining: 0,
       }).select().single();
     if (saleError) throw saleError;
 
@@ -1658,16 +2012,17 @@ async function doCheckout() {
       branchName: currentProfile.branches?.name || '',
       customerName,
       lines: cart.map(l => ({ name: l.product.name, quantity: l.quantity, unitPrice: l.unitPrice })),
-      subtotal, discount, total,
+      subtotal, discount, tax, total,
     });
 
     cart = []; posEls.discountInput.value = 0; posEls.customerSelect.value = '';
+    resetQuickDiscountSelection();
     renderCart();
     await loadStockBalances();
     renderProducts();
   } catch (err) {
     console.error(err);
-    showToast('حصل خطأ أثناء إتمام البيع، حاول تاني', true);
+    showToast('حدث خطأ أثناء إتمام عملية البيع، يرجى المحاولة مرة أخرى', true);
   } finally {
     posEls.checkoutBtn.disabled = cart.length === 0;
     posEls.checkoutBtn.textContent = 'إتمام البيع';
@@ -1702,11 +2057,180 @@ function showReceipt(sale) {
     <div class="r-divider"></div>
     <div class="r-row"><span>الإجمالي الفرعي</span><span class="num">${sale.subtotal.toFixed(2)}</span></div>
     ${sale.discount > 0 ? `<div class="r-row"><span>الخصم</span><span class="num">-${sale.discount.toFixed(2)}</span></div>` : ''}
+    ${sale.tax > 0 ? `<div class="r-row"><span>${taxInclusive ? 'منها ضريبة' : 'الضريبة'}</span><span class="num">${sale.tax.toFixed(2)}</span></div>` : ''}
     <div class="r-total-row"><span>الإجمالي</span><span class="num">${sale.total.toFixed(2)}</span></div>
     <div class="r-footer">شكرًا لتعاملكم معنا 🌿</div>
   `;
 
   document.getElementById('receiptModalOverlay').classList.add('show');
+}
+
+// ------------------------------------------------------------
+// مرتجع بيع (من شاشة الكاشير)
+// ------------------------------------------------------------
+let saleReturnSale = null;
+let saleReturnLines = []; // [{ saleItemId, productId, name, soldQty, unitPrice, returnQty }]
+
+function openSaleReturnModal() {
+  saleReturnSale = null;
+  saleReturnLines = [];
+  document.getElementById('saleReturnInvoiceInput').value = '';
+  document.getElementById('saleReturnInvoiceInfo').style.display = 'none';
+  document.getElementById('saleReturnLinesSection').style.display = 'none';
+  document.getElementById('saveSaleReturnBtn').style.display = 'none';
+  document.getElementById('saleReturnReasonInput').value = '';
+  document.getElementById('saleReturnMethodSelect').value = 'cash';
+  document.getElementById('saleReturnModalError').classList.remove('show');
+  document.getElementById('saleReturnModalOverlay').classList.add('show');
+}
+
+function closeSaleReturnModal() {
+  document.getElementById('saleReturnModalOverlay').classList.remove('show');
+}
+
+async function searchSaleForReturn() {
+  const errEl = document.getElementById('saleReturnModalError');
+  errEl.classList.remove('show');
+  const invoiceNumber = Number(document.getElementById('saleReturnInvoiceInput').value);
+  if (!invoiceNumber) { errEl.textContent = 'اكتب رقم فاتورة صحيح'; errEl.classList.add('show'); return; }
+
+  const { data: sale, error: saleError } = await supabaseClient
+    .from('sales')
+    .select('*, customers(name), sale_items(*, products(name))')
+    .eq('invoice_number', invoiceNumber)
+    .maybeSingle();
+
+  if (saleError || !sale) {
+    errEl.textContent = 'لا توجد فاتورة بيع بهذا الرقم';
+    errEl.classList.add('show');
+    document.getElementById('saleReturnInvoiceInfo').style.display = 'none';
+    document.getElementById('saleReturnLinesSection').style.display = 'none';
+    document.getElementById('saveSaleReturnBtn').style.display = 'none';
+    return;
+  }
+
+  saleReturnSale = sale;
+  const date = new Date(sale.created_at).toLocaleDateString('ar-EG');
+  const infoEl = document.getElementById('saleReturnInvoiceInfo');
+  infoEl.textContent = `العميل: ${sale.customers?.name || 'عميل نقدي'} — الإجمالي: ${Number(sale.total).toFixed(2)} — التاريخ: ${date}`;
+  infoEl.style.display = 'block';
+
+  saleReturnLines = (sale.sale_items || []).map(si => ({
+    saleItemId: si.id, productId: si.product_id, name: si.products?.name || '—',
+    soldQty: Number(si.quantity), unitPrice: Number(si.unit_price), returnQty: 0,
+  }));
+
+  renderSaleReturnLines();
+  document.getElementById('saleReturnLinesSection').style.display = 'block';
+  document.getElementById('saveSaleReturnBtn').style.display = 'inline-block';
+}
+
+function renderSaleReturnLines() {
+  const wrap = document.getElementById('saleReturnLinesWrap');
+  wrap.innerHTML = '';
+  saleReturnLines.forEach((line) => {
+    const row = document.createElement('div');
+    row.className = 'purchase-line-row';
+
+    const nameDiv = document.createElement('div');
+    nameDiv.textContent = line.name;
+
+    const soldDiv = document.createElement('div');
+    soldDiv.className = 'num';
+    soldDiv.textContent = line.soldQty;
+
+    const qtyInput = document.createElement('input');
+    qtyInput.type = 'number'; qtyInput.min = '0'; qtyInput.max = String(line.soldQty); qtyInput.step = '0.001';
+    qtyInput.value = line.returnQty;
+    qtyInput.addEventListener('input', () => {
+      let v = Number(qtyInput.value) || 0;
+      if (v > line.soldQty) { v = line.soldQty; qtyInput.value = v; }
+      if (v < 0) { v = 0; qtyInput.value = v; }
+      line.returnQty = v;
+      row.querySelector('.purchase-line-total').textContent = (line.returnQty * line.unitPrice).toFixed(2);
+      updateSaleReturnTotal();
+    });
+
+    const totalDiv = document.createElement('div');
+    totalDiv.className = 'purchase-line-total num';
+    totalDiv.textContent = (line.returnQty * line.unitPrice).toFixed(2);
+
+    const emptyDiv = document.createElement('div');
+
+    row.appendChild(nameDiv);
+    row.appendChild(soldDiv);
+    row.appendChild(qtyInput);
+    row.appendChild(totalDiv);
+    row.appendChild(emptyDiv);
+    wrap.appendChild(row);
+  });
+  updateSaleReturnTotal();
+}
+
+function calcSaleReturnTotal() {
+  return saleReturnLines.reduce((s, l) => s + l.returnQty * l.unitPrice, 0);
+}
+
+function updateSaleReturnTotal() {
+  document.getElementById('saleReturnTotalLabel').textContent = calcSaleReturnTotal().toFixed(2);
+}
+
+async function saveSaleReturn(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('saleReturnModalError');
+  errEl.classList.remove('show');
+
+  if (!saleReturnSale) { errEl.textContent = 'يرجى البحث عن الفاتورة أولاً'; errEl.classList.add('show'); return; }
+
+  const validLines = saleReturnLines.filter(l => l.returnQty > 0);
+  if (validLines.length === 0) { errEl.textContent = 'حدد كمية مرتجعة لصنف واحد على الأقل'; errEl.classList.add('show'); return; }
+
+  const saveBtn = document.getElementById('saveSaleReturnBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  try {
+    const total = calcSaleReturnTotal();
+    const reason = document.getElementById('saleReturnReasonInput').value.trim() || null;
+    const refundMethod = document.getElementById('saleReturnMethodSelect').value;
+
+    const { data: saleReturn, error: srError } = await supabaseClient
+      .from('sale_returns')
+      .insert({
+        sale_id: saleReturnSale.id, branch_id: currentProfile.branch_id, user_id: currentProfile.id,
+        customer_id: saleReturnSale.customer_id, reason, refund_method: refundMethod, total,
+      }).select().single();
+    if (srError) throw srError;
+
+    const returnItems = validLines.map(l => ({
+      sale_return_id: saleReturn.id, sale_item_id: l.saleItemId, product_id: l.productId,
+      quantity: l.returnQty, unit_price: l.unitPrice, total: l.returnQty * l.unitPrice,
+    }));
+    const { error: itemsError } = await supabaseClient.from('sale_return_items').insert(returnItems);
+    if (itemsError) throw itemsError;
+
+    // لو الاسترداد رصيد على حساب العميل، يتحسم من رصيده (يقل مديونيته أو يزيد له رصيد)
+    if (refundMethod === 'credit' && saleReturnSale.customer_id) {
+      const { data: customer } = await supabaseClient.from('customers').select('balance').eq('id', saleReturnSale.customer_id).single();
+      const newBalance = (Number(customer?.balance) || 0) - total;
+      await supabaseClient.from('customers').update({ balance: newBalance }).eq('id', saleReturnSale.customer_id);
+    }
+
+    showToast('تم تسجيل مرتجع البيع وتحديث المخزون تلقائيًا');
+    closeSaleReturnModal();
+    await loadStockBalances();
+    renderProducts();
+    if (document.getElementById('bo-section-sale-returns')?.style.display === 'block') {
+      await loadBoSaleReturns(); renderSaleReturnsTable();
+    }
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = 'حدث خطأ أثناء حفظ المرتجع، يرجى المحاولة مرة أخرى';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ المرتجع';
+  }
 }
 
 // ------------------------------------------------------------
@@ -1737,6 +2261,9 @@ async function enterBackoffice() {
   await loadBoExpenseItems();
   await loadBoUnitTypes();
   await loadBoCustomerTypes();
+  await loadBoTaxRates();
+  await loadBoQuickDiscounts();
+  await loadTaxInclusiveSetting();
   renderProductsTable();
   renderCategoriesTable();
   renderCustomersTable();
@@ -1747,6 +2274,9 @@ async function enterBackoffice() {
   renderExpenseItemsTable();
   renderUnitTypesTable();
   renderCustomerTypesTable();
+  renderTaxRatesTable();
+  renderQuickDiscountsTable();
+  document.getElementById('taxInclusiveToggle').checked = taxInclusive;
   populateProductCategorySelect();
 }
 
@@ -1762,10 +2292,16 @@ function bindBackofficeEvents() {
       document.getElementById('bo-section-products').style.display = section === 'products' ? 'block' : 'none';
       document.getElementById('bo-section-categories').style.display = section === 'categories' ? 'block' : 'none';
       document.getElementById('bo-section-unit-types').style.display = section === 'unit-types' ? 'block' : 'none';
+      document.getElementById('bo-section-tax-rates').style.display = section === 'tax-rates' ? 'block' : 'none';
+      document.getElementById('bo-section-quick-discounts').style.display = section === 'quick-discounts' ? 'block' : 'none';
       document.getElementById('bo-section-customer-types').style.display = section === 'customer-types' ? 'block' : 'none';
       document.getElementById('bo-section-customers').style.display = section === 'customers' ? 'block' : 'none';
       document.getElementById('bo-section-suppliers').style.display = section === 'suppliers' ? 'block' : 'none';
       document.getElementById('bo-section-purchases').style.display = section === 'purchases' ? 'block' : 'none';
+      document.getElementById('bo-section-purchase-returns').style.display = section === 'purchase-returns' ? 'block' : 'none';
+      document.getElementById('bo-section-sale-returns').style.display = section === 'sale-returns' ? 'block' : 'none';
+      if (section === 'purchase-returns') { loadBoPurchaseReturns().then(renderPurchaseReturnsTable); }
+      if (section === 'sale-returns') { loadBoSaleReturns().then(renderSaleReturnsTable); }
       document.getElementById('bo-section-reports').style.display = section === 'reports' ? 'block' : 'none';
       document.getElementById('bo-section-soon').style.display = section === 'soon' ? 'block' : 'none';
       document.getElementById('bo-section-users').style.display = section === 'users' ? 'block' : 'none';
@@ -1836,6 +2372,25 @@ function bindBackofficeEvents() {
   document.getElementById('purchasePaid').addEventListener('input', updatePurchaseTotals);
   document.getElementById('purchaseForm').addEventListener('submit', savePurchase);
 
+  // ---- Purchase return modal ----
+  document.getElementById('addPurchaseReturnBtn').addEventListener('click', openPurchaseReturnModal);
+  document.getElementById('cancelPurchaseReturnBtn').addEventListener('click', closePurchaseReturnModal);
+  document.getElementById('purchaseReturnModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'purchaseReturnModalOverlay') closePurchaseReturnModal();
+  });
+  document.getElementById('purchaseReturnSearchBtn').addEventListener('click', searchPurchaseForReturn);
+  document.getElementById('purchaseReturnForm').addEventListener('submit', savePurchaseReturn);
+
+  // ---- Sale return (accessible from backoffice too) ----
+  document.getElementById('addSaleReturnFromBoBtn').addEventListener('click', openSaleReturnModal);
+
+  // ---- Invoice detail modal (read-only view) ----
+  document.getElementById('closeInvoiceDetailBtn').addEventListener('click', closeInvoiceDetailModal);
+  document.getElementById('printInvoiceDetailBtn').addEventListener('click', () => window.print());
+  document.getElementById('invoiceDetailModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'invoiceDetailModalOverlay') closeInvoiceDetailModal();
+  });
+
   // ---- Salaries ----
   document.getElementById('addSalaryBtn').addEventListener('click', () => openSalaryModal(null));
   document.getElementById('cancelSalaryBtn').addEventListener('click', closeSalaryModal);
@@ -1890,6 +2445,37 @@ function bindBackofficeEvents() {
   });
   document.getElementById('unitTypeForm').addEventListener('submit', saveUnitType);
 
+  // ---- Tax rates ----
+  document.getElementById('addTaxRateBtn').addEventListener('click', () => openTaxRateModal(null));
+  document.getElementById('cancelTaxRateBtn').addEventListener('click', closeTaxRateModal);
+  document.getElementById('taxRateModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'taxRateModalOverlay') closeTaxRateModal();
+  });
+  document.getElementById('taxRateForm').addEventListener('submit', saveTaxRate);
+
+  // ---- Quick discounts ----
+  document.getElementById('addQuickDiscountBtn').addEventListener('click', () => openQuickDiscountModal(null));
+  document.getElementById('cancelQuickDiscountBtn').addEventListener('click', closeQuickDiscountModal);
+  document.getElementById('quickDiscountModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'quickDiscountModalOverlay') closeQuickDiscountModal();
+  });
+  document.getElementById('quickDiscountForm').addEventListener('submit', saveQuickDiscount);
+  document.getElementById('quickDiscountType').addEventListener('change', updateQuickDiscountValueLabel);
+
+  // ---- إعداد السعر شامل الضريبة ----
+  document.getElementById('taxInclusiveToggle').addEventListener('change', async (e) => {
+    const checked = e.target.checked;
+    const { error } = await supabaseClient.from('settings').upsert({ key: 'tax_inclusive', value: checked });
+    if (error) {
+      console.error(error);
+      showToast('تعذر تحديث الإعداد', true);
+      e.target.checked = !checked;
+      return;
+    }
+    taxInclusive = checked;
+    showToast('تم تحديث الإعداد بنجاح');
+  });
+
   // ---- Customer types ----
   document.getElementById('addCustomerTypeBtn').addEventListener('click', () => openCustomerTypeModal(null));
   document.getElementById('cancelCustomerTypeBtn').addEventListener('click', closeCustomerTypeModal);
@@ -1931,7 +2517,7 @@ function bindBackofficeEvents() {
 async function loadBoProducts() {
   const { data, error } = await supabaseClient
     .from('products')
-    .select('*, categories(name), product_barcodes(id, barcode)')
+    .select('*, categories(name), tax_rates(name, rate), product_barcodes(id, barcode)')
     .order('created_at', { ascending: false });
   if (error) { console.error(error); showToast('تعذر تحميل الأصناف', true); return; }
   boProducts = data || [];
@@ -1984,9 +2570,20 @@ function populateProductUnitTypeSelect(currentValue) {
   sel.value = currentValue || (activeTypes[0]?.name || '');
 }
 
+function populateProductTaxRateSelect(currentValue) {
+  const sel = document.getElementById('productTaxRate');
+  sel.innerHTML = '<option value="">بدون ضريبة</option>';
+  boTaxRates.filter(t => t.is_active).forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.id; opt.textContent = `${t.name} (${t.rate}%)`;
+    sel.appendChild(opt);
+  });
+  sel.value = currentValue || '';
+}
+
 function exportProductsToExcel() {
   if (boProducts.length === 0) {
-    showToast('مفيش أصناف عشان تتصدّر', true);
+    showToast('لا توجد أصناف لتصديرها', true);
     return;
   }
   const rows = boProducts.map(p => ({
@@ -2009,7 +2606,7 @@ function exportProductsToExcel() {
   XLSX.utils.book_append_sheet(wb, ws, 'الأصناف');
   const dateStr = new Date().toISOString().slice(0, 10);
   XLSX.writeFile(wb, `الأصناف-${dateStr}.xlsx`);
-  showToast('اتصدّر ملف الإكسل بنجاح');
+  showToast('تم تصدير ملف الإكسل بنجاح');
 }
 
 function findOrCreateCategoryId(name) {
@@ -2052,7 +2649,7 @@ async function handleProductsExcelImport(e) {
     const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
     if (rows.length === 0) {
-      showToast('الملف فاضي، مفيش صفوف تتستورد', true);
+      showToast('الملف فارغ، لا توجد صفوف لاستيرادها', true);
       return;
     }
 
@@ -2090,13 +2687,13 @@ async function handleProductsExcelImport(e) {
             .map(b => ({ product_id: newProduct.id, barcode: b }));
           if (barcodes.length > 0) {
             const { error: bcError } = await supabaseClient.from('product_barcodes').insert(barcodes);
-            if (bcError) errors.push(`صف ${i + 2}: الباركود اتكرر أو حصل خطأ فيه`);
+            if (bcError) errors.push(`صف ${i + 2}: الباركود مكرر أو حدث به خطأ`);
           }
         }
         successCount++;
       } catch (err) {
         console.error(err);
-        errors.push(`صف ${i + 2} (${name}): ${err.message || 'حصل خطأ'}`);
+        errors.push(`صف ${i + 2} (${name}): ${err.message || 'حدث خطأ'}`);
       }
     }
 
@@ -2106,9 +2703,9 @@ async function handleProductsExcelImport(e) {
     renderProductsTable();
 
     if (errors.length === 0) {
-      showToast(`اتضاف ${successCount} صنف بنجاح`);
+      showToast(`تمت إضافة ${successCount} صنف بنجاح`);
     } else {
-      showToast(`اتضاف ${successCount} صنف، وفشل ${errors.length}`, errors.length === rows.length);
+      showToast(`تمت إضافة ${successCount} صنف، وفشلت إضافة ${errors.length}`, errors.length === rows.length);
       console.warn('أخطاء الاستيراد:', errors);
     }
   } catch (err) {
@@ -2124,7 +2721,7 @@ async function handleProductsExcelImport(e) {
 function renderProductsTable() {
   const tbody = document.getElementById('productsTableBody');
   if (boProducts.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لسه مفيش أصناف مضافة</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لا توجد أصناف مضافة حتى الآن</td></tr>`;
     return;
   }
 
@@ -2153,7 +2750,7 @@ function renderProductsTable() {
   });
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">مفيش أصناف مطابقة للبحث/الفلترة</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لا توجد أصناف مطابقة للبحث أو الفلترة</td></tr>`;
     return;
   }
 
@@ -2187,6 +2784,7 @@ function openProductModal(product) {
   document.getElementById('productName').value = product ? product.name : '';
   document.getElementById('productCategory').value = product ? (product.category_id || '') : '';
   populateProductUnitTypeSelect(product ? product.unit_type : '');
+  populateProductTaxRateSelect(product ? (product.tax_rate_id || '') : '');
   document.getElementById('productCost').value = product ? product.cost_price : 0;
   document.getElementById('productPrice').value = product ? product.sale_price : 0;
   document.getElementById('productPrice2').value = product?.sale_price_2 || '';
@@ -2206,7 +2804,7 @@ function closeProductModal() {
 function renderBarcodeList() {
   const wrap = document.getElementById('barcodeList');
   if (currentBarcodes.length === 0) {
-    wrap.innerHTML = `<span style="font-size:12px; color:var(--ink-soft);">مفيش باركود مضاف لسه</span>`;
+    wrap.innerHTML = `<span style="font-size:12px; color:var(--ink-soft);">لا يوجد باركود مضاف حتى الآن</span>`;
     return;
   }
   wrap.innerHTML = '';
@@ -2227,7 +2825,7 @@ function addBarcodeToCurrentProduct() {
   const val = input.value.trim();
   if (!val) return;
   if (currentBarcodes.some(b => b.barcode === val)) {
-    showToast('الباركود ده مضاف بالفعل', true);
+    showToast('هذا الباركود مضاف بالفعل', true);
     return;
   }
   currentBarcodes.push({ id: null, barcode: val });
@@ -2248,6 +2846,7 @@ async function saveProduct(e) {
     name: document.getElementById('productName').value.trim(),
     category_id: document.getElementById('productCategory').value || null,
     unit_type: document.getElementById('productUnitType').value,
+    tax_rate_id: document.getElementById('productTaxRate').value || null,
     cost_price: Number(document.getElementById('productCost').value) || 0,
     sale_price: Number(document.getElementById('productPrice').value) || 0,
     sale_price_2: document.getElementById('productPrice2').value ? Number(document.getElementById('productPrice2').value) : null,
@@ -2267,7 +2866,7 @@ async function saveProduct(e) {
       productId = data.id;
     }
 
-    // مزامنة الباركود: احذف اللي اتشال، ضيف اللي جديد
+    // مزامنة الباركود: حذف ما تمت إزالته، وإضافة الجديد
     const { data: existingBarcodes } = await supabaseClient
       .from('product_barcodes').select('id, barcode').eq('product_id', productId);
     const existingIds = (existingBarcodes || []).map(b => b.id);
@@ -2282,15 +2881,15 @@ async function saveProduct(e) {
       if (bcError) throw bcError;
     }
 
-    showToast(id ? 'اتحدّث الصنف بنجاح' : 'اتضاف الصنف بنجاح');
+    showToast(id ? 'تم تحديث الصنف بنجاح' : 'تمت إضافة الصنف بنجاح');
     closeProductModal();
     await loadBoProducts();
     renderProductsTable();
   } catch (err) {
     console.error(err);
     errEl.textContent = err.message?.includes('duplicate') || err.code === '23505'
-      ? 'الباركود ده مستخدم في صنف تاني بالفعل'
-      : (err.message || 'حصل خطأ أثناء الحفظ');
+      ? 'هذا الباركود مستخدم بالفعل في صنف آخر'
+      : (err.message || 'حدث خطأ أثناء الحفظ');
     errEl.classList.add('show');
   } finally {
     saveBtn.disabled = false;
@@ -2301,7 +2900,7 @@ async function saveProduct(e) {
 async function toggleProductActive(product) {
   const { error } = await supabaseClient.from('products').update({ is_active: !product.is_active }).eq('id', product.id);
   if (error) { console.error(error); showToast('تعذر تحديث حالة الصنف', true); return; }
-  showToast(product.is_active ? 'اتوقّف الصنف' : 'اتفعّل الصنف');
+  showToast(product.is_active ? 'تم إيقاف الصنف' : 'تم تفعيل الصنف');
   await loadBoProducts();
   renderProductsTable();
 }
@@ -2310,7 +2909,7 @@ async function toggleProductActive(product) {
 function renderCategoriesTable() {
   const tbody = document.getElementById('categoriesTableBody');
   if (boCategories.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">لسه مفيش مجموعات مضافة</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">لا توجد مجموعات مضافة حتى الآن</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
@@ -2366,14 +2965,14 @@ async function saveCategory(e) {
       const { error } = await supabaseClient.from('categories').insert(payload);
       if (error) throw error;
     }
-    showToast(id ? 'اتحدّثت المجموعة' : 'اتضافت المجموعة');
+    showToast(id ? 'تم تحديث المجموعة' : 'تمت إضافة المجموعة');
     closeCategoryModal();
     await loadBoCategories();
     renderCategoriesTable();
     populateProductCategorySelect();
   } catch (err) {
     console.error(err);
-    errEl.textContent = err.message || 'حصل خطأ أثناء الحفظ';
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
     errEl.classList.add('show');
   } finally {
     saveBtn.disabled = false;
@@ -2407,7 +3006,7 @@ function renderCustomersTable() {
   });
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">${boCustomers.length === 0 ? 'لسه مفيش عملاء مضافين' : 'مفيش عملاء مطابقين للبحث'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">${boCustomers.length === 0 ? 'لا يوجد عملاء مضافون حتى الآن' : 'لا يوجد عملاء مطابقون للبحث'}</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
@@ -2486,14 +3085,14 @@ async function saveCustomer(e) {
       const { error } = await supabaseClient.from('customers').insert(payload);
       if (error) throw error;
     }
-    showToast(id ? 'اتحدّثت بيانات العميل' : 'اتضاف العميل بنجاح');
+    showToast(id ? 'تم تحديث بيانات العميل' : 'تمت إضافة العميل بنجاح');
     closeCustomerModal();
     await loadBoCustomers();
     renderCustomersTable();
     await loadCustomers(); // حدّث قائمة العملاء في شاشة المبيعات كمان
   } catch (err) {
     console.error(err);
-    errEl.textContent = err.message || 'حصل خطأ أثناء الحفظ';
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
     errEl.classList.add('show');
   } finally {
     saveBtn.disabled = false;
@@ -2502,14 +3101,14 @@ async function saveCustomer(e) {
 }
 
 async function deleteCustomer(customer) {
-  if (!confirm(`متأكد إنك عايز تحذف "${customer.name}"؟`)) return;
+  if (!confirm(`هل أنت متأكد أنك تريد حذف "${customer.name}"؟`)) return;
   const { error } = await supabaseClient.from('customers').delete().eq('id', customer.id);
   if (error) {
     console.error(error);
     showToast('تعذر حذف العميل — على الأرجح مرتبط بفواتير سابقة', true);
     return;
   }
-  showToast('اتحذف العميل');
+  showToast('تم حذف العميل');
   await loadBoCustomers();
   renderCustomersTable();
   await loadCustomers();
@@ -2517,7 +3116,7 @@ async function deleteCustomer(customer) {
 
 function exportCustomersToExcel() {
   if (boCustomers.length === 0) {
-    showToast('مفيش عملاء عشان يتصدّروا', true);
+    showToast('لا يوجد عملاء لتصديرهم', true);
     return;
   }
   const rows = boCustomers.map(c => ({
@@ -2534,7 +3133,7 @@ function exportCustomersToExcel() {
   XLSX.utils.book_append_sheet(wb, ws, 'العملاء');
   const dateStr = new Date().toISOString().slice(0, 10);
   XLSX.writeFile(wb, `العملاء-${dateStr}.xlsx`);
-  showToast('اتصدّر ملف الإكسل بنجاح');
+  showToast('تم تصدير ملف الإكسل بنجاح');
 }
 
 function findOrCreateCustomerTypeId(name) {
@@ -2564,7 +3163,7 @@ async function handleCustomersExcelImport(e) {
     const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
 
     if (rows.length === 0) {
-      showToast('الملف فاضي، مفيش صفوف تتستورد', true);
+      showToast('الملف فارغ، لا توجد صفوف لاستيرادها', true);
       return;
     }
 
@@ -2593,7 +3192,7 @@ async function handleCustomersExcelImport(e) {
         successCount++;
       } catch (err) {
         console.error(err);
-        errors.push(`صف ${i + 2} (${name}): ${err.message || 'حصل خطأ'}`);
+        errors.push(`صف ${i + 2} (${name}): ${err.message || 'حدث خطأ'}`);
       }
     }
 
@@ -2603,9 +3202,9 @@ async function handleCustomersExcelImport(e) {
     await loadCustomers();
 
     if (errors.length === 0) {
-      showToast(`اتضاف ${successCount} عميل بنجاح`);
+      showToast(`تمت إضافة ${successCount} عميل بنجاح`);
     } else {
-      showToast(`اتضاف ${successCount} عميل، وفشل ${errors.length}`, errors.length === rows.length);
+      showToast(`تمت إضافة ${successCount} عميل، وفشلت إضافة ${errors.length}`, errors.length === rows.length);
       console.warn('أخطاء الاستيراد:', errors);
     }
   } catch (err) {
@@ -2639,7 +3238,7 @@ function updateSalaryBaseDisplay() {
   const opt = sel.options[sel.selectedIndex];
   const base = opt ? Number(opt.dataset.baseSalary || 0) : 0;
   document.getElementById('salaryBaseDisplay').value = base.toFixed(2);
-  // اقتراح الصافي المدفوع تلقائيًا لو الحقل لسه فاضي/صفر (مش هيغيّر قيمة اتكتبت يدوي)
+  // اقتراح الصافي المدفوع تلقائيًا إذا كان الحقل ما زال فارغًا/صفرًا (لن يغيّر قيمة تم إدخالها يدويًا)
   const netInput = document.getElementById('salaryNetAmount');
   if (!netInput.dataset.touched) {
     const bonus = Number(document.getElementById('salaryBonus').value) || 0;
@@ -2756,7 +3355,7 @@ async function saveSalaryPayment(e) {
   };
 
   try {
-    if (!payload.user_id) throw new Error('اختار الموظف');
+    if (!payload.user_id) throw new Error('يرجى اختيار الموظف');
     if (id) {
       const { error } = await supabaseClient.from('salary_payments').update(payload).eq('id', id);
       if (error) throw error;
@@ -2764,12 +3363,12 @@ async function saveSalaryPayment(e) {
       const { error } = await supabaseClient.from('salary_payments').insert({ ...payload, created_by: currentProfile?.id || null });
       if (error) throw error;
     }
-    showToast(id ? 'اتحدّثت دفعة الراتب' : 'اتضافت دفعة الراتب بنجاح');
+    showToast(id ? 'تم تحديث دفعة الراتب' : 'تمت إضافة دفعة الراتب بنجاح');
     closeSalaryModal();
     await runSalaryFilter();
   } catch (err) {
     console.error(err);
-    errEl.textContent = err.message || 'حصل خطأ أثناء الحفظ';
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
     errEl.classList.add('show');
   } finally {
     saveBtn.disabled = false;
@@ -2778,10 +3377,10 @@ async function saveSalaryPayment(e) {
 }
 
 async function deleteSalaryPayment(payment) {
-  if (!confirm('متأكد إنك عايز تحذف دفعة الراتب دي؟')) return;
+  if (!confirm('هل أنت متأكد أنك تريد حذف دفعة الراتب هذه؟')) return;
   const { error } = await supabaseClient.from('salary_payments').delete().eq('id', payment.id);
   if (error) { console.error(error); showToast('تعذر حذف دفعة الراتب', true); return; }
-  showToast('اتحذفت دفعة الراتب');
+  showToast('تم حذف دفعة الراتب');
   await runSalaryFilter();
 }
 
@@ -2919,12 +3518,12 @@ async function saveExpense(e) {
       const { error } = await supabaseClient.from('expenses').insert({ ...payload, created_by: currentProfile?.id || null });
       if (error) throw error;
     }
-    showToast(id ? 'اتحدّث المصروف' : 'اتضاف المصروف بنجاح');
+    showToast(id ? 'تم تحديث المصروف' : 'تمت إضافة المصروف بنجاح');
     closeExpenseModal();
     await runExpenseFilter();
   } catch (err) {
     console.error(err);
-    errEl.textContent = err.message || 'حصل خطأ أثناء الحفظ';
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
     errEl.classList.add('show');
   } finally {
     saveBtn.disabled = false;
@@ -2933,10 +3532,10 @@ async function saveExpense(e) {
 }
 
 async function deleteExpense(expense) {
-  if (!confirm('متأكد إنك عايز تحذف المصروف ده؟')) return;
+  if (!confirm('هل أنت متأكد أنك تريد حذف هذا المصروف؟')) return;
   const { error } = await supabaseClient.from('expenses').delete().eq('id', expense.id);
   if (error) { console.error(error); showToast('تعذر حذف المصروف', true); return; }
-  showToast('اتحذف المصروف');
+  showToast('تم حذف المصروف');
   await runExpenseFilter();
 }
 
@@ -2952,7 +3551,7 @@ async function loadBoExpenseItems() {
 function renderExpenseItemsTable() {
   const tbody = document.getElementById('expenseItemsTableBody');
   if (boExpenseItems.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">لسه مفيش بنود مصروفات مضافة</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">لا توجد بنود مصروفات مضافة حتى الآن</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
@@ -3008,13 +3607,13 @@ async function saveExpenseItem(e) {
       const { error } = await supabaseClient.from('expense_items').insert(payload);
       if (error) throw error;
     }
-    showToast(id ? 'اتحدّث البند' : 'اتضاف البند بنجاح');
+    showToast(id ? 'تم تحديث البند' : 'تمت إضافة البند بنجاح');
     closeExpenseItemModal();
     await loadBoExpenseItems();
     renderExpenseItemsTable();
   } catch (err) {
     console.error(err);
-    errEl.textContent = err.message || 'حصل خطأ أثناء الحفظ';
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
     errEl.classList.add('show');
   } finally {
     saveBtn.disabled = false;
@@ -3041,7 +3640,7 @@ async function loadBoUnitTypes() {
 function renderUnitTypesTable() {
   const tbody = document.getElementById('unitTypesTableBody');
   if (boUnitTypes.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">لسه مفيش أنواع وحدات مضافة</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">لا توجد أنواع وحدات مضافة حتى الآن</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
@@ -3097,13 +3696,13 @@ async function saveUnitType(e) {
       const { error } = await supabaseClient.from('unit_types').insert(payload);
       if (error) throw error;
     }
-    showToast(id ? 'اتحدّث النوع' : 'اتضاف النوع بنجاح');
+    showToast(id ? 'تم تحديث النوع' : 'تمت إضافة النوع بنجاح');
     closeUnitTypeModal();
     await loadBoUnitTypes();
     renderUnitTypesTable();
   } catch (err) {
     console.error(err);
-    errEl.textContent = err.message || 'حصل خطأ أثناء الحفظ';
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
     errEl.classList.add('show');
   } finally {
     saveBtn.disabled = false;
@@ -3130,7 +3729,7 @@ async function loadBoCustomerTypes() {
 function renderCustomerTypesTable() {
   const tbody = document.getElementById('customerTypesTableBody');
   if (boCustomerTypes.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">لسه مفيش أنواع عملاء مضافة</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">لا توجد أنواع عملاء مضافة حتى الآن</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
@@ -3186,13 +3785,13 @@ async function saveCustomerType(e) {
       const { error } = await supabaseClient.from('customer_types').insert(payload);
       if (error) throw error;
     }
-    showToast(id ? 'اتحدّث النوع' : 'اتضاف النوع بنجاح');
+    showToast(id ? 'تم تحديث النوع' : 'تمت إضافة النوع بنجاح');
     closeCustomerTypeModal();
     await loadBoCustomerTypes();
     renderCustomerTypesTable();
   } catch (err) {
     console.error(err);
-    errEl.textContent = err.message || 'حصل خطأ أثناء الحفظ';
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
     errEl.classList.add('show');
   } finally {
     saveBtn.disabled = false;
@@ -3205,6 +3804,201 @@ async function toggleCustomerTypeActive(item) {
   if (error) { console.error(error); showToast('تعذر تحديث حالة النوع', true); return; }
   await loadBoCustomerTypes();
   renderCustomerTypesTable();
+}
+
+// ---- Tax rates (الضريبة) ----
+let boTaxRates = [];
+
+async function loadBoTaxRates() {
+  const { data, error } = await supabaseClient.from('tax_rates').select('*').order('name');
+  if (error) { console.error(error); showToast('تعذر تحميل نسب الضريبة', true); return; }
+  boTaxRates = data || [];
+}
+
+function renderTaxRatesTable() {
+  const tbody = document.getElementById('taxRatesTableBody');
+  if (boTaxRates.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" class="bo-empty">لا توجد نسب ضريبة مضافة حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boTaxRates.forEach(x => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(x.name)}</td>
+      <td class="num">${Number(x.rate).toFixed(2)}%</td>
+      <td><span class="bo-badge ${x.is_active ? 'active' : 'inactive'}">${x.is_active ? 'مفعّل' : 'موقّف'}</span></td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="toggle">${x.is_active ? 'إيقاف' : 'تفعيل'}</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openTaxRateModal(x));
+    tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleTaxRateActive(x));
+    tbody.appendChild(tr);
+  });
+}
+
+function openTaxRateModal(item) {
+  document.getElementById('taxRateModalTitle').textContent = item ? 'تعديل نسبة' : 'نسبة جديدة';
+  document.getElementById('taxRateId').value = item ? item.id : '';
+  document.getElementById('taxRateName').value = item ? item.name : '';
+  document.getElementById('taxRateValue').value = item ? item.rate : 0;
+  document.getElementById('taxRateActive').checked = item ? item.is_active : true;
+  document.getElementById('taxRateModalError').classList.remove('show');
+  document.getElementById('taxRateModalOverlay').classList.add('show');
+}
+
+function closeTaxRateModal() {
+  document.getElementById('taxRateModalOverlay').classList.remove('show');
+}
+
+async function saveTaxRate(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('taxRateModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveTaxRateBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('taxRateId').value || null;
+  const payload = {
+    name: document.getElementById('taxRateName').value.trim(),
+    rate: Number(document.getElementById('taxRateValue').value) || 0,
+    is_active: document.getElementById('taxRateActive').checked,
+  };
+
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('tax_rates').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('tax_rates').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث نسبة الضريبة' : 'تمت إضافة نسبة الضريبة بنجاح');
+    closeTaxRateModal();
+    await loadBoTaxRates();
+    renderTaxRatesTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function toggleTaxRateActive(item) {
+  const { error } = await supabaseClient.from('tax_rates').update({ is_active: !item.is_active }).eq('id', item.id);
+  if (error) { console.error(error); showToast('تعذر تحديث حالة النسبة', true); return; }
+  await loadBoTaxRates();
+  renderTaxRatesTable();
+}
+
+// ---- Quick discounts (أزرار الخصم السريع بشاشة البيع) ----
+let boQuickDiscounts = [];
+
+async function loadBoQuickDiscounts() {
+  const { data, error } = await supabaseClient.from('quick_discounts').select('*').order('value');
+  if (error) { console.error(error); showToast('تعذر تحميل الخصومات', true); return; }
+  boQuickDiscounts = data || [];
+}
+
+function renderQuickDiscountsTable() {
+  const tbody = document.getElementById('quickDiscountsTableBody');
+  if (boQuickDiscounts.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">لا توجد خصومات سريعة مضافة حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boQuickDiscounts.forEach(x => {
+    const tr = document.createElement('tr');
+    const typeLabel = x.discount_type === 'fixed' ? 'مبلغ ثابت' : 'نسبة %';
+    const valueLabel = x.discount_type === 'fixed' ? Number(x.value).toFixed(2) : `${Number(x.value).toFixed(2)}%`;
+    tr.innerHTML = `
+      <td>${escapeHtml(x.label)}</td>
+      <td>${typeLabel}</td>
+      <td class="num">${valueLabel}</td>
+      <td><span class="bo-badge ${x.is_active ? 'active' : 'inactive'}">${x.is_active ? 'مفعّل' : 'موقّف'}</span></td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="toggle">${x.is_active ? 'إيقاف' : 'تفعيل'}</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openQuickDiscountModal(x));
+    tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleQuickDiscountActive(x));
+    tbody.appendChild(tr);
+  });
+}
+
+function openQuickDiscountModal(item) {
+  document.getElementById('quickDiscountModalTitle').textContent = item ? 'تعديل خصم' : 'خصم جديد';
+  document.getElementById('quickDiscountId').value = item ? item.id : '';
+  document.getElementById('quickDiscountLabel').value = item ? item.label : '';
+  document.getElementById('quickDiscountType').value = item ? item.discount_type : 'percentage';
+  document.getElementById('quickDiscountValue').value = item ? item.value : 0;
+  document.getElementById('quickDiscountActive').checked = item ? item.is_active : true;
+  updateQuickDiscountValueLabel();
+  document.getElementById('quickDiscountModalError').classList.remove('show');
+  document.getElementById('quickDiscountModalOverlay').classList.add('show');
+}
+
+function updateQuickDiscountValueLabel() {
+  const type = document.getElementById('quickDiscountType').value;
+  document.getElementById('quickDiscountValueLabel').textContent = type === 'fixed' ? 'المبلغ' : 'النسبة %';
+}
+
+function closeQuickDiscountModal() {
+  document.getElementById('quickDiscountModalOverlay').classList.remove('show');
+}
+
+async function saveQuickDiscount(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('quickDiscountModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveQuickDiscountBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('quickDiscountId').value || null;
+  const payload = {
+    label: document.getElementById('quickDiscountLabel').value.trim(),
+    discount_type: document.getElementById('quickDiscountType').value,
+    value: Number(document.getElementById('quickDiscountValue').value) || 0,
+    is_active: document.getElementById('quickDiscountActive').checked,
+  };
+
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('quick_discounts').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('quick_discounts').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث الخصم' : 'تمت إضافة الخصم بنجاح');
+    closeQuickDiscountModal();
+    await loadBoQuickDiscounts();
+    renderQuickDiscountsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function toggleQuickDiscountActive(item) {
+  const { error } = await supabaseClient.from('quick_discounts').update({ is_active: !item.is_active }).eq('id', item.id);
+  if (error) { console.error(error); showToast('تعذر تحديث حالة الخصم', true); return; }
+  await loadBoQuickDiscounts();
+  renderQuickDiscountsTable();
 }
 
 // ---- Users ----
@@ -3267,7 +4061,7 @@ async function loadBoUsers() {
 function renderUsersTable() {
   const tbody = document.getElementById('usersTableBody');
   if (boUsers.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لسه مفيش مستخدمين مضافين</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لا يوجد مستخدمون مضافون حتى الآن</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
@@ -3347,7 +4141,7 @@ async function saveUser(e) {
         });
         if (rpcError) throw rpcError;
       }
-      showToast('اتحدّثت بيانات المستخدم');
+      showToast('تم تحديث بيانات المستخدم');
     } else {
       // مستخدم جديد: إنشاء حساب Auth بعميل منفصل عشان مانفصلش جلسة الأدمن الحالي
       if (!username) throw new Error('اكتب اسم المستخدم');
@@ -3364,7 +4158,7 @@ async function saveUser(e) {
       if (profileError) throw profileError;
 
       await adminCreateClient.auth.signOut(); // تنظيف جلسة العميل المؤقت
-      showToast('اتضاف المستخدم بنجاح');
+      showToast('تمت إضافة المستخدم بنجاح');
     }
 
     closeUserModal();
@@ -3372,7 +4166,7 @@ async function saveUser(e) {
     renderUsersTable();
   } catch (err) {
     console.error(err);
-    errEl.textContent = err.message || 'حصل خطأ أثناء الحفظ';
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
     errEl.classList.add('show');
   } finally {
     saveBtn.disabled = false;
@@ -3382,11 +4176,11 @@ async function saveUser(e) {
 
 async function toggleUserActive(user) {
   if (user.id === currentProfile.id && user.is_active) {
-    if (!confirm('ده حسابك الحالي — متأكد إنك عايز توقفه؟ هيتم تسجيل خروجك فورًا.')) return;
+    if (!confirm('هذا حسابك الحالي — هل أنت متأكد أنك تريد إيقافه؟ سيتم تسجيل خروجك فورًا.')) return;
   }
   const { error } = await supabaseClient.from('users_profile').update({ is_active: !user.is_active }).eq('id', user.id);
   if (error) { console.error(error); showToast('تعذر تحديث حالة المستخدم', true); return; }
-  showToast(user.is_active ? 'اتوقف المستخدم' : 'اتفعّل المستخدم');
+  showToast(user.is_active ? 'تم إيقاف المستخدم' : 'تم تفعيل المستخدم');
   if (user.id === currentProfile.id && user.is_active) { await doLogout(); return; }
   await loadBoUsers();
   renderUsersTable();
@@ -3407,7 +4201,7 @@ function renderEmployeesTable() {
   const filtered = boEmployees.filter(e => !q || e.full_name.toLowerCase().includes(q));
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" class="bo-empty">${boEmployees.length === 0 ? 'لسه مفيش موظفين مضافين' : 'مفيش موظفين مطابقين للبحث'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="bo-empty">${boEmployees.length === 0 ? 'لا يوجد موظفون مضافون حتى الآن' : 'لا يوجد موظفون مطابقون للبحث'}</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
@@ -3493,13 +4287,13 @@ async function saveEmployee(e) {
       const { error } = await supabaseClient.from('employees').insert(payload);
       if (error) throw error;
     }
-    showToast(id ? 'اتحدّثت بيانات الموظف بنجاح' : 'اتضاف الموظف بنجاح');
+    showToast(id ? 'تم تحديث بيانات الموظف بنجاح' : 'تمت إضافة الموظف بنجاح');
     closeEmployeeModal();
     await loadBoEmployees();
     renderEmployeesTable();
   } catch (err) {
     console.error(err);
-    errEl.textContent = err.message || 'حصل خطأ أثناء الحفظ';
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
     errEl.classList.add('show');
   } finally {
     saveBtn.disabled = false;
@@ -3508,10 +4302,10 @@ async function saveEmployee(e) {
 }
 
 async function deleteEmployee(employee) {
-  if (!confirm(`متأكد إنك عايز تحذف الموظف "${employee.full_name}"؟`)) return;
+  if (!confirm(`هل أنت متأكد أنك تريد حذف الموظف "${employee.full_name}"؟`)) return;
   const { error } = await supabaseClient.from('employees').delete().eq('id', employee.id);
   if (error) { console.error(error); showToast('تعذر حذف الموظف', true); return; }
-  showToast('اتحذف الموظف بنجاح');
+  showToast('تم حذف الموظف بنجاح');
   await loadBoEmployees();
   renderEmployeesTable();
 }
@@ -3534,7 +4328,7 @@ function renderSuppliersTable() {
   });
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">${boSuppliers.length === 0 ? 'لسه مفيش موردين مضافين' : 'مفيش موردين مطابقين للبحث'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">${boSuppliers.length === 0 ? 'لا يوجد موردون مضافون حتى الآن' : 'لا يوجد موردون مطابقون للبحث'}</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
@@ -3596,13 +4390,13 @@ async function saveSupplier(e) {
       const { error } = await supabaseClient.from('suppliers').insert(payload);
       if (error) throw error;
     }
-    showToast(id ? 'اتحدّثت بيانات المورد' : 'اتضاف المورد بنجاح');
+    showToast(id ? 'تم تحديث بيانات المورد' : 'تمت إضافة المورد بنجاح');
     closeSupplierModal();
     await loadBoSuppliers();
     renderSuppliersTable();
   } catch (err) {
     console.error(err);
-    errEl.textContent = err.message || 'حصل خطأ أثناء الحفظ';
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
     errEl.classList.add('show');
   } finally {
     saveBtn.disabled = false;
@@ -3611,14 +4405,14 @@ async function saveSupplier(e) {
 }
 
 async function deleteSupplier(supplier) {
-  if (!confirm(`متأكد إنك عايز تحذف "${supplier.name}"؟`)) return;
+  if (!confirm(`هل أنت متأكد أنك تريد حذف "${supplier.name}"؟`)) return;
   const { error } = await supabaseClient.from('suppliers').delete().eq('id', supplier.id);
   if (error) {
     console.error(error);
     showToast('تعذر حذف المورد — على الأرجح مرتبط بفواتير شراء سابقة', true);
     return;
   }
-  showToast('اتحذف المورد');
+  showToast('تم حذف المورد');
   await loadBoSuppliers();
   renderSuppliersTable();
 }
@@ -3640,7 +4434,7 @@ async function loadBoPurchases() {
 function renderPurchasesTable() {
   const tbody = document.getElementById('purchasesTableBody');
   if (boPurchases.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">لسه مفيش فواتير شراء مسجّلة</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">لا توجد فواتير شراء مسجّلة حتى الآن</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
@@ -3653,7 +4447,9 @@ function renderPurchasesTable() {
       <td class="num">${Number(p.total).toFixed(2)}</td>
       <td class="num">${Number(p.paid_amount).toFixed(2)}</td>
       <td class="num">${Number(p.remaining).toFixed(2)}</td>
-      <td class="num">${date}</td>`;
+      <td class="num">${date}</td>
+      <td><button class="bo-icon-btn" data-action="view">عرض</button></td>`;
+    tr.querySelector('[data-action="view"]').addEventListener('click', () => openPurchaseDetailModal(p));
     tbody.appendChild(tr);
   });
 }
@@ -3754,10 +4550,10 @@ async function savePurchase(e) {
   errEl.classList.remove('show');
 
   const supplierId = document.getElementById('purchaseSupplier').value;
-  if (!supplierId) { errEl.textContent = 'اختار المورد الأول'; errEl.classList.add('show'); return; }
+  if (!supplierId) { errEl.textContent = 'يرجى اختيار المورد أولاً'; errEl.classList.add('show'); return; }
 
   const validLines = purchaseLines.filter(l => l.productId && l.quantity > 0);
-  if (validLines.length === 0) { errEl.textContent = 'ضيف صنف واحد على الأقل بكمية صحيحة'; errEl.classList.add('show'); return; }
+  if (validLines.length === 0) { errEl.textContent = 'أضف صنفًا واحدًا على الأقل بكمية صحيحة'; errEl.classList.add('show'); return; }
 
   const saveBtn = document.getElementById('savePurchaseBtn');
   saveBtn.disabled = true;
@@ -3802,7 +4598,7 @@ async function savePurchase(e) {
       await supabaseClient.from('suppliers').update({ balance: newBalance }).eq('id', supplierId);
     }
 
-    showToast(`اتسجّلت فاتورة الشراء رقم ${purchase.invoice_number} وتحدّث المخزون تلقائيًا`);
+    showToast(`تم تسجيل فاتورة الشراء رقم ${purchase.invoice_number} وتحديث المخزون تلقائيًا`);
     closePurchaseModal();
     await Promise.all([loadBoPurchases(), loadBoProducts(), loadBoSuppliers()]);
     renderPurchasesTable();
@@ -3810,12 +4606,334 @@ async function savePurchase(e) {
     renderSuppliersTable();
   } catch (err) {
     console.error(err);
-    errEl.textContent = err.message || 'حصل خطأ أثناء حفظ الفاتورة';
+    errEl.textContent = err.message || 'حدث خطأ أثناء حفظ الفاتورة';
     errEl.classList.add('show');
   } finally {
     saveBtn.disabled = false;
     saveBtn.textContent = 'حفظ الفاتورة';
   }
+}
+
+// ---- Purchase Returns ----
+let boPurchaseReturns = [];
+let purchaseReturnPurchase = null;
+let purchaseReturnLines = []; // [{ purchaseItemId, productId, name, boughtQty, unitCost, returnQty }]
+
+async function loadBoPurchaseReturns() {
+  const { data, error } = await supabaseClient
+    .from('purchase_returns')
+    .select('*, purchases(invoice_number), suppliers(name)')
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (error) { console.error(error); showToast('تعذر تحميل مرتجعات الشراء', true); return; }
+  boPurchaseReturns = data || [];
+}
+
+function renderPurchaseReturnsTable() {
+  const tbody = document.getElementById('purchaseReturnsTableBody');
+  if (boPurchaseReturns.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">لا توجد مرتجعات شراء مسجّلة حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boPurchaseReturns.forEach(r => {
+    const tr = document.createElement('tr');
+    const date = new Date(r.created_at).toLocaleDateString('ar-EG');
+    tr.innerHTML = `
+      <td class="num">#${r.purchases?.invoice_number ?? '—'}</td>
+      <td>${escapeHtml(r.suppliers?.name || '—')}</td>
+      <td class="num">${Number(r.total).toFixed(2)}</td>
+      <td>${escapeHtml(r.reason || '—')}</td>
+      <td class="num">${date}</td>
+      <td><button class="bo-icon-btn" data-action="view">عرض</button></td>`;
+    tr.querySelector('[data-action="view"]').addEventListener('click', () => openPurchaseReturnDetailModal(r));
+    tbody.appendChild(tr);
+  });
+}
+
+function openPurchaseReturnModal() {
+  purchaseReturnPurchase = null;
+  purchaseReturnLines = [];
+  document.getElementById('purchaseReturnInvoiceInput').value = '';
+  document.getElementById('purchaseReturnInvoiceInfo').style.display = 'none';
+  document.getElementById('purchaseReturnLinesSection').style.display = 'none';
+  document.getElementById('savePurchaseReturnBtn').style.display = 'none';
+  document.getElementById('purchaseReturnReasonInput').value = '';
+  document.getElementById('purchaseReturnModalError').classList.remove('show');
+  document.getElementById('purchaseReturnModalOverlay').classList.add('show');
+}
+
+function closePurchaseReturnModal() {
+  document.getElementById('purchaseReturnModalOverlay').classList.remove('show');
+}
+
+async function searchPurchaseForReturn() {
+  const errEl = document.getElementById('purchaseReturnModalError');
+  errEl.classList.remove('show');
+  const invoiceNumber = Number(document.getElementById('purchaseReturnInvoiceInput').value);
+  if (!invoiceNumber) { errEl.textContent = 'اكتب رقم فاتورة صحيح'; errEl.classList.add('show'); return; }
+
+  const { data: purchase, error: purchaseError } = await supabaseClient
+    .from('purchases')
+    .select('*, suppliers(name), purchase_items(*, products(name))')
+    .eq('invoice_number', invoiceNumber)
+    .maybeSingle();
+
+  if (purchaseError || !purchase) {
+    errEl.textContent = 'لا توجد فاتورة شراء بهذا الرقم';
+    errEl.classList.add('show');
+    document.getElementById('purchaseReturnInvoiceInfo').style.display = 'none';
+    document.getElementById('purchaseReturnLinesSection').style.display = 'none';
+    document.getElementById('savePurchaseReturnBtn').style.display = 'none';
+    return;
+  }
+
+  purchaseReturnPurchase = purchase;
+  const date = new Date(purchase.created_at).toLocaleDateString('ar-EG');
+  const infoEl = document.getElementById('purchaseReturnInvoiceInfo');
+  infoEl.textContent = `المورد: ${purchase.suppliers?.name || '—'} — الإجمالي: ${Number(purchase.total).toFixed(2)} — التاريخ: ${date}`;
+  infoEl.style.display = 'block';
+
+  purchaseReturnLines = (purchase.purchase_items || []).map(pi => ({
+    purchaseItemId: pi.id, productId: pi.product_id, name: pi.products?.name || '—',
+    boughtQty: Number(pi.quantity), unitCost: Number(pi.unit_cost), returnQty: 0,
+  }));
+
+  renderPurchaseReturnLines();
+  document.getElementById('purchaseReturnLinesSection').style.display = 'block';
+  document.getElementById('savePurchaseReturnBtn').style.display = 'inline-block';
+}
+
+function renderPurchaseReturnLines() {
+  const wrap = document.getElementById('purchaseReturnLinesWrap');
+  wrap.innerHTML = '';
+  purchaseReturnLines.forEach((line) => {
+    const row = document.createElement('div');
+    row.className = 'purchase-line-row';
+
+    const nameDiv = document.createElement('div');
+    nameDiv.textContent = line.name;
+
+    const boughtDiv = document.createElement('div');
+    boughtDiv.className = 'num';
+    boughtDiv.textContent = line.boughtQty;
+
+    const qtyInput = document.createElement('input');
+    qtyInput.type = 'number'; qtyInput.min = '0'; qtyInput.max = String(line.boughtQty); qtyInput.step = '0.001';
+    qtyInput.value = line.returnQty;
+    qtyInput.addEventListener('input', () => {
+      let v = Number(qtyInput.value) || 0;
+      if (v > line.boughtQty) { v = line.boughtQty; qtyInput.value = v; }
+      if (v < 0) { v = 0; qtyInput.value = v; }
+      line.returnQty = v;
+      row.querySelector('.purchase-line-total').textContent = (line.returnQty * line.unitCost).toFixed(2);
+      updatePurchaseReturnTotal();
+    });
+
+    const totalDiv = document.createElement('div');
+    totalDiv.className = 'purchase-line-total num';
+    totalDiv.textContent = (line.returnQty * line.unitCost).toFixed(2);
+
+    const emptyDiv = document.createElement('div');
+
+    row.appendChild(nameDiv);
+    row.appendChild(boughtDiv);
+    row.appendChild(qtyInput);
+    row.appendChild(totalDiv);
+    row.appendChild(emptyDiv);
+    wrap.appendChild(row);
+  });
+  updatePurchaseReturnTotal();
+}
+
+function calcPurchaseReturnTotal() {
+  return purchaseReturnLines.reduce((s, l) => s + l.returnQty * l.unitCost, 0);
+}
+
+function updatePurchaseReturnTotal() {
+  document.getElementById('purchaseReturnTotalLabel').textContent = calcPurchaseReturnTotal().toFixed(2);
+}
+
+async function savePurchaseReturn(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('purchaseReturnModalError');
+  errEl.classList.remove('show');
+
+  if (!purchaseReturnPurchase) { errEl.textContent = 'يرجى البحث عن فاتورة الشراء أولاً'; errEl.classList.add('show'); return; }
+
+  const validLines = purchaseReturnLines.filter(l => l.returnQty > 0);
+  if (validLines.length === 0) { errEl.textContent = 'حدد كمية مرتجعة لصنف واحد على الأقل'; errEl.classList.add('show'); return; }
+
+  const saveBtn = document.getElementById('savePurchaseReturnBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  try {
+    const total = calcPurchaseReturnTotal();
+    const reason = document.getElementById('purchaseReturnReasonInput').value.trim() || null;
+
+    const { data: purchaseReturn, error: prError } = await supabaseClient
+      .from('purchase_returns')
+      .insert({
+        purchase_id: purchaseReturnPurchase.id, branch_id: currentProfile.branch_id, user_id: currentProfile.id,
+        supplier_id: purchaseReturnPurchase.supplier_id, reason, total,
+      }).select().single();
+    if (prError) throw prError;
+
+    const returnItems = validLines.map(l => ({
+      purchase_return_id: purchaseReturn.id, purchase_item_id: l.purchaseItemId, product_id: l.productId,
+      quantity: l.returnQty, unit_cost: l.unitCost, total: l.returnQty * l.unitCost,
+    }));
+    const { error: itemsError } = await supabaseClient.from('purchase_return_items').insert(returnItems);
+    if (itemsError) throw itemsError;
+
+    // تقليل مديونيتنا عند المورد بقيمة المرتجع
+    if (purchaseReturnPurchase.supplier_id) {
+      const supplier = boSuppliers.find(s => s.id === purchaseReturnPurchase.supplier_id);
+      const newBalance = Math.max(0, (Number(supplier?.balance) || 0) - total);
+      await supabaseClient.from('suppliers').update({ balance: newBalance }).eq('id', purchaseReturnPurchase.supplier_id);
+    }
+
+    showToast('تم تسجيل مرتجع الشراء وتحديث المخزون تلقائيًا');
+    closePurchaseReturnModal();
+    await Promise.all([loadBoPurchaseReturns(), loadBoProducts(), loadBoSuppliers()]);
+    renderPurchaseReturnsTable();
+    renderProductsTable();
+    renderSuppliersTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء حفظ المرتجع';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ المرتجع';
+  }
+}
+
+// ---- Sale Returns (list view in backoffice) ----
+let boSaleReturns = [];
+
+async function loadBoSaleReturns() {
+  const { data, error } = await supabaseClient
+    .from('sale_returns')
+    .select('*, sales(invoice_number), customers(name)')
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (error) { console.error(error); showToast('تعذر تحميل مرتجعات البيع', true); return; }
+  boSaleReturns = data || [];
+}
+
+function renderSaleReturnsTable() {
+  const tbody = document.getElementById('saleReturnsTableBody');
+  if (boSaleReturns.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لا توجد مرتجعات بيع مسجّلة حتى الآن</td></tr>`;
+    return;
+  }
+  const methodLabels = { cash: 'استرداد نقدي', credit: 'رصيد على حساب العميل', exchange: 'استبدال' };
+  tbody.innerHTML = '';
+  boSaleReturns.forEach(r => {
+    const tr = document.createElement('tr');
+    const date = new Date(r.created_at).toLocaleDateString('ar-EG');
+    tr.innerHTML = `
+      <td class="num">#${r.sales?.invoice_number ?? '—'}</td>
+      <td>${escapeHtml(r.customers?.name || 'عميل نقدي')}</td>
+      <td class="num">${Number(r.total).toFixed(2)}</td>
+      <td>${methodLabels[r.refund_method] || r.refund_method}</td>
+      <td>${escapeHtml(r.reason || '—')}</td>
+      <td class="num">${date}</td>
+      <td><button class="bo-icon-btn" data-action="view">عرض</button></td>`;
+    tr.querySelector('[data-action="view"]').addEventListener('click', () => openSaleReturnDetailModal(r));
+    tbody.appendChild(tr);
+  });
+}
+
+// ---- Invoice detail modal (read-only view — no edit/delete) ----
+function closeInvoiceDetailModal() {
+  document.getElementById('invoiceDetailModalOverlay').classList.remove('show');
+}
+
+function renderInvoiceDetailItemsTable(items, unitPriceLabel) {
+  const rowsHtml = (items || []).map(it => `
+    <tr>
+      <td>${escapeHtml(it.products?.name || 'صنف محذوف')}</td>
+      <td class="num">${Number(it.quantity)}</td>
+      <td class="num">${Number(it.unit_price ?? it.unit_cost ?? 0).toFixed(2)}</td>
+      <td class="num">${Number(it.total).toFixed(2)}</td>
+    </tr>`).join('');
+  return `
+    <div class="bo-table-wrap" style="margin:14px 0;">
+      <table class="bo-table">
+        <thead><tr><th>الصنف</th><th>الكمية</th><th>${unitPriceLabel}</th><th>الإجمالي</th></tr></thead>
+        <tbody>${rowsHtml || '<tr><td colspan="4" class="bo-empty">لا توجد أصناف</td></tr>'}</tbody>
+      </table>
+    </div>`;
+}
+
+async function openPurchaseDetailModal(purchase) {
+  document.getElementById('invoiceDetailModalTitle').textContent = `فاتورة شراء رقم #${purchase.invoice_number}`;
+  const body = document.getElementById('invoiceDetailModalBody');
+  body.innerHTML = `<div class="bo-empty">جاري تحميل التفاصيل...</div>`;
+  document.getElementById('invoiceDetailModalOverlay').classList.add('show');
+
+  const { data: items, error } = await supabaseClient
+    .from('purchase_items')
+    .select('quantity, unit_cost, total, products(name)')
+    .eq('purchase_id', purchase.id);
+  if (error) { console.error(error); body.innerHTML = `<div class="bo-empty">تعذر تحميل تفاصيل الفاتورة</div>`; return; }
+
+  const date = new Date(purchase.created_at).toLocaleString('ar-EG');
+  body.innerHTML = `
+    <div class="totals-row"><span>المورد</span><span>${escapeHtml(purchase.suppliers?.name || '—')}</span></div>
+    <div class="totals-row"><span>التاريخ</span><span class="num">${date}</span></div>
+    <div class="totals-row"><span>الحالة</span><span>${escapeHtml(purchase.status || '—')}</span></div>
+    ${renderInvoiceDetailItemsTable(items, 'سعر الوحدة')}
+    <div class="totals-row"><span>الإجمالي</span><span class="num">${Number(purchase.total).toFixed(2)}</span></div>
+    <div class="totals-row"><span>المدفوع</span><span class="num">${Number(purchase.paid_amount).toFixed(2)}</span></div>
+    <div class="totals-row grand"><span>المتبقي</span><span class="num">${Number(purchase.remaining).toFixed(2)}</span></div>`;
+}
+
+async function openPurchaseReturnDetailModal(ret) {
+  document.getElementById('invoiceDetailModalTitle').textContent = `مرتجع شراء — فاتورة #${ret.purchases?.invoice_number ?? '—'}`;
+  const body = document.getElementById('invoiceDetailModalBody');
+  body.innerHTML = `<div class="bo-empty">جاري تحميل التفاصيل...</div>`;
+  document.getElementById('invoiceDetailModalOverlay').classList.add('show');
+
+  const { data: items, error } = await supabaseClient
+    .from('purchase_return_items')
+    .select('quantity, unit_cost, total, products(name)')
+    .eq('purchase_return_id', ret.id);
+  if (error) { console.error(error); body.innerHTML = `<div class="bo-empty">تعذر تحميل تفاصيل المرتجع</div>`; return; }
+
+  const date = new Date(ret.created_at).toLocaleString('ar-EG');
+  body.innerHTML = `
+    <div class="totals-row"><span>المورد</span><span>${escapeHtml(ret.suppliers?.name || '—')}</span></div>
+    <div class="totals-row"><span>التاريخ</span><span class="num">${date}</span></div>
+    <div class="totals-row"><span>السبب</span><span>${escapeHtml(ret.reason || '—')}</span></div>
+    ${renderInvoiceDetailItemsTable(items, 'سعر الوحدة')}
+    <div class="totals-row grand"><span>إجمالي المرتجع</span><span class="num">${Number(ret.total).toFixed(2)}</span></div>`;
+}
+
+async function openSaleReturnDetailModal(ret) {
+  document.getElementById('invoiceDetailModalTitle').textContent = `مرتجع بيع — فاتورة #${ret.sales?.invoice_number ?? '—'}`;
+  const body = document.getElementById('invoiceDetailModalBody');
+  body.innerHTML = `<div class="bo-empty">جاري تحميل التفاصيل...</div>`;
+  document.getElementById('invoiceDetailModalOverlay').classList.add('show');
+
+  const { data: items, error } = await supabaseClient
+    .from('sale_return_items')
+    .select('quantity, unit_price, total, products(name)')
+    .eq('sale_return_id', ret.id);
+  if (error) { console.error(error); body.innerHTML = `<div class="bo-empty">تعذر تحميل تفاصيل المرتجع</div>`; return; }
+
+  const methodLabels = { cash: 'استرداد نقدي', credit: 'رصيد على حساب العميل', exchange: 'استبدال' };
+  const date = new Date(ret.created_at).toLocaleString('ar-EG');
+  body.innerHTML = `
+    <div class="totals-row"><span>العميل</span><span>${escapeHtml(ret.customers?.name || 'عميل نقدي')}</span></div>
+    <div class="totals-row"><span>التاريخ</span><span class="num">${date}</span></div>
+    <div class="totals-row"><span>طريقة الاسترداد</span><span>${escapeHtml(methodLabels[ret.refund_method] || ret.refund_method || '—')}</span></div>
+    <div class="totals-row"><span>السبب</span><span>${escapeHtml(ret.reason || '—')}</span></div>
+    ${renderInvoiceDetailItemsTable(items, 'سعر الوحدة')}
+    <div class="totals-row grand"><span>إجمالي المرتجع</span><span class="num">${Number(ret.total).toFixed(2)}</span></div>`;
 }
 
 // ---- Reports ----
@@ -3928,7 +5046,7 @@ async function runReport() {
     const topProducts = Object.values(grouped).sort((a, b) => b.revenue - a.revenue).slice(0, 10);
     const tbody = document.getElementById('topProductsTableBody');
     if (topProducts.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">مفيش مبيعات في الفترة دي</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">لا توجد مبيعات في هذه الفترة</td></tr>`;
     } else {
       tbody.innerHTML = '';
       topProducts.forEach(p => {
