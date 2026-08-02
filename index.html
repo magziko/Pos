@@ -790,7 +790,7 @@ const adminCreateClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_AN
 
 // النظام بيشتغل باسم مستخدم وكلمة مرور بس (من غير إيميل)، فبنولّد إيميل داخلي غير مرئي
 // للمستخدم من اسم المستخدم عشان نقدر نستخدم Supabase Auth عادي من تحت
-const USERNAME_EMAIL_DOMAIN = 'pos-users.local';
+const USERNAME_EMAIL_DOMAIN = 'posusers-app.com';
 function usernameToEmail(username) {
   const normalized = (username || '').trim().toLowerCase().replace(/[^a-z0-9._-]/g, '');
   return normalized + '@' + USERNAME_EMAIL_DOMAIN;
