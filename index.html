@@ -257,7 +257,7 @@ a { color: inherit; }
       <div class="error-msg" id="loginError"></div>
       <form id="loginForm">
         <div class="field"><label for="loginUsername">اسم المستخدم</label>
-          <input type="text" id="loginUsername" required autocomplete="username" placeholder="اسم المستخدم" style="direction:ltr; text-align:right;"></div>
+          <input type="text" id="loginUsername" required autocomplete="username" placeholder="اسم المستخدم (أو بريدك الإلكتروني القديم)" style="direction:ltr; text-align:right;"></div>
         <div class="field"><label for="loginPassword">كلمة المرور</label>
           <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="••••••••"></div>
         <button type="submit" class="submit-btn" id="loginSubmitBtn">دخول</button>
@@ -795,6 +795,12 @@ function usernameToEmail(username) {
   const normalized = (username || '').trim().toLowerCase().replace(/[^a-z0-9._-]/g, '');
   return normalized + '@' + USERNAME_EMAIL_DOMAIN;
 }
+// خانة تسجيل الدخول بتقبل اسم مستخدم عادي، أو إيميل حقيقي (للحسابات القديمة اللي اتعملت قبل التعديل ده)
+function loginIdentifierToEmail(identifier) {
+  const trimmed = (identifier || '').trim();
+  if (trimmed.includes('@')) return trimmed.toLowerCase();
+  return usernameToEmail(trimmed);
+}
 
 let currentProfile = null;
 
@@ -857,7 +863,7 @@ loginForm.addEventListener('submit', async (e) => {
 
   const username = document.getElementById('loginUsername').value.trim();
   const password = document.getElementById('loginPassword').value;
-  const email = usernameToEmail(username);
+  const email = loginIdentifierToEmail(username);
 
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
   if (error) {
@@ -1917,7 +1923,7 @@ function openUserModal(user) {
   document.getElementById('userId').value = user ? user.id : '';
   document.getElementById('userFullName').value = user ? (user.full_name || '') : '';
   document.getElementById('userUsername').value = user ? (user.username || '') : '';
-  document.getElementById('userUsername').disabled = !!user; // ما نغيّرش اسم المستخدم لمستخدم موجود
+  document.getElementById('userUsername').disabled = false;
   document.getElementById('userPassword').value = '';
   document.getElementById('userPassword').required = !user;
   document.getElementById('userPasswordHint').style.display = user ? 'block' : 'none';
@@ -1953,7 +1959,7 @@ async function saveUser(e) {
       // تحديث مستخدم موجود: بيانات البروفايل + تغيير كلمة المرور لو اتكتبت
       const { error } = await supabaseClient
         .from('users_profile')
-        .update({ full_name: fullName, role_id: roleId, branch_id: branchId, is_active: isActive })
+        .update({ full_name: fullName, username: username || null, role_id: roleId, branch_id: branchId, is_active: isActive })
         .eq('id', id);
       if (error) throw error;
 
