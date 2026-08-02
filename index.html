@@ -256,8 +256,8 @@ a { color: inherit; }
       </div>
       <div class="error-msg" id="loginError"></div>
       <form id="loginForm">
-        <div class="field"><label for="loginEmail">البريد الإلكتروني</label>
-          <input type="email" id="loginEmail" required autocomplete="username" placeholder="name@example.com"></div>
+        <div class="field"><label for="loginUsername">اسم المستخدم</label>
+          <input type="text" id="loginUsername" required autocomplete="username" placeholder="اسم المستخدم" style="direction:ltr; text-align:right;"></div>
         <div class="field"><label for="loginPassword">كلمة المرور</label>
           <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="••••••••"></div>
         <button type="submit" class="submit-btn" id="loginSubmitBtn">دخول</button>
@@ -286,8 +286,8 @@ a { color: inherit; }
           <input type="text" id="regFullName" required placeholder="مثال: أحمد محمد"></div>
         <div class="field"><label for="regBranchName">اسم الفرع</label>
           <input type="text" id="regBranchName" required placeholder="مثال: الفرع الرئيسي"></div>
-        <div class="field"><label for="regEmail">البريد الإلكتروني</label>
-          <input type="email" id="regEmail" required autocomplete="username" placeholder="name@example.com"></div>
+        <div class="field"><label for="regUsername">اسم المستخدم</label>
+          <input type="text" id="regUsername" required autocomplete="username" placeholder="اسم المستخدم" style="direction:ltr; text-align:right;"></div>
         <div class="field"><label for="regPassword">كلمة المرور</label>
           <input type="password" id="regPassword" required autocomplete="new-password" placeholder="6 أحرف على الأقل" minlength="6"></div>
         <button type="submit" class="submit-btn" id="regSubmitBtn">إنشاء الحساب</button>
@@ -365,6 +365,7 @@ a { color: inherit; }
         <button class="bo-nav-item" data-section="suppliers">الموردون</button>
         <button class="bo-nav-item" data-section="purchases">فواتير الشراء</button>
         <button class="bo-nav-item" data-section="reports">التقارير</button>
+        <button class="bo-nav-item" data-section="users">إدارة المستخدمين</button>
       </div>
 
       <div class="bo-content">
@@ -543,6 +544,38 @@ a { color: inherit; }
             </table>
           </div>
         </div>
+
+        <!-- قسم إدارة المستخدمين -->
+        <div id="bo-section-users" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">إدارة المستخدمين</div>
+            <button class="bo-add-btn" id="addUserBtn">+ مستخدم جديد</button>
+          </div>
+
+          <div class="quick-range-row" style="margin-bottom:14px;">
+            <button class="quick-range-btn active" data-user-tab="data">بيانات المستخدمين</button>
+          </div>
+
+          <div id="userTab-data">
+            <div class="bo-table-wrap">
+              <table class="bo-table">
+                <thead>
+                  <tr>
+                    <th>الاسم الكامل</th>
+                    <th>اسم المستخدم</th>
+                    <th>الفرع</th>
+                    <th>مستوى الصلاحية</th>
+                    <th>الحالة</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                  <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -694,6 +727,39 @@ a { color: inherit; }
   </div>
 </div>
 
+<!-- Modal: إضافة / تعديل مستخدم -->
+<div class="modal-overlay" id="userModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="userModalTitle">مستخدم جديد</div>
+    <form id="userForm">
+      <input type="hidden" id="userId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>الاسم الكامل</label><input type="text" id="userFullName" required></div>
+        <div class="field field-full"><label>اسم المستخدم</label>
+          <input type="text" id="userUsername" required autocomplete="off" style="direction:ltr; text-align:right;"></div>
+        <div class="field field-full" id="userPasswordField"><label>كلمة المرور</label>
+          <input type="password" id="userPassword" autocomplete="new-password" placeholder="6 أحرف على الأقل" minlength="6" style="direction:ltr; text-align:right;">
+          <div id="userPasswordHint" style="font-size:12px; color:var(--ink-soft); margin-top:4px; display:none;">اتركها فارغة لو مش عايز تغيّر كلمة المرور</div>
+        </div>
+        <div class="field"><label>الفرع</label><select id="userBranch" required></select></div>
+        <div class="field"><label>مستوى الصلاحية</label><select id="userRole" required></select></div>
+        <div class="field field-full">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="userActive" checked style="width:auto;"> الحساب مفعّل ويقدر يسجّل دخول
+          </label>
+        </div>
+      </div>
+
+      <div class="error-msg" id="userModalError"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelUserBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveUserBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Modal: فاتورة البيع (للطباعة) -->
 <div class="modal-overlay" id="receiptModalOverlay">
   <div class="modal-box receipt-modal-box">
@@ -715,6 +781,20 @@ a { color: inherit; }
 const SUPABASE_URL = 'https://aagyaxicphooldhwycko.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhZ3lheGljcGhvb2xkaHd5Y2tvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1ODI0MTQsImV4cCI6MjEwMTE1ODQxNH0.IXId6VALd6WwufMwyHjwK12zYXAozPOXUdyjM4omUh4';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// عميل مساعد لإنشاء مستخدمين جدد من لوحة التحكم من غير ما نفصل جلسة الأدمن الحالي
+// (signUp عادي بيبدّل الجلسة النشطة؛ العميل ده منفصل ومش بيحفظ جلسة فـ الأدمن فاضل مسجّل دخول)
+const adminCreateClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+});
+
+// النظام بيشتغل باسم مستخدم وكلمة مرور بس (من غير إيميل)، فبنولّد إيميل داخلي غير مرئي
+// للمستخدم من اسم المستخدم عشان نقدر نستخدم Supabase Auth عادي من تحت
+const USERNAME_EMAIL_DOMAIN = 'pos-users.local';
+function usernameToEmail(username) {
+  const normalized = (username || '').trim().toLowerCase().replace(/[^a-z0-9._-]/g, '');
+  return normalized + '@' + USERNAME_EMAIL_DOMAIN;
+}
 
 let currentProfile = null;
 
@@ -775,8 +855,9 @@ loginForm.addEventListener('submit', async (e) => {
   loginSubmitBtn.disabled = true;
   loginSubmitBtn.textContent = 'جاري الدخول...';
 
-  const email = document.getElementById('loginEmail').value.trim();
+  const username = document.getElementById('loginUsername').value.trim();
   const password = document.getElementById('loginPassword').value;
+  const email = usernameToEmail(username);
 
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
   if (error) {
@@ -820,7 +901,8 @@ registerForm.addEventListener('submit', async (e) => {
 
   const fullName = document.getElementById('regFullName').value.trim();
   const branchName = document.getElementById('regBranchName').value.trim();
-  const email = document.getElementById('regEmail').value.trim();
+  const username = document.getElementById('regUsername').value.trim();
+  const email = usernameToEmail(username);
   const password = document.getElementById('regPassword').value;
 
   try {
@@ -869,7 +951,7 @@ registerForm.addEventListener('submit', async (e) => {
 
     const { error: profileError } = await supabaseClient
       .from('users_profile')
-      .insert({ id: userId, full_name: fullName, role_id: roleId, branch_id: branchId, is_active: true });
+      .insert({ id: userId, full_name: fullName, username, role_id: roleId, branch_id: branchId, is_active: true });
     if (profileError) throw profileError;
 
     regSuccess.textContent = isFirstUser
@@ -1158,7 +1240,7 @@ async function doLogout() {
   await supabaseClient.auth.signOut();
   currentProfile = null;
   cart = [];
-  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginUsername').value = '';
   document.getElementById('loginPassword').value = '';
   showView('login');
 }
@@ -1279,11 +1361,15 @@ async function enterBackoffice() {
   await loadBoCustomers();
   await loadBoSuppliers();
   await loadBoPurchases();
+  await loadBoRoles();
+  await loadBoBranches();
+  await loadBoUsers();
   renderProductsTable();
   renderCategoriesTable();
   renderCustomersTable();
   renderSuppliersTable();
   renderPurchasesTable();
+  renderUsersTable();
   populateProductCategorySelect();
 }
 
@@ -1303,6 +1389,7 @@ function bindBackofficeEvents() {
       document.getElementById('bo-section-purchases').style.display = section === 'purchases' ? 'block' : 'none';
       document.getElementById('bo-section-reports').style.display = section === 'reports' ? 'block' : 'none';
       document.getElementById('bo-section-soon').style.display = section === 'soon' ? 'block' : 'none';
+      document.getElementById('bo-section-users').style.display = section === 'users' ? 'block' : 'none';
       if (section === 'reports' && !reportsLoadedOnce) { runReport(); reportsLoadedOnce = true; }
     });
   });
@@ -1354,6 +1441,14 @@ function bindBackofficeEvents() {
   document.getElementById('addPurchaseLineBtn').addEventListener('click', () => addPurchaseLine());
   document.getElementById('purchasePaid').addEventListener('input', updatePurchaseTotals);
   document.getElementById('purchaseForm').addEventListener('submit', savePurchase);
+
+  // ---- Users ----
+  document.getElementById('addUserBtn').addEventListener('click', () => openUserModal(null));
+  document.getElementById('cancelUserBtn').addEventListener('click', closeUserModal);
+  document.getElementById('userModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'userModalOverlay') closeUserModal();
+  });
+  document.getElementById('userForm').addEventListener('submit', saveUser);
 
   // ---- Reports ----
   setQuickRange('today');
@@ -1741,6 +1836,177 @@ async function deleteCustomer(customer) {
   await loadBoCustomers();
   renderCustomersTable();
   await loadCustomers();
+}
+
+// ---- Users ----
+let boUsers = [];
+let boRoles = [];
+let boBranchesList = [];
+
+async function loadBoRoles() {
+  const { data, error } = await supabaseClient.from('roles').select('*').order('name');
+  if (error) { console.error(error); return; }
+  boRoles = data || [];
+}
+
+async function loadBoBranches() {
+  const { data, error } = await supabaseClient.from('branches').select('*').order('name');
+  if (error) { console.error(error); return; }
+  boBranchesList = data || [];
+}
+
+function populateUserSelects(selectedRoleId, selectedBranchId) {
+  const roleSel = document.getElementById('userRole');
+  roleSel.innerHTML = '';
+  boRoles.forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = r.id; opt.textContent = r.name === 'admin' ? 'أدمن' : (r.name === 'cashier' ? 'كاشير' : r.name);
+    roleSel.appendChild(opt);
+  });
+  if (selectedRoleId) roleSel.value = selectedRoleId;
+
+  const branchSel = document.getElementById('userBranch');
+  branchSel.innerHTML = '';
+  boBranchesList.forEach(b => {
+    const opt = document.createElement('option');
+    opt.value = b.id; opt.textContent = b.name;
+    branchSel.appendChild(opt);
+  });
+  if (selectedBranchId) branchSel.value = selectedBranchId;
+}
+
+async function loadBoUsers() {
+  const { data, error } = await supabaseClient
+    .from('users_profile')
+    .select('*, roles(id, name), branches(id, name)')
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل المستخدمين', true); return; }
+  boUsers = data || [];
+}
+
+function renderUsersTable() {
+  const tbody = document.getElementById('usersTableBody');
+  if (boUsers.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">لسه مفيش مستخدمين مضافين</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boUsers.forEach(u => {
+    const roleLabel = u.roles?.name === 'admin' ? 'أدمن' : (u.roles?.name === 'cashier' ? 'كاشير' : (u.roles?.name || '—'));
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(u.full_name || '—')}</td>
+      <td class="num">${escapeHtml(u.username || '—')}</td>
+      <td>${escapeHtml(u.branches?.name || '—')}</td>
+      <td>${escapeHtml(roleLabel)}</td>
+      <td><span class="bo-badge ${u.is_active ? 'active' : 'inactive'}">${u.is_active ? 'مفعّل' : 'موقّف'}</span></td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn" data-action="toggle">${u.is_active ? 'توقيف' : 'تفعيل'}</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openUserModal(u));
+    tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleUserActive(u));
+    tbody.appendChild(tr);
+  });
+}
+
+function openUserModal(user) {
+  document.getElementById('userModalTitle').textContent = user ? 'تعديل مستخدم' : 'مستخدم جديد';
+  document.getElementById('userId').value = user ? user.id : '';
+  document.getElementById('userFullName').value = user ? (user.full_name || '') : '';
+  document.getElementById('userUsername').value = user ? (user.username || '') : '';
+  document.getElementById('userUsername').disabled = !!user; // ما نغيّرش اسم المستخدم لمستخدم موجود
+  document.getElementById('userPassword').value = '';
+  document.getElementById('userPassword').required = !user;
+  document.getElementById('userPasswordHint').style.display = user ? 'block' : 'none';
+  document.getElementById('userActive').checked = user ? !!user.is_active : true;
+  populateUserSelects(user?.roles?.id, user?.branches?.id);
+  document.getElementById('userModalError').classList.remove('show');
+  document.getElementById('userModalOverlay').classList.add('show');
+}
+
+function closeUserModal() {
+  document.getElementById('userModalOverlay').classList.remove('show');
+  document.getElementById('userUsername').disabled = false;
+}
+
+async function saveUser(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('userModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveUserBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('userId').value || null;
+  const fullName = document.getElementById('userFullName').value.trim();
+  const username = document.getElementById('userUsername').value.trim();
+  const password = document.getElementById('userPassword').value;
+  const roleId = document.getElementById('userRole').value;
+  const branchId = document.getElementById('userBranch').value;
+  const isActive = document.getElementById('userActive').checked;
+
+  try {
+    if (id) {
+      // تحديث مستخدم موجود: بيانات البروفايل + تغيير كلمة المرور لو اتكتبت
+      const { error } = await supabaseClient
+        .from('users_profile')
+        .update({ full_name: fullName, role_id: roleId, branch_id: branchId, is_active: isActive })
+        .eq('id', id);
+      if (error) throw error;
+
+      if (password) {
+        if (password.length < 6) throw new Error('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+        const { error: rpcError } = await supabaseClient.rpc('admin_reset_user_password', {
+          target_user_id: id, new_password: password,
+        });
+        if (rpcError) throw rpcError;
+      }
+      showToast('اتحدّثت بيانات المستخدم');
+    } else {
+      // مستخدم جديد: إنشاء حساب Auth بعميل منفصل عشان مانفصلش جلسة الأدمن الحالي
+      if (!username) throw new Error('اكتب اسم المستخدم');
+      if (!password || password.length < 6) throw new Error('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+      const email = usernameToEmail(username);
+
+      const { data: signUpData, error: signUpError } = await adminCreateClient.auth.signUp({ email, password });
+      if (signUpError) throw signUpError;
+      if (!signUpData.user) throw new Error('تعذر إنشاء المستخدم');
+
+      const { error: profileError } = await supabaseClient
+        .from('users_profile')
+        .insert({ id: signUpData.user.id, full_name: fullName, username, role_id: roleId, branch_id: branchId, is_active: isActive });
+      if (profileError) throw profileError;
+
+      await adminCreateClient.auth.signOut(); // تنظيف جلسة العميل المؤقت
+      showToast('اتضاف المستخدم بنجاح');
+    }
+
+    closeUserModal();
+    await loadBoUsers();
+    renderUsersTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حصل خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function toggleUserActive(user) {
+  if (user.id === currentProfile.id && user.is_active) {
+    if (!confirm('ده حسابك الحالي — متأكد إنك عايز توقفه؟ هيتم تسجيل خروجك فورًا.')) return;
+  }
+  const { error } = await supabaseClient.from('users_profile').update({ is_active: !user.is_active }).eq('id', user.id);
+  if (error) { console.error(error); showToast('تعذر تحديث حالة المستخدم', true); return; }
+  showToast(user.is_active ? 'اتوقف المستخدم' : 'اتفعّل المستخدم');
+  if (user.id === currentProfile.id && user.is_active) { await doLogout(); return; }
+  await loadBoUsers();
+  renderUsersTable();
 }
 
 // ---- Suppliers ----
