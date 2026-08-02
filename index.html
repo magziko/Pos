@@ -367,6 +367,7 @@ a { color: inherit; }
         <button class="bo-nav-item" data-section="reports">التقارير</button>
         <button class="bo-nav-item" data-section="expense-items">بنود المصروفات</button>
         <button class="bo-nav-item" data-section="expenses">المصروفات</button>
+        <button class="bo-nav-item" data-section="salaries">الرواتب</button>
         <button class="bo-nav-item" data-section="users">إدارة المستخدمين</button>
       </div>
 
@@ -531,12 +532,16 @@ a { color: inherit; }
               <div class="report-card-value num" id="reportAvgInvoice">0.00</div>
             </div>
             <div class="report-card">
-              <div class="report-card-label">صافي الربح (بعد خصم المصروفات)</div>
+              <div class="report-card-label">صافي الربح (بعد خصم المصروفات والرواتب)</div>
               <div class="report-card-value num positive" id="reportProfit">0.00</div>
             </div>
             <div class="report-card">
               <div class="report-card-label">إجمالي المصروفات</div>
               <div class="report-card-value num" id="reportExpenses">0.00</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">إجمالي الرواتب</div>
+              <div class="report-card-value num" id="reportSalaries">0.00</div>
             </div>
           </div>
 
@@ -612,6 +617,58 @@ a { color: inherit; }
               <thead><tr><th>اسم البند</th><th>الحالة</th><th></th></tr></thead>
               <tbody id="expenseItemsTableBody">
                 <tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم الرواتب -->
+        <div id="bo-section-salaries" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">الرواتب</div>
+            <button class="bo-add-btn" id="addSalaryBtn">+ دفعة راتب جديدة</button>
+          </div>
+
+          <div class="quick-range-row" id="salaryQuickRangeRow" style="margin-bottom:12px;">
+            <button class="quick-range-btn" data-salary-range="today">اليوم</button>
+            <button class="quick-range-btn" data-salary-range="7days">آخر 7 أيام</button>
+            <button class="quick-range-btn active" data-salary-range="month">الشهر الحالي</button>
+            <button class="quick-range-btn" data-salary-range="30days">آخر 30 يوم</button>
+          </div>
+
+          <div class="report-filters">
+            <div class="field"><label>من تاريخ</label><input type="date" id="salaryFromDate"></div>
+            <div class="field"><label>إلى تاريخ</label><input type="date" id="salaryToDate"></div>
+            <button class="bo-add-btn" id="runSalaryFilterBtn">تحديث</button>
+          </div>
+
+          <div class="report-cards">
+            <div class="report-card">
+              <div class="report-card-label">إجمالي الرواتب المدفوعة</div>
+              <div class="report-card-value num" id="salaryTotalLabel">0.00</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">عدد الدفعات</div>
+              <div class="report-card-value num" id="salaryCountLabel">0</div>
+            </div>
+          </div>
+
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>التاريخ</th>
+                  <th>الموظف</th>
+                  <th>الراتب الأساسي</th>
+                  <th>مكافأة</th>
+                  <th>خصم</th>
+                  <th>الصافي المدفوع</th>
+                  <th>ملاحظات</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="salariesTableBody">
+                <tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
@@ -799,6 +856,30 @@ a { color: inherit; }
   </div>
 </div>
 
+<!-- Modal: إضافة / تعديل دفعة راتب -->
+<div class="modal-overlay" id="salaryModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="salaryModalTitle">دفعة راتب جديدة</div>
+    <form id="salaryForm">
+      <input type="hidden" id="salaryId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>الموظف</label><select id="salaryEmployeeSelect" required></select></div>
+        <div class="field"><label>الراتب الأساسي</label><input type="text" id="salaryBaseDisplay" class="num" value="0.00" disabled></div>
+        <div class="field"><label>التاريخ</label><input type="date" id="salaryDate" required></div>
+        <div class="field"><label>مكافأة (اختياري)</label><input type="number" id="salaryBonus" step="0.01" min="0" value="0"></div>
+        <div class="field"><label>خصم (اختياري)</label><input type="number" id="salaryDeduction" step="0.01" min="0" value="0"></div>
+        <div class="field field-full"><label>الصافي المدفوع</label><input type="number" id="salaryNetAmount" step="0.01" min="0" required value="0"></div>
+        <div class="field field-full"><label>ملاحظات (اختياري)</label><input type="text" id="salaryNotes"></div>
+      </div>
+      <div class="error-msg" id="salaryModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelSalaryBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveSalaryBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Modal: إضافة / تعديل مصروف -->
 <div class="modal-overlay" id="expenseModalOverlay">
   <div class="modal-box">
@@ -858,6 +939,7 @@ a { color: inherit; }
         </div>
         <div class="field"><label>الفرع</label><select id="userBranch" required></select></div>
         <div class="field"><label>مستوى الصلاحية</label><select id="userRole" required></select></div>
+        <div class="field"><label>الراتب الأساسي (اختياري)</label><input type="number" id="userBaseSalary" step="0.01" min="0" value="0"></div>
         <div class="field field-full">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
             <input type="checkbox" id="userActive" checked style="width:auto;"> الحساب مفعّل ويقدر يسجّل دخول
@@ -1515,8 +1597,10 @@ function bindBackofficeEvents() {
       document.getElementById('bo-section-users').style.display = section === 'users' ? 'block' : 'none';
       document.getElementById('bo-section-expense-items').style.display = section === 'expense-items' ? 'block' : 'none';
       document.getElementById('bo-section-expenses').style.display = section === 'expenses' ? 'block' : 'none';
+      document.getElementById('bo-section-salaries').style.display = section === 'salaries' ? 'block' : 'none';
       if (section === 'reports' && !reportsLoadedOnce) { runReport(); reportsLoadedOnce = true; }
       if (section === 'expenses' && !expensesLoadedOnce) { setExpenseQuickRange('month'); runExpenseFilter(); expensesLoadedOnce = true; }
+      if (section === 'salaries' && !salariesLoadedOnce) { setSalaryQuickRange('month'); runSalaryFilter(); salariesLoadedOnce = true; }
     });
   });
 
@@ -1567,6 +1651,27 @@ function bindBackofficeEvents() {
   document.getElementById('addPurchaseLineBtn').addEventListener('click', () => addPurchaseLine());
   document.getElementById('purchasePaid').addEventListener('input', updatePurchaseTotals);
   document.getElementById('purchaseForm').addEventListener('submit', savePurchase);
+
+  // ---- Salaries ----
+  document.getElementById('addSalaryBtn').addEventListener('click', () => openSalaryModal(null));
+  document.getElementById('cancelSalaryBtn').addEventListener('click', closeSalaryModal);
+  document.getElementById('salaryModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'salaryModalOverlay') closeSalaryModal();
+  });
+  document.getElementById('salaryForm').addEventListener('submit', saveSalaryPayment);
+  document.getElementById('salaryEmployeeSelect').addEventListener('change', updateSalaryBaseDisplay);
+  document.getElementById('salaryBonus').addEventListener('input', updateSalaryBaseDisplay);
+  document.getElementById('salaryDeduction').addEventListener('input', updateSalaryBaseDisplay);
+  document.getElementById('salaryNetAmount').addEventListener('input', (e) => { e.target.dataset.touched = '1'; });
+  document.getElementById('runSalaryFilterBtn').addEventListener('click', () => runSalaryFilter());
+  document.querySelectorAll('[data-salary-range]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-salary-range]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      setSalaryQuickRange(btn.dataset.salaryRange);
+      runSalaryFilter();
+    });
+  });
 
   // ---- Expenses ----
   document.getElementById('addExpenseBtn').addEventListener('click', () => openExpenseModal(null));
@@ -1989,6 +2094,172 @@ async function deleteCustomer(customer) {
   await loadCustomers();
 }
 
+// ---- Salaries (الرواتب) ----
+let boSalaryPayments = [];
+
+function populateSalaryEmployeeSelect(selectedUserId) {
+  const sel = document.getElementById('salaryEmployeeSelect');
+  sel.innerHTML = '';
+  boUsers.forEach(u => {
+    const opt = document.createElement('option');
+    opt.value = u.id; opt.textContent = u.full_name + (u.is_active ? '' : ' (موقّف)');
+    opt.dataset.baseSalary = u.base_salary || 0;
+    sel.appendChild(opt);
+  });
+  if (selectedUserId) sel.value = selectedUserId;
+  updateSalaryBaseDisplay();
+}
+
+function updateSalaryBaseDisplay() {
+  const sel = document.getElementById('salaryEmployeeSelect');
+  const opt = sel.options[sel.selectedIndex];
+  const base = opt ? Number(opt.dataset.baseSalary || 0) : 0;
+  document.getElementById('salaryBaseDisplay').value = base.toFixed(2);
+  // اقتراح الصافي المدفوع تلقائيًا لو الحقل لسه فاضي/صفر (مش هيغيّر قيمة اتكتبت يدوي)
+  const netInput = document.getElementById('salaryNetAmount');
+  if (!netInput.dataset.touched) {
+    const bonus = Number(document.getElementById('salaryBonus').value) || 0;
+    const deduction = Number(document.getElementById('salaryDeduction').value) || 0;
+    netInput.value = Math.max(0, base + bonus - deduction).toFixed(2);
+  }
+}
+
+function setSalaryQuickRange(range) {
+  const today = new Date();
+  let from = new Date(today);
+  let to = new Date(today);
+
+  if (range === '7days') {
+    from.setDate(from.getDate() - 6);
+  } else if (range === '30days') {
+    from.setDate(from.getDate() - 29);
+  } else if (range === 'month') {
+    from = new Date(today.getFullYear(), today.getMonth(), 1);
+  }
+
+  document.getElementById('salaryFromDate').value = toDateInputValue(from);
+  document.getElementById('salaryToDate').value = toDateInputValue(to);
+}
+
+async function runSalaryFilter() {
+  const fromDate = document.getElementById('salaryFromDate').value;
+  const toDate = document.getElementById('salaryToDate').value;
+  if (!fromDate || !toDate) return;
+  await loadBoSalaries(fromDate, toDate);
+  renderSalariesTable();
+}
+
+async function loadBoSalaries(fromDate, toDate) {
+  const { data, error } = await supabaseClient
+    .from('salary_payments')
+    .select('*, users_profile(full_name, base_salary)')
+    .gte('payment_date', fromDate)
+    .lte('payment_date', toDate)
+    .order('payment_date', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل الرواتب', true); return; }
+  boSalaryPayments = data || [];
+}
+
+function renderSalariesTable() {
+  const tbody = document.getElementById('salariesTableBody');
+  const total = boSalaryPayments.reduce((s, x) => s + Number(x.net_amount), 0);
+  document.getElementById('salaryTotalLabel').textContent = total.toFixed(2);
+  document.getElementById('salaryCountLabel').textContent = boSalaryPayments.length;
+
+  if (boSalaryPayments.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" class="bo-empty">لا توجد دفعات رواتب في الفترة المحددة</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boSalaryPayments.forEach(x => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="num">${escapeHtml(x.payment_date)}</td>
+      <td>${escapeHtml(x.users_profile?.full_name || '—')}</td>
+      <td class="num">${Number(x.users_profile?.base_salary || 0).toFixed(2)}</td>
+      <td class="num">${Number(x.bonus || 0).toFixed(2)}</td>
+      <td class="num">${Number(x.deduction || 0).toFixed(2)}</td>
+      <td class="num">${Number(x.net_amount).toFixed(2)}</td>
+      <td>${escapeHtml(x.notes || '—')}</td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openSalaryModal(x));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteSalaryPayment(x));
+    tbody.appendChild(tr);
+  });
+}
+
+function openSalaryModal(payment) {
+  document.getElementById('salaryModalTitle').textContent = payment ? 'تعديل دفعة راتب' : 'دفعة راتب جديدة';
+  document.getElementById('salaryId').value = payment ? payment.id : '';
+  document.getElementById('salaryDate').value = payment ? payment.payment_date : toDateInputValue(new Date());
+  document.getElementById('salaryBonus').value = payment ? (payment.bonus || 0) : 0;
+  document.getElementById('salaryDeduction').value = payment ? (payment.deduction || 0) : 0;
+  document.getElementById('salaryNotes').value = payment?.notes || '';
+  const netInput = document.getElementById('salaryNetAmount');
+  netInput.value = payment ? payment.net_amount : 0;
+  delete netInput.dataset.touched;
+  populateSalaryEmployeeSelect(payment ? payment.user_id : (boUsers.find(u => u.is_active)?.id || boUsers[0]?.id));
+  document.getElementById('salaryModalError').classList.remove('show');
+  document.getElementById('salaryModalOverlay').classList.add('show');
+}
+
+function closeSalaryModal() {
+  document.getElementById('salaryModalOverlay').classList.remove('show');
+}
+
+async function saveSalaryPayment(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('salaryModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveSalaryBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('salaryId').value || null;
+  const payload = {
+    user_id: document.getElementById('salaryEmployeeSelect').value,
+    bonus: Number(document.getElementById('salaryBonus').value) || 0,
+    deduction: Number(document.getElementById('salaryDeduction').value) || 0,
+    net_amount: Number(document.getElementById('salaryNetAmount').value) || 0,
+    payment_date: document.getElementById('salaryDate').value,
+    notes: document.getElementById('salaryNotes').value.trim() || null,
+  };
+
+  try {
+    if (!payload.user_id) throw new Error('اختار الموظف');
+    if (id) {
+      const { error } = await supabaseClient.from('salary_payments').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('salary_payments').insert({ ...payload, created_by: currentProfile?.id || null });
+      if (error) throw error;
+    }
+    showToast(id ? 'اتحدّثت دفعة الراتب' : 'اتضافت دفعة الراتب بنجاح');
+    closeSalaryModal();
+    await runSalaryFilter();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حصل خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function deleteSalaryPayment(payment) {
+  if (!confirm('متأكد إنك عايز تحذف دفعة الراتب دي؟')) return;
+  const { error } = await supabaseClient.from('salary_payments').delete().eq('id', payment.id);
+  if (error) { console.error(error); showToast('تعذر حذف دفعة الراتب', true); return; }
+  showToast('اتحذفت دفعة الراتب');
+  await runSalaryFilter();
+}
+
 // ---- Expenses (المصروفات) ----
 let boExpenses = [];
 
@@ -2317,6 +2588,7 @@ function openUserModal(user) {
   document.getElementById('userPassword').required = !user;
   document.getElementById('userPasswordHint').style.display = user ? 'block' : 'none';
   document.getElementById('userActive').checked = user ? !!user.is_active : true;
+  document.getElementById('userBaseSalary').value = user ? (user.base_salary || 0) : 0;
   populateUserSelects(user?.roles?.id, user?.branches?.id);
   document.getElementById('userModalError').classList.remove('show');
   document.getElementById('userModalOverlay').classList.add('show');
@@ -2342,13 +2614,14 @@ async function saveUser(e) {
   const roleId = document.getElementById('userRole').value;
   const branchId = document.getElementById('userBranch').value;
   const isActive = document.getElementById('userActive').checked;
+  const baseSalary = Number(document.getElementById('userBaseSalary').value) || 0;
 
   try {
     if (id) {
       // تحديث مستخدم موجود: بيانات البروفايل + تغيير كلمة المرور لو اتكتبت
       const { error } = await supabaseClient
         .from('users_profile')
-        .update({ full_name: fullName, username: username || null, role_id: roleId, branch_id: branchId, is_active: isActive })
+        .update({ full_name: fullName, username: username || null, role_id: roleId, branch_id: branchId, is_active: isActive, base_salary: baseSalary })
         .eq('id', id);
       if (error) throw error;
 
@@ -2372,7 +2645,7 @@ async function saveUser(e) {
 
       const { error: profileError } = await supabaseClient
         .from('users_profile')
-        .insert({ id: signUpData.user.id, full_name: fullName, username, role_id: roleId, branch_id: branchId, is_active: isActive });
+        .insert({ id: signUpData.user.id, full_name: fullName, username, role_id: roleId, branch_id: branchId, is_active: isActive, base_salary: baseSalary });
       if (profileError) throw profileError;
 
       await adminCreateClient.auth.signOut(); // تنظيف جلسة العميل المؤقت
@@ -2709,6 +2982,7 @@ async function savePurchase(e) {
 // ---- Reports ----
 let reportsLoadedOnce = false;
 let expensesLoadedOnce = false;
+let salariesLoadedOnce = false;
 
 function toDateInputValue(d) {
   return d.toISOString().split('T')[0];
@@ -2796,7 +3070,17 @@ async function runReport() {
     const totalExpensesInRange = (expensesInRange || []).reduce((sum, x) => sum + Number(x.amount), 0);
     document.getElementById('reportExpenses').textContent = totalExpensesInRange.toFixed(2);
 
-    const profit = grossProfit - totalExpensesInRange;
+    // الرواتب المدفوعة في نفس الفترة
+    const { data: salariesInRange, error: salariesError } = await supabaseClient
+      .from('salary_payments')
+      .select('net_amount')
+      .gte('payment_date', fromDate)
+      .lte('payment_date', toDate);
+    if (salariesError) throw salariesError;
+    const totalSalariesInRange = (salariesInRange || []).reduce((sum, x) => sum + Number(x.net_amount), 0);
+    document.getElementById('reportSalaries').textContent = totalSalariesInRange.toFixed(2);
+
+    const profit = grossProfit - totalExpensesInRange - totalSalariesInRange;
     const profitEl = document.getElementById('reportProfit');
     profitEl.textContent = profit.toFixed(2);
     profitEl.classList.toggle('positive', profit >= 0);
