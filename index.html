@@ -466,7 +466,12 @@ a { color: inherit; }
         <div id="bo-section-customers" style="display:none;">
           <div class="bo-section-header">
             <div class="bo-section-title">إدارة العملاء</div>
-            <button class="bo-add-btn" id="addCustomerBtn">+ عميل جديد</button>
+            <div class="bo-section-actions">
+              <input type="file" id="customersExcelInput" accept=".xlsx,.xls" style="display:none;">
+              <button class="bo-outline-btn" id="importCustomersBtn">استيراد إكسل</button>
+              <button class="bo-outline-btn" id="exportCustomersBtn">تصدير إكسل</button>
+              <button class="bo-add-btn" id="addCustomerBtn">+ عميل جديد</button>
+            </div>
           </div>
           <div class="search-row" style="margin-bottom:14px;">
             <input type="text" id="customerSearchInput" placeholder="ابحث بالاسم أو رقم التليفون...">
@@ -1723,6 +1728,9 @@ function bindBackofficeEvents() {
 
   // ---- Customer modal ----
   document.getElementById('addCustomerBtn').addEventListener('click', () => openCustomerModal(null));
+  document.getElementById('exportCustomersBtn').addEventListener('click', exportCustomersToExcel);
+  document.getElementById('importCustomersBtn').addEventListener('click', () => document.getElementById('customersExcelInput').click());
+  document.getElementById('customersExcelInput').addEventListener('change', handleCustomersExcelImport);
   document.getElementById('cancelCustomerBtn').addEventListener('click', closeCustomerModal);
   document.getElementById('customerModalOverlay').addEventListener('click', (e) => {
     if (e.target.id === 'customerModalOverlay') closeCustomerModal();
@@ -2374,6 +2382,109 @@ async function deleteCustomer(customer) {
   await loadBoCustomers();
   renderCustomersTable();
   await loadCustomers();
+}
+
+function exportCustomersToExcel() {
+  if (boCustomers.length === 0) {
+    showToast('مفيش عملاء عشان يتصدّروا', true);
+    return;
+  }
+  const rows = boCustomers.map(c => ({
+    'اسم العميل': c.name || '',
+    'النوع': c.customer_types?.name || '',
+    'رقم التليفون': c.phone || '',
+    'العنوان': c.address || '',
+    'الرصيد': Number(c.balance) || 0,
+    'نقاط الولاء': Number(c.loyalty_points) || 0,
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [{ wch: 24 }, { wch: 16 }, { wch: 16 }, { wch: 26 }, { wch: 12 }, { wch: 12 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'العملاء');
+  const dateStr = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(wb, `العملاء-${dateStr}.xlsx`);
+  showToast('اتصدّر ملف الإكسل بنجاح');
+}
+
+function findOrCreateCustomerTypeId(name) {
+  const clean = (name || '').toString().trim();
+  if (!clean) return Promise.resolve(null);
+  const existing = boCustomerTypes.find(t => t.name.trim().toLowerCase() === clean.toLowerCase());
+  if (existing) return Promise.resolve(existing.id);
+  return supabaseClient.from('customer_types').insert({ name: clean, is_active: true }).select().single()
+    .then(({ data, error }) => {
+      if (error || !data) return null;
+      boCustomerTypes.push(data);
+      return data.id;
+    });
+}
+
+async function handleCustomersExcelImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const importBtn = document.getElementById('importCustomersBtn');
+  importBtn.disabled = true;
+  importBtn.textContent = 'جاري الاستيراد...';
+
+  try {
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array' });
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+    if (rows.length === 0) {
+      showToast('الملف فاضي، مفيش صفوف تتستورد', true);
+      return;
+    }
+
+    let successCount = 0;
+    const errors = [];
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const name = (row['اسم العميل'] || row['الاسم'] || row['name'] || '').toString().trim();
+      if (!name) {
+        errors.push(`صف ${i + 2}: الاسم مفقود`);
+        continue;
+      }
+      try {
+        const customerTypeId = await findOrCreateCustomerTypeId(row['النوع'] || row['customer_type']);
+        const payload = {
+          name,
+          customer_type_id: customerTypeId,
+          phone: (row['رقم التليفون'] || row['phone'] || '').toString().trim() || null,
+          address: (row['العنوان'] || row['address'] || '').toString().trim() || null,
+          balance: Number(row['الرصيد']) || 0,
+          loyalty_points: Number(row['نقاط الولاء']) || 0,
+        };
+        const { error: custError } = await supabaseClient.from('customers').insert(payload);
+        if (custError) throw custError;
+        successCount++;
+      } catch (err) {
+        console.error(err);
+        errors.push(`صف ${i + 2} (${name}): ${err.message || 'حصل خطأ'}`);
+      }
+    }
+
+    await loadBoCustomerTypes();
+    await loadBoCustomers();
+    renderCustomersTable();
+    await loadCustomers();
+
+    if (errors.length === 0) {
+      showToast(`اتضاف ${successCount} عميل بنجاح`);
+    } else {
+      showToast(`اتضاف ${successCount} عميل، وفشل ${errors.length}`, errors.length === rows.length);
+      console.warn('أخطاء الاستيراد:', errors);
+    }
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر قراءة ملف الإكسل، تأكد من الصيغة', true);
+  } finally {
+    importBtn.disabled = false;
+    importBtn.textContent = 'استيراد إكسل';
+    e.target.value = '';
+  }
 }
 
 // ---- Salaries (الرواتب) ----
