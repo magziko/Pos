@@ -375,6 +375,7 @@ a { color: inherit; }
         <button class="bo-nav-item" data-section="expense-items">بنود المصروفات</button>
         <button class="bo-nav-item" data-section="expenses">المصروفات</button>
         <button class="bo-nav-item" data-section="salaries">الرواتب</button>
+        <button class="bo-nav-item" data-section="employees">بيانات الموظفين</button>
         <button class="bo-nav-item" data-section="users">إدارة المستخدمين</button>
       </div>
 
@@ -738,6 +739,35 @@ a { color: inherit; }
           </div>
         </div>
 
+        <!-- قسم بيانات الموظفين -->
+        <div id="bo-section-employees" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">بيانات الموظفين</div>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="employeeSearchInput" placeholder="ابحث بالاسم...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>الاسم الكامل</th>
+                  <th>الوظيفة</th>
+                  <th>الفرع</th>
+                  <th>رقم التليفون</th>
+                  <th>الرقم القومي</th>
+                  <th>تاريخ التعيين</th>
+                  <th>الحالة</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="employeesTableBody">
+                <tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- قسم إدارة المستخدمين -->
         <div id="bo-section-users" style="display:none;">
           <div class="bo-section-header">
@@ -1059,6 +1089,30 @@ a { color: inherit; }
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelUserBtn">إلغاء</button>
         <button type="submit" class="submit-btn" id="saveUserBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: تعديل بيانات موظف -->
+<div class="modal-overlay" id="employeeModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">بيانات الموظف</div>
+    <form id="employeeForm">
+      <input type="hidden" id="employeeId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>الاسم الكامل</label><input type="text" id="employeeFullName" disabled style="background:var(--surface-sunken);"></div>
+        <div class="field"><label>رقم التليفون</label><input type="text" id="employeePhone" style="direction:ltr; text-align:right;"></div>
+        <div class="field"><label>الرقم القومي</label><input type="text" id="employeeNationalId" style="direction:ltr; text-align:right;"></div>
+        <div class="field"><label>تاريخ التعيين</label><input type="date" id="employeeHireDate"></div>
+        <div class="field field-full"><label>العنوان</label><input type="text" id="employeeAddress"></div>
+      </div>
+
+      <div class="error-msg" id="employeeModalError"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelEmployeeBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveEmployeeBtn">حفظ</button>
       </div>
     </form>
   </div>
@@ -1683,6 +1737,7 @@ async function enterBackoffice() {
   renderSuppliersTable();
   renderPurchasesTable();
   renderUsersTable();
+  renderEmployeesTable();
   renderExpenseItemsTable();
   renderUnitTypesTable();
   renderCustomerTypesTable();
@@ -1708,6 +1763,7 @@ function bindBackofficeEvents() {
       document.getElementById('bo-section-reports').style.display = section === 'reports' ? 'block' : 'none';
       document.getElementById('bo-section-soon').style.display = section === 'soon' ? 'block' : 'none';
       document.getElementById('bo-section-users').style.display = section === 'users' ? 'block' : 'none';
+      document.getElementById('bo-section-employees').style.display = section === 'employees' ? 'block' : 'none';
       document.getElementById('bo-section-expense-items').style.display = section === 'expense-items' ? 'block' : 'none';
       document.getElementById('bo-section-expenses').style.display = section === 'expenses' ? 'block' : 'none';
       document.getElementById('bo-section-salaries').style.display = section === 'salaries' ? 'block' : 'none';
@@ -1843,6 +1899,14 @@ function bindBackofficeEvents() {
     if (e.target.id === 'userModalOverlay') closeUserModal();
   });
   document.getElementById('userForm').addEventListener('submit', saveUser);
+
+  // ---- Employees ----
+  document.getElementById('employeeSearchInput').addEventListener('input', renderEmployeesTable);
+  document.getElementById('cancelEmployeeBtn').addEventListener('click', closeEmployeeModal);
+  document.getElementById('employeeModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'employeeModalOverlay') closeEmployeeModal();
+  });
+  document.getElementById('employeeForm').addEventListener('submit', saveEmployee);
 
   // ---- Reports ----
   setQuickRange('today');
@@ -3306,6 +3370,86 @@ async function toggleUserActive(user) {
   if (user.id === currentProfile.id && user.is_active) { await doLogout(); return; }
   await loadBoUsers();
   renderUsersTable();
+}
+
+// ---- Employees (بيانات الموظفين) ----
+function renderEmployeesTable() {
+  const tbody = document.getElementById('employeesTableBody');
+  const q = (document.getElementById('employeeSearchInput')?.value || '').trim().toLowerCase();
+  const filtered = boUsers.filter(u => !q || u.full_name.toLowerCase().includes(q));
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" class="bo-empty">${boUsers.length === 0 ? 'لسه مفيش موظفين مضافين' : 'مفيش موظفين مطابقين للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(u => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(u.full_name)}</td>
+      <td>${escapeHtml(u.roles?.name || '—')}</td>
+      <td>${escapeHtml(u.branches?.name || '—')}</td>
+      <td class="num">${escapeHtml(u.phone || '—')}</td>
+      <td class="num">${escapeHtml(u.national_id || '—')}</td>
+      <td>${escapeHtml(u.hire_date || '—')}</td>
+      <td><span class="bo-badge ${u.is_active ? 'active' : 'inactive'}">${u.is_active ? 'مفعّل' : 'موقّف'}</span></td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openEmployeeModal(u));
+    tbody.appendChild(tr);
+  });
+}
+
+function openEmployeeModal(user) {
+  document.getElementById('employeeId').value = user.id;
+  document.getElementById('employeeFullName').value = user.full_name;
+  document.getElementById('employeePhone').value = user.phone || '';
+  document.getElementById('employeeNationalId').value = user.national_id || '';
+  document.getElementById('employeeHireDate').value = user.hire_date || '';
+  document.getElementById('employeeAddress').value = user.address || '';
+  document.getElementById('employeeModalError').classList.remove('show');
+  document.getElementById('employeeModalOverlay').classList.add('show');
+}
+
+function closeEmployeeModal() {
+  document.getElementById('employeeModalOverlay').classList.remove('show');
+}
+
+async function saveEmployee(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('employeeModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveEmployeeBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('employeeId').value;
+  const payload = {
+    phone: document.getElementById('employeePhone').value.trim() || null,
+    national_id: document.getElementById('employeeNationalId').value.trim() || null,
+    hire_date: document.getElementById('employeeHireDate').value || null,
+    address: document.getElementById('employeeAddress').value.trim() || null,
+  };
+
+  try {
+    const { error } = await supabaseClient.from('users_profile').update(payload).eq('id', id);
+    if (error) throw error;
+    showToast('اتحدّثت بيانات الموظف بنجاح');
+    closeEmployeeModal();
+    await loadBoUsers();
+    renderUsersTable();
+    renderEmployeesTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حصل خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
 }
 
 // ---- Suppliers ----
