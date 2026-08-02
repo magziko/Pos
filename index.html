@@ -759,12 +759,11 @@ a { color: inherit; }
                   <th>الرقم القومي</th>
                   <th>تاريخ التعيين</th>
                   <th>الراتب الأساسي</th>
-                  <th>الحالة</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody id="employeesTableBody">
-                <tr><td colspan="9" class="bo-empty">جاري التحميل...</td></tr>
+                <tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
@@ -1099,18 +1098,19 @@ a { color: inherit; }
 <!-- Modal: إضافة / تعديل بيانات موظف -->
 <div class="modal-overlay" id="employeeModalOverlay">
   <div class="modal-box">
-    <div class="modal-title" id="employeeModalTitle">بيانات الموظف</div>
+    <div class="modal-title" id="employeeModalTitle">موظف جديد</div>
     <form id="employeeForm">
       <input type="hidden" id="employeeId">
       <div class="modal-grid">
         <div class="field field-full"><label>الاسم الكامل</label><input type="text" id="employeeFullName" required></div>
+        <div class="field"><label>الوظيفة</label><input type="text" id="employeeJobTitle" placeholder="مثال: عامل نظافة"></div>
+        <div class="field"><label>الفرع</label><select id="employeeBranch"><option value="">بدون فرع</option></select></div>
         <div class="field"><label>رقم التليفون</label><input type="text" id="employeePhone" style="direction:ltr; text-align:right;"></div>
         <div class="field"><label>الرقم القومي</label><input type="text" id="employeeNationalId" style="direction:ltr; text-align:right;"></div>
         <div class="field"><label>تاريخ التعيين</label><input type="date" id="employeeHireDate"></div>
         <div class="field"><label>الراتب الأساسي</label><input type="number" id="employeeBaseSalary" step="0.01" min="0" value="0"></div>
         <div class="field field-full"><label>العنوان</label><input type="text" id="employeeAddress"></div>
       </div>
-      <div style="font-size:12px; color:var(--ink-soft); margin:-4px 0 4px;" id="employeeNoLoginHint">الموظف ده بيانات وراتب بس، من غير حساب دخول على البرنامج.</div>
 
       <div class="error-msg" id="employeeModalError"></div>
 
@@ -1732,6 +1732,7 @@ async function enterBackoffice() {
   await loadBoRoles();
   await loadBoBranches();
   await loadBoUsers();
+  await loadBoEmployees();
   await loadBoExpenseItems();
   await loadBoUnitTypes();
   await loadBoCustomerTypes();
@@ -3355,7 +3356,6 @@ async function saveUser(e) {
     closeUserModal();
     await loadBoUsers();
     renderUsersTable();
-    renderEmployeesTable();
   } catch (err) {
     console.error(err);
     errEl.textContent = err.message || 'حصل خطأ أثناء الحفظ';
@@ -3378,70 +3378,75 @@ async function toggleUserActive(user) {
   renderUsersTable();
 }
 
-// ---- Employees (بيانات الموظفين) ----
+// ---- Employees (بيانات الموظفين) — جدول مستقل، مجرد بيانات من غير حساب دخول ----
+let boEmployees = [];
+
+async function loadBoEmployees() {
+  const { data, error } = await supabaseClient.from('employees').select('*, branches(name)').order('full_name');
+  if (error) { console.error(error); showToast('تعذر تحميل بيانات الموظفين', true); return; }
+  boEmployees = data || [];
+}
+
 function renderEmployeesTable() {
   const tbody = document.getElementById('employeesTableBody');
   const q = (document.getElementById('employeeSearchInput')?.value || '').trim().toLowerCase();
-  const filtered = boUsers.filter(u => !q || u.full_name.toLowerCase().includes(q));
+  const filtered = boEmployees.filter(e => !q || e.full_name.toLowerCase().includes(q));
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="9" class="bo-empty">${boUsers.length === 0 ? 'لسه مفيش موظفين مضافين' : 'مفيش موظفين مطابقين للبحث'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="bo-empty">${boEmployees.length === 0 ? 'لسه مفيش موظفين مضافين' : 'مفيش موظفين مطابقين للبحث'}</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
-  filtered.forEach(u => {
+  filtered.forEach(e => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${escapeHtml(u.full_name)}</td>
-      <td>${escapeHtml(u.roles?.name || '—')}</td>
-      <td>${escapeHtml(u.branches?.name || '—')}</td>
-      <td class="num">${escapeHtml(u.phone || '—')}</td>
-      <td class="num">${escapeHtml(u.national_id || '—')}</td>
-      <td>${escapeHtml(u.hire_date || '—')}</td>
-      <td class="num">${Number(u.base_salary || 0).toFixed(2)}</td>
-      <td><span class="bo-badge ${u.is_active ? 'active' : 'inactive'}">${u.is_active ? 'مفعّل' : 'موقّف'}</span></td>
+      <td>${escapeHtml(e.full_name)}</td>
+      <td>${escapeHtml(e.job_title || '—')}</td>
+      <td>${escapeHtml(e.branches?.name || '—')}</td>
+      <td class="num">${escapeHtml(e.phone || '—')}</td>
+      <td class="num">${escapeHtml(e.national_id || '—')}</td>
+      <td>${escapeHtml(e.hire_date || '—')}</td>
+      <td class="num">${Number(e.base_salary || 0).toFixed(2)}</td>
       <td>
         <div class="bo-row-actions">
           <button class="bo-icon-btn" data-action="edit">تعديل</button>
           <button class="bo-icon-btn danger" data-action="delete">حذف</button>
         </div>
       </td>`;
-    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openEmployeeModal(u));
-    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteEmployee(u));
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openEmployeeModal(e));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteEmployee(e));
     tbody.appendChild(tr);
   });
 }
 
-function openEmployeeModal(user) {
-  document.getElementById('employeeModalTitle').textContent = user ? 'بيانات الموظف' : 'إضافة موظف جديد';
-  document.getElementById('employeeId').value = user ? user.id : '';
-  document.getElementById('employeeFullName').value = user ? user.full_name : '';
-  document.getElementById('employeePhone').value = user ? (user.phone || '') : '';
-  document.getElementById('employeeNationalId').value = user ? (user.national_id || '') : '';
-  document.getElementById('employeeHireDate').value = user ? (user.hire_date || '') : '';
-  document.getElementById('employeeBaseSalary').value = user ? (user.base_salary || 0) : 0;
-  document.getElementById('employeeAddress').value = user ? (user.address || '') : '';
-  document.getElementById('employeeNoLoginHint').style.display = user ? 'none' : 'block';
+function populateEmployeeBranchSelect(currentValue) {
+  const sel = document.getElementById('employeeBranch');
+  sel.innerHTML = '<option value="">بدون فرع</option>';
+  boBranchesList.forEach(b => {
+    const opt = document.createElement('option');
+    opt.value = b.id; opt.textContent = b.name;
+    sel.appendChild(opt);
+  });
+  sel.value = currentValue || '';
+}
+
+function openEmployeeModal(employee) {
+  document.getElementById('employeeModalTitle').textContent = employee ? 'تعديل بيانات موظف' : 'موظف جديد';
+  document.getElementById('employeeId').value = employee ? employee.id : '';
+  document.getElementById('employeeFullName').value = employee ? employee.full_name : '';
+  document.getElementById('employeeJobTitle').value = employee?.job_title || '';
+  populateEmployeeBranchSelect(employee?.branch_id || '');
+  document.getElementById('employeePhone').value = employee?.phone || '';
+  document.getElementById('employeeNationalId').value = employee?.national_id || '';
+  document.getElementById('employeeHireDate').value = employee?.hire_date || '';
+  document.getElementById('employeeBaseSalary').value = employee ? (employee.base_salary || 0) : 0;
+  document.getElementById('employeeAddress').value = employee?.address || '';
   document.getElementById('employeeModalError').classList.remove('show');
   document.getElementById('employeeModalOverlay').classList.add('show');
 }
 
 function closeEmployeeModal() {
   document.getElementById('employeeModalOverlay').classList.remove('show');
-}
-
-async function deleteEmployee(user) {
-  if (user.id === currentProfile.id) {
-    showToast('متقدرش تحذف حسابك الحالي', true);
-    return;
-  }
-  if (!confirm(`متأكد إنك عايز تحذف الموظف "${user.full_name}"؟`)) return;
-  const { error } = await supabaseClient.from('users_profile').delete().eq('id', user.id);
-  if (error) { console.error(error); showToast('تعذر حذف الموظف', true); return; }
-  showToast('اتحذف الموظف بنجاح');
-  await loadBoUsers();
-  renderEmployeesTable();
-  renderUsersTable();
 }
 
 async function saveEmployee(e) {
@@ -3452,49 +3457,31 @@ async function saveEmployee(e) {
   saveBtn.disabled = true;
   saveBtn.textContent = 'جاري الحفظ...';
 
-  const id = document.getElementById('employeeId').value;
-  const fullName = document.getElementById('employeeFullName').value.trim();
-  const baseSalary = Number(document.getElementById('employeeBaseSalary').value) || 0;
+  const id = document.getElementById('employeeId').value || null;
   const payload = {
-    full_name: fullName,
-    base_salary: baseSalary,
+    full_name: document.getElementById('employeeFullName').value.trim(),
+    job_title: document.getElementById('employeeJobTitle').value.trim() || null,
+    branch_id: document.getElementById('employeeBranch').value || null,
     phone: document.getElementById('employeePhone').value.trim() || null,
     national_id: document.getElementById('employeeNationalId').value.trim() || null,
     hire_date: document.getElementById('employeeHireDate').value || null,
+    base_salary: Number(document.getElementById('employeeBaseSalary').value) || 0,
     address: document.getElementById('employeeAddress').value.trim() || null,
   };
 
   try {
-    if (!fullName) throw new Error('اكتب اسم الموظف');
+    if (!payload.full_name) throw new Error('اكتب اسم الموظف');
 
     if (id) {
-      // تعديل بيانات موظف موجود
-      const { error } = await supabaseClient.from('users_profile').update(payload).eq('id', id);
+      const { error } = await supabaseClient.from('employees').update(payload).eq('id', id);
       if (error) throw error;
-      showToast('اتحدّثت بيانات الموظف بنجاح');
     } else {
-      // موظف جديد من غير حساب دخول على البرنامج: بننشئ حساب مخفي بس عشان قيود قاعدة البيانات،
-      // وبنسيبه موقّف (is_active: false) وبدون صلاحية/فرع عشان محدش يقدر يدخل بيه فعليًا
-      const hiddenUsername = 'staff_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-      const hiddenPassword = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
-      const email = usernameToEmail(hiddenUsername);
-
-      const { data: signUpData, error: signUpError } = await adminCreateClient.auth.signUp({ email, password: hiddenPassword });
-      if (signUpError) throw signUpError;
-      if (!signUpData.user) throw new Error('تعذر إنشاء سجل الموظف');
-
-      const { error: profileError } = await supabaseClient
-        .from('users_profile')
-        .insert({ id: signUpData.user.id, is_active: false, role_id: null, branch_id: null, username: null, ...payload });
-      if (profileError) throw profileError;
-
-      await adminCreateClient.auth.signOut(); // تنظيف جلسة العميل المؤقت
-      showToast('اتضاف الموظف بنجاح');
+      const { error } = await supabaseClient.from('employees').insert(payload);
+      if (error) throw error;
     }
-
+    showToast(id ? 'اتحدّثت بيانات الموظف بنجاح' : 'اتضاف الموظف بنجاح');
     closeEmployeeModal();
-    await loadBoUsers();
-    renderUsersTable();
+    await loadBoEmployees();
     renderEmployeesTable();
   } catch (err) {
     console.error(err);
@@ -3504,6 +3491,15 @@ async function saveEmployee(e) {
     saveBtn.disabled = false;
     saveBtn.textContent = 'حفظ';
   }
+}
+
+async function deleteEmployee(employee) {
+  if (!confirm(`متأكد إنك عايز تحذف الموظف "${employee.full_name}"؟`)) return;
+  const { error } = await supabaseClient.from('employees').delete().eq('id', employee.id);
+  if (error) { console.error(error); showToast('تعذر حذف الموظف', true); return; }
+  showToast('اتحذف الموظف بنجاح');
+  await loadBoEmployees();
+  renderEmployeesTable();
 }
 
 // ---- Suppliers ----
