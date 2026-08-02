@@ -366,6 +366,7 @@ a { color: inherit; }
         <button class="bo-nav-item" data-section="purchases">فواتير الشراء</button>
         <button class="bo-nav-item" data-section="reports">التقارير</button>
         <button class="bo-nav-item" data-section="expense-items">بنود المصروفات</button>
+        <button class="bo-nav-item" data-section="expenses">المصروفات</button>
         <button class="bo-nav-item" data-section="users">إدارة المستخدمين</button>
       </div>
 
@@ -541,6 +542,56 @@ a { color: inherit; }
               <thead><tr><th>الصنف</th><th>الكمية المباعة</th><th>الإيراد</th></tr></thead>
               <tbody id="topProductsTableBody">
                 <tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم المصروفات -->
+        <div id="bo-section-expenses" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">المصروفات</div>
+            <button class="bo-add-btn" id="addExpenseBtn">+ مصروف جديد</button>
+          </div>
+
+          <div class="quick-range-row" id="expenseQuickRangeRow" style="margin-bottom:12px;">
+            <button class="quick-range-btn" data-expense-range="today">اليوم</button>
+            <button class="quick-range-btn" data-expense-range="7days">آخر 7 أيام</button>
+            <button class="quick-range-btn active" data-expense-range="month">الشهر الحالي</button>
+            <button class="quick-range-btn" data-expense-range="30days">آخر 30 يوم</button>
+          </div>
+
+          <div class="report-filters">
+            <div class="field"><label>من تاريخ</label><input type="date" id="expenseFromDate"></div>
+            <div class="field"><label>إلى تاريخ</label><input type="date" id="expenseToDate"></div>
+            <button class="bo-add-btn" id="runExpenseFilterBtn">تحديث</button>
+          </div>
+
+          <div class="report-cards">
+            <div class="report-card">
+              <div class="report-card-label">إجمالي المصروفات في الفترة</div>
+              <div class="report-card-value num" id="expenseTotalLabel">0.00</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">عدد المصروفات</div>
+              <div class="report-card-value num" id="expenseCountLabel">0</div>
+            </div>
+          </div>
+
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>التاريخ</th>
+                  <th>البند</th>
+                  <th>الفرع</th>
+                  <th>المبلغ</th>
+                  <th>ملاحظات</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="expensesTableBody">
+                <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
@@ -739,6 +790,28 @@ a { color: inherit; }
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelPurchaseBtn">إلغاء</button>
         <button type="submit" class="submit-btn" id="savePurchaseBtn">حفظ الفاتورة</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: إضافة / تعديل مصروف -->
+<div class="modal-overlay" id="expenseModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="expenseModalTitle">مصروف جديد</div>
+    <form id="expenseForm">
+      <input type="hidden" id="expenseId">
+      <div class="modal-grid">
+        <div class="field"><label>البند</label><select id="expenseItemSelect" required></select></div>
+        <div class="field"><label>الفرع</label><select id="expenseBranchSelect" required></select></div>
+        <div class="field"><label>المبلغ</label><input type="number" id="expenseAmount" step="0.01" min="0" required value="0"></div>
+        <div class="field"><label>التاريخ</label><input type="date" id="expenseDate" required></div>
+        <div class="field field-full"><label>ملاحظات (اختياري)</label><input type="text" id="expenseNotes"></div>
+      </div>
+      <div class="error-msg" id="expenseModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelExpenseBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveExpenseBtn">حفظ</button>
       </div>
     </form>
   </div>
@@ -1437,7 +1510,9 @@ function bindBackofficeEvents() {
       document.getElementById('bo-section-soon').style.display = section === 'soon' ? 'block' : 'none';
       document.getElementById('bo-section-users').style.display = section === 'users' ? 'block' : 'none';
       document.getElementById('bo-section-expense-items').style.display = section === 'expense-items' ? 'block' : 'none';
+      document.getElementById('bo-section-expenses').style.display = section === 'expenses' ? 'block' : 'none';
       if (section === 'reports' && !reportsLoadedOnce) { runReport(); reportsLoadedOnce = true; }
+      if (section === 'expenses' && !expensesLoadedOnce) { setExpenseQuickRange('month'); runExpenseFilter(); expensesLoadedOnce = true; }
     });
   });
 
@@ -1488,6 +1563,23 @@ function bindBackofficeEvents() {
   document.getElementById('addPurchaseLineBtn').addEventListener('click', () => addPurchaseLine());
   document.getElementById('purchasePaid').addEventListener('input', updatePurchaseTotals);
   document.getElementById('purchaseForm').addEventListener('submit', savePurchase);
+
+  // ---- Expenses ----
+  document.getElementById('addExpenseBtn').addEventListener('click', () => openExpenseModal(null));
+  document.getElementById('cancelExpenseBtn').addEventListener('click', closeExpenseModal);
+  document.getElementById('expenseModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'expenseModalOverlay') closeExpenseModal();
+  });
+  document.getElementById('expenseForm').addEventListener('submit', saveExpense);
+  document.getElementById('runExpenseFilterBtn').addEventListener('click', () => runExpenseFilter());
+  document.querySelectorAll('[data-expense-range]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-expense-range]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      setExpenseQuickRange(btn.dataset.expenseRange);
+      runExpenseFilter();
+    });
+  });
 
   // ---- Expense items ----
   document.getElementById('addExpenseItemBtn').addEventListener('click', () => openExpenseItemModal(null));
@@ -1891,6 +1983,161 @@ async function deleteCustomer(customer) {
   await loadBoCustomers();
   renderCustomersTable();
   await loadCustomers();
+}
+
+// ---- Expenses (المصروفات) ----
+let boExpenses = [];
+
+function populateExpenseSelects(selectedItemId, selectedBranchId) {
+  const itemSel = document.getElementById('expenseItemSelect');
+  itemSel.innerHTML = '';
+  boExpenseItems.forEach(x => {
+    const opt = document.createElement('option');
+    opt.value = x.id; opt.textContent = x.name;
+    itemSel.appendChild(opt);
+  });
+  if (selectedItemId) itemSel.value = selectedItemId;
+
+  const branchSel = document.getElementById('expenseBranchSelect');
+  branchSel.innerHTML = '';
+  boBranchesList.forEach(b => {
+    const opt = document.createElement('option');
+    opt.value = b.id; opt.textContent = b.name;
+    branchSel.appendChild(opt);
+  });
+  if (selectedBranchId) branchSel.value = selectedBranchId;
+}
+
+function setExpenseQuickRange(range) {
+  const today = new Date();
+  let from = new Date(today);
+  let to = new Date(today);
+
+  if (range === '7days') {
+    from.setDate(from.getDate() - 6);
+  } else if (range === '30days') {
+    from.setDate(from.getDate() - 29);
+  } else if (range === 'month') {
+    from = new Date(today.getFullYear(), today.getMonth(), 1);
+  }
+  // 'today' يسيب from = to = النهاردة
+
+  document.getElementById('expenseFromDate').value = toDateInputValue(from);
+  document.getElementById('expenseToDate').value = toDateInputValue(to);
+}
+
+async function runExpenseFilter() {
+  const fromDate = document.getElementById('expenseFromDate').value;
+  const toDate = document.getElementById('expenseToDate').value;
+  if (!fromDate || !toDate) return;
+  await loadBoExpenses(fromDate, toDate);
+  renderExpensesTable();
+}
+
+async function loadBoExpenses(fromDate, toDate) {
+  const { data, error } = await supabaseClient
+    .from('expenses')
+    .select('*, expense_items(name), branches(name)')
+    .gte('expense_date', fromDate)
+    .lte('expense_date', toDate)
+    .order('expense_date', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل المصروفات', true); return; }
+  boExpenses = data || [];
+}
+
+function renderExpensesTable() {
+  const tbody = document.getElementById('expensesTableBody');
+  const total = boExpenses.reduce((s, x) => s + Number(x.amount), 0);
+  document.getElementById('expenseTotalLabel').textContent = total.toFixed(2);
+  document.getElementById('expenseCountLabel').textContent = boExpenses.length;
+
+  if (boExpenses.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">لا توجد مصروفات في الفترة المحددة</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boExpenses.forEach(x => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="num">${escapeHtml(x.expense_date)}</td>
+      <td>${escapeHtml(x.expense_items?.name || '—')}</td>
+      <td>${escapeHtml(x.branches?.name || '—')}</td>
+      <td class="num">${Number(x.amount).toFixed(2)}</td>
+      <td>${escapeHtml(x.notes || '—')}</td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openExpenseModal(x));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteExpense(x));
+    tbody.appendChild(tr);
+  });
+}
+
+function openExpenseModal(expense) {
+  document.getElementById('expenseModalTitle').textContent = expense ? 'تعديل مصروف' : 'مصروف جديد';
+  document.getElementById('expenseId').value = expense ? expense.id : '';
+  document.getElementById('expenseAmount').value = expense ? expense.amount : 0;
+  document.getElementById('expenseDate').value = expense ? expense.expense_date : toDateInputValue(new Date());
+  document.getElementById('expenseNotes').value = expense?.notes || '';
+  populateExpenseSelects(
+    expense ? expense.expense_item_id : (boExpenseItems[0]?.id || ''),
+    expense ? expense.branch_id : (currentProfile?.branches?.id || boBranchesList[0]?.id || '')
+  );
+  document.getElementById('expenseModalError').classList.remove('show');
+  document.getElementById('expenseModalOverlay').classList.add('show');
+}
+
+function closeExpenseModal() {
+  document.getElementById('expenseModalOverlay').classList.remove('show');
+}
+
+async function saveExpense(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('expenseModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveExpenseBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('expenseId').value || null;
+  const payload = {
+    expense_item_id: document.getElementById('expenseItemSelect').value,
+    branch_id: document.getElementById('expenseBranchSelect').value,
+    amount: Number(document.getElementById('expenseAmount').value) || 0,
+    expense_date: document.getElementById('expenseDate').value,
+    notes: document.getElementById('expenseNotes').value.trim() || null,
+  };
+
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('expenses').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('expenses').insert({ ...payload, created_by: currentProfile?.id || null });
+      if (error) throw error;
+    }
+    showToast(id ? 'اتحدّث المصروف' : 'اتضاف المصروف بنجاح');
+    closeExpenseModal();
+    await runExpenseFilter();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حصل خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function deleteExpense(expense) {
+  if (!confirm('متأكد إنك عايز تحذف المصروف ده؟')) return;
+  const { error } = await supabaseClient.from('expenses').delete().eq('id', expense.id);
+  if (error) { console.error(error); showToast('تعذر حذف المصروف', true); return; }
+  showToast('اتحذف المصروف');
+  await runExpenseFilter();
 }
 
 // ---- Expense items (بنود المصروفات) ----
@@ -2457,6 +2704,7 @@ async function savePurchase(e) {
 
 // ---- Reports ----
 let reportsLoadedOnce = false;
+let expensesLoadedOnce = false;
 
 function toDateInputValue(d) {
   return d.toISOString().split('T')[0];
