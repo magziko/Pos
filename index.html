@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>نظام نقاط البيع</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 /* ============================================================
    Design tokens
@@ -150,6 +151,10 @@ a { color: inherit; }
 .bo-section-title { font-size: 18px; font-weight: 700; }
 .bo-add-btn { background: var(--teal-700); color: white; padding: 10px 18px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 600; }
 .bo-add-btn:hover { background: var(--teal-900); }
+.bo-section-actions { display: flex; align-items: center; gap: 8px; }
+.bo-outline-btn { background: var(--surface); color: var(--teal-700); border: 1px solid var(--teal-700); padding: 9px 16px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 600; }
+.bo-outline-btn:hover { background: var(--teal-100); }
+.bo-outline-btn:disabled { opacity: .6; cursor: not-allowed; }
 .bo-table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
 .bo-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 .bo-table th { text-align: right; background: var(--surface-sunken); color: var(--ink-soft); font-weight: 600; padding: 10px 14px; font-size: 12.5px; }
@@ -376,7 +381,12 @@ a { color: inherit; }
         <div id="bo-section-products">
           <div class="bo-section-header">
             <div class="bo-section-title">إدارة الأصناف</div>
-            <button class="bo-add-btn" id="addProductBtn">+ صنف جديد</button>
+            <div class="bo-section-actions">
+              <input type="file" id="productsExcelInput" accept=".xlsx,.xls" style="display:none;">
+              <button class="bo-outline-btn" id="importProductsBtn">استيراد إكسل</button>
+              <button class="bo-outline-btn" id="exportProductsBtn">تصدير إكسل</button>
+              <button class="bo-add-btn" id="addProductBtn">+ صنف جديد</button>
+            </div>
           </div>
           <div class="bo-table-wrap">
             <table class="bo-table">
@@ -1606,6 +1616,9 @@ function bindBackofficeEvents() {
 
   // ---- Product modal ----
   document.getElementById('addProductBtn').addEventListener('click', () => openProductModal(null));
+  document.getElementById('exportProductsBtn').addEventListener('click', exportProductsToExcel);
+  document.getElementById('importProductsBtn').addEventListener('click', () => document.getElementById('productsExcelInput').click());
+  document.getElementById('productsExcelInput').addEventListener('change', handleProductsExcelImport);
   document.getElementById('cancelProductBtn').addEventListener('click', closeProductModal);
   document.getElementById('productModalOverlay').addEventListener('click', (e) => {
     if (e.target.id === 'productModalOverlay') closeProductModal();
@@ -1742,6 +1755,131 @@ function populateProductCategorySelect() {
     opt.value = c.id; opt.textContent = c.name;
     sel.appendChild(opt);
   });
+}
+
+function exportProductsToExcel() {
+  if (boProducts.length === 0) {
+    showToast('مفيش أصناف عشان تتصدّر', true);
+    return;
+  }
+  const rows = boProducts.map(p => ({
+    'اسم الصنف': p.name || '',
+    'المجموعة': p.categories?.name || '',
+    'نوع الوحدة': p.unit_type === 'weight' ? 'بالوزن' : 'بالقطعة',
+    'سعر الشراء': Number(p.cost_price) || 0,
+    'سعر البيع': Number(p.sale_price) || 0,
+    'سعر بيع 2': p.sale_price_2 != null ? Number(p.sale_price_2) : '',
+    'حد إعادة الطلب': Number(p.reorder_level) || 0,
+    'الباركود': (p.product_barcodes || []).map(b => b.barcode).join(', '),
+    'الحالة': p.is_active ? 'مفعّل' : 'موقّف',
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [
+    { wch: 26 }, { wch: 18 }, { wch: 12 }, { wch: 12 },
+    { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 26 }, { wch: 10 },
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'الأصناف');
+  const dateStr = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(wb, `الأصناف-${dateStr}.xlsx`);
+  showToast('اتصدّر ملف الإكسل بنجاح');
+}
+
+function findOrCreateCategoryId(name) {
+  const clean = (name || '').toString().trim();
+  if (!clean) return Promise.resolve(null);
+  const existing = boCategories.find(c => c.name.trim().toLowerCase() === clean.toLowerCase());
+  if (existing) return Promise.resolve(existing.id);
+  return supabaseClient.from('categories').insert({ name: clean, is_active: true }).select().single()
+    .then(({ data, error }) => {
+      if (error || !data) return null;
+      boCategories.push(data);
+      return data.id;
+    });
+}
+
+async function handleProductsExcelImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const importBtn = document.getElementById('importProductsBtn');
+  importBtn.disabled = true;
+  importBtn.textContent = 'جاري الاستيراد...';
+
+  try {
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array' });
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+    if (rows.length === 0) {
+      showToast('الملف فاضي، مفيش صفوف تتستورد', true);
+      return;
+    }
+
+    let successCount = 0;
+    const errors = [];
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const name = (row['اسم الصنف'] || row['الاسم'] || row['name'] || '').toString().trim();
+      if (!name) {
+        errors.push(`صف ${i + 2}: الاسم مفقود`);
+        continue;
+      }
+      try {
+        const categoryId = await findOrCreateCategoryId(row['المجموعة'] || row['category']);
+        const unitRaw = (row['نوع الوحدة'] || row['unit_type'] || '').toString().trim();
+        const unitType = unitRaw === 'بالوزن' || unitRaw.toLowerCase() === 'weight' ? 'weight' : 'piece';
+        const salePrice2Raw = row['سعر بيع 2'];
+        const payload = {
+          name,
+          category_id: categoryId,
+          unit_type: unitType,
+          cost_price: Number(row['سعر الشراء']) || 0,
+          sale_price: Number(row['سعر البيع']) || 0,
+          sale_price_2: salePrice2Raw !== '' && salePrice2Raw != null ? Number(salePrice2Raw) : null,
+          reorder_level: Number(row['حد إعادة الطلب']) || 0,
+          is_active: (row['الحالة'] || '').toString().trim() !== 'موقّف',
+        };
+        const { data: newProduct, error: prodError } = await supabaseClient
+          .from('products').insert(payload).select().single();
+        if (prodError) throw prodError;
+
+        const barcodeText = (row['الباركود'] || row['barcode'] || '').toString().trim();
+        if (barcodeText) {
+          const barcodes = barcodeText.split(/[,،\s]+/).filter(Boolean)
+            .map(b => ({ product_id: newProduct.id, barcode: b }));
+          if (barcodes.length > 0) {
+            const { error: bcError } = await supabaseClient.from('product_barcodes').insert(barcodes);
+            if (bcError) errors.push(`صف ${i + 2}: الباركود اتكرر أو حصل خطأ فيه`);
+          }
+        }
+        successCount++;
+      } catch (err) {
+        console.error(err);
+        errors.push(`صف ${i + 2} (${name}): ${err.message || 'حصل خطأ'}`);
+      }
+    }
+
+    await loadBoCategories();
+    await loadBoProducts();
+    populateProductCategorySelect();
+    renderProductsTable();
+
+    if (errors.length === 0) {
+      showToast(`اتضاف ${successCount} صنف بنجاح`);
+    } else {
+      showToast(`اتضاف ${successCount} صنف، وفشل ${errors.length}`, errors.length === rows.length);
+      console.warn('أخطاء الاستيراد:', errors);
+    }
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر قراءة ملف الإكسل، تأكد من الصيغة', true);
+  } finally {
+    importBtn.disabled = false;
+    importBtn.textContent = 'استيراد إكسل';
+    e.target.value = '';
+  }
 }
 
 function renderProductsTable() {
