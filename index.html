@@ -365,6 +365,7 @@ a { color: inherit; }
         <button class="bo-nav-item" data-section="suppliers">الموردون</button>
         <button class="bo-nav-item" data-section="purchases">فواتير الشراء</button>
         <button class="bo-nav-item" data-section="reports">التقارير</button>
+        <button class="bo-nav-item" data-section="expense-items">بنود المصروفات</button>
         <button class="bo-nav-item" data-section="users">إدارة المستخدمين</button>
       </div>
 
@@ -539,6 +540,22 @@ a { color: inherit; }
             <table class="bo-table">
               <thead><tr><th>الصنف</th><th>الكمية المباعة</th><th>الإيراد</th></tr></thead>
               <tbody id="topProductsTableBody">
+                <tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم بنود المصروفات -->
+        <div id="bo-section-expense-items" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">بنود المصروفات</div>
+            <button class="bo-add-btn" id="addExpenseItemBtn">+ بند جديد</button>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>اسم البند</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="expenseItemsTableBody">
                 <tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
@@ -722,6 +739,27 @@ a { color: inherit; }
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelPurchaseBtn">إلغاء</button>
         <button type="submit" class="submit-btn" id="savePurchaseBtn">حفظ الفاتورة</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: إضافة / تعديل بند مصروف -->
+<div class="modal-overlay" id="expenseItemModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="expenseItemModalTitle">بند جديد</div>
+    <form id="expenseItemForm">
+      <input type="hidden" id="expenseItemId">
+      <div class="field field-full"><label>اسم البند</label><input type="text" id="expenseItemName" required placeholder="مثال: إيجار، كهرباء، صيانة..."></div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="expenseItemActive" checked style="width:auto;"> مفعّل
+        </label>
+      </div>
+      <div class="error-msg" id="expenseItemModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelExpenseItemBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveExpenseItemBtn">حفظ</button>
       </div>
     </form>
   </div>
@@ -1370,12 +1408,14 @@ async function enterBackoffice() {
   await loadBoRoles();
   await loadBoBranches();
   await loadBoUsers();
+  await loadBoExpenseItems();
   renderProductsTable();
   renderCategoriesTable();
   renderCustomersTable();
   renderSuppliersTable();
   renderPurchasesTable();
   renderUsersTable();
+  renderExpenseItemsTable();
   populateProductCategorySelect();
 }
 
@@ -1396,6 +1436,7 @@ function bindBackofficeEvents() {
       document.getElementById('bo-section-reports').style.display = section === 'reports' ? 'block' : 'none';
       document.getElementById('bo-section-soon').style.display = section === 'soon' ? 'block' : 'none';
       document.getElementById('bo-section-users').style.display = section === 'users' ? 'block' : 'none';
+      document.getElementById('bo-section-expense-items').style.display = section === 'expense-items' ? 'block' : 'none';
       if (section === 'reports' && !reportsLoadedOnce) { runReport(); reportsLoadedOnce = true; }
     });
   });
@@ -1447,6 +1488,14 @@ function bindBackofficeEvents() {
   document.getElementById('addPurchaseLineBtn').addEventListener('click', () => addPurchaseLine());
   document.getElementById('purchasePaid').addEventListener('input', updatePurchaseTotals);
   document.getElementById('purchaseForm').addEventListener('submit', savePurchase);
+
+  // ---- Expense items ----
+  document.getElementById('addExpenseItemBtn').addEventListener('click', () => openExpenseItemModal(null));
+  document.getElementById('cancelExpenseItemBtn').addEventListener('click', closeExpenseItemModal);
+  document.getElementById('expenseItemModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'expenseItemModalOverlay') closeExpenseItemModal();
+  });
+  document.getElementById('expenseItemForm').addEventListener('submit', saveExpenseItem);
 
   // ---- Users ----
   document.getElementById('addUserBtn').addEventListener('click', () => openUserModal(null));
@@ -1842,6 +1891,95 @@ async function deleteCustomer(customer) {
   await loadBoCustomers();
   renderCustomersTable();
   await loadCustomers();
+}
+
+// ---- Expense items (بنود المصروفات) ----
+let boExpenseItems = [];
+
+async function loadBoExpenseItems() {
+  const { data, error } = await supabaseClient.from('expense_items').select('*').order('name');
+  if (error) { console.error(error); showToast('تعذر تحميل بنود المصروفات', true); return; }
+  boExpenseItems = data || [];
+}
+
+function renderExpenseItemsTable() {
+  const tbody = document.getElementById('expenseItemsTableBody');
+  if (boExpenseItems.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">لسه مفيش بنود مصروفات مضافة</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boExpenseItems.forEach(x => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(x.name)}</td>
+      <td><span class="bo-badge ${x.is_active ? 'active' : 'inactive'}">${x.is_active ? 'مفعّل' : 'موقّف'}</span></td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="toggle">${x.is_active ? 'إيقاف' : 'تفعيل'}</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openExpenseItemModal(x));
+    tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleExpenseItemActive(x));
+    tbody.appendChild(tr);
+  });
+}
+
+function openExpenseItemModal(item) {
+  document.getElementById('expenseItemModalTitle').textContent = item ? 'تعديل بند' : 'بند جديد';
+  document.getElementById('expenseItemId').value = item ? item.id : '';
+  document.getElementById('expenseItemName').value = item ? item.name : '';
+  document.getElementById('expenseItemActive').checked = item ? item.is_active : true;
+  document.getElementById('expenseItemModalError').classList.remove('show');
+  document.getElementById('expenseItemModalOverlay').classList.add('show');
+}
+
+function closeExpenseItemModal() {
+  document.getElementById('expenseItemModalOverlay').classList.remove('show');
+}
+
+async function saveExpenseItem(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('expenseItemModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveExpenseItemBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('expenseItemId').value || null;
+  const payload = {
+    name: document.getElementById('expenseItemName').value.trim(),
+    is_active: document.getElementById('expenseItemActive').checked,
+  };
+
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('expense_items').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('expense_items').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'اتحدّث البند' : 'اتضاف البند بنجاح');
+    closeExpenseItemModal();
+    await loadBoExpenseItems();
+    renderExpenseItemsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حصل خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function toggleExpenseItemActive(item) {
+  const { error } = await supabaseClient.from('expense_items').update({ is_active: !item.is_active }).eq('id', item.id);
+  if (error) { console.error(error); showToast('تعذر تحديث حالة البند', true); return; }
+  await loadBoExpenseItems();
+  renderExpenseItemsTable();
 }
 
 // ---- Users ----
