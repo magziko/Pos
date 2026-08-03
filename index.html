@@ -198,6 +198,9 @@ a { color: inherit; }
 .unit-row { display: grid; grid-template-columns: 1.2fr 1fr 1fr auto; gap: 8px; align-items: center; background: var(--surface-sunken); padding: 8px; border-radius: var(--radius-sm); }
 .unit-row input, .unit-row select { padding: 8px 9px; font-size: 12.5px; }
 .unit-row .remove-unit-btn { color: var(--danger); background: none; font-size: 16px; font-weight: 700; padding: 4px 8px; }
+.transfer-row { display: grid; grid-template-columns: 2fr 1fr auto; gap: 8px; align-items: center; background: var(--surface-sunken); padding: 8px; border-radius: var(--radius-sm); margin-bottom: 6px; }
+.transfer-row input, .transfer-row select { padding: 8px 9px; font-size: 12.5px; }
+.transfer-row .remove-unit-btn { color: var(--danger); background: none; font-size: 16px; font-weight: 700; padding: 4px 8px; }
 .unit-picker-overlay { position: fixed; inset: 0; background: rgba(15,25,20,0.4); display: none; align-items: center; justify-content: center; z-index: 60; padding: 20px; }
 .unit-picker-overlay.show { display: flex; }
 .unit-picker-box { background: var(--surface); border-radius: var(--radius-lg); padding: 20px; width: 100%; max-width: 340px; box-shadow: var(--shadow-card); }
@@ -416,6 +419,7 @@ a { color: inherit; }
         <button class="bo-nav-item" data-section="employees">بيانات الموظفين</button>
         <button class="bo-nav-item" data-section="users">إدارة المستخدمين</button>
         <button class="bo-nav-item" data-section="branches">الفروع</button>
+        <button class="bo-nav-item" data-section="stock">المخازن ونقل البضاعة</button>
       </div>
 
       <div class="bo-content">
@@ -982,6 +986,62 @@ a { color: inherit; }
             </table>
           </div>
         </div>
+
+        <!-- قسم المخازن ونقل البضاعة -->
+        <div id="bo-section-stock" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">المخازن ونقل البضاعة</div>
+          </div>
+
+          <div class="quick-range-row" style="margin-bottom:14px;">
+            <button class="quick-range-btn active" data-stock-tab="balances">أرصدة المخزون</button>
+            <button class="quick-range-btn" data-stock-tab="transfer">نقل البضاعة</button>
+          </div>
+
+          <div id="stockTab-balances">
+            <div class="search-row" style="margin-bottom:14px; align-items:center;">
+              <select id="stockBalanceBranchSelect" style="max-width:220px; padding:12px 14px;"></select>
+              <input type="text" id="stockBalanceSearchInput" placeholder="ابحث باسم الصنف...">
+            </div>
+            <div class="bo-table-wrap">
+              <table class="bo-table">
+                <thead>
+                  <tr>
+                    <th>الصنف</th>
+                    <th>الكمية المتاحة</th>
+                  </tr>
+                </thead>
+                <tbody id="stockBalancesTableBody">
+                  <tr><td colspan="2" class="bo-empty">جاري التحميل...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="stockTab-transfer" style="display:none;">
+            <div class="bo-section-header">
+              <div></div>
+              <button class="bo-add-btn" id="addTransferBtn">+ نقل جديد</button>
+            </div>
+            <div class="bo-table-wrap">
+              <table class="bo-table">
+                <thead>
+                  <tr>
+                    <th>التاريخ</th>
+                    <th>من فرع</th>
+                    <th>إلى فرع</th>
+                    <th>عدد الأصناف</th>
+                    <th>ملاحظة</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="transfersTableBody">
+                  <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1123,6 +1183,38 @@ a { color: inherit; }
         <button type="submit" class="submit-btn" id="saveBranchBtn">حفظ</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Modal: نقل بضاعة جديد -->
+<div class="modal-overlay" id="transferModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">نقل بضاعة بين الفروع</div>
+    <form id="transferForm">
+      <div class="modal-grid">
+        <div class="field"><label>من فرع</label><select id="transferFromBranch" required></select></div>
+        <div class="field"><label>إلى فرع</label><select id="transferToBranch" required></select></div>
+        <div class="field field-full"><label>ملاحظة (اختياري)</label><input type="text" id="transferNote"></div>
+      </div>
+      <div id="transferItemsList" style="margin:10px 0;"></div>
+      <button type="button" class="btn-secondary" id="addTransferRowBtn" style="margin-top:4px;">+ إضافة صنف</button>
+      <div class="error-msg" id="transferModalError" style="margin-top:14px;"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelTransferBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveTransferBtn">تنفيذ النقل</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: تفاصيل نقل بضاعة -->
+<div class="modal-overlay" id="transferDetailModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">تفاصيل النقل</div>
+    <div id="transferDetailBody"></div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="closeTransferDetailBtn">إغلاق</button>
+    </div>
   </div>
 </div>
 
@@ -2553,6 +2645,8 @@ function bindBackofficeEvents() {
       document.getElementById('bo-section-soon').style.display = section === 'soon' ? 'block' : 'none';
       document.getElementById('bo-section-users').style.display = section === 'users' ? 'block' : 'none';
       document.getElementById('bo-section-branches').style.display = section === 'branches' ? 'block' : 'none';
+      document.getElementById('bo-section-stock').style.display = section === 'stock' ? 'block' : 'none';
+      if (section === 'stock' && !stockSectionLoadedOnce) { initStockSection(); stockSectionLoadedOnce = true; }
       document.getElementById('bo-section-employees').style.display = section === 'employees' ? 'block' : 'none';
       document.getElementById('bo-section-expense-items').style.display = section === 'expense-items' ? 'block' : 'none';
       document.getElementById('bo-section-expenses').style.display = section === 'expenses' ? 'block' : 'none';
@@ -2621,6 +2715,32 @@ function bindBackofficeEvents() {
     if (e.target.id === 'branchModalOverlay') closeBranchModal();
   });
   document.getElementById('branchForm').addEventListener('submit', saveBranch);
+
+  // ---- Stock / warehouses ----
+  document.querySelectorAll('[data-stock-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-stock-tab]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const tab = btn.dataset.stockTab;
+      document.getElementById('stockTab-balances').style.display = tab === 'balances' ? 'block' : 'none';
+      document.getElementById('stockTab-transfer').style.display = tab === 'transfer' ? 'block' : 'none';
+    });
+  });
+  document.getElementById('stockBalanceBranchSelect').addEventListener('change', renderStockBalancesTable);
+  document.getElementById('stockBalanceSearchInput').addEventListener('input', renderStockBalancesTable);
+  document.getElementById('addTransferBtn').addEventListener('click', openTransferModal);
+  document.getElementById('cancelTransferBtn').addEventListener('click', closeTransferModal);
+  document.getElementById('transferModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'transferModalOverlay') closeTransferModal();
+  });
+  document.getElementById('addTransferRowBtn').addEventListener('click', () => {
+    currentTransferItems.push({ product_id: '', quantity: '' });
+    renderTransferItemsList();
+  });
+  document.getElementById('transferForm').addEventListener('submit', saveTransfer);
+  document.getElementById('closeTransferDetailBtn').addEventListener('click', () => {
+    document.getElementById('transferDetailModalOverlay').classList.remove('show');
+  });
 
   // ---- Supplier modal ----
   document.getElementById('addSupplierBtn').addEventListener('click', () => openSupplierModal(null));
@@ -4454,6 +4574,256 @@ async function deleteBranch(branch) {
   renderBranchesTable();
 }
 
+// ---- Stock & warehouse transfers ----
+let currentTransferItems = [];
+let boTransfers = [];
+
+function initStockSection() {
+  populateStockBranchSelects();
+  renderStockBalancesTable();
+  loadBoTransfers().then(renderTransfersTable);
+}
+
+function populateStockBranchSelects() {
+  const opts = boBranchesList.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+
+  const balanceSel = document.getElementById('stockBalanceBranchSelect');
+  balanceSel.innerHTML = opts;
+  if (currentProfile?.branch_id) balanceSel.value = currentProfile.branch_id;
+
+  const fromSel = document.getElementById('transferFromBranch');
+  const toSel = document.getElementById('transferToBranch');
+  fromSel.innerHTML = opts;
+  toSel.innerHTML = opts;
+  if (currentProfile?.branch_id) fromSel.value = currentProfile.branch_id;
+}
+
+async function renderStockBalancesTable() {
+  const branchId = document.getElementById('stockBalanceBranchSelect').value;
+  const tbody = document.getElementById('stockBalancesTableBody');
+  if (!branchId) { tbody.innerHTML = `<tr><td colspan="2" class="bo-empty">اختر فرعًا</td></tr>`; return; }
+  tbody.innerHTML = `<tr><td colspan="2" class="bo-empty">جاري التحميل...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from('stock_balances')
+    .select('product_id, quantity, products(name)')
+    .eq('branch_id', branchId);
+  if (error) { console.error(error); showToast('تعذر تحميل أرصدة المخزون', true); return; }
+
+  const q = (document.getElementById('stockBalanceSearchInput').value || '').trim().toLowerCase();
+  const rows = (data || [])
+    .filter(r => r.products && (!q || r.products.name.toLowerCase().includes(q)))
+    .sort((a, b) => (a.products?.name || '').localeCompare(b.products?.name || '', 'ar'));
+
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="2" class="bo-empty">لا توجد أرصدة مسجلة لهذا الفرع</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${escapeHtml(r.products?.name || 'صنف محذوف')}</td><td class="num">${Number(r.quantity)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function openTransferModal() {
+  document.getElementById('transferModalError').classList.remove('show');
+  document.getElementById('transferNote').value = '';
+  currentTransferItems = [{ product_id: '', quantity: '' }];
+  populateStockBranchSelects();
+  renderTransferItemsList();
+  document.getElementById('transferModalOverlay').classList.add('show');
+}
+
+function closeTransferModal() {
+  document.getElementById('transferModalOverlay').classList.remove('show');
+}
+
+function renderTransferItemsList() {
+  const wrap = document.getElementById('transferItemsList');
+  wrap.innerHTML = '';
+  currentTransferItems.forEach((item, idx) => {
+    const row = document.createElement('div');
+    row.className = 'transfer-row';
+
+    const productSelect = document.createElement('select');
+    productSelect.innerHTML = '<option value="">اختر صنف...</option>' + boProducts.map(p =>
+      `<option value="${p.id}" ${p.id === item.product_id ? 'selected' : ''}>${escapeHtml(p.name)}</option>`).join('');
+    productSelect.addEventListener('change', () => { currentTransferItems[idx].product_id = productSelect.value; });
+
+    const qtyInput = document.createElement('input');
+    qtyInput.type = 'number'; qtyInput.min = '0.001'; qtyInput.step = '0.001';
+    qtyInput.placeholder = 'الكمية';
+    qtyInput.value = item.quantity ?? '';
+    qtyInput.addEventListener('input', () => { currentTransferItems[idx].quantity = qtyInput.value; });
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button'; removeBtn.className = 'remove-unit-btn'; removeBtn.textContent = '×';
+    removeBtn.addEventListener('click', () => { currentTransferItems.splice(idx, 1); renderTransferItemsList(); });
+
+    row.append(productSelect, qtyInput, removeBtn);
+    wrap.appendChild(row);
+  });
+}
+
+async function saveTransfer(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('transferModalError');
+  errEl.classList.remove('show');
+
+  const fromBranch = document.getElementById('transferFromBranch').value;
+  const toBranch = document.getElementById('transferToBranch').value;
+  const note = document.getElementById('transferNote').value.trim() || null;
+
+  if (!fromBranch || !toBranch) { errEl.textContent = 'اختر الفرعين'; errEl.classList.add('show'); return; }
+  if (fromBranch === toBranch) { errEl.textContent = 'لازم يكون الفرع المرسل مختلف عن الفرع المستقبل'; errEl.classList.add('show'); return; }
+
+  const lines = currentTransferItems
+    .filter(i => i.product_id && Number(i.quantity) > 0)
+    .map(i => ({ product_id: i.product_id, quantity: Number(i.quantity) }));
+  if (lines.length === 0) { errEl.textContent = 'ضيف صنف واحد على الأقل بكمية صحيحة'; errEl.classList.add('show'); return; }
+
+  const saveBtn = document.getElementById('saveTransferBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري التنفيذ...';
+
+  try {
+    // تحقق إن الرصيد متاح في فرع المصدر لكل صنف قبل أي تعديل
+    const { data: sourceBalances, error: sbError } = await supabaseClient
+      .from('stock_balances')
+      .select('product_id, quantity')
+      .eq('branch_id', fromBranch)
+      .in('product_id', lines.map(l => l.product_id));
+    if (sbError) throw sbError;
+    const sourceMap = {};
+    (sourceBalances || []).forEach(r => { sourceMap[r.product_id] = Number(r.quantity); });
+
+    for (const line of lines) {
+      const available = sourceMap[line.product_id] ?? 0;
+      if (line.quantity > available) {
+        const productName = boProducts.find(p => p.id === line.product_id)?.name || 'الصنف';
+        throw new Error(`الرصيد المتاح من "${productName}" في الفرع المرسل هو ${available} فقط`);
+      }
+    }
+
+    // خصم من فرع المصدر
+    for (const line of lines) {
+      const newQty = sourceMap[line.product_id] - line.quantity;
+      const { error } = await supabaseClient
+        .from('stock_balances')
+        .update({ quantity: newQty })
+        .eq('branch_id', fromBranch)
+        .eq('product_id', line.product_id);
+      if (error) throw error;
+    }
+
+    // إضافة لفرع الوجهة (تحديث الرصيد لو موجود، أو إنشاء سطر جديد لو مش موجود)
+    const { data: destBalances, error: dbError } = await supabaseClient
+      .from('stock_balances')
+      .select('product_id, quantity')
+      .eq('branch_id', toBranch)
+      .in('product_id', lines.map(l => l.product_id));
+    if (dbError) throw dbError;
+    const destMap = {};
+    (destBalances || []).forEach(r => { destMap[r.product_id] = Number(r.quantity); });
+
+    for (const line of lines) {
+      if (destMap[line.product_id] !== undefined) {
+        const { error } = await supabaseClient
+          .from('stock_balances')
+          .update({ quantity: destMap[line.product_id] + line.quantity })
+          .eq('branch_id', toBranch)
+          .eq('product_id', line.product_id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabaseClient
+          .from('stock_balances')
+          .insert({ branch_id: toBranch, product_id: line.product_id, quantity: line.quantity });
+        if (error) throw error;
+      }
+    }
+
+    // تسجيل عملية النقل نفسها للأرشيف
+    const { data: transfer, error: transferError } = await supabaseClient
+      .from('stock_transfers')
+      .insert({ from_branch_id: fromBranch, to_branch_id: toBranch, note, created_by: currentProfile.id })
+      .select().single();
+    if (transferError) throw transferError;
+
+    const itemsPayload = lines.map(l => ({ transfer_id: transfer.id, product_id: l.product_id, quantity: l.quantity }));
+    const { error: itemsError } = await supabaseClient.from('stock_transfer_items').insert(itemsPayload);
+    if (itemsError) throw itemsError;
+
+    showToast('تم تنفيذ النقل بنجاح');
+    closeTransferModal();
+    await loadBoTransfers();
+    renderTransfersTable();
+    renderStockBalancesTable();
+    if (currentProfile?.branch_id === fromBranch || currentProfile?.branch_id === toBranch) {
+      await loadStockBalances();
+    }
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء تنفيذ النقل';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'تنفيذ النقل';
+  }
+}
+
+async function loadBoTransfers() {
+  const { data, error } = await supabaseClient
+    .from('stock_transfers')
+    .select('*, from_branch:branches!stock_transfers_from_branch_id_fkey(name), to_branch:branches!stock_transfers_to_branch_id_fkey(name), stock_transfer_items(id)')
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل سجل النقل', true); return; }
+  boTransfers = data || [];
+}
+
+function renderTransfersTable() {
+  const tbody = document.getElementById('transfersTableBody');
+  if (boTransfers.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">لا توجد عمليات نقل مسجلة حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boTransfers.forEach(t => {
+    const date = new Date(t.created_at).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' });
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="num">${date}</td>
+      <td>${escapeHtml(t.from_branch?.name || '—')}</td>
+      <td>${escapeHtml(t.to_branch?.name || '—')}</td>
+      <td class="num">${(t.stock_transfer_items || []).length}</td>
+      <td>${escapeHtml(t.note || '—')}</td>
+      <td><button class="bo-icon-btn" data-action="view">التفاصيل</button></td>`;
+    tr.querySelector('[data-action="view"]').addEventListener('click', () => viewTransferDetail(t));
+    tbody.appendChild(tr);
+  });
+}
+
+async function viewTransferDetail(transfer) {
+  const { data, error } = await supabaseClient
+    .from('stock_transfer_items')
+    .select('quantity, products(name)')
+    .eq('transfer_id', transfer.id);
+  if (error) { console.error(error); showToast('تعذر تحميل تفاصيل النقل', true); return; }
+
+  const date = new Date(transfer.created_at).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' });
+  const rowsHtml = (data || []).map(r => `
+    <div class="totals-row"><span>${escapeHtml(r.products?.name || 'صنف محذوف')}</span><span class="num">${Number(r.quantity)}</span></div>`).join('');
+
+  document.getElementById('transferDetailBody').innerHTML = `
+    <div class="totals-row"><span>التاريخ</span><span class="num">${date}</span></div>
+    <div class="totals-row"><span>من فرع</span><span>${escapeHtml(transfer.from_branch?.name || '—')}</span></div>
+    <div class="totals-row"><span>إلى فرع</span><span>${escapeHtml(transfer.to_branch?.name || '—')}</span></div>
+    <div class="totals-row"><span>ملاحظة</span><span>${escapeHtml(transfer.note || '—')}</span></div>
+    <div style="margin-top:10px; border-top:1px dashed var(--border); padding-top:10px;">${rowsHtml}</div>`;
+  document.getElementById('transferDetailModalOverlay').classList.add('show');
+}
+
 function populateUserSelects(selectedRoleId, selectedBranchId) {
   const roleSel = document.getElementById('userRole');
   roleSel.innerHTML = '';
@@ -4858,6 +5228,7 @@ async function deleteSupplier(supplier) {
 // ---- سجل المدفوعات (دفعات من عملاء / لموردين) ----
 let boPayments = [];
 let boPaymentsLoadedOnce = false;
+let stockSectionLoadedOnce = false;
 
 async function loadBoPayments() {
   const { data, error } = await supabaseClient
