@@ -996,6 +996,7 @@ a { color: inherit; }
           <div class="quick-range-row" style="margin-bottom:14px;">
             <button class="quick-range-btn active" data-stock-tab="balances">أرصدة المخزون</button>
             <button class="quick-range-btn" data-stock-tab="transfer">نقل البضاعة</button>
+            <button class="quick-range-btn" data-stock-tab="adjust">الجرد</button>
           </div>
 
           <div id="stockTab-balances">
@@ -1037,6 +1038,56 @@ a { color: inherit; }
                 </thead>
                 <tbody id="transfersTableBody">
                   <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="stockTab-adjust" style="display:none;">
+            <div class="search-row" style="margin-bottom:14px; align-items:center;">
+              <select id="stockAdjustBranchSelect" style="max-width:220px; padding:12px 14px;"></select>
+              <input type="text" id="stockAdjustSearchInput" placeholder="ابحث باسم الصنف...">
+            </div>
+            <div class="bo-table-wrap">
+              <table class="bo-table">
+                <thead>
+                  <tr>
+                    <th>الصنف</th>
+                    <th>الرصيد الحالي (بالنظام)</th>
+                    <th>الرصيد الفعلي (بعد الجرد)</th>
+                    <th>الفرق</th>
+                  </tr>
+                </thead>
+                <tbody id="stockAdjustTableBody">
+                  <tr><td colspan="4" class="bo-empty">اختر فرعًا</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="field" style="margin-top:14px;">
+              <label>سبب الجرد / ملاحظة</label>
+              <input type="text" id="stockAdjustNote" placeholder="مثال: جرد دوري شهر أغسطس">
+            </div>
+            <div class="action-row" style="max-width:260px;">
+              <button type="button" class="submit-btn" id="saveStockAdjustBtn">حفظ الجرد</button>
+            </div>
+            <div class="error-msg" id="stockAdjustError" style="margin-top:10px;"></div>
+
+            <div class="bo-section-header" style="margin-top:28px;">
+              <div class="bo-section-title">سجل عمليات الجرد</div>
+            </div>
+            <div class="bo-table-wrap">
+              <table class="bo-table">
+                <thead>
+                  <tr>
+                    <th>التاريخ</th>
+                    <th>الفرع</th>
+                    <th>عدد الأصناف المعدّلة</th>
+                    <th>ملاحظة</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="stockAdjustmentsTableBody">
+                  <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -1214,6 +1265,17 @@ a { color: inherit; }
     <div id="transferDetailBody"></div>
     <div class="modal-actions">
       <button type="button" class="modal-cancel-btn" id="closeTransferDetailBtn">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: تفاصيل عملية جرد -->
+<div class="modal-overlay" id="adjustmentDetailModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">تفاصيل الجرد</div>
+    <div id="adjustmentDetailBody"></div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="closeAdjustmentDetailBtn">إغلاق</button>
     </div>
   </div>
 </div>
@@ -2724,6 +2786,8 @@ function bindBackofficeEvents() {
       const tab = btn.dataset.stockTab;
       document.getElementById('stockTab-balances').style.display = tab === 'balances' ? 'block' : 'none';
       document.getElementById('stockTab-transfer').style.display = tab === 'transfer' ? 'block' : 'none';
+      document.getElementById('stockTab-adjust').style.display = tab === 'adjust' ? 'block' : 'none';
+      if (tab === 'adjust' && !stockAdjustLoadedOnce) { initStockAdjustTab(); stockAdjustLoadedOnce = true; }
     });
   });
   document.getElementById('stockBalanceBranchSelect').addEventListener('change', renderStockBalancesTable);
@@ -2740,6 +2804,12 @@ function bindBackofficeEvents() {
   document.getElementById('transferForm').addEventListener('submit', saveTransfer);
   document.getElementById('closeTransferDetailBtn').addEventListener('click', () => {
     document.getElementById('transferDetailModalOverlay').classList.remove('show');
+  });
+  document.getElementById('stockAdjustBranchSelect').addEventListener('change', renderStockAdjustTable);
+  document.getElementById('stockAdjustSearchInput').addEventListener('input', renderStockAdjustTable);
+  document.getElementById('saveStockAdjustBtn').addEventListener('click', saveStockAdjust);
+  document.getElementById('closeAdjustmentDetailBtn').addEventListener('click', () => {
+    document.getElementById('adjustmentDetailModalOverlay').classList.remove('show');
   });
 
   // ---- Supplier modal ----
@@ -4591,6 +4661,10 @@ function populateStockBranchSelects() {
   balanceSel.innerHTML = opts;
   if (currentProfile?.branch_id) balanceSel.value = currentProfile.branch_id;
 
+  const adjustSel = document.getElementById('stockAdjustBranchSelect');
+  adjustSel.innerHTML = opts;
+  if (currentProfile?.branch_id) adjustSel.value = currentProfile.branch_id;
+
   const fromSel = document.getElementById('transferFromBranch');
   const toSel = document.getElementById('transferToBranch');
   fromSel.innerHTML = opts;
@@ -4822,6 +4896,176 @@ async function viewTransferDetail(transfer) {
     <div class="totals-row"><span>ملاحظة</span><span>${escapeHtml(transfer.note || '—')}</span></div>
     <div style="margin-top:10px; border-top:1px dashed var(--border); padding-top:10px;">${rowsHtml}</div>`;
   document.getElementById('transferDetailModalOverlay').classList.add('show');
+}
+
+// ---- Stock adjustment / الجرد ----
+let currentAdjustRows = [];
+let boAdjustments = [];
+
+function initStockAdjustTab() {
+  renderStockAdjustTable();
+  loadBoAdjustments().then(renderAdjustmentsTable);
+}
+
+async function renderStockAdjustTable() {
+  const branchId = document.getElementById('stockAdjustBranchSelect').value;
+  const tbody = document.getElementById('stockAdjustTableBody');
+  if (!branchId) { tbody.innerHTML = `<tr><td colspan="4" class="bo-empty">اختر فرعًا</td></tr>`; return; }
+  tbody.innerHTML = `<tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from('stock_balances')
+    .select('product_id, quantity')
+    .eq('branch_id', branchId);
+  if (error) { console.error(error); showToast('تعذر تحميل أرصدة المخزون', true); return; }
+  const balanceMap = {};
+  (data || []).forEach(r => { balanceMap[r.product_id] = Number(r.quantity); });
+
+  const q = (document.getElementById('stockAdjustSearchInput').value || '').trim().toLowerCase();
+  const rows = boProducts
+    .filter(p => !q || p.name.toLowerCase().includes(q))
+    .sort((a, b) => a.name.localeCompare(b.name, 'ar'))
+    .map(p => ({ product_id: p.id, name: p.name, before: balanceMap[p.id] ?? 0, after: balanceMap[p.id] ?? 0 }));
+
+  currentAdjustRows = rows;
+
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" class="bo-empty">لا توجد أصناف مطابقة</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  rows.forEach((row, idx) => {
+    const tr = document.createElement('tr');
+    const diffId = `adjustDiff-${idx}`;
+    tr.innerHTML = `
+      <td>${escapeHtml(row.name)}</td>
+      <td class="num">${row.before}</td>
+      <td><input type="number" step="0.001" min="0" class="num" style="width:100px; padding:6px 8px;" value="${row.after}" data-idx="${idx}"></td>
+      <td class="num" id="${diffId}">0</td>`;
+    tr.querySelector('input').addEventListener('input', (e) => {
+      const val = e.target.value === '' ? row.before : Number(e.target.value);
+      currentAdjustRows[idx].after = val;
+      document.getElementById(diffId).textContent = (val - row.before).toFixed(3).replace(/\.?0+$/, '') || '0';
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+async function saveStockAdjust() {
+  const errEl = document.getElementById('stockAdjustError');
+  errEl.classList.remove('show');
+  const branchId = document.getElementById('stockAdjustBranchSelect').value;
+  if (!branchId) { errEl.textContent = 'اختر فرعًا'; errEl.classList.add('show'); return; }
+
+  const changed = currentAdjustRows.filter(r => Number(r.after) !== Number(r.before));
+  if (changed.length === 0) { errEl.textContent = 'لا يوجد أي تغيير في الأرصدة لحفظه'; errEl.classList.add('show'); return; }
+
+  const note = document.getElementById('stockAdjustNote').value.trim() || null;
+  const saveBtn = document.getElementById('saveStockAdjustBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  try {
+    for (const row of changed) {
+      const { data: existing, error: fetchErr } = await supabaseClient
+        .from('stock_balances')
+        .select('id')
+        .eq('branch_id', branchId)
+        .eq('product_id', row.product_id)
+        .maybeSingle();
+      if (fetchErr) throw fetchErr;
+      if (existing) {
+        const { error } = await supabaseClient
+          .from('stock_balances')
+          .update({ quantity: row.after })
+          .eq('branch_id', branchId)
+          .eq('product_id', row.product_id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabaseClient
+          .from('stock_balances')
+          .insert({ branch_id: branchId, product_id: row.product_id, quantity: row.after });
+        if (error) throw error;
+      }
+    }
+
+    const { data: adjustment, error: adjError } = await supabaseClient
+      .from('stock_adjustments')
+      .insert({ branch_id: branchId, note, created_by: currentProfile.id })
+      .select().single();
+    if (adjError) throw adjError;
+
+    const itemsPayload = changed.map(r => ({
+      adjustment_id: adjustment.id, product_id: r.product_id,
+      quantity_before: r.before, quantity_after: r.after, difference: r.after - r.before,
+    }));
+    const { error: itemsError } = await supabaseClient.from('stock_adjustment_items').insert(itemsPayload);
+    if (itemsError) throw itemsError;
+
+    showToast('تم حفظ الجرد بنجاح');
+    document.getElementById('stockAdjustNote').value = '';
+    await loadBoAdjustments();
+    renderAdjustmentsTable();
+    renderStockAdjustTable();
+    if (currentProfile?.branch_id === branchId) await loadStockBalances();
+    renderStockBalancesTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء حفظ الجرد';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ الجرد';
+  }
+}
+
+async function loadBoAdjustments() {
+  const { data, error } = await supabaseClient
+    .from('stock_adjustments')
+    .select('*, branches(name), stock_adjustment_items(id)')
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل سجل الجرد', true); return; }
+  boAdjustments = data || [];
+}
+
+function renderAdjustmentsTable() {
+  const tbody = document.getElementById('stockAdjustmentsTableBody');
+  if (boAdjustments.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">لا توجد عمليات جرد مسجلة حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boAdjustments.forEach(a => {
+    const date = new Date(a.created_at).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' });
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="num">${date}</td>
+      <td>${escapeHtml(a.branches?.name || '—')}</td>
+      <td class="num">${(a.stock_adjustment_items || []).length}</td>
+      <td>${escapeHtml(a.note || '—')}</td>
+      <td><button class="bo-icon-btn" data-action="view">التفاصيل</button></td>`;
+    tr.querySelector('[data-action="view"]').addEventListener('click', () => viewAdjustmentDetail(a));
+    tbody.appendChild(tr);
+  });
+}
+
+async function viewAdjustmentDetail(adjustment) {
+  const { data, error } = await supabaseClient
+    .from('stock_adjustment_items')
+    .select('quantity_before, quantity_after, difference, products(name)')
+    .eq('adjustment_id', adjustment.id);
+  if (error) { console.error(error); showToast('تعذر تحميل تفاصيل الجرد', true); return; }
+
+  const date = new Date(adjustment.created_at).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' });
+  const rowsHtml = (data || []).map(r => `
+    <div class="totals-row"><span>${escapeHtml(r.products?.name || 'صنف محذوف')}</span><span class="num">${Number(r.quantity_before)} ← ${Number(r.quantity_after)} (${r.difference > 0 ? '+' : ''}${Number(r.difference)})</span></div>`).join('');
+
+  document.getElementById('adjustmentDetailBody').innerHTML = `
+    <div class="totals-row"><span>التاريخ</span><span class="num">${date}</span></div>
+    <div class="totals-row"><span>الفرع</span><span>${escapeHtml(adjustment.branches?.name || '—')}</span></div>
+    <div class="totals-row"><span>ملاحظة</span><span>${escapeHtml(adjustment.note || '—')}</span></div>
+    <div style="margin-top:10px; border-top:1px dashed var(--border); padding-top:10px;">${rowsHtml}</div>`;
+  document.getElementById('adjustmentDetailModalOverlay').classList.add('show');
 }
 
 function populateUserSelects(selectedRoleId, selectedBranchId) {
@@ -5229,6 +5473,7 @@ async function deleteSupplier(supplier) {
 let boPayments = [];
 let boPaymentsLoadedOnce = false;
 let stockSectionLoadedOnce = false;
+let stockAdjustLoadedOnce = false;
 
 async function loadBoPayments() {
   const { data, error } = await supabaseClient
