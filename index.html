@@ -177,6 +177,47 @@ a { color: inherit; }
 .bo-icon-btn.danger:hover { background: var(--danger-100); color: var(--danger); }
 .bo-empty { text-align: center; color: var(--ink-soft); padding: 50px 20px; font-size: 13.5px; }
 
+/* -------- تهيئة البيانات -------- */
+.rd-scope-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px 18px; margin-bottom: 16px; }
+.rd-scope-toggle { display: flex; gap: 8px; }
+.rd-scope-toggle button { flex: 1; background: var(--surface-sunken); border: 1px solid var(--border); color: var(--ink-soft); padding: 10px; border-radius: var(--radius-sm); font-family: inherit; font-weight: 700; font-size: 13.5px; }
+.rd-scope-toggle button.active { background: var(--teal-700); border-color: var(--teal-700); color: #fff; }
+.rd-date-range { display: none; gap: 12px; margin-top: 14px; align-items: center; flex-wrap: wrap; }
+.rd-date-range.show { display: flex; }
+.rd-date-range label { font-size: 12.5px; color: var(--ink-soft); display: flex; flex-direction: column; gap: 5px; }
+.rd-date-range input[type="date"] { padding: 8px 10px; font-size: 13px; }
+.rd-hint { font-size: 12px; color: var(--ink-soft); margin-top: 10px; line-height: 1.6; }
+.rd-group { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px 18px 14px; margin-bottom: 12px; transition: border-color .15s ease; }
+.rd-group.checked { border-color: var(--teal-500); }
+.rd-group.required { border-color: var(--amber-600); }
+.rd-group-head { display: flex; align-items: flex-start; gap: 12px; cursor: pointer; }
+.rd-group-head input[type="checkbox"] { appearance: none; width: 19px; height: 19px; border: 2px solid var(--border); border-radius: 5px; margin-top: 2px; flex-shrink: 0; cursor: pointer; position: relative; background: var(--surface); }
+.rd-group-head input[type="checkbox"]:checked { border-color: var(--teal-700); background: var(--teal-700); }
+.rd-group-head input[type="checkbox"]:checked::after { content: ""; position: absolute; right: 5px; top: 1px; width: 6px; height: 11px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(40deg); }
+.rd-group-head input[type="checkbox"]:disabled { opacity: .7; cursor: not-allowed; }
+.rd-title-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rd-group-title { font-size: 14.5px; font-weight: 700; margin: 0; }
+.rd-lock-tag { font-size: 10.5px; color: var(--amber-600); background: var(--amber-100); padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+.rd-group-desc { font-size: 12.5px; color: var(--ink-soft); margin: 3px 0 0; line-height: 1.55; }
+.rd-tables { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; padding-right: 31px; }
+.rd-chip { font-family: var(--font-num); direction: ltr; font-size: 11px; color: var(--ink-soft); background: var(--surface-sunken); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; }
+.rd-chip b { color: var(--ink); font-weight: 600; }
+.rd-options { padding-right: 31px; margin-top: 10px; display: flex; flex-wrap: wrap; gap: 14px; }
+.rd-options label { font-size: 12.5px; color: var(--ink-soft); display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.rd-options label.disabled { opacity: .45; cursor: not-allowed; }
+.rd-options input[type="checkbox"] { width: 14px; height: 14px; }
+.rd-footer-bar { position: sticky; bottom: 16px; margin-top: 18px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: var(--shadow-card); }
+.rd-summary { font-size: 13px; color: var(--ink-soft); }
+.rd-summary b { color: var(--danger); }
+.rd-btn-danger { background: var(--danger); color: #fff; padding: 11px 20px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 700; }
+.rd-btn-danger:hover { background: #A32E2E; }
+.rd-btn-danger:disabled { background: #E3B9B9; color: #fff; cursor: not-allowed; }
+.rd-modal-scope { font-family: var(--font-num); direction: ltr; text-align: right; font-size: 12.5px; color: var(--teal-700); margin: -8px 0 14px; }
+.rd-phrase { font-family: var(--font-num); direction: ltr; background: var(--danger-100); color: var(--danger); padding: 7px 12px; border-radius: 6px; display: inline-block; margin-bottom: 12px; font-size: 13.5px; letter-spacing: .03em; }
+.rd-result { margin-top: 14px; background: var(--surface); border: 1px solid var(--teal-500); border-radius: var(--radius-md); padding: 14px 16px; font-size: 12.5px; color: var(--ink-soft); white-space: pre-wrap; display: none; line-height: 1.7; }
+.rd-result.show { display: block; }
+.rd-result .rd-result-title { color: var(--teal-700); font-weight: 700; font-size: 13.5px; display: block; margin-bottom: 6px; }
+
 .modal-overlay { position: fixed; inset: 0; background: rgba(16, 30, 25, 0.45); display: none; align-items: center; justify-content: center; z-index: 100; padding: 20px; }
 .modal-overlay.show { display: flex; }
 .modal-box { background: var(--surface); border-radius: var(--radius-lg); width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; padding: 26px 26px 22px; box-shadow: var(--shadow-card); }
@@ -421,6 +462,7 @@ a { color: inherit; }
         <button class="bo-nav-item" data-section="users">إدارة المستخدمين</button>
         <button class="bo-nav-item" data-section="branches">الفروع</button>
         <button class="bo-nav-item" data-section="stock">المخازن ونقل البضاعة</button>
+        <button class="bo-nav-item" data-section="reset-data">تهيئة البيانات</button>
       </div>
 
       <div class="bo-content">
@@ -1122,7 +1164,55 @@ a { color: inherit; }
             </div>
           </div>
         </div>
+
+        <!-- قسم تهيئة البيانات -->
+        <div id="bo-section-reset-data" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">تهيئة البيانات</div>
+          </div>
+
+          <div class="rd-scope-bar">
+            <div class="rd-scope-toggle">
+              <button type="button" id="rdScopeAll" class="active">حذف كل البيانات</button>
+              <button type="button" id="rdScopeRange">حذف فترة محددة فقط</button>
+            </div>
+            <div class="rd-date-range" id="rdDateRange">
+              <label>من تاريخ<input type="date" id="rdDateFrom"></label>
+              <label>إلى تاريخ<input type="date" id="rdDateTo"></label>
+            </div>
+            <div class="rd-hint" id="rdScopeHint">سيتم حذف كل السجلات في المجموعات المختارة نهائيًا، بلا استثناء تاريخ.</div>
+          </div>
+
+          <div id="rdGroupsContainer"></div>
+
+          <div class="rd-footer-bar">
+            <div class="rd-summary" id="rdSummary">لم يتم اختيار أي مجموعة بعد</div>
+            <div style="display:flex; gap:10px;">
+              <button class="bo-outline-btn" id="rdRefreshBtn" type="button">تحديث الأعداد</button>
+              <button class="rd-btn-danger" id="rdOpenConfirm" type="button" disabled>حذف المحدد</button>
+            </div>
+          </div>
+
+          <div class="rd-result" id="rdResult"></div>
+        </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: تأكيد تهيئة البيانات -->
+<div class="modal-overlay" id="rdConfirmOverlay">
+  <div class="modal-box" style="max-width:440px;">
+    <div class="modal-title" style="color:var(--danger);">تأكيد الحذف النهائي</div>
+    <div class="rd-modal-scope" id="rdModalScopeLine"></div>
+    <div style="font-size:13px; color:var(--ink-soft); line-height:1.7; margin-bottom:14px;">
+      سيتم حذف بيانات <b id="rdModalGroupsCount">0</b> مجموعة بشكل نهائي ولا يمكن التراجع عنه. للمتابعة، اكتب العبارة التالية بالضبط:
+    </div>
+    <div class="rd-phrase" id="rdConfirmPhrase">تأكيد الحذف</div>
+    <input type="text" id="rdConfirmInput" placeholder="اكتب العبارة هنا" autocomplete="off" style="width:100%; padding:11px 12px; font-size:14px; margin-bottom:16px;">
+    <div class="modal-actions">
+      <button class="modal-cancel-btn" id="rdCancelConfirm" type="button">إلغاء</button>
+      <button class="rd-btn-danger" id="rdDoExecute" type="button" disabled style="flex:1;">تنفيذ الحذف</button>
     </div>
   </div>
 </div>
@@ -2829,6 +2919,8 @@ function bindBackofficeEvents() {
       document.getElementById('bo-section-branches').style.display = section === 'branches' ? 'block' : 'none';
       document.getElementById('bo-section-stock').style.display = section === 'stock' ? 'block' : 'none';
       if (section === 'stock' && !stockSectionLoadedOnce) { initStockSection(); stockSectionLoadedOnce = true; }
+      document.getElementById('bo-section-reset-data').style.display = section === 'reset-data' ? 'block' : 'none';
+      if (section === 'reset-data' && !resetDataLoadedOnce) { initResetDataSection(); resetDataLoadedOnce = true; }
       document.getElementById('bo-section-employees').style.display = section === 'employees' ? 'block' : 'none';
       document.getElementById('bo-section-expense-items').style.display = section === 'expense-items' ? 'block' : 'none';
       document.getElementById('bo-section-expenses').style.display = section === 'expenses' ? 'block' : 'none';
@@ -5733,6 +5825,7 @@ async function deleteSupplier(supplier) {
 let boPayments = [];
 let boPaymentsLoadedOnce = false;
 let stockSectionLoadedOnce = false;
+let resetDataLoadedOnce = false;
 let stockAdjustLoadedOnce = false;
 let stockWarehousesLoadedOnce = false;
 
@@ -6565,6 +6658,264 @@ async function runReport() {
     console.error(err);
     showToast('تعذر تحميل التقرير', true);
   }
+}
+
+// ============================================================
+// تهيئة البيانات (Data Reset)
+// ============================================================
+const RD_GROUPS = [
+  {
+    id: 'sales_purchases',
+    title: 'المبيعات والمشتريات والمرتجعات والدفعات',
+    desc: 'كل فواتير البيع والشراء ومرتجعاتها وسجلات الدفع المرتبطة بها.',
+    tables: ['sales', 'sale_returns', 'purchases', 'purchase_returns', 'payments'],
+    rpc: 'fn_admin_reset_sales_purchases',
+    depends: [],
+    options: [
+      { key: 'p_reset_invoice_numbers', label: 'إعادة ترقيم الفواتير من 1', default: false, fullOnly: true }
+    ]
+  },
+  {
+    id: 'stock_movements',
+    title: 'حركة المخزون',
+    desc: 'التحويلات بين المخازن، الجرد، وحركات المخزون.',
+    tables: ['stock_transfers', 'stock_adjustments', 'stock_transactions', 'stock_balances'],
+    rpc: 'fn_admin_reset_stock_movements',
+    depends: [],
+    options: [
+      { key: 'p_zero_balances', label: 'تصفير أرصدة المخزون (عند الحذف الكامل فقط)', default: true, fullOnly: true }
+    ]
+  },
+  {
+    id: 'expenses_salaries',
+    title: 'المصروفات والرواتب',
+    desc: 'سجلات المصروفات اليومية ودفعات الرواتب.',
+    tables: ['expenses', 'salary_payments'],
+    rpc: 'fn_admin_reset_expenses_salaries',
+    depends: [],
+    options: []
+  },
+  {
+    id: 'customers_suppliers',
+    title: 'العملاء والموردين',
+    desc: 'يتطلب حذف «المبيعات والمشتريات» لنفس النطاق أولاً — يتم اختيارها تلقائيًا.',
+    tables: ['customers', 'suppliers'],
+    rpc: 'fn_admin_reset_customers_suppliers',
+    depends: ['sales_purchases'],
+    options: [
+      { key: 'p_include_types', label: 'حذف أنواع العملاء أيضًا (عند الحذف الكامل فقط)', default: false, fullOnly: true }
+    ]
+  },
+  {
+    id: 'products',
+    title: 'المنتجات',
+    desc: 'يتطلب تفريغ «المبيعات والمشتريات» و«حركة المخزون» لنفس النطاق أولاً — يتم اختيارهما تلقائيًا.',
+    tables: ['products', 'product_barcodes', 'product_units'],
+    rpc: 'fn_admin_reset_products',
+    depends: ['sales_purchases', 'stock_movements'],
+    options: [
+      { key: 'p_include_categories', label: 'حذف الفئات أيضًا (عند الحذف الكامل فقط)', default: false, fullOnly: true }
+    ]
+  }
+];
+const rdById = id => RD_GROUPS.find(g => g.id === id);
+
+const rdState = {};
+RD_GROUPS.forEach(g => {
+  rdState[g.id] = { checked: false, requiredBy: new Set(), options: {}, counts: {} };
+  g.options.forEach(o => rdState[g.id].options[o.key] = o.default);
+});
+
+let rdScope = 'all'; // 'all' | 'range'
+const RD_CONFIRM_PHRASE = 'تأكيد الحذف';
+
+function initResetDataSection() {
+  document.getElementById('rdConfirmPhrase').textContent = RD_CONFIRM_PHRASE;
+
+  document.getElementById('rdScopeAll').addEventListener('click', () => rdSetScope('all'));
+  document.getElementById('rdScopeRange').addEventListener('click', () => rdSetScope('range'));
+  document.getElementById('rdRefreshBtn').addEventListener('click', rdRefreshCounts);
+
+  document.getElementById('rdOpenConfirm').addEventListener('click', () => {
+    const n = RD_GROUPS.filter(g => rdState[g.id].checked).length;
+    document.getElementById('rdModalGroupsCount').textContent = n;
+    document.getElementById('rdModalScopeLine').textContent = rdScope === 'all'
+      ? 'النطاق: كل البيانات (بدون تاريخ)'
+      : `النطاق: من ${document.getElementById('rdDateFrom').value || 'بداية السجلات'} إلى ${document.getElementById('rdDateTo').value || 'اليوم'}`;
+    const input = document.getElementById('rdConfirmInput');
+    input.value = '';
+    document.getElementById('rdDoExecute').disabled = true;
+    document.getElementById('rdConfirmOverlay').classList.add('show');
+    input.focus();
+  });
+
+  document.getElementById('rdCancelConfirm').addEventListener('click', () => {
+    document.getElementById('rdConfirmOverlay').classList.remove('show');
+  });
+  document.getElementById('rdConfirmOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'rdConfirmOverlay') document.getElementById('rdConfirmOverlay').classList.remove('show');
+  });
+  document.getElementById('rdConfirmInput').addEventListener('input', (e) => {
+    document.getElementById('rdDoExecute').disabled = e.target.value.trim() !== RD_CONFIRM_PHRASE;
+  });
+  document.getElementById('rdDoExecute').addEventListener('click', rdExecute);
+
+  rdRender();
+  rdRefreshCounts();
+}
+
+function rdSetScope(s) {
+  rdScope = s;
+  document.getElementById('rdScopeAll').classList.toggle('active', s === 'all');
+  document.getElementById('rdScopeRange').classList.toggle('active', s === 'range');
+  document.getElementById('rdDateRange').classList.toggle('show', s === 'range');
+  document.getElementById('rdScopeHint').textContent = s === 'all'
+    ? 'سيتم حذف كل السجلات في المجموعات المختارة نهائيًا، بلا استثناء تاريخ.'
+    : 'سيتم حذف السجلات الواقعة بين التاريخين فقط. خيارات الحذف الكامل (تصفير الأرصدة، إعادة الترقيم، حذف الفئات/الأنواع) تُعطَّل تلقائيًا في هذا الوضع.';
+  rdRender();
+  rdRefreshCounts();
+}
+
+function rdSetChecked(groupId, checked) {
+  rdState[groupId].checked = checked;
+  const g = rdById(groupId);
+  if (checked) {
+    g.depends.forEach(depId => {
+      rdState[depId].requiredBy.add(groupId);
+      rdState[depId].checked = true;
+    });
+  } else {
+    g.depends.forEach(depId => rdState[depId].requiredBy.delete(groupId));
+  }
+}
+
+function rdIsLocked(groupId) {
+  return rdState[groupId].requiredBy.size > 0;
+}
+
+function rdRender() {
+  const container = document.getElementById('rdGroupsContainer');
+  container.innerHTML = '';
+
+  RD_GROUPS.forEach(g => {
+    const s = rdState[g.id];
+    const locked = rdIsLocked(g.id);
+    const card = document.createElement('div');
+    card.className = 'rd-group' + (s.checked ? ' checked' : '') + (locked ? ' required' : '');
+
+    const lockTag = locked
+      ? `<span class="rd-lock-tag">مطلوبة تلقائيًا من: ${[...s.requiredBy].map(id => rdById(id).title).join('، ')}</span>`
+      : '';
+
+    const chips = g.tables.map(t => {
+      const n = s.counts[t];
+      return `<span class="rd-chip"><b>${t}</b>${n !== undefined ? ` — ${n}` : ''}</span>`;
+    }).join('');
+
+    const opts = g.options.map(o => {
+      const disabled = o.fullOnly && rdScope === 'range';
+      return `
+        <label class="${disabled ? 'disabled' : ''}">
+          <input type="checkbox" data-group="${g.id}" data-opt="${o.key}"
+            ${s.options[o.key] ? 'checked' : ''} ${disabled ? 'disabled' : ''}>
+          ${o.label}
+        </label>`;
+    }).join('');
+
+    card.innerHTML = `
+      <div class="rd-group-head" data-group="${g.id}">
+        <input type="checkbox" ${s.checked ? 'checked' : ''} ${locked ? 'disabled' : ''}
+          data-role="rd-group-check" data-group="${g.id}">
+        <div>
+          <div class="rd-title-row">
+            <p class="rd-group-title">${escapeHtml(g.title)}</p>
+            ${lockTag}
+          </div>
+          <p class="rd-group-desc">${escapeHtml(g.desc)}</p>
+        </div>
+      </div>
+      <div class="rd-tables">${chips}</div>
+      ${opts ? `<div class="rd-options">${opts}</div>` : ''}
+    `;
+    container.appendChild(card);
+  });
+
+  container.querySelectorAll('[data-role="rd-group-check"]').forEach(cb => {
+    cb.addEventListener('change', (e) => {
+      rdSetChecked(e.target.dataset.group, e.target.checked);
+      rdRender();
+    });
+  });
+  container.querySelectorAll('.rd-options input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', (e) => {
+      rdState[e.target.dataset.group].options[e.target.dataset.opt] = e.target.checked;
+    });
+  });
+
+  const checkedCount = RD_GROUPS.filter(g => rdState[g.id].checked).length;
+  document.getElementById('rdSummary').innerHTML = checkedCount
+    ? `تم اختيار <b>${checkedCount}</b> من ${RD_GROUPS.length} مجموعات للحذف`
+    : 'لم يتم اختيار أي مجموعة بعد';
+  document.getElementById('rdOpenConfirm').disabled = checkedCount === 0;
+}
+
+async function rdRefreshCounts() {
+  const dateFrom = document.getElementById('rdDateFrom')?.value || null;
+  const dateTo = document.getElementById('rdDateTo')?.value || null;
+
+  for (const g of RD_GROUPS) {
+    for (const t of g.tables) {
+      try {
+        let q = supabaseClient.from(t).select('*', { count: 'exact', head: true });
+        const dateCol = t === 'expenses' ? 'expense_date' : t === 'salary_payments' ? 'payment_date' : 'created_at';
+        if (t !== 'stock_balances' && rdScope === 'range') {
+          if (dateFrom) q = q.gte(dateCol, dateFrom);
+          if (dateTo) q = q.lte(dateCol, dateTo);
+        }
+        const { count, error } = await q;
+        rdState[g.id].counts[t] = error ? '؟' : (count ?? 0);
+      } catch {
+        rdState[g.id].counts[t] = '؟';
+      }
+    }
+  }
+  rdRender();
+}
+
+async function rdExecute() {
+  document.getElementById('rdConfirmOverlay').classList.remove('show');
+  const openBtn = document.getElementById('rdOpenConfirm');
+  document.getElementById('rdDoExecute').disabled = true;
+  openBtn.disabled = true;
+  openBtn.textContent = 'جارٍ التنفيذ...';
+
+  const dateFrom = rdScope === 'range' && document.getElementById('rdDateFrom').value ? document.getElementById('rdDateFrom').value : null;
+  const dateTo = rdScope === 'range' && document.getElementById('rdDateTo').value ? document.getElementById('rdDateTo').value : null;
+
+  const log = [];
+  let hadError = false;
+
+  for (const g of RD_GROUPS) {
+    if (!rdState[g.id].checked) continue;
+    try {
+      const params = { p_date_from: dateFrom, p_date_to: dateTo, ...rdState[g.id].options };
+      const { data, error } = await supabaseClient.rpc(g.rpc, params);
+      if (error) throw error;
+      log.push(`✔ ${g.title}\n  ${JSON.stringify(data)}`);
+    } catch (err) {
+      hadError = true;
+      log.push(`✘ ${g.title}\n  خطأ: ${err.message || err}`);
+      break;
+    }
+  }
+
+  const resultEl = document.getElementById('rdResult');
+  resultEl.classList.add('show');
+  resultEl.innerHTML = `<span class="rd-result-title">${hadError ? 'توقفت العملية بسبب خطأ' : 'تمت التهيئة بنجاح'}</span>` + escapeHtml(log.join('\n\n'));
+  showToast(hadError ? 'حدث خطأ أثناء التنفيذ' : 'تم تنفيذ التهيئة بنجاح', hadError);
+
+  openBtn.textContent = 'حذف المحدد';
+  await rdRefreshCounts();
 }
 </script>
 </body>
