@@ -356,6 +356,7 @@ a { color: inherit; }
       <div class="cart-side">
         <div class="cart-header">
           <div class="cart-title">الفاتورة الحالية</div>
+          <select class="customer-select" id="posWarehouseSelect" style="display:none; margin-inline-start:8px;"></select>
           <select class="customer-select" id="customerSelect"><option value="">عميل نقدي (بدون تسجيل)</option></select>
         </div>
         <div class="cart-items" id="cartItems"><div class="cart-empty">لا توجد أصناف مضافة للفاتورة حتى الآن</div></div>
@@ -1362,9 +1363,15 @@ a { color: inherit; }
   <div class="modal-box wide">
     <div class="modal-title">فاتورة شراء جديدة</div>
     <form id="purchaseForm">
-      <div class="field">
-        <label>المورد</label>
-        <select id="purchaseSupplier" required><option value="">اختر مورد...</option></select>
+      <div class="modal-grid">
+        <div class="field">
+          <label>المورد</label>
+          <select id="purchaseSupplier" required><option value="">اختر مورد...</option></select>
+        </div>
+        <div class="field" id="purchaseWarehouseField" style="display:none;">
+          <label>استلام البضاعة في مخزن</label>
+          <select id="purchaseWarehouse"></select>
+        </div>
       </div>
 
       <div style="margin-top:14px;">
@@ -1970,6 +1977,7 @@ function cachePosEls() {
   posEls.searchInput = document.getElementById('searchInput');
   posEls.categoriesRow = document.getElementById('categoriesRow');
   posEls.productGrid = document.getElementById('productGrid');
+  posEls.warehouseSelect = document.getElementById('posWarehouseSelect');
   posEls.customerSelect = document.getElementById('customerSelect');
   posEls.cartItems = document.getElementById('cartItems');
   posEls.subtotalLabel = document.getElementById('subtotalLabel');
@@ -2003,6 +2011,7 @@ async function enterPos() {
   startClock();
   updateHeldCount();
   renderCart();
+  await loadPosWarehouses();
   await Promise.all([loadCategories(), loadProducts(), loadCustomers(), loadStockBalances(), loadQuickDiscounts(), loadTaxInclusiveSetting()]);
   renderCategories();
   renderProducts();
@@ -2030,6 +2039,10 @@ function bindPosEvents() {
   posEls.searchInput.addEventListener('input', renderProducts);
   posEls.discountInput.addEventListener('input', renderCart);
   posEls.paidInput.addEventListener('input', (e) => { e.target.dataset.touched = '1'; renderCart(); });
+  posEls.warehouseSelect.addEventListener('change', async () => {
+    await loadStockBalances();
+    renderProducts();
+  });
   posEls.customerSelect.addEventListener('change', () => {
     delete posEls.paidInput.dataset.touched;
     renderCart();
@@ -2139,9 +2152,42 @@ async function getMainWarehouseId(branchId) {
   return data?.id || null;
 }
 
+let posWarehouses = []; // مخازن الفرع الحالي المتاحة للكاشير يختار منها وقت البيع
+
+// بتحمّل مخازن فرع الكاشير الحالي وتظهر قائمة الاختيار بس لو فيه أكتر من مخزن نشط
+async function loadPosWarehouses() {
+  if (!posEls.warehouseSelect || !currentProfile?.branch_id) return;
+  const { data, error } = await supabaseClient
+    .from('warehouses')
+    .select('id, name, is_main')
+    .eq('branch_id', currentProfile.branch_id)
+    .eq('is_active', true)
+    .order('is_main', { ascending: false });
+  if (error) { console.error(error); return; }
+  posWarehouses = data || [];
+  if (posWarehouses.length <= 1) {
+    posEls.warehouseSelect.style.display = 'none';
+    posEls.warehouseSelect.innerHTML = '';
+    return;
+  }
+  posEls.warehouseSelect.innerHTML = posWarehouses
+    .map(w => `<option value="${w.id}">${escapeHtml(w.name)}${w.is_main ? ' (رئيسي)' : ''}</option>`).join('');
+  const main = posWarehouses.find(w => w.is_main);
+  if (main) posEls.warehouseSelect.value = main.id;
+  posEls.warehouseSelect.style.display = 'inline-block';
+}
+
+// بترجع المخزن اللي الكاشير مختاره دلوقتي، أو null لو مفيش اختيار (يبقى fallback للمخزن الرئيسي)
+function posSelectedWarehouseId() {
+  if (posEls.warehouseSelect && posEls.warehouseSelect.style.display !== 'none' && posEls.warehouseSelect.value) {
+    return posEls.warehouseSelect.value;
+  }
+  return null;
+}
+
 async function loadStockBalances() {
   if (!currentProfile?.branch_id) { stockMap = {}; return; }
-  const warehouseId = await getMainWarehouseId(currentProfile.branch_id);
+  const warehouseId = posSelectedWarehouseId() || await getMainWarehouseId(currentProfile.branch_id);
   if (!warehouseId) { stockMap = {}; return; }
   const { data, error } = await supabaseClient
     .from('stock_balances')
@@ -2441,9 +2487,10 @@ async function doCheckout() {
       }).select().single();
     if (saleError) throw saleError;
 
+    const saleWarehouseId = posSelectedWarehouseId();
     const saleItems = cart.map(l => ({
       sale_id: sale.id, product_id: l.product.id, product_unit_id: l.productUnitId || null, quantity: l.quantity,
-      unit_price: l.unitPrice, discount: 0, total: l.quantity * l.unitPrice,
+      unit_price: l.unitPrice, discount: 0, total: l.quantity * l.unitPrice, warehouse_id: saleWarehouseId,
     }));
     // ملحوظة: حركة المخزون بقت تلقائية عبر تريجر trg_sale_item_stock_effect
     // على مستوى قاعدة البيانات (بيحوّل الكمية للوحدة الأساسية بنفسه)،
@@ -2720,6 +2767,7 @@ async function enterBackoffice() {
   await loadBoCustomers();
   await loadBoSuppliers();
   await loadBoPurchases();
+  await loadBoWarehouses();
   await loadBoRoles();
   await loadBoBranches();
   await loadBoUsers();
@@ -5880,6 +5928,19 @@ function openPurchaseModal() {
     supplierSel.appendChild(opt);
   });
 
+  const whField = document.getElementById('purchaseWarehouseField');
+  const whSel = document.getElementById('purchaseWarehouse');
+  const branchWarehouses = boWarehouses.filter(w => w.is_active && w.branch_id === currentProfile?.branch_id);
+  if (branchWarehouses.length > 1) {
+    whSel.innerHTML = branchWarehouses.map(w => `<option value="${w.id}">${escapeHtml(warehouseLabel(w))}</option>`).join('');
+    const main = branchWarehouses.find(w => w.is_main);
+    if (main) whSel.value = main.id;
+    whField.style.display = 'block';
+  } else {
+    whSel.innerHTML = '';
+    whField.style.display = 'none';
+  }
+
   purchaseLines = [];
   addPurchaseLine();
   document.getElementById('purchasePaid').value = 0;
@@ -5989,9 +6050,12 @@ async function savePurchase(e) {
       }).select().single();
     if (purchaseError) throw purchaseError;
 
+    const purchaseWarehouseId = document.getElementById('purchaseWarehouseField').style.display !== 'none'
+      ? (document.getElementById('purchaseWarehouse').value || null)
+      : null;
     const purchaseItems = validLines.map(l => ({
       purchase_id: purchase.id, product_id: l.productId, quantity: l.quantity,
-      unit_cost: l.unitCost, total: l.quantity * l.unitCost,
+      unit_cost: l.unitCost, total: l.quantity * l.unitCost, warehouse_id: purchaseWarehouseId,
     }));
     // ملحوظة: حركة المخزون بقت تلقائية عبر تريجر trg_purchase_item_stock_effect
     // على مستوى قاعدة البيانات، فمفيش داعي نبعت stock_transactions يدويًا من هنا زي الأول.
