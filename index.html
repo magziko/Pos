@@ -997,11 +997,12 @@ a { color: inherit; }
             <button class="quick-range-btn active" data-stock-tab="balances">أرصدة المخزون</button>
             <button class="quick-range-btn" data-stock-tab="transfer">نقل البضاعة</button>
             <button class="quick-range-btn" data-stock-tab="adjust">الجرد</button>
+            <button class="quick-range-btn" data-stock-tab="warehouses">إدارة المخازن</button>
           </div>
 
           <div id="stockTab-balances">
             <div class="search-row" style="margin-bottom:14px; align-items:center;">
-              <select id="stockBalanceBranchSelect" style="max-width:220px; padding:12px 14px;"></select>
+              <select id="stockBalanceWarehouseSelect" style="max-width:260px; padding:12px 14px;"></select>
               <input type="text" id="stockBalanceSearchInput" placeholder="ابحث باسم الصنف...">
             </div>
             <div class="bo-table-wrap">
@@ -1029,8 +1030,8 @@ a { color: inherit; }
                 <thead>
                   <tr>
                     <th>التاريخ</th>
-                    <th>من فرع</th>
-                    <th>إلى فرع</th>
+                    <th>من مخزن</th>
+                    <th>إلى مخزن</th>
                     <th>عدد الأصناف</th>
                     <th>ملاحظة</th>
                     <th></th>
@@ -1045,7 +1046,7 @@ a { color: inherit; }
 
           <div id="stockTab-adjust" style="display:none;">
             <div class="search-row" style="margin-bottom:14px; align-items:center;">
-              <select id="stockAdjustBranchSelect" style="max-width:220px; padding:12px 14px;"></select>
+              <select id="stockAdjustWarehouseSelect" style="max-width:260px; padding:12px 14px;"></select>
               <input type="text" id="stockAdjustSearchInput" placeholder="ابحث باسم الصنف...">
             </div>
             <div class="bo-table-wrap">
@@ -1080,13 +1081,36 @@ a { color: inherit; }
                 <thead>
                   <tr>
                     <th>التاريخ</th>
-                    <th>الفرع</th>
+                    <th>المخزن</th>
                     <th>عدد الأصناف المعدّلة</th>
                     <th>ملاحظة</th>
                     <th></th>
                   </tr>
                 </thead>
                 <tbody id="stockAdjustmentsTableBody">
+                  <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="stockTab-warehouses" style="display:none;">
+            <div class="bo-section-header">
+              <div></div>
+              <button class="bo-add-btn" id="addWarehouseBtn">+ مخزن جديد</button>
+            </div>
+            <div class="bo-table-wrap">
+              <table class="bo-table">
+                <thead>
+                  <tr>
+                    <th>الفرع</th>
+                    <th>اسم المخزن</th>
+                    <th>رئيسي؟</th>
+                    <th>الحالة</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="warehousesTableBody">
                   <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
                 </tbody>
               </table>
@@ -1237,14 +1261,38 @@ a { color: inherit; }
   </div>
 </div>
 
+<!-- Modal: إضافة / تعديل مخزن فرعي -->
+<div class="modal-overlay" id="warehouseModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="warehouseModalTitle">مخزن جديد</div>
+    <form id="warehouseForm">
+      <input type="hidden" id="warehouseId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>الفرع</label><select id="warehouseBranch" required></select></div>
+        <div class="field field-full"><label>اسم المخزن</label><input type="text" id="warehouseName" required placeholder="مثال: مخزن التالف، مخزن المطبخ..."></div>
+        <div class="field field-full">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="warehouseActive" checked style="width:auto;"> المخزن مفعّل
+          </label>
+        </div>
+      </div>
+      <div class="error-msg" id="warehouseModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelWarehouseBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveWarehouseBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Modal: نقل بضاعة جديد -->
 <div class="modal-overlay" id="transferModalOverlay">
   <div class="modal-box">
     <div class="modal-title">نقل بضاعة بين الفروع</div>
     <form id="transferForm">
       <div class="modal-grid">
-        <div class="field"><label>من فرع</label><select id="transferFromBranch" required></select></div>
-        <div class="field"><label>إلى فرع</label><select id="transferToBranch" required></select></div>
+        <div class="field"><label>من مخزن</label><select id="transferFromWarehouse" required></select></div>
+        <div class="field"><label>إلى مخزن</label><select id="transferToWarehouse" required></select></div>
         <div class="field field-full"><label>ملاحظة (اختياري)</label><input type="text" id="transferNote"></div>
       </div>
       <div id="transferItemsList" style="margin:10px 0;"></div>
@@ -2072,13 +2120,33 @@ async function loadCustomers() {
 }
 
 let stockMap = {}; // productId -> الكمية المتاحة في الفرع الحالي
+const branchWarehouseCache = {}; // branchId -> id المخزن الرئيسي بتاعه (كاش عشان منكررش الاستعلام)
+
+// كل فرع بيتعمله مخزن رئيسي تلقائيًا (trigger fn_create_main_warehouse) وجداول المخزون
+// (stock_balances / stock_transfers / stock_adjustments) شغالة بـ warehouse_id مش branch_id.
+// الدالة دي بترجع id المخزن الرئيسي لفرع معين.
+async function getMainWarehouseId(branchId) {
+  if (!branchId) return null;
+  if (branchWarehouseCache[branchId]) return branchWarehouseCache[branchId];
+  const { data, error } = await supabaseClient
+    .from('warehouses')
+    .select('id')
+    .eq('branch_id', branchId)
+    .eq('is_main', true)
+    .maybeSingle();
+  if (error) { console.error(error); return null; }
+  if (data) branchWarehouseCache[branchId] = data.id;
+  return data?.id || null;
+}
 
 async function loadStockBalances() {
   if (!currentProfile?.branch_id) { stockMap = {}; return; }
+  const warehouseId = await getMainWarehouseId(currentProfile.branch_id);
+  if (!warehouseId) { stockMap = {}; return; }
   const { data, error } = await supabaseClient
     .from('stock_balances')
     .select('product_id, quantity')
-    .eq('branch_id', currentProfile.branch_id);
+    .eq('warehouse_id', warehouseId);
   if (error) { console.error(error); return; }
   stockMap = {};
   (data || []).forEach(row => { stockMap[row.product_id] = Number(row.quantity); });
@@ -2787,10 +2855,12 @@ function bindBackofficeEvents() {
       document.getElementById('stockTab-balances').style.display = tab === 'balances' ? 'block' : 'none';
       document.getElementById('stockTab-transfer').style.display = tab === 'transfer' ? 'block' : 'none';
       document.getElementById('stockTab-adjust').style.display = tab === 'adjust' ? 'block' : 'none';
+      document.getElementById('stockTab-warehouses').style.display = tab === 'warehouses' ? 'block' : 'none';
       if (tab === 'adjust' && !stockAdjustLoadedOnce) { initStockAdjustTab(); stockAdjustLoadedOnce = true; }
+      if (tab === 'warehouses' && !stockWarehousesLoadedOnce) { renderWarehousesTable(); stockWarehousesLoadedOnce = true; }
     });
   });
-  document.getElementById('stockBalanceBranchSelect').addEventListener('change', renderStockBalancesTable);
+  document.getElementById('stockBalanceWarehouseSelect').addEventListener('change', renderStockBalancesTable);
   document.getElementById('stockBalanceSearchInput').addEventListener('input', renderStockBalancesTable);
   document.getElementById('addTransferBtn').addEventListener('click', openTransferModal);
   document.getElementById('cancelTransferBtn').addEventListener('click', closeTransferModal);
@@ -2805,12 +2875,20 @@ function bindBackofficeEvents() {
   document.getElementById('closeTransferDetailBtn').addEventListener('click', () => {
     document.getElementById('transferDetailModalOverlay').classList.remove('show');
   });
-  document.getElementById('stockAdjustBranchSelect').addEventListener('change', renderStockAdjustTable);
+  document.getElementById('stockAdjustWarehouseSelect').addEventListener('change', renderStockAdjustTable);
   document.getElementById('stockAdjustSearchInput').addEventListener('input', renderStockAdjustTable);
   document.getElementById('saveStockAdjustBtn').addEventListener('click', saveStockAdjust);
   document.getElementById('closeAdjustmentDetailBtn').addEventListener('click', () => {
     document.getElementById('adjustmentDetailModalOverlay').classList.remove('show');
   });
+
+  // ---- Warehouse modal ----
+  document.getElementById('addWarehouseBtn').addEventListener('click', () => openWarehouseModal(null));
+  document.getElementById('cancelWarehouseBtn').addEventListener('click', closeWarehouseModal);
+  document.getElementById('warehouseModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'warehouseModalOverlay') closeWarehouseModal();
+  });
+  document.getElementById('warehouseForm').addEventListener('submit', saveWarehouse);
 
   // ---- Supplier modal ----
   document.getElementById('addSupplierBtn').addEventListener('click', () => openSupplierModal(null));
@@ -4616,6 +4694,11 @@ async function saveBranch(e) {
     await loadBoBranches();
     renderBranchesTable();
     populateUserSelects();
+    if (stockSectionLoadedOnce) {
+      await loadBoWarehouses();
+      populateStockWarehouseSelects();
+      if (stockWarehousesLoadedOnce) renderWarehousesTable();
+    }
   } catch (err) {
     console.error(err);
     errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
@@ -4647,41 +4730,163 @@ async function deleteBranch(branch) {
 // ---- Stock & warehouse transfers ----
 let currentTransferItems = [];
 let boTransfers = [];
+let boWarehouses = [];
 
-function initStockSection() {
-  populateStockBranchSelects();
+async function loadBoWarehouses() {
+  const { data, error } = await supabaseClient
+    .from('warehouses')
+    .select('*, branches(name)')
+    .order('name');
+  if (error) { console.error(error); return; }
+  boWarehouses = (data || []).sort((a, b) => {
+    const branchCompare = (a.branches?.name || '').localeCompare(b.branches?.name || '', 'ar');
+    if (branchCompare !== 0) return branchCompare;
+    if (a.is_main !== b.is_main) return a.is_main ? -1 : 1;
+    return a.name.localeCompare(b.name, 'ar');
+  });
+}
+
+function warehouseLabel(w) {
+  const branchName = w.branches?.name || 'فرع محذوف';
+  return `${branchName} — ${w.name}${w.is_main ? ' (رئيسي)' : ''}`;
+}
+
+async function initStockSection() {
+  await loadBoWarehouses();
+  populateStockWarehouseSelects();
   renderStockBalancesTable();
   loadBoTransfers().then(renderTransfersTable);
 }
 
-function populateStockBranchSelects() {
-  const opts = boBranchesList.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+function populateStockWarehouseSelects() {
+  const opts = boWarehouses.filter(w => w.is_active).map(w => `<option value="${w.id}">${escapeHtml(warehouseLabel(w))}</option>`).join('');
+  const myMainWarehouse = boWarehouses.find(w => w.branch_id === currentProfile?.branch_id && w.is_main);
 
-  const balanceSel = document.getElementById('stockBalanceBranchSelect');
+  const balanceSel = document.getElementById('stockBalanceWarehouseSelect');
   balanceSel.innerHTML = opts;
-  if (currentProfile?.branch_id) balanceSel.value = currentProfile.branch_id;
+  if (myMainWarehouse) balanceSel.value = myMainWarehouse.id;
 
-  const adjustSel = document.getElementById('stockAdjustBranchSelect');
+  const adjustSel = document.getElementById('stockAdjustWarehouseSelect');
   adjustSel.innerHTML = opts;
-  if (currentProfile?.branch_id) adjustSel.value = currentProfile.branch_id;
+  if (myMainWarehouse) adjustSel.value = myMainWarehouse.id;
 
-  const fromSel = document.getElementById('transferFromBranch');
-  const toSel = document.getElementById('transferToBranch');
+  const fromSel = document.getElementById('transferFromWarehouse');
+  const toSel = document.getElementById('transferToWarehouse');
   fromSel.innerHTML = opts;
   toSel.innerHTML = opts;
-  if (currentProfile?.branch_id) fromSel.value = currentProfile.branch_id;
+  if (myMainWarehouse) fromSel.value = myMainWarehouse.id;
+}
+
+function renderWarehousesTable() {
+  const tbody = document.getElementById('warehousesTableBody');
+  if (boWarehouses.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">لا توجد مخازن مسجلة حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boWarehouses.forEach(w => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(w.branches?.name || '—')}</td>
+      <td>${escapeHtml(w.name)}</td>
+      <td>${w.is_main ? 'نعم' : '—'}</td>
+      <td>${w.is_active ? 'مفعّل' : 'متوقف'}</td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          ${w.is_main ? '' : '<button class="bo-icon-btn danger" data-action="delete">حذف</button>'}
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openWarehouseModal(w));
+    const delBtn = tr.querySelector('[data-action="delete"]');
+    if (delBtn) delBtn.addEventListener('click', () => deleteWarehouse(w));
+    tbody.appendChild(tr);
+  });
+}
+
+function openWarehouseModal(warehouse) {
+  document.getElementById('warehouseModalTitle').textContent = warehouse ? 'تعديل مخزن' : 'مخزن جديد';
+  document.getElementById('warehouseId').value = warehouse ? warehouse.id : '';
+  const branchSel = document.getElementById('warehouseBranch');
+  branchSel.innerHTML = boBranchesList.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+  branchSel.value = warehouse ? warehouse.branch_id : (currentProfile?.branch_id || boBranchesList[0]?.id || '');
+  branchSel.disabled = !!(warehouse && warehouse.is_main); // المخزن الرئيسي مرتبط تلقائيًا بفرعه، منقلش الفرع بتاعه
+  document.getElementById('warehouseName').value = warehouse ? warehouse.name : '';
+  document.getElementById('warehouseActive').checked = warehouse ? warehouse.is_active : true;
+  document.getElementById('warehouseModalError').classList.remove('show');
+  document.getElementById('warehouseModalOverlay').classList.add('show');
+}
+
+function closeWarehouseModal() {
+  document.getElementById('warehouseModalOverlay').classList.remove('show');
+}
+
+async function saveWarehouse(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('warehouseModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveWarehouseBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('warehouseId').value || null;
+  const payload = {
+    branch_id: document.getElementById('warehouseBranch').value,
+    name: document.getElementById('warehouseName').value.trim(),
+    is_active: document.getElementById('warehouseActive').checked,
+  };
+
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('warehouses').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('warehouses').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث بيانات المخزن' : 'تمت إضافة المخزن بنجاح');
+    closeWarehouseModal();
+    await loadBoWarehouses();
+    renderWarehousesTable();
+    populateStockWarehouseSelects();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function deleteWarehouse(warehouse) {
+  if (warehouse.is_main) {
+    showToast('لا يمكن حذف المخزن الرئيسي للفرع', true);
+    return;
+  }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف مخزن "${warehouse.name}"؟`)) return;
+  const { error } = await supabaseClient.from('warehouses').delete().eq('id', warehouse.id);
+  if (error) {
+    console.error(error);
+    showToast('تعذر حذف المخزن — على الأرجح فيه أرصدة أو عمليات مسجلة عليه', true);
+    return;
+  }
+  showToast('تم حذف المخزن');
+  await loadBoWarehouses();
+  renderWarehousesTable();
+  populateStockWarehouseSelects();
 }
 
 async function renderStockBalancesTable() {
-  const branchId = document.getElementById('stockBalanceBranchSelect').value;
+  const warehouseId = document.getElementById('stockBalanceWarehouseSelect').value;
   const tbody = document.getElementById('stockBalancesTableBody');
-  if (!branchId) { tbody.innerHTML = `<tr><td colspan="2" class="bo-empty">اختر فرعًا</td></tr>`; return; }
+  if (!warehouseId) { tbody.innerHTML = `<tr><td colspan="2" class="bo-empty">اختر مخزنًا</td></tr>`; return; }
   tbody.innerHTML = `<tr><td colspan="2" class="bo-empty">جاري التحميل...</td></tr>`;
 
   const { data, error } = await supabaseClient
     .from('stock_balances')
     .select('product_id, quantity, products(name)')
-    .eq('branch_id', branchId);
+    .eq('warehouse_id', warehouseId);
   if (error) { console.error(error); showToast('تعذر تحميل أرصدة المخزون', true); return; }
 
   const q = (document.getElementById('stockBalanceSearchInput').value || '').trim().toLowerCase();
@@ -4690,7 +4895,7 @@ async function renderStockBalancesTable() {
     .sort((a, b) => (a.products?.name || '').localeCompare(b.products?.name || '', 'ar'));
 
   if (rows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="2" class="bo-empty">لا توجد أرصدة مسجلة لهذا الفرع</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="2" class="bo-empty">لا توجد أرصدة مسجلة لهذا المخزن</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
@@ -4705,7 +4910,7 @@ function openTransferModal() {
   document.getElementById('transferModalError').classList.remove('show');
   document.getElementById('transferNote').value = '';
   currentTransferItems = [{ product_id: '', quantity: '' }];
-  populateStockBranchSelects();
+  populateStockWarehouseSelects();
   renderTransferItemsList();
   document.getElementById('transferModalOverlay').classList.add('show');
 }
@@ -4746,12 +4951,12 @@ async function saveTransfer(e) {
   const errEl = document.getElementById('transferModalError');
   errEl.classList.remove('show');
 
-  const fromBranch = document.getElementById('transferFromBranch').value;
-  const toBranch = document.getElementById('transferToBranch').value;
+  const fromWarehouse = document.getElementById('transferFromWarehouse').value;
+  const toWarehouse = document.getElementById('transferToWarehouse').value;
   const note = document.getElementById('transferNote').value.trim() || null;
 
-  if (!fromBranch || !toBranch) { errEl.textContent = 'اختر الفرعين'; errEl.classList.add('show'); return; }
-  if (fromBranch === toBranch) { errEl.textContent = 'لازم يكون الفرع المرسل مختلف عن الفرع المستقبل'; errEl.classList.add('show'); return; }
+  if (!fromWarehouse || !toWarehouse) { errEl.textContent = 'اختر المخزنين'; errEl.classList.add('show'); return; }
+  if (fromWarehouse === toWarehouse) { errEl.textContent = 'لازم يكون مخزن المصدر مختلف عن مخزن الوجهة'; errEl.classList.add('show'); return; }
 
   const lines = currentTransferItems
     .filter(i => i.product_id && Number(i.quantity) > 0)
@@ -4763,11 +4968,11 @@ async function saveTransfer(e) {
   saveBtn.textContent = 'جاري التنفيذ...';
 
   try {
-    // تحقق إن الرصيد متاح في فرع المصدر لكل صنف قبل أي تعديل
+    // تحقق إن الرصيد متاح في مخزن المصدر لكل صنف قبل أي تعديل
     const { data: sourceBalances, error: sbError } = await supabaseClient
       .from('stock_balances')
       .select('product_id, quantity')
-      .eq('branch_id', fromBranch)
+      .eq('warehouse_id', fromWarehouse)
       .in('product_id', lines.map(l => l.product_id));
     if (sbError) throw sbError;
     const sourceMap = {};
@@ -4777,26 +4982,26 @@ async function saveTransfer(e) {
       const available = sourceMap[line.product_id] ?? 0;
       if (line.quantity > available) {
         const productName = boProducts.find(p => p.id === line.product_id)?.name || 'الصنف';
-        throw new Error(`الرصيد المتاح من "${productName}" في الفرع المرسل هو ${available} فقط`);
+        throw new Error(`الرصيد المتاح من "${productName}" في المخزن المصدر هو ${available} فقط`);
       }
     }
 
-    // خصم من فرع المصدر
+    // خصم من مخزن المصدر
     for (const line of lines) {
       const newQty = sourceMap[line.product_id] - line.quantity;
       const { error } = await supabaseClient
         .from('stock_balances')
         .update({ quantity: newQty })
-        .eq('branch_id', fromBranch)
+        .eq('warehouse_id', fromWarehouse)
         .eq('product_id', line.product_id);
       if (error) throw error;
     }
 
-    // إضافة لفرع الوجهة (تحديث الرصيد لو موجود، أو إنشاء سطر جديد لو مش موجود)
+    // إضافة لمخزن الوجهة (تحديث الرصيد لو موجود، أو إنشاء سطر جديد لو مش موجود)
     const { data: destBalances, error: dbError } = await supabaseClient
       .from('stock_balances')
       .select('product_id, quantity')
-      .eq('branch_id', toBranch)
+      .eq('warehouse_id', toWarehouse)
       .in('product_id', lines.map(l => l.product_id));
     if (dbError) throw dbError;
     const destMap = {};
@@ -4807,13 +5012,13 @@ async function saveTransfer(e) {
         const { error } = await supabaseClient
           .from('stock_balances')
           .update({ quantity: destMap[line.product_id] + line.quantity })
-          .eq('branch_id', toBranch)
+          .eq('warehouse_id', toWarehouse)
           .eq('product_id', line.product_id);
         if (error) throw error;
       } else {
         const { error } = await supabaseClient
           .from('stock_balances')
-          .insert({ branch_id: toBranch, product_id: line.product_id, quantity: line.quantity });
+          .insert({ warehouse_id: toWarehouse, product_id: line.product_id, quantity: line.quantity });
         if (error) throw error;
       }
     }
@@ -4821,7 +5026,7 @@ async function saveTransfer(e) {
     // تسجيل عملية النقل نفسها للأرشيف
     const { data: transfer, error: transferError } = await supabaseClient
       .from('stock_transfers')
-      .insert({ from_branch_id: fromBranch, to_branch_id: toBranch, note, created_by: currentProfile.id })
+      .insert({ from_warehouse_id: fromWarehouse, to_warehouse_id: toWarehouse, note, created_by: currentProfile.id })
       .select().single();
     if (transferError) throw transferError;
 
@@ -4834,7 +5039,8 @@ async function saveTransfer(e) {
     await loadBoTransfers();
     renderTransfersTable();
     renderStockBalancesTable();
-    if (currentProfile?.branch_id === fromBranch || currentProfile?.branch_id === toBranch) {
+    const myMainWarehouse = await getMainWarehouseId(currentProfile?.branch_id);
+    if (myMainWarehouse && (myMainWarehouse === fromWarehouse || myMainWarehouse === toWarehouse)) {
       await loadStockBalances();
     }
   } catch (err) {
@@ -4850,7 +5056,7 @@ async function saveTransfer(e) {
 async function loadBoTransfers() {
   const { data, error } = await supabaseClient
     .from('stock_transfers')
-    .select('*, from_branch:branches!stock_transfers_from_branch_id_fkey(name), to_branch:branches!stock_transfers_to_branch_id_fkey(name), stock_transfer_items(id)')
+    .select('*, from_warehouse:warehouses!stock_transfers_from_warehouse_id_fkey(name, branches(name)), to_warehouse:warehouses!stock_transfers_to_warehouse_id_fkey(name, branches(name)), stock_transfer_items(id)')
     .order('created_at', { ascending: false });
   if (error) { console.error(error); showToast('تعذر تحميل سجل النقل', true); return; }
   boTransfers = data || [];
@@ -4868,8 +5074,8 @@ function renderTransfersTable() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="num">${date}</td>
-      <td>${escapeHtml(t.from_branch?.name || '—')}</td>
-      <td>${escapeHtml(t.to_branch?.name || '—')}</td>
+      <td>${escapeHtml(t.from_warehouse?.branches?.name || '—')}</td>
+      <td>${escapeHtml(t.to_warehouse?.branches?.name || '—')}</td>
       <td class="num">${(t.stock_transfer_items || []).length}</td>
       <td>${escapeHtml(t.note || '—')}</td>
       <td><button class="bo-icon-btn" data-action="view">التفاصيل</button></td>`;
@@ -4891,8 +5097,8 @@ async function viewTransferDetail(transfer) {
 
   document.getElementById('transferDetailBody').innerHTML = `
     <div class="totals-row"><span>التاريخ</span><span class="num">${date}</span></div>
-    <div class="totals-row"><span>من فرع</span><span>${escapeHtml(transfer.from_branch?.name || '—')}</span></div>
-    <div class="totals-row"><span>إلى فرع</span><span>${escapeHtml(transfer.to_branch?.name || '—')}</span></div>
+    <div class="totals-row"><span>من فرع</span><span>${escapeHtml(transfer.from_warehouse?.branches?.name || '—')}</span></div>
+    <div class="totals-row"><span>إلى فرع</span><span>${escapeHtml(transfer.to_warehouse?.branches?.name || '—')}</span></div>
     <div class="totals-row"><span>ملاحظة</span><span>${escapeHtml(transfer.note || '—')}</span></div>
     <div style="margin-top:10px; border-top:1px dashed var(--border); padding-top:10px;">${rowsHtml}</div>`;
   document.getElementById('transferDetailModalOverlay').classList.add('show');
@@ -4908,15 +5114,15 @@ function initStockAdjustTab() {
 }
 
 async function renderStockAdjustTable() {
-  const branchId = document.getElementById('stockAdjustBranchSelect').value;
+  const warehouseId = document.getElementById('stockAdjustWarehouseSelect').value;
   const tbody = document.getElementById('stockAdjustTableBody');
-  if (!branchId) { tbody.innerHTML = `<tr><td colspan="4" class="bo-empty">اختر فرعًا</td></tr>`; return; }
+  if (!warehouseId) { tbody.innerHTML = `<tr><td colspan="4" class="bo-empty">اختر مخزنًا</td></tr>`; return; }
   tbody.innerHTML = `<tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>`;
 
   const { data, error } = await supabaseClient
     .from('stock_balances')
     .select('product_id, quantity')
-    .eq('branch_id', branchId);
+    .eq('warehouse_id', warehouseId);
   if (error) { console.error(error); showToast('تعذر تحميل أرصدة المخزون', true); return; }
   const balanceMap = {};
   (data || []).forEach(r => { balanceMap[r.product_id] = Number(r.quantity); });
@@ -4954,8 +5160,8 @@ async function renderStockAdjustTable() {
 async function saveStockAdjust() {
   const errEl = document.getElementById('stockAdjustError');
   errEl.classList.remove('show');
-  const branchId = document.getElementById('stockAdjustBranchSelect').value;
-  if (!branchId) { errEl.textContent = 'اختر فرعًا'; errEl.classList.add('show'); return; }
+  const warehouseId = document.getElementById('stockAdjustWarehouseSelect').value;
+  if (!warehouseId) { errEl.textContent = 'اختر مخزنًا'; errEl.classList.add('show'); return; }
 
   const changed = currentAdjustRows.filter(r => Number(r.after) !== Number(r.before));
   if (changed.length === 0) { errEl.textContent = 'لا يوجد أي تغيير في الأرصدة لحفظه'; errEl.classList.add('show'); return; }
@@ -4970,7 +5176,7 @@ async function saveStockAdjust() {
       const { data: existing, error: fetchErr } = await supabaseClient
         .from('stock_balances')
         .select('id')
-        .eq('branch_id', branchId)
+        .eq('warehouse_id', warehouseId)
         .eq('product_id', row.product_id)
         .maybeSingle();
       if (fetchErr) throw fetchErr;
@@ -4978,20 +5184,20 @@ async function saveStockAdjust() {
         const { error } = await supabaseClient
           .from('stock_balances')
           .update({ quantity: row.after })
-          .eq('branch_id', branchId)
+          .eq('warehouse_id', warehouseId)
           .eq('product_id', row.product_id);
         if (error) throw error;
       } else {
         const { error } = await supabaseClient
           .from('stock_balances')
-          .insert({ branch_id: branchId, product_id: row.product_id, quantity: row.after });
+          .insert({ warehouse_id: warehouseId, product_id: row.product_id, quantity: row.after });
         if (error) throw error;
       }
     }
 
     const { data: adjustment, error: adjError } = await supabaseClient
       .from('stock_adjustments')
-      .insert({ branch_id: branchId, note, created_by: currentProfile.id })
+      .insert({ warehouse_id: warehouseId, note, created_by: currentProfile.id })
       .select().single();
     if (adjError) throw adjError;
 
@@ -5007,7 +5213,8 @@ async function saveStockAdjust() {
     await loadBoAdjustments();
     renderAdjustmentsTable();
     renderStockAdjustTable();
-    if (currentProfile?.branch_id === branchId) await loadStockBalances();
+    const myMainWarehouse = await getMainWarehouseId(currentProfile?.branch_id);
+    if (myMainWarehouse === warehouseId) await loadStockBalances();
     renderStockBalancesTable();
   } catch (err) {
     console.error(err);
@@ -5022,7 +5229,7 @@ async function saveStockAdjust() {
 async function loadBoAdjustments() {
   const { data, error } = await supabaseClient
     .from('stock_adjustments')
-    .select('*, branches(name), stock_adjustment_items(id)')
+    .select('*, warehouses(name, branches(name)), stock_adjustment_items(id)')
     .order('created_at', { ascending: false });
   if (error) { console.error(error); showToast('تعذر تحميل سجل الجرد', true); return; }
   boAdjustments = data || [];
@@ -5040,7 +5247,7 @@ function renderAdjustmentsTable() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="num">${date}</td>
-      <td>${escapeHtml(a.branches?.name || '—')}</td>
+      <td>${escapeHtml(a.warehouses?.branches?.name || '—')}</td>
       <td class="num">${(a.stock_adjustment_items || []).length}</td>
       <td>${escapeHtml(a.note || '—')}</td>
       <td><button class="bo-icon-btn" data-action="view">التفاصيل</button></td>`;
@@ -5062,7 +5269,7 @@ async function viewAdjustmentDetail(adjustment) {
 
   document.getElementById('adjustmentDetailBody').innerHTML = `
     <div class="totals-row"><span>التاريخ</span><span class="num">${date}</span></div>
-    <div class="totals-row"><span>الفرع</span><span>${escapeHtml(adjustment.branches?.name || '—')}</span></div>
+    <div class="totals-row"><span>الفرع</span><span>${escapeHtml(adjustment.warehouses?.branches?.name || '—')}</span></div>
     <div class="totals-row"><span>ملاحظة</span><span>${escapeHtml(adjustment.note || '—')}</span></div>
     <div style="margin-top:10px; border-top:1px dashed var(--border); padding-top:10px;">${rowsHtml}</div>`;
   document.getElementById('adjustmentDetailModalOverlay').classList.add('show');
@@ -5474,6 +5681,7 @@ let boPayments = [];
 let boPaymentsLoadedOnce = false;
 let stockSectionLoadedOnce = false;
 let stockAdjustLoadedOnce = false;
+let stockWarehousesLoadedOnce = false;
 
 async function loadBoPayments() {
   const { data, error } = await supabaseClient
