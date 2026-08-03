@@ -415,6 +415,7 @@ a { color: inherit; }
         <button class="bo-nav-item" data-section="salaries">الرواتب</button>
         <button class="bo-nav-item" data-section="employees">بيانات الموظفين</button>
         <button class="bo-nav-item" data-section="users">إدارة المستخدمين</button>
+        <button class="bo-nav-item" data-section="branches">الفروع</button>
       </div>
 
       <div class="bo-content">
@@ -957,6 +958,30 @@ a { color: inherit; }
             </div>
           </div>
         </div>
+
+        <!-- قسم الفروع -->
+        <div id="bo-section-branches" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">إدارة الفروع</div>
+            <button class="bo-add-btn" id="addBranchBtn">+ فرع جديد</button>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>اسم الفرع</th>
+                  <th>العنوان</th>
+                  <th>رقم التليفون</th>
+                  <th>عدد المستخدمين</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="branchesTableBody">
+                <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1076,6 +1101,26 @@ a { color: inherit; }
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelSupplierBtn">إلغاء</button>
         <button type="submit" class="submit-btn" id="saveSupplierBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: إضافة / تعديل فرع -->
+<div class="modal-overlay" id="branchModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="branchModalTitle">فرع جديد</div>
+    <form id="branchForm">
+      <input type="hidden" id="branchId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>اسم الفرع</label><input type="text" id="branchName" required></div>
+        <div class="field"><label>رقم التليفون</label><input type="text" id="branchPhone" style="direction:ltr; text-align:right;"></div>
+        <div class="field field-full"><label>العنوان</label><input type="text" id="branchAddress"></div>
+      </div>
+      <div class="error-msg" id="branchModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelBranchBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveBranchBtn">حفظ</button>
       </div>
     </form>
   </div>
@@ -2469,6 +2514,7 @@ async function enterBackoffice() {
   renderSuppliersTable();
   renderPurchasesTable();
   renderUsersTable();
+  renderBranchesTable();
   renderEmployeesTable();
   renderExpenseItemsTable();
   renderUnitTypesTable();
@@ -2506,6 +2552,7 @@ function bindBackofficeEvents() {
       document.getElementById('bo-section-reports').style.display = section === 'reports' ? 'block' : 'none';
       document.getElementById('bo-section-soon').style.display = section === 'soon' ? 'block' : 'none';
       document.getElementById('bo-section-users').style.display = section === 'users' ? 'block' : 'none';
+      document.getElementById('bo-section-branches').style.display = section === 'branches' ? 'block' : 'none';
       document.getElementById('bo-section-employees').style.display = section === 'employees' ? 'block' : 'none';
       document.getElementById('bo-section-expense-items').style.display = section === 'expense-items' ? 'block' : 'none';
       document.getElementById('bo-section-expenses').style.display = section === 'expenses' ? 'block' : 'none';
@@ -2566,6 +2613,14 @@ function bindBackofficeEvents() {
     if (e.target.id === 'paymentModalOverlay') closePaymentModal();
   });
   document.getElementById('paymentForm').addEventListener('submit', savePayment);
+
+  // ---- Branch modal ----
+  document.getElementById('addBranchBtn').addEventListener('click', () => openBranchModal(null));
+  document.getElementById('cancelBranchBtn').addEventListener('click', closeBranchModal);
+  document.getElementById('branchModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'branchModalOverlay') closeBranchModal();
+  });
+  document.getElementById('branchForm').addEventListener('submit', saveBranch);
 
   // ---- Supplier modal ----
   document.getElementById('addSupplierBtn').addEventListener('click', () => openSupplierModal(null));
@@ -4300,6 +4355,103 @@ async function loadBoBranches() {
   const { data, error } = await supabaseClient.from('branches').select('*').order('name');
   if (error) { console.error(error); return; }
   boBranchesList = data || [];
+}
+
+function renderBranchesTable() {
+  const tbody = document.getElementById('branchesTableBody');
+  if (boBranchesList.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">لا يوجد فروع مضافة حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boBranchesList.forEach(b => {
+    const userCount = boUsers.filter(u => u.branch_id === b.id).length;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(b.name)}</td>
+      <td>${escapeHtml(b.address || '—')}</td>
+      <td class="num">${escapeHtml(b.phone || '—')}</td>
+      <td class="num">${userCount}</td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openBranchModal(b));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteBranch(b));
+    tbody.appendChild(tr);
+  });
+}
+
+function openBranchModal(branch) {
+  document.getElementById('branchModalTitle').textContent = branch ? 'تعديل فرع' : 'فرع جديد';
+  document.getElementById('branchId').value = branch ? branch.id : '';
+  document.getElementById('branchName').value = branch ? branch.name : '';
+  document.getElementById('branchPhone').value = branch?.phone || '';
+  document.getElementById('branchAddress').value = branch?.address || '';
+  document.getElementById('branchModalError').classList.remove('show');
+  document.getElementById('branchModalOverlay').classList.add('show');
+}
+
+function closeBranchModal() {
+  document.getElementById('branchModalOverlay').classList.remove('show');
+}
+
+async function saveBranch(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('branchModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveBranchBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('branchId').value || null;
+  const payload = {
+    name: document.getElementById('branchName').value.trim(),
+    phone: document.getElementById('branchPhone').value.trim() || null,
+    address: document.getElementById('branchAddress').value.trim() || null,
+  };
+
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('branches').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('branches').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث بيانات الفرع' : 'تمت إضافة الفرع بنجاح');
+    closeBranchModal();
+    await loadBoBranches();
+    renderBranchesTable();
+    populateUserSelects();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function deleteBranch(branch) {
+  const userCount = boUsers.filter(u => u.branch_id === branch.id).length;
+  if (userCount > 0) {
+    showToast('لا يمكن حذف الفرع لوجود مستخدمين مرتبطين به — انقل المستخدمين لفرع آخر أولاً', true);
+    return;
+  }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف "${branch.name}"؟`)) return;
+  const { error } = await supabaseClient.from('branches').delete().eq('id', branch.id);
+  if (error) {
+    console.error(error);
+    showToast('تعذر حذف الفرع — على الأرجح مرتبط ببيانات أخرى (موظفين، مصروفات...)', true);
+    return;
+  }
+  showToast('تم حذف الفرع');
+  await loadBoBranches();
+  renderBranchesTable();
 }
 
 function populateUserSelects(selectedRoleId, selectedBranchId) {
