@@ -125,6 +125,10 @@ a { color: inherit; }
 .totals-row .num { font-weight: 700; }
 .discount-row { display: flex; gap: 8px; margin: 10px 0; }
 .discount-row input { flex: 1; padding: 8px 10px; font-size: 12.5px; text-align: center; }
+.paid-row { display: flex; gap: 8px; margin: 10px 0; align-items: center; }
+.paid-row label { font-size: 12.5px; color: var(--ink-soft); white-space: nowrap; }
+.paid-row input { flex: 1; padding: 8px 10px; font-size: 12.5px; text-align: center; }
+.totals-row.due { color: var(--danger); font-weight: 700; }
 .quick-discount-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
 .quick-discount-btn { background: var(--surface-sunken); color: var(--ink-soft); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
 .quick-discount-btn:hover { background: var(--teal-100); color: var(--teal-700); }
@@ -358,6 +362,11 @@ a { color: inherit; }
           <div class="discount-row"><input type="number" id="discountInput" placeholder="خصم (قيمة)" min="0" value="0"></div>
           <div class="totals-row" id="taxRow" style="display:none;"><span id="taxRowLabel">الضريبة</span><span class="num" id="taxLabel">0.00</span></div>
           <div class="totals-row grand"><span>الإجمالي</span><span class="num" id="totalLabel">0.00</span></div>
+          <div class="paid-row" id="paidRow" style="display:none;">
+            <label for="paidInput">المدفوع الآن</label>
+            <input type="number" id="paidInput" min="0" step="0.01">
+          </div>
+          <div class="totals-row due" id="dueRow" style="display:none;"><span>آجل على حساب العميل</span><span class="num" id="dueLabel">0.00</span></div>
           <div class="action-row">
             <button class="btn-secondary" id="holdBtn">تعليق</button>
             <button class="btn-secondary" id="recallBtn">استرجاع (<span id="heldCount">0</span>)</button>
@@ -396,6 +405,7 @@ a { color: inherit; }
         <button class="bo-nav-item" data-section="customers">العملاء</button>
         <button class="bo-nav-item" data-section="customer-types">أنواع العملاء</button>
         <button class="bo-nav-item" data-section="suppliers">الموردون</button>
+        <button class="bo-nav-item" data-section="payments">سجل المدفوعات</button>
         <button class="bo-nav-item" data-section="purchases">فواتير الشراء</button>
         <button class="bo-nav-item" data-section="purchase-returns">مرتجعات الشراء</button>
         <button class="bo-nav-item" data-section="sale-returns">مرتجعات البيع</button>
@@ -598,6 +608,35 @@ a { color: inherit; }
               </thead>
               <tbody id="suppliersTableBody">
                 <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم سجل المدفوعات -->
+        <div id="bo-section-payments" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">سجل المدفوعات</div>
+            <div class="bo-section-actions">
+              <button class="bo-outline-btn" id="addCustomerReceiptBtn">+ دفعة من عميل</button>
+              <button class="bo-outline-btn" id="addSupplierPaymentBtn">+ دفعة لمورد</button>
+            </div>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>النوع</th>
+                  <th>الطرف</th>
+                  <th>المبلغ</th>
+                  <th>طريقة الدفع</th>
+                  <th>ملاحظة</th>
+                  <th>التاريخ</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="paymentsTableBody">
+                <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
@@ -1037,6 +1076,35 @@ a { color: inherit; }
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelSupplierBtn">إلغاء</button>
         <button type="submit" class="submit-btn" id="saveSupplierBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: تسجيل دفعة (من عميل / لمورد) -->
+<div class="modal-overlay" id="paymentModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="paymentModalTitle">دفعة جديدة</div>
+    <form id="paymentForm">
+      <input type="hidden" id="paymentType">
+      <div class="modal-grid">
+        <div class="field field-full"><label id="paymentPartyLabel">العميل</label><select id="paymentPartySelect" required></select></div>
+        <div class="field"><label>المبلغ</label><input type="number" id="paymentAmount" min="0.01" step="0.01" required></div>
+        <div class="field">
+          <label>طريقة الدفع</label>
+          <select id="paymentMethod">
+            <option value="cash">نقدي</option>
+            <option value="card">بطاقة</option>
+            <option value="transfer">تحويل</option>
+            <option value="other">أخرى</option>
+          </select>
+        </div>
+        <div class="field field-full"><label>ملاحظة (اختياري)</label><input type="text" id="paymentNote"></div>
+      </div>
+      <div class="error-msg" id="paymentModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelPaymentBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="savePaymentBtn">حفظ</button>
       </div>
     </form>
   </div>
@@ -1668,6 +1736,10 @@ function cachePosEls() {
   posEls.recallBtn = document.getElementById('recallBtn');
   posEls.heldCount = document.getElementById('heldCount');
   posEls.checkoutBtn = document.getElementById('checkoutBtn');
+  posEls.paidRow = document.getElementById('paidRow');
+  posEls.paidInput = document.getElementById('paidInput');
+  posEls.dueRow = document.getElementById('dueRow');
+  posEls.dueLabel = document.getElementById('dueLabel');
 }
 
 async function enterPos() {
@@ -1710,6 +1782,11 @@ function bindPosEvents() {
   });
   posEls.searchInput.addEventListener('input', renderProducts);
   posEls.discountInput.addEventListener('input', renderCart);
+  posEls.paidInput.addEventListener('input', (e) => { e.target.dataset.touched = '1'; renderCart(); });
+  posEls.customerSelect.addEventListener('change', () => {
+    delete posEls.paidInput.dataset.touched;
+    renderCart();
+  });
 
   posEls.holdBtn.addEventListener('click', () => {
     if (cart.length === 0) return showToast('الفاتورة فارغة، لا يوجد ما يمكن تعليقه', true);
@@ -2039,7 +2116,22 @@ function renderCart() {
   posEls.taxRow.style.display = taxTotal > 0 ? 'flex' : 'none';
   posEls.taxRowLabel.textContent = taxInclusive ? 'الضريبة (شاملة ضمن السعر)' : 'الضريبة';
   posEls.taxLabel.textContent = taxTotal.toFixed(2);
-  posEls.totalLabel.textContent = calcTotal().toFixed(2);
+  const total = calcTotal();
+  posEls.totalLabel.textContent = total.toFixed(2);
+
+  // البيع بالأجل متاح فقط لعميل مسجل (مش عميل نقدي)
+  const hasCustomer = !!posEls.customerSelect.value;
+  posEls.paidRow.style.display = hasCustomer ? 'flex' : 'none';
+  if (!hasCustomer) {
+    posEls.dueRow.style.display = 'none';
+  } else {
+    if (!posEls.paidInput.dataset.touched) posEls.paidInput.value = total.toFixed(2);
+    const paid = Math.max(0, Math.min(total, Number(posEls.paidInput.value) || 0));
+    const due = Math.round((total - paid) * 100) / 100;
+    posEls.dueRow.style.display = due > 0 ? 'flex' : 'none';
+    posEls.dueLabel.textContent = due.toFixed(2);
+  }
+
   posEls.checkoutBtn.disabled = cart.length === 0;
 }
 
@@ -2066,11 +2158,19 @@ async function doCheckout() {
     const total = calcTotal();
     const customerId = posEls.customerSelect.value || null;
 
+    // البيع بالأجل متاح فقط لعميل مسجل — عميل نقدي لازم يدفع كامل المبلغ
+    let paidAmount = customerId ? (Number(posEls.paidInput.value) || 0) : total;
+    paidAmount = Math.max(0, Math.min(total, paidAmount));
+    const remaining = Math.round((total - paidAmount) * 100) / 100;
+    if (remaining > 0 && !customerId) {
+      throw new Error('البيع الآجل متاح فقط لعميل مسجل، اختر عميلًا أولاً');
+    }
+
     const { data: sale, error: saleError } = await supabaseClient
       .from('sales')
       .insert({
         branch_id: currentProfile.branch_id, user_id: currentProfile.id, customer_id: customerId,
-        status: 'completed', subtotal, discount, tax, total, paid_amount: total, remaining: 0,
+        status: 'completed', subtotal, discount, tax, total, paid_amount: paidAmount, remaining,
       }).select().single();
     if (saleError) throw saleError;
 
@@ -2083,6 +2183,13 @@ async function doCheckout() {
     // فمفيش داعي نبعت stock_transactions يدويًا من هنا زي الأول.
     const { error: itemsError } = await supabaseClient.from('sale_items').insert(saleItems);
     if (itemsError) throw itemsError;
+
+    // لو فيه مبلغ آجل، يتضاف على رصيد العميل (مديونية له)
+    if (remaining > 0 && customerId) {
+      const { data: customer } = await supabaseClient.from('customers').select('balance').eq('id', customerId).single();
+      const newBalance = (Number(customer?.balance) || 0) + remaining;
+      await supabaseClient.from('customers').update({ balance: newBalance }).eq('id', customerId);
+    }
 
     showToast(`تمت الفاتورة رقم ${sale.invoice_number} بنجاح`);
 
@@ -2099,17 +2206,18 @@ async function doCheckout() {
         name: l.unitLabel && l.productUnitId ? `${l.product.name} (${l.unitLabel})` : l.product.name,
         quantity: l.quantity, unitPrice: l.unitPrice,
       })),
-      subtotal, discount, tax, total,
+      subtotal, discount, tax, total, paidAmount, remaining,
     });
 
     cart = []; posEls.discountInput.value = 0; posEls.customerSelect.value = '';
+    delete posEls.paidInput.dataset.touched; posEls.paidInput.value = '';
     resetQuickDiscountSelection();
     renderCart();
     await loadStockBalances();
     renderProducts();
   } catch (err) {
     console.error(err);
-    showToast('حدث خطأ أثناء إتمام عملية البيع، يرجى المحاولة مرة أخرى', true);
+    showToast(err.message || 'حدث خطأ أثناء إتمام عملية البيع، يرجى المحاولة مرة أخرى', true);
   } finally {
     posEls.checkoutBtn.disabled = cart.length === 0;
     posEls.checkoutBtn.textContent = 'إتمام البيع';
@@ -2146,6 +2254,9 @@ function showReceipt(sale) {
     ${sale.discount > 0 ? `<div class="r-row"><span>الخصم</span><span class="num">-${sale.discount.toFixed(2)}</span></div>` : ''}
     ${sale.tax > 0 ? `<div class="r-row"><span>${taxInclusive ? 'منها ضريبة' : 'الضريبة'}</span><span class="num">${sale.tax.toFixed(2)}</span></div>` : ''}
     <div class="r-total-row"><span>الإجمالي</span><span class="num">${sale.total.toFixed(2)}</span></div>
+    ${sale.remaining > 0 ? `
+    <div class="r-row"><span>المدفوع</span><span class="num">${sale.paidAmount.toFixed(2)}</span></div>
+    <div class="r-row" style="color:#C13B3B; font-weight:700;"><span>آجل على حساب العميل</span><span class="num">${sale.remaining.toFixed(2)}</span></div>` : ''}
     <div class="r-footer">شكرًا لتعاملكم معنا 🌿</div>
   `;
 
@@ -2385,6 +2496,8 @@ function bindBackofficeEvents() {
       document.getElementById('bo-section-customer-types').style.display = section === 'customer-types' ? 'block' : 'none';
       document.getElementById('bo-section-customers').style.display = section === 'customers' ? 'block' : 'none';
       document.getElementById('bo-section-suppliers').style.display = section === 'suppliers' ? 'block' : 'none';
+      document.getElementById('bo-section-payments').style.display = section === 'payments' ? 'block' : 'none';
+      if (section === 'payments' && !boPaymentsLoadedOnce) { loadBoPayments().then(renderPaymentsTable); boPaymentsLoadedOnce = true; }
       document.getElementById('bo-section-purchases').style.display = section === 'purchases' ? 'block' : 'none';
       document.getElementById('bo-section-purchase-returns').style.display = section === 'purchase-returns' ? 'block' : 'none';
       document.getElementById('bo-section-sale-returns').style.display = section === 'sale-returns' ? 'block' : 'none';
@@ -2444,6 +2557,15 @@ function bindBackofficeEvents() {
   });
   document.getElementById('customerForm').addEventListener('submit', saveCustomer);
   document.getElementById('customerSearchInput').addEventListener('input', renderCustomersTable);
+
+  // ---- Payments ----
+  document.getElementById('addCustomerReceiptBtn').addEventListener('click', () => openPaymentModal('customer_receipt', null));
+  document.getElementById('addSupplierPaymentBtn').addEventListener('click', () => openPaymentModal('supplier_payment', null));
+  document.getElementById('cancelPaymentBtn').addEventListener('click', closePaymentModal);
+  document.getElementById('paymentModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'paymentModalOverlay') closePaymentModal();
+  });
+  document.getElementById('paymentForm').addEventListener('submit', savePayment);
 
   // ---- Supplier modal ----
   document.getElementById('addSupplierBtn').addEventListener('click', () => openSupplierModal(null));
@@ -3181,10 +3303,12 @@ function renderCustomersTable() {
       <td class="num">${Number(c.loyalty_points).toFixed(2)}</td>
       <td>
         <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="pay">دفعة</button>
           <button class="bo-icon-btn" data-action="edit">تعديل</button>
           <button class="bo-icon-btn danger" data-action="delete">حذف</button>
         </div>
       </td>`;
+    tr.querySelector('[data-action="pay"]').addEventListener('click', () => openPaymentModal('customer_receipt', c));
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openCustomerModal(c));
     tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteCustomer(c));
     tbody.appendChild(tr);
@@ -4501,10 +4625,12 @@ function renderSuppliersTable() {
       <td class="num">${Number(s.balance).toFixed(2)}</td>
       <td>
         <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="pay">دفعة</button>
           <button class="bo-icon-btn" data-action="edit">تعديل</button>
           <button class="bo-icon-btn danger" data-action="delete">حذف</button>
         </div>
       </td>`;
+    tr.querySelector('[data-action="pay"]').addEventListener('click', () => openPaymentModal('supplier_payment', s));
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openSupplierModal(s));
     tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteSupplier(s));
     tbody.appendChild(tr);
@@ -4575,6 +4701,161 @@ async function deleteSupplier(supplier) {
   showToast('تم حذف المورد');
   await loadBoSuppliers();
   renderSuppliersTable();
+}
+
+// ---- سجل المدفوعات (دفعات من عملاء / لموردين) ----
+let boPayments = [];
+let boPaymentsLoadedOnce = false;
+
+async function loadBoPayments() {
+  const { data, error } = await supabaseClient
+    .from('payments')
+    .select('*, customers(name), suppliers(name)')
+    .order('created_at', { ascending: false })
+    .limit(300);
+  if (error) { console.error(error); showToast('تعذر تحميل سجل المدفوعات', true); return; }
+  boPayments = data || [];
+}
+
+const paymentMethodLabels = { cash: 'نقدي', card: 'بطاقة', transfer: 'تحويل', other: 'أخرى' };
+
+function renderPaymentsTable() {
+  const tbody = document.getElementById('paymentsTableBody');
+  if (boPayments.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لا توجد مدفوعات مسجلة حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boPayments.forEach(p => {
+    const tr = document.createElement('tr');
+    const typeLabel = p.payment_type === 'customer_receipt' ? 'دفعة من عميل' : 'دفعة لمورد';
+    const partyName = p.payment_type === 'customer_receipt' ? (p.customers?.name || '—') : (p.suppliers?.name || '—');
+    const dateStr = new Date(p.created_at).toLocaleString('ar-EG', {
+      year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
+    });
+    tr.innerHTML = `
+      <td>${typeLabel}</td>
+      <td>${escapeHtml(partyName)}</td>
+      <td class="num">${Number(p.amount).toFixed(2)}</td>
+      <td>${paymentMethodLabels[p.method] || escapeHtml(p.method || '—')}</td>
+      <td>${escapeHtml(p.note || '—')}</td>
+      <td class="num">${dateStr}</td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deletePayment(p));
+    tbody.appendChild(tr);
+  });
+}
+
+function populatePaymentPartySelect(type, currentId) {
+  const sel = document.getElementById('paymentPartySelect');
+  sel.innerHTML = '';
+  const list = type === 'customer_receipt' ? boCustomers : boSuppliers;
+  list.forEach(p => {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = `${p.name} (الرصيد الحالي: ${Number(p.balance).toFixed(2)})`;
+    sel.appendChild(opt);
+  });
+  sel.value = currentId || (list[0]?.id || '');
+}
+
+function openPaymentModal(type, party) {
+  document.getElementById('paymentType').value = type;
+  document.getElementById('paymentModalTitle').textContent =
+    type === 'customer_receipt' ? 'تسجيل دفعة من عميل' : 'تسجيل دفعة لمورد';
+  document.getElementById('paymentPartyLabel').textContent = type === 'customer_receipt' ? 'العميل' : 'المورد';
+  populatePaymentPartySelect(type, party?.id);
+  document.getElementById('paymentAmount').value = '';
+  document.getElementById('paymentMethod').value = 'cash';
+  document.getElementById('paymentNote').value = '';
+  document.getElementById('paymentModalError').classList.remove('show');
+  document.getElementById('paymentModalOverlay').classList.add('show');
+}
+
+function closePaymentModal() {
+  document.getElementById('paymentModalOverlay').classList.remove('show');
+}
+
+async function savePayment(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('paymentModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('savePaymentBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const type = document.getElementById('paymentType').value;
+  const partyId = document.getElementById('paymentPartySelect').value;
+  const amount = Number(document.getElementById('paymentAmount').value) || 0;
+  const method = document.getElementById('paymentMethod').value;
+  const note = document.getElementById('paymentNote').value.trim() || null;
+
+  try {
+    if (!partyId) throw new Error(type === 'customer_receipt' ? 'يرجى اختيار العميل' : 'يرجى اختيار المورد');
+    if (amount <= 0) throw new Error('المبلغ يجب أن يكون أكبر من صفر');
+
+    const payload = {
+      payment_type: type,
+      customer_id: type === 'customer_receipt' ? partyId : null,
+      supplier_id: type === 'supplier_payment' ? partyId : null,
+      amount, method,
+      branch_id: currentProfile.branch_id, user_id: currentProfile.id, note,
+    };
+    const { error } = await supabaseClient.from('payments').insert(payload);
+    if (error) throw error;
+
+    // تحديث رصيد الطرف: دفعة العميل تقلل مديونيته، ودفعتنا للمورد تقلل مديونيتنا له
+    const table = type === 'customer_receipt' ? 'customers' : 'suppliers';
+    const { data: party } = await supabaseClient.from(table).select('balance').eq('id', partyId).single();
+    const newBalance = (Number(party?.balance) || 0) - amount;
+    await supabaseClient.from(table).update({ balance: newBalance }).eq('id', partyId);
+
+    showToast('تم تسجيل الدفعة بنجاح');
+    closePaymentModal();
+    await loadBoPayments();
+    renderPaymentsTable();
+    if (type === 'customer_receipt') {
+      await loadBoCustomers(); renderCustomersTable(); await loadCustomers();
+    } else {
+      await loadBoSuppliers(); renderSuppliersTable();
+    }
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء حفظ الدفعة';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function deletePayment(payment) {
+  const partyLabel = payment.payment_type === 'customer_receipt' ? 'العميل' : 'المورد';
+  if (!confirm(`هل أنت متأكد من حذف هذه الدفعة؟ سيتم عكس أثرها على رصيد ${partyLabel}.`)) return;
+
+  const { error } = await supabaseClient.from('payments').delete().eq('id', payment.id);
+  if (error) { console.error(error); showToast('تعذر حذف الدفعة', true); return; }
+
+  const table = payment.payment_type === 'customer_receipt' ? 'customers' : 'suppliers';
+  const partyId = payment.payment_type === 'customer_receipt' ? payment.customer_id : payment.supplier_id;
+  if (partyId) {
+    const { data: party } = await supabaseClient.from(table).select('balance').eq('id', partyId).single();
+    const newBalance = (Number(party?.balance) || 0) + Number(payment.amount);
+    await supabaseClient.from(table).update({ balance: newBalance }).eq('id', partyId);
+  }
+
+  showToast('تم حذف الدفعة');
+  await loadBoPayments();
+  renderPaymentsTable();
+  if (payment.payment_type === 'customer_receipt') {
+    await loadBoCustomers(); renderCustomersTable(); await loadCustomers();
+  } else {
+    await loadBoSuppliers(); renderSuppliersTable();
+  }
 }
 
 // ---- Purchases ----
