@@ -190,6 +190,18 @@ a { color: inherit; }
 .barcode-add-row { display: flex; gap: 6px; }
 .barcode-add-row input { flex: 1; padding: 8px 10px; font-size: 12.5px; }
 .barcode-add-row button { background: var(--teal-100); color: var(--teal-700); padding: 8px 14px; border-radius: var(--radius-sm); font-size: 12.5px; font-weight: 600; }
+.units-list { display: flex; flex-direction: column; gap: 8px; }
+.unit-row { display: grid; grid-template-columns: 1.2fr 1fr 1fr auto; gap: 8px; align-items: center; background: var(--surface-sunken); padding: 8px; border-radius: var(--radius-sm); }
+.unit-row input, .unit-row select { padding: 8px 9px; font-size: 12.5px; }
+.unit-row .remove-unit-btn { color: var(--danger); background: none; font-size: 16px; font-weight: 700; padding: 4px 8px; }
+.unit-picker-overlay { position: fixed; inset: 0; background: rgba(15,25,20,0.4); display: none; align-items: center; justify-content: center; z-index: 60; padding: 20px; }
+.unit-picker-overlay.show { display: flex; }
+.unit-picker-box { background: var(--surface); border-radius: var(--radius-lg); padding: 20px; width: 100%; max-width: 340px; box-shadow: var(--shadow-card); }
+.unit-picker-title { font-weight: 700; font-size: 14.5px; margin-bottom: 12px; }
+.unit-picker-option { width: 100%; display: flex; justify-content: space-between; align-items: center; background: var(--surface-sunken); border: 1px solid var(--border); padding: 12px 14px; border-radius: var(--radius-sm); margin-bottom: 8px; font-size: 13.5px; font-weight: 600; }
+.unit-picker-option:hover { border-color: var(--teal-500); background: var(--teal-100); }
+.unit-picker-option .num { font-weight: 700; color: var(--teal-700); }
+.unit-picker-cancel { width: 100%; text-align: center; background: none; color: var(--ink-soft); font-size: 12.5px; padding: 8px; margin-top: 4px; }
 
 /* -------- Reports -------- */
 .report-filters { display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
@@ -941,6 +953,13 @@ a { color: inherit; }
           </div>
         </div>
 
+        <div class="field field-full" id="productUnitsSection">
+          <label>وحدات بيع إضافية (اختياري) — مثال: كرتونة فيها 24 قطعة</label>
+          <div class="units-list" id="unitsList"></div>
+          <button type="button" class="btn-secondary" id="addUnitRowBtn" style="margin-top:8px;">+ إضافة وحدة</button>
+          <p id="unitsHint" style="font-size:11.5px; color:var(--ink-soft); margin:6px 0 0;">احفظ الصنف أول مرة قبل إضافة وحدات بيع إضافية له.</p>
+        </div>
+
         <div class="field field-full">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
             <input type="checkbox" id="productActive" checked style="width:auto;"> الصنف مفعّل ويظهر في شاشة المبيعات
@@ -1404,6 +1423,14 @@ a { color: inherit; }
 
 <div class="toast" id="toast"></div>
 
+<div class="unit-picker-overlay" id="unitPickerOverlay">
+  <div class="unit-picker-box">
+    <div class="unit-picker-title" id="unitPickerTitle">اختر الوحدة</div>
+    <div id="unitPickerOptions"></div>
+    <button type="button" class="unit-picker-cancel" id="unitPickerCancelBtn">إلغاء</button>
+  </div>
+</div>
+
 <script>
 // ============================================================
 // Supabase client — عدّل القيم دي بمشروعك من Supabase Dashboard
@@ -1688,7 +1715,10 @@ function bindPosEvents() {
     if (cart.length === 0) return showToast('الفاتورة فارغة، لا يوجد ما يمكن تعليقه', true);
     heldOrders.push({
       id: crypto.randomUUID(), time: new Date().toISOString(),
-      cart: cart.map(l => ({ productId: l.product.id, name: l.product.name, quantity: l.quantity, unitPrice: l.unitPrice })),
+      cart: cart.map(l => ({
+        productId: l.product.id, name: l.product.name, quantity: l.quantity, unitPrice: l.unitPrice,
+        productUnitId: l.productUnitId || null, unitLabel: l.unitLabel || null, factor: l.factor || 1,
+      })),
       discount: Number(posEls.discountInput.value) || 0,
       customerId: posEls.customerSelect.value || null,
     });
@@ -1706,6 +1736,7 @@ function bindPosEvents() {
     cart = last.cart.map(l => ({
       product: allProducts.find(p => p.id === l.productId) || { id: l.productId, name: l.name, sale_price: l.unitPrice },
       quantity: l.quantity, unitPrice: l.unitPrice,
+      productUnitId: l.productUnitId || null, unitLabel: l.unitLabel || null, factor: l.factor || 1,
     }));
     posEls.discountInput.value = last.discount || 0;
     resetQuickDiscountSelection();
@@ -1715,6 +1746,10 @@ function bindPosEvents() {
   });
 
   posEls.checkoutBtn.addEventListener('click', doCheckout);
+  document.getElementById('unitPickerCancelBtn').addEventListener('click', closeUnitPicker);
+  document.getElementById('unitPickerOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'unitPickerOverlay') closeUnitPicker();
+  });
 
   document.getElementById('closeReceiptBtn').addEventListener('click', () => {
     document.getElementById('receiptModalOverlay').classList.remove('show');
@@ -1739,7 +1774,7 @@ async function loadCategories() {
 async function loadProducts() {
   const { data, error } = await supabaseClient
     .from('products')
-    .select('id, name, category_id, sale_price, unit_type, image_url, tax_rate_id, tax_rates(rate), product_barcodes(barcode)')
+    .select('id, name, category_id, sale_price, unit_type, image_url, tax_rate_id, tax_rates(rate), product_barcodes(barcode), product_units(id, unit_type_id, factor_to_base, sale_price, is_active, unit_types(name))')
     .eq('is_active', true).order('name');
   if (error) {
     console.error(error);
@@ -1825,34 +1860,84 @@ function renderProducts() {
   });
 }
 
+function lineKeyOf(productId, productUnitId) { return productId + '::' + (productUnitId || 'base'); }
+
 function addToCart(product) {
-  const existing = cart.find(l => l.product.id === product.id);
+  const extraUnits = (product.product_units || []).filter(u => u.is_active);
+  if (extraUnits.length === 0) {
+    addUnitToCart(product, null, Number(product.sale_price), 1, null);
+    return;
+  }
+  openUnitPicker(product, extraUnits);
+}
+
+function openUnitPicker(product, extraUnits) {
+  const overlay = document.getElementById('unitPickerOverlay');
+  const optionsWrap = document.getElementById('unitPickerOptions');
+  document.getElementById('unitPickerTitle').textContent = `اختر وحدة "${product.name}"`;
+  optionsWrap.innerHTML = '';
+
+  const baseBtn = document.createElement('button');
+  baseBtn.type = 'button'; baseBtn.className = 'unit-picker-option';
+  baseBtn.innerHTML = `<span>${escapeHtml(product.unit_type || 'الوحدة الأساسية')}</span><span class="num">${Number(product.sale_price).toFixed(2)}</span>`;
+  baseBtn.addEventListener('click', () => {
+    addUnitToCart(product, null, Number(product.sale_price), 1, product.unit_type);
+    closeUnitPicker();
+  });
+  optionsWrap.appendChild(baseBtn);
+
+  extraUnits.forEach(u => {
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'unit-picker-option';
+    const label = u.unit_types?.name || 'وحدة';
+    btn.innerHTML = `<span>${escapeHtml(label)}</span><span class="num">${Number(u.sale_price).toFixed(2)}</span>`;
+    btn.addEventListener('click', () => {
+      addUnitToCart(product, u.id, Number(u.sale_price), Number(u.factor_to_base), label);
+      closeUnitPicker();
+    });
+    optionsWrap.appendChild(btn);
+  });
+
+  overlay.classList.add('show');
+}
+function closeUnitPicker() { document.getElementById('unitPickerOverlay').classList.remove('show'); }
+
+function addUnitToCart(product, productUnitId, unitPrice, factor, unitLabel) {
+  const key = lineKeyOf(product.id, productUnitId);
+  const existing = cart.find(l => lineKeyOf(l.product.id, l.productUnitId) === key);
   const requestedQty = existing ? existing.quantity + 1 : 1;
-  if (!confirmStockIfNeeded(product, requestedQty)) return;
+  if (!confirmStockIfNeeded(product, requestedQty, factor)) return;
   if (existing) existing.quantity += 1;
-  else cart.push({ product, quantity: 1, unitPrice: Number(product.sale_price) });
+  else cart.push({ product, quantity: 1, unitPrice, productUnitId, unitLabel, factor });
   renderCart();
   renderProducts();
 }
 
-function changeQty(productId, delta) {
-  const line = cart.find(l => l.product.id === productId);
+function changeQty(productId, productUnitId, delta) {
+  const key = lineKeyOf(productId, productUnitId);
+  const line = cart.find(l => lineKeyOf(l.product.id, l.productUnitId) === key);
   if (!line) return;
-  if (delta > 0 && !confirmStockIfNeeded(line.product, line.quantity + delta)) return;
+  if (delta > 0 && !confirmStockIfNeeded(line.product, line.quantity + delta, line.factor)) return;
   line.quantity += delta;
-  if (line.quantity <= 0) cart = cart.filter(l => l.product.id !== productId);
+  if (line.quantity <= 0) cart = cart.filter(l => lineKeyOf(l.product.id, l.productUnitId) !== key);
   renderCart();
   renderProducts();
 }
 
 // بيرجع true لو تمام نكمل، أو false لو المستخدم لغى العملية بعد التنبيه
-function confirmStockIfNeeded(product, requestedQty) {
+// requestedQty بوحدة السطر نفسها (مش بالضرورة الوحدة الأساسية)؛ factor بيحوّلها للوحدة الأساسية للمقارنة بالمخزون
+function confirmStockIfNeeded(product, requestedQty, factor) {
   const available = availableStock(product.id);
-  if (requestedQty <= available) return true;
-  return confirm(`الرصيد المتاح من "${product.name}" هو ${available} فقط، والمطلوب ${requestedQty}. هل تريد إتمام عملية البيع؟`);
+  const requestedBaseQty = requestedQty * (factor || 1);
+  if (requestedBaseQty <= available) return true;
+  return confirm(`الرصيد المتاح من "${product.name}" هو ${available} (بالوحدة الأساسية) فقط، والمطلوب ${requestedBaseQty}. هل تريد إتمام عملية البيع؟`);
 }
 
-function removeLine(productId) { cart = cart.filter(l => l.product.id !== productId); renderCart(); }
+function removeLine(productId, productUnitId) {
+  const key = lineKeyOf(productId, productUnitId);
+  cart = cart.filter(l => lineKeyOf(l.product.id, l.productUnitId) !== key);
+  renderCart();
+}
 function calcSubtotal() { return cart.reduce((s, l) => s + l.quantity * l.unitPrice, 0); }
 function calcTaxTotal() {
   return cart.reduce((s, l) => {
@@ -1930,8 +2015,11 @@ function renderCart() {
       const row = document.createElement('div');
       row.className = 'cart-line';
       const lineTotal = (line.quantity * line.unitPrice).toFixed(2);
+      const nameLabel = line.unitLabel && line.productUnitId
+        ? `${escapeHtml(line.product.name)} <span style="color:var(--ink-soft); font-weight:500;">(${escapeHtml(line.unitLabel)})</span>`
+        : escapeHtml(line.product.name);
       row.innerHTML = `
-        <div class="cart-line-name">${escapeHtml(line.product.name)}</div>
+        <div class="cart-line-name">${nameLabel}</div>
         <div class="cart-line-total"><span class="num">${lineTotal}</span></div>
         <div class="cart-line-controls">
           <button class="qty-btn" data-action="dec">−</button>
@@ -1940,9 +2028,9 @@ function renderCart() {
           <span class="unit-price num">${line.unitPrice.toFixed(2)} / وحدة</span>
           <button class="remove-btn" data-action="remove">حذف</button>
         </div>`;
-      row.querySelector('[data-action="inc"]').addEventListener('click', () => changeQty(line.product.id, 1));
-      row.querySelector('[data-action="dec"]').addEventListener('click', () => changeQty(line.product.id, -1));
-      row.querySelector('[data-action="remove"]').addEventListener('click', () => removeLine(line.product.id));
+      row.querySelector('[data-action="inc"]').addEventListener('click', () => changeQty(line.product.id, line.productUnitId, 1));
+      row.querySelector('[data-action="dec"]').addEventListener('click', () => changeQty(line.product.id, line.productUnitId, -1));
+      row.querySelector('[data-action="remove"]').addEventListener('click', () => removeLine(line.product.id, line.productUnitId));
       posEls.cartItems.appendChild(row);
     });
   }
@@ -1987,18 +2075,14 @@ async function doCheckout() {
     if (saleError) throw saleError;
 
     const saleItems = cart.map(l => ({
-      sale_id: sale.id, product_id: l.product.id, quantity: l.quantity,
+      sale_id: sale.id, product_id: l.product.id, product_unit_id: l.productUnitId || null, quantity: l.quantity,
       unit_price: l.unitPrice, discount: 0, total: l.quantity * l.unitPrice,
     }));
+    // ملحوظة: حركة المخزون بقت تلقائية عبر تريجر trg_sale_item_stock_effect
+    // على مستوى قاعدة البيانات (بيحوّل الكمية للوحدة الأساسية بنفسه)،
+    // فمفيش داعي نبعت stock_transactions يدويًا من هنا زي الأول.
     const { error: itemsError } = await supabaseClient.from('sale_items').insert(saleItems);
     if (itemsError) throw itemsError;
-
-    const stockRows = cart.map(l => ({
-      product_id: l.product.id, branch_id: currentProfile.branch_id,
-      quantity: -l.quantity, type: 'sale', reference_id: sale.id, user_id: currentProfile.id,
-    }));
-    const { error: stockError } = await supabaseClient.from('stock_transactions').insert(stockRows);
-    if (stockError) throw stockError;
 
     showToast(`تمت الفاتورة رقم ${sale.invoice_number} بنجاح`);
 
@@ -2011,7 +2095,10 @@ async function doCheckout() {
       cashierName: currentProfile.full_name,
       branchName: currentProfile.branches?.name || '',
       customerName,
-      lines: cart.map(l => ({ name: l.product.name, quantity: l.quantity, unitPrice: l.unitPrice })),
+      lines: cart.map(l => ({
+        name: l.unitLabel && l.productUnitId ? `${l.product.name} (${l.unitLabel})` : l.product.name,
+        quantity: l.quantity, unitPrice: l.unitPrice,
+      })),
       subtotal, discount, tax, total,
     });
 
@@ -2240,6 +2327,7 @@ let boInitialized = false;
 let boProducts = [];
 let boCategories = [];
 let currentBarcodes = []; // الباركود المرتبط بالصنف المفتوح حاليًا في المودال
+let currentUnits = []; // وحدات البيع الإضافية المرتبطة بالصنف المفتوح حاليًا في المودال
 
 async function enterBackoffice() {
   showView('backoffice');
@@ -2332,6 +2420,10 @@ function bindBackofficeEvents() {
     if (e.key === 'Enter') { e.preventDefault(); addBarcodeToCurrentProduct(); }
   });
   document.getElementById('productForm').addEventListener('submit', saveProduct);
+  document.getElementById('addUnitRowBtn').addEventListener('click', () => {
+    currentUnits.push({ id: null, unit_type_id: '', factor_to_base: '', sale_price: '', is_active: true });
+    renderUnitsList();
+  });
 
   // ---- Category modal ----
   document.getElementById('addCategoryBtn').addEventListener('click', () => openCategoryModal(null));
@@ -2517,7 +2609,7 @@ function bindBackofficeEvents() {
 async function loadBoProducts() {
   const { data, error } = await supabaseClient
     .from('products')
-    .select('*, categories(name), tax_rates(name, rate), product_barcodes(id, barcode)')
+    .select('*, categories(name), tax_rates(name, rate), product_barcodes(id, barcode), product_units(id, unit_type_id, factor_to_base, sale_price, is_active, unit_types(name))')
     .order('created_at', { ascending: false });
   if (error) { console.error(error); showToast('تعذر تحميل الأصناف', true); return; }
   boProducts = data || [];
@@ -2779,6 +2871,9 @@ function renderProductsTable() {
 
 function openProductModal(product) {
   currentBarcodes = product ? (product.product_barcodes || []).map(b => ({ id: b.id, barcode: b.barcode })) : [];
+  currentUnits = product ? (product.product_units || []).map(u => ({
+    id: u.id, unit_type_id: u.unit_type_id, factor_to_base: u.factor_to_base, sale_price: u.sale_price, is_active: u.is_active,
+  })) : [];
   document.getElementById('productModalTitle').textContent = product ? 'تعديل صنف' : 'صنف جديد';
   document.getElementById('productId').value = product ? product.id : '';
   document.getElementById('productName').value = product ? product.name : '';
@@ -2794,7 +2889,42 @@ function openProductModal(product) {
   document.getElementById('productModalError').classList.remove('show');
   document.getElementById('newBarcodeInput').value = '';
   renderBarcodeList();
+  document.getElementById('addUnitRowBtn').style.display = product ? '' : 'none';
+  document.getElementById('unitsHint').style.display = product ? 'none' : '';
+  renderUnitsList();
   document.getElementById('productModalOverlay').classList.add('show');
+}
+
+function renderUnitsList() {
+  const wrap = document.getElementById('unitsList');
+  wrap.innerHTML = '';
+  currentUnits.forEach((u, idx) => {
+    const row = document.createElement('div');
+    row.className = 'unit-row';
+    const unitSelect = document.createElement('select');
+    unitSelect.innerHTML = boUnitTypes.filter(t => t.is_active).map(t =>
+      `<option value="${t.id}" ${t.id === u.unit_type_id ? 'selected' : ''}>${escapeHtml(t.name)}</option>`).join('');
+    unitSelect.addEventListener('change', () => { currentUnits[idx].unit_type_id = unitSelect.value; });
+
+    const factorInput = document.createElement('input');
+    factorInput.type = 'number'; factorInput.min = '0.0001'; factorInput.step = '0.0001';
+    factorInput.placeholder = 'كام قطعة (وحدة أساسية) فيها؟';
+    factorInput.value = u.factor_to_base ?? '';
+    factorInput.addEventListener('input', () => { currentUnits[idx].factor_to_base = factorInput.value; });
+
+    const priceInput = document.createElement('input');
+    priceInput.type = 'number'; priceInput.min = '0'; priceInput.step = '0.01';
+    priceInput.placeholder = 'سعر البيع بالوحدة دي';
+    priceInput.value = u.sale_price ?? '';
+    priceInput.addEventListener('input', () => { currentUnits[idx].sale_price = priceInput.value; });
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button'; removeBtn.className = 'remove-unit-btn'; removeBtn.textContent = '×';
+    removeBtn.addEventListener('click', () => { currentUnits.splice(idx, 1); renderUnitsList(); });
+
+    row.append(unitSelect, factorInput, priceInput, removeBtn);
+    wrap.appendChild(row);
+  });
 }
 
 function closeProductModal() {
@@ -2879,6 +3009,36 @@ async function saveProduct(e) {
     if (newOnes.length > 0) {
       const { error: bcError } = await supabaseClient.from('product_barcodes').insert(newOnes);
       if (bcError) throw bcError;
+    }
+
+    // مزامنة وحدات البيع الإضافية (متاحة فقط لصنف موجود بالفعل)
+    if (id) {
+      for (const u of currentUnits) {
+        if (!u.unit_type_id || !u.factor_to_base || u.sale_price === '' || u.sale_price === null) {
+          throw new Error('لازم تحدد نوع الوحدة والكمية والسعر لكل وحدة بيع إضافية مضافة');
+        }
+      }
+      const { data: existingUnits } = await supabaseClient
+        .from('product_units').select('id').eq('product_id', productId);
+      const existingUnitIds = (existingUnits || []).map(u => u.id);
+      const keptUnitIds = currentUnits.filter(u => u.id).map(u => u.id);
+      const removedUnitIds = existingUnitIds.filter(uid => !keptUnitIds.includes(uid));
+      if (removedUnitIds.length > 0) {
+        await supabaseClient.from('product_units').delete().in('id', removedUnitIds);
+      }
+      for (const u of currentUnits) {
+        const unitPayload = {
+          product_id: productId, unit_type_id: u.unit_type_id,
+          factor_to_base: Number(u.factor_to_base), sale_price: Number(u.sale_price),
+        };
+        if (u.id) {
+          const { error: uErr } = await supabaseClient.from('product_units').update(unitPayload).eq('id', u.id);
+          if (uErr) throw uErr;
+        } else {
+          const { error: uErr } = await supabaseClient.from('product_units').insert(unitPayload);
+          if (uErr) throw uErr;
+        }
+      }
     }
 
     showToast(id ? 'تم تحديث الصنف بنجاح' : 'تمت إضافة الصنف بنجاح');
@@ -4576,15 +4736,10 @@ async function savePurchase(e) {
       purchase_id: purchase.id, product_id: l.productId, quantity: l.quantity,
       unit_cost: l.unitCost, total: l.quantity * l.unitCost,
     }));
+    // ملحوظة: حركة المخزون بقت تلقائية عبر تريجر trg_purchase_item_stock_effect
+    // على مستوى قاعدة البيانات، فمفيش داعي نبعت stock_transactions يدويًا من هنا زي الأول.
     const { error: itemsError } = await supabaseClient.from('purchase_items').insert(purchaseItems);
     if (itemsError) throw itemsError;
-
-    const stockRows = validLines.map(l => ({
-      product_id: l.productId, branch_id: currentProfile.branch_id,
-      quantity: l.quantity, type: 'purchase', reference_id: purchase.id, user_id: currentProfile.id,
-    }));
-    const { error: stockError } = await supabaseClient.from('stock_transactions').insert(stockRows);
-    if (stockError) throw stockError;
 
     // تحديث سعر الشراء الحالي للصنف (اختياري لكن مفيد)
     for (const l of validLines) {
