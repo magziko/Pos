@@ -108,6 +108,18 @@ a { color: inherit; }
 .cart-header { padding: 16px 18px 10px; border-bottom: 1px solid var(--border); }
 .cart-title { font-weight: 700; font-size: 14.5px; margin-bottom: 8px; }
 .customer-select { width: 100%; padding: 9px 10px; font-size: 13px; }
+.customer-combo { position: relative; width: 100%; }
+.customer-combo input.customer-select { width: 100%; cursor: text; }
+.customer-dropdown {
+  display: none; position: absolute; z-index: 40; top: calc(100% + 4px); right: 0; left: 0;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-card); max-height: 220px; overflow-y: auto;
+}
+.customer-dropdown.show { display: block; }
+.customer-option { padding: 9px 12px; font-size: 13px; cursor: pointer; }
+.customer-option:hover, .customer-option.active { background: var(--teal-100); color: var(--teal-900); }
+.customer-option-empty { color: var(--ink-soft); cursor: default; }
+.customer-option-empty:hover { background: none; color: var(--ink-soft); }
 .cart-items { flex: 1; overflow-y: auto; padding: 8px 14px; }
 .cart-empty { text-align: center; color: var(--ink-soft); font-size: 13px; padding: 40px 10px; }
 .cart-line { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; padding: 10px 4px; border-bottom: 1px solid var(--surface-sunken); }
@@ -456,7 +468,11 @@ a { color: inherit; }
         <div class="cart-header">
           <div class="cart-title">الفاتورة الحالية</div>
           <select class="customer-select" id="posWarehouseSelect" style="display:none; margin-inline-start:8px;"></select>
-          <select class="customer-select" id="customerSelect"><option value="">عميل نقدي (بدون تسجيل)</option></select>
+          <div class="customer-combo" id="customerCombo">
+            <input type="text" class="customer-select" id="customerSearchInput" placeholder="عميل نقدي (بدون تسجيل)" autocomplete="off">
+            <div class="customer-dropdown" id="customerDropdown"></div>
+            <select id="customerSelect" style="display:none;"><option value="">عميل نقدي (بدون تسجيل)</option></select>
+          </div>
         </div>
         <div class="cart-items" id="cartItems"><div class="cart-empty">لا توجد أصناف مضافة للفاتورة حتى الآن</div></div>
         <div class="cart-footer">
@@ -2624,6 +2640,8 @@ function cachePosEls() {
   posEls.productGrid = document.getElementById('productGrid');
   posEls.warehouseSelect = document.getElementById('posWarehouseSelect');
   posEls.customerSelect = document.getElementById('customerSelect');
+  posEls.customerSearchInput = document.getElementById('customerSearchInput');
+  posEls.customerDropdown = document.getElementById('customerDropdown');
   posEls.cartItems = document.getElementById('cartItems');
   posEls.subtotalLabel = document.getElementById('subtotalLabel');
   posEls.totalLabel = document.getElementById('totalLabel');
@@ -2748,6 +2766,25 @@ function bindPosEvents() {
     delete posEls.paidInput.dataset.touched;
     renderCart();
   });
+  posEls.customerSearchInput.addEventListener('focus', () => {
+    posEls.customerSearchInput.select();
+    renderCustomerDropdown('');
+  });
+  posEls.customerSearchInput.addEventListener('input', () => {
+    renderCustomerDropdown(posEls.customerSearchInput.value);
+  });
+  posEls.customerSearchInput.addEventListener('blur', () => {
+    closeCustomerDropdown();
+    syncCustomerSearchDisplay();
+  });
+  posEls.customerSearchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { closeCustomerDropdown(); syncCustomerSearchDisplay(); posEls.customerSearchInput.blur(); }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const first = posEls.customerDropdown.querySelector('.customer-option:not(.customer-option-empty)');
+      if (first) first.dispatchEvent(new Event('mousedown'));
+    }
+  });
 
   posEls.holdBtn.addEventListener('click', () => {
     if (cart.length === 0) return showToast('الفاتورة فارغة، لا يوجد ما يمكن تعليقه', true);
@@ -2780,7 +2817,7 @@ function bindPosEvents() {
     posEls.discountInput.value = last.discount || 0;
     resetQuickDiscountSelection();
     posEls.paymentMethodSelect.value = last.paymentMethod || 'cash';
-    if (last.customerId) posEls.customerSelect.value = last.customerId;
+    setCustomerSelection(last.customerId || '', { silent: true });
     renderCart(); updateHeldCount();
     showToast('تم استرجاع آخر فاتورة معلّقة');
   });
@@ -2837,15 +2874,79 @@ async function loadProducts() {
   allProducts = data || [];
 }
 
+let allCustomers = [];
 async function loadCustomers() {
   const { data, error } = await supabaseClient.from('customers').select('id, name').order('name').limit(200);
   if (error) { console.error(error); return; }
+  allCustomers = data || [];
+  const prevValue = posEls.customerSelect.value;
   posEls.customerSelect.innerHTML = '<option value="">عميل نقدي (بدون تسجيل)</option>';
-  (data || []).forEach(c => {
+  allCustomers.forEach(c => {
     const opt = document.createElement('option');
     opt.value = c.id; opt.textContent = c.name;
     posEls.customerSelect.appendChild(opt);
   });
+  // نحافظ على العميل المختار لو لسه موجود بعد إعادة التحميل (مثلاً بعد تعديل في لوحة التحكم)
+  if (prevValue && allCustomers.some(c => c.id === prevValue)) posEls.customerSelect.value = prevValue;
+  syncCustomerSearchDisplay();
+}
+
+// بترجع النص المعروض في خانة البحث مطابق للعميل المختار فعليًا في الـ select المخفي
+function syncCustomerSearchDisplay() {
+  if (!posEls.customerSearchInput) return;
+  const opt = posEls.customerSelect.selectedOptions[0];
+  posEls.customerSearchInput.value = opt ? opt.textContent : '';
+}
+
+// بتحدد عميل (أو تفرغ الاختيار لو id فاضي) وتحدّث خانة البحث وتطلق change زي الـ select العادي
+function setCustomerSelection(id, options = {}) {
+  posEls.customerSelect.value = id || '';
+  syncCustomerSearchDisplay();
+  if (!options.silent) posEls.customerSelect.dispatchEvent(new Event('change'));
+}
+
+// بتعرض قائمة العملاء المطابقة لأي مقطع من الاسم (مش بس أول الاسم زي الـ select العادي)
+function renderCustomerDropdown(query) {
+  const q = (query || '').trim().toLowerCase();
+  const dropdown = posEls.customerDropdown;
+  dropdown.innerHTML = '';
+
+  if (!q || 'عميل نقدي بدون تسجيل'.includes(q)) {
+    const cashOption = document.createElement('div');
+    cashOption.className = 'customer-option';
+    cashOption.textContent = 'عميل نقدي (بدون تسجيل)';
+    cashOption.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      setCustomerSelection('');
+      closeCustomerDropdown();
+    });
+    dropdown.appendChild(cashOption);
+  }
+
+  const matches = allCustomers.filter(c => c.name.toLowerCase().includes(q));
+  if (matches.length === 0 && q) {
+    const empty = document.createElement('div');
+    empty.className = 'customer-option customer-option-empty';
+    empty.textContent = 'لا يوجد عميل مطابق';
+    dropdown.appendChild(empty);
+  } else {
+    matches.forEach(c => {
+      const item = document.createElement('div');
+      item.className = 'customer-option';
+      item.textContent = c.name;
+      item.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        setCustomerSelection(c.id);
+        closeCustomerDropdown();
+      });
+      dropdown.appendChild(item);
+    });
+  }
+  dropdown.classList.add('show');
+}
+
+function closeCustomerDropdown() {
+  posEls.customerDropdown.classList.remove('show');
 }
 
 let stockMap = {}; // productId -> الكمية المتاحة في الفرع الحالي
@@ -3242,7 +3343,7 @@ async function doCheckout() {
       subtotal, discount, tax, total, paidAmount, remaining, paymentMethod,
     });
 
-    cart = []; posEls.discountInput.value = 0; posEls.customerSelect.value = '';
+    cart = []; posEls.discountInput.value = 0; setCustomerSelection('', { silent: true });
     delete posEls.paidInput.dataset.touched; posEls.paidInput.value = '';
     posEls.paymentMethodSelect.value = 'cash';
     resetQuickDiscountSelection();
