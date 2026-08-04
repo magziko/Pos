@@ -154,9 +154,75 @@ a { color: inherit; }
 .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: white; padding: 12px 20px; border-radius: var(--radius-sm); font-size: 13.5px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease; z-index: 50; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 .toast.error { background: var(--danger); }
+/* -------- POS: floating mobile cart bar + drawer (mobile only) -------- */
+.mobile-cart-bar { display: none; }
+.cart-mobile-close { display: none; }
+.cart-drawer-backdrop { display: none; }
+
 @media (max-width: 860px) {
-  .main { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
-  .cart-side { border-right: none; border-top: 1px solid var(--border); max-height: 50vh; }
+  .main { grid-template-columns: 1fr; grid-template-rows: 1fr; position: relative; overflow: hidden; }
+
+  /* Product side: sticky search + categories, roomy scroll area, room for floating bar */
+  .product-side { padding: 12px 12px 84px; }
+  .search-row { position: sticky; top: 0; z-index: 5; background: var(--bg); padding-top: 2px; margin-bottom: 10px; }
+  .search-row input { padding: 13px 16px; font-size: 16px; }
+  .categories { position: sticky; top: 54px; z-index: 5; background: var(--bg); padding: 4px 0 10px; margin-bottom: 4px; gap: 8px; }
+  .cat-chip { padding: 9px 16px; font-size: 13.5px; }
+
+  /* Bigger, easier-to-tap product cards */
+  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .product-card { padding: 10px; gap: 6px; }
+  .product-card:active { transform: scale(0.96); border-color: var(--teal-500); }
+  .product-thumb { font-size: 22px; }
+  .product-name { font-size: 13px; min-height: 2.5em; }
+  .product-price { font-size: 15px; }
+
+  /* Cart becomes a full-screen bottom sheet, hidden until opened */
+  .cart-side {
+    position: fixed; inset: 0; z-index: 70; border-top: none; max-height: none;
+    transform: translateY(100%); transition: transform 0.25s ease-out;
+    border-radius: 0; padding-top: env(safe-area-inset-top);
+  }
+  .cart-side.open { transform: translateY(0); }
+
+  .cart-drawer-backdrop {
+    display: block; position: fixed; inset: 0; background: rgba(16, 30, 25, 0.45);
+    z-index: 65; opacity: 0; pointer-events: none; transition: opacity 0.25s ease-out;
+  }
+  .cart-drawer-backdrop.show { opacity: 1; pointer-events: auto; }
+
+  .cart-header { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px 12px; }
+  .cart-mobile-close {
+    display: flex; align-items: center; gap: 6px; align-self: flex-start;
+    background: var(--surface-sunken); color: var(--ink); padding: 8px 14px 8px 10px;
+    border-radius: 20px; font-size: 13px; font-weight: 600;
+  }
+  .cart-mobile-close:hover { background: var(--teal-100); color: var(--teal-700); }
+
+  .cart-items { padding: 6px 16px; }
+  .cart-footer { padding: 14px 16px calc(18px + env(safe-area-inset-bottom)); }
+
+  /* Floating summary bar that opens the cart drawer */
+  .mobile-cart-bar {
+    display: flex; align-items: center; gap: 10px; position: fixed;
+    right: 12px; left: 12px; bottom: calc(14px + env(safe-area-inset-bottom));
+    background: var(--teal-700); color: white; border-radius: 16px; padding: 13px 16px;
+    box-shadow: 0 6px 20px rgba(11, 74, 64, 0.35); z-index: 60;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
+  .mobile-cart-bar:active { transform: scale(0.98); }
+  .mobile-cart-bar.hidden { transform: translateY(140%); opacity: 0; pointer-events: none; }
+  .mobile-cart-bar-count {
+    background: rgba(255,255,255,0.22); min-width: 24px; height: 24px; border-radius: 50%;
+    display: grid; place-items: center; font-family: var(--font-num); font-weight: 700; font-size: 12.5px; flex-shrink: 0;
+  }
+  .mobile-cart-bar-label { font-size: 14px; font-weight: 700; flex: 1; text-align: right; }
+  .mobile-cart-bar-total { font-family: var(--font-num); direction: ltr; font-weight: 700; font-size: 15px; }
+}
+
+@media (max-width: 420px) {
+  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .product-name { font-size: 12.5px; }
 }
 
 /* -------- Back office -------- */
@@ -475,8 +541,10 @@ a { color: inherit; }
         <div class="categories" id="categoriesRow"><button class="cat-chip active" data-cat="all">الكل</button></div>
         <div class="product-grid" id="productGrid"><div class="empty-state">جاري تحميل الأصناف...</div></div>
       </div>
-      <div class="cart-side">
+      <div class="cart-drawer-backdrop" id="cartDrawerBackdrop"></div>
+      <div class="cart-side" id="cartSide">
         <div class="cart-header">
+          <button class="cart-mobile-close" id="cartMobileClose" type="button">‹ رجوع للأصناف</button>
           <div class="cart-title">الفاتورة الحالية</div>
           <select class="customer-select" id="posWarehouseSelect" style="display:none; margin-inline-start:8px;"></select>
           <div class="customer-combo" id="customerCombo">
@@ -515,6 +583,11 @@ a { color: inherit; }
         </div>
       </div>
     </div>
+    <button class="mobile-cart-bar hidden" id="mobileCartBar" type="button">
+      <span class="mobile-cart-bar-count" id="mobileCartCount">0</span>
+      <span class="mobile-cart-bar-label">عرض الفاتورة</span>
+      <span class="mobile-cart-bar-total num" id="mobileCartTotal">0.00</span>
+    </button>
   </div>
 </div>
 
@@ -2811,6 +2884,21 @@ function cachePosEls() {
   posEls.paymentMethodSelect = document.getElementById('posPaymentMethod');
   posEls.dueRow = document.getElementById('dueRow');
   posEls.dueLabel = document.getElementById('dueLabel');
+  posEls.cartSide = document.getElementById('cartSide');
+  posEls.cartDrawerBackdrop = document.getElementById('cartDrawerBackdrop');
+  posEls.cartMobileClose = document.getElementById('cartMobileClose');
+  posEls.mobileCartBar = document.getElementById('mobileCartBar');
+  posEls.mobileCartCount = document.getElementById('mobileCartCount');
+  posEls.mobileCartTotal = document.getElementById('mobileCartTotal');
+}
+
+function openMobileCart() {
+  posEls.cartSide.classList.add('open');
+  posEls.cartDrawerBackdrop.classList.add('show');
+}
+function closeMobileCart() {
+  posEls.cartSide.classList.remove('open');
+  posEls.cartDrawerBackdrop.classList.remove('show');
 }
 
 async function enterPos() {
@@ -2954,6 +3042,7 @@ function bindPosEvents() {
     cart = []; posEls.discountInput.value = 0;
     resetQuickDiscountSelection();
     renderCart(); updateHeldCount();
+    closeMobileCart();
     showToast('تم تعليق الفاتورة');
   });
 
@@ -2975,6 +3064,11 @@ function bindPosEvents() {
   });
 
   posEls.checkoutBtn.addEventListener('click', doCheckout);
+
+  posEls.mobileCartBar.addEventListener('click', openMobileCart);
+  posEls.cartMobileClose.addEventListener('click', closeMobileCart);
+  posEls.cartDrawerBackdrop.addEventListener('click', closeMobileCart);
+
   document.getElementById('unitPickerCancelBtn').addEventListener('click', closeUnitPicker);
   document.getElementById('unitPickerOverlay').addEventListener('click', (e) => {
     if (e.target.id === 'unitPickerOverlay') closeUnitPicker();
@@ -3415,6 +3509,11 @@ function renderCart() {
   }
 
   posEls.checkoutBtn.disabled = cart.length === 0;
+
+  const itemCount = cart.reduce((sum, l) => sum + Number(l.quantity), 0);
+  posEls.mobileCartCount.textContent = itemCount;
+  posEls.mobileCartTotal.textContent = total.toFixed(2);
+  posEls.mobileCartBar.classList.toggle('hidden', cart.length === 0);
 }
 
 
@@ -3500,6 +3599,7 @@ async function doCheckout() {
     posEls.paymentMethodSelect.value = 'cash';
     resetQuickDiscountSelection();
     renderCart();
+    closeMobileCart();
     await loadStockBalances();
     renderProducts();
   } catch (err) {
