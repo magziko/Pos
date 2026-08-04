@@ -266,6 +266,13 @@ a { color: inherit; }
 .report-card-value.positive { color: var(--teal-700); }
 .report-card-value.negative { color: var(--danger); }
 .report-subtitle { font-size: 14px; font-weight: 700; margin: 22px 0 12px; }
+.report-subtitle-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 30px 0 12px; }
+.report-subtitle-row .report-subtitle { margin: 0; }
+.report-subtitle-actions { display: flex; gap: 8px; }
+.debts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.debts-col-title { font-size: 13px; font-weight: 700; margin-bottom: 10px; color: var(--ink-soft); }
+.debts-col-title.owed-to-us { color: var(--teal-700); }
+.debts-col-title.we-owe { color: var(--danger); }
 
 /* -------- Purchases -------- */
 .modal-box.wide { max-width: 680px; }
@@ -283,6 +290,8 @@ a { color: inherit; }
   .bo-main { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
   .bo-sidebar { border-left: none; border-bottom: 1px solid var(--border); display: flex; overflow-x: auto; }
   .bo-nav-item { white-space: nowrap; }
+  .debts-grid { grid-template-columns: 1fr; }
+  .report-subtitle-row { flex-direction: column; align-items: flex-start; gap: 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
@@ -826,6 +835,54 @@ a { color: inherit; }
                 <tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
+          </div>
+
+          <div class="report-subtitle-row">
+            <div class="report-subtitle">تقرير الديون (أرصدة العملاء والموردين)</div>
+            <div class="report-subtitle-actions">
+              <button class="bo-icon-btn" id="refreshDebtsBtn">تحديث</button>
+              <button class="bo-icon-btn" id="exportDebtsBtn">تصدير إكسل</button>
+            </div>
+          </div>
+
+          <div class="report-cards">
+            <div class="report-card">
+              <div class="report-card-label">إجمالي مستحق من العملاء</div>
+              <div class="report-card-value num positive" id="debtsCustomersTotal">0.00</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">إجمالي مستحق للموردين</div>
+              <div class="report-card-value num negative" id="debtsSuppliersTotal">0.00</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">صافي الموقف (لنا − علينا)</div>
+              <div class="report-card-value num" id="debtsNetPosition">0.00</div>
+            </div>
+          </div>
+
+          <div class="debts-grid">
+            <div>
+              <div class="debts-col-title owed-to-us">عملاء عليهم مبالغ (مدينون لنا)</div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>العميل</th><th>الهاتف</th><th>الرصيد المستحق</th><th></th></tr></thead>
+                  <tbody id="debtsCustomersTableBody">
+                    <tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div>
+              <div class="debts-col-title we-owe">موردون لهم مبالغ عندنا (نحن مدينون لهم)</div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>المورد</th><th>الهاتف</th><th>المستحق له</th><th></th></tr></thead>
+                  <tbody id="debtsSuppliersTableBody">
+                    <tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -3186,6 +3243,8 @@ function bindBackofficeEvents() {
   setQuickRange('today');
   document.getElementById('runReportBtn').addEventListener('click', () => runReport());
   document.getElementById('reportBranchFilter').addEventListener('change', () => runReport());
+  document.getElementById('refreshDebtsBtn').addEventListener('click', () => refreshDebtsReport());
+  document.getElementById('exportDebtsBtn').addEventListener('click', () => exportDebtsToExcel());
   document.querySelectorAll('.quick-range-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.quick-range-btn').forEach(b => b.classList.remove('active'));
@@ -6658,6 +6717,90 @@ async function runReport() {
     console.error(err);
     showToast('تعذر تحميل التقرير', true);
   }
+
+  await refreshDebtsReport();
+}
+
+// ---- تقرير الديون ----
+async function refreshDebtsReport() {
+  document.getElementById('debtsCustomersTableBody').innerHTML = `<tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>`;
+  document.getElementById('debtsSuppliersTableBody').innerHTML = `<tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>`;
+  try {
+    await loadBoCustomers();
+    await loadBoSuppliers();
+    renderDebtsReport();
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحميل تقرير الديون', true);
+  }
+}
+
+function renderDebtsReport() {
+  const debtorCustomers = boCustomers.filter(c => Number(c.balance) > 0.004).sort((a, b) => Number(b.balance) - Number(a.balance));
+  const owedSuppliers = boSuppliers.filter(s => Number(s.balance) > 0.004).sort((a, b) => Number(b.balance) - Number(a.balance));
+
+  const customersTotal = debtorCustomers.reduce((sum, c) => sum + Number(c.balance), 0);
+  const suppliersTotal = owedSuppliers.reduce((sum, s) => sum + Number(s.balance), 0);
+  const netPosition = customersTotal - suppliersTotal;
+
+  document.getElementById('debtsCustomersTotal').textContent = customersTotal.toFixed(2);
+  document.getElementById('debtsSuppliersTotal').textContent = suppliersTotal.toFixed(2);
+  const netEl = document.getElementById('debtsNetPosition');
+  netEl.textContent = netPosition.toFixed(2);
+  netEl.classList.toggle('positive', netPosition >= 0);
+  netEl.classList.toggle('negative', netPosition < 0);
+
+  const custBody = document.getElementById('debtsCustomersTableBody');
+  if (debtorCustomers.length === 0) {
+    custBody.innerHTML = `<tr><td colspan="4" class="bo-empty">لا يوجد عملاء عليهم مبالغ مستحقة</td></tr>`;
+  } else {
+    custBody.innerHTML = '';
+    debtorCustomers.forEach(c => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${escapeHtml(c.name)}</td>
+        <td class="num">${escapeHtml(c.phone || '—')}</td>
+        <td class="num">${Number(c.balance).toFixed(2)}</td>
+        <td><div class="bo-row-actions"><button class="bo-icon-btn" data-action="pay">دفعة</button></div></td>`;
+      tr.querySelector('[data-action="pay"]').addEventListener('click', () => openPaymentModal('customer_receipt', c));
+      custBody.appendChild(tr);
+    });
+  }
+
+  const suppBody = document.getElementById('debtsSuppliersTableBody');
+  if (owedSuppliers.length === 0) {
+    suppBody.innerHTML = `<tr><td colspan="4" class="bo-empty">لا يوجد موردون لهم مبالغ مستحقة</td></tr>`;
+  } else {
+    suppBody.innerHTML = '';
+    owedSuppliers.forEach(s => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${escapeHtml(s.name)}</td>
+        <td class="num">${escapeHtml(s.phone || '—')}</td>
+        <td class="num">${Number(s.balance).toFixed(2)}</td>
+        <td><div class="bo-row-actions"><button class="bo-icon-btn" data-action="pay">دفعة</button></div></td>`;
+      tr.querySelector('[data-action="pay"]').addEventListener('click', () => openPaymentModal('supplier_payment', s));
+      suppBody.appendChild(tr);
+    });
+  }
+}
+
+function exportDebtsToExcel() {
+  const debtorCustomers = boCustomers.filter(c => Number(c.balance) > 0.004).sort((a, b) => Number(b.balance) - Number(a.balance));
+  const owedSuppliers = boSuppliers.filter(s => Number(s.balance) > 0.004).sort((a, b) => Number(b.balance) - Number(a.balance));
+
+  const customersRows = debtorCustomers.map(c => ({
+    'العميل': c.name, 'الهاتف': c.phone || '', 'الرصيد المستحق': Number(c.balance),
+  }));
+  const suppliersRows = owedSuppliers.map(s => ({
+    'المورد': s.name, 'الهاتف': s.phone || '', 'المستحق له': Number(s.balance),
+  }));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(customersRows), 'ديون العملاء');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(suppliersRows), 'مستحقات الموردين');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `تقرير-الديون-${dateStr}.xlsx`);
 }
 
 // ============================================================
