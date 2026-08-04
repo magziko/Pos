@@ -324,9 +324,10 @@ a { color: inherit; }
 
 /* -------- Purchases -------- */
 .modal-box.wide { max-width: 680px; }
-.purchase-lines-wrap { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; margin-bottom: 6px; }
-.purchase-line-row { display: grid; grid-template-columns: 1fr 90px 100px 90px 32px; gap: 8px; padding: 8px 10px; align-items: center; border-bottom: 1px solid var(--surface-sunken); }
-.purchase-line-row.header-row { background: var(--surface-sunken); font-size: 11.5px; font-weight: 600; color: var(--ink-soft); padding: 8px 10px; }
+.purchase-lines-wrap { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: visible; margin-bottom: 6px; }
+.purchase-line-row { display: grid; grid-template-columns: 1fr 90px 100px 90px 32px; gap: 8px; padding: 8px 10px; align-items: center; border-bottom: 1px solid var(--surface-sunken); position: relative; }
+.purchase-line-row.header-row { background: var(--surface-sunken); font-size: 11.5px; font-weight: 600; color: var(--ink-soft); padding: 8px 10px; border-radius: var(--radius-md) var(--radius-md) 0 0; }
+.purchase-line-row:last-child { border-bottom: none; border-radius: 0 0 var(--radius-md) var(--radius-md); }
 .purchase-line-row select, .purchase-line-row input { padding: 7px 8px; font-size: 12.5px; width: 100%; }
 .purchase-line-total { font-family: var(--font-num); direction: ltr; text-align: right; font-size: 12.5px; font-weight: 600; }
 .purchase-line-remove { color: var(--danger); background: none; font-size: 16px; font-weight: 700; }
