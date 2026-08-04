@@ -509,7 +509,8 @@ a { color: inherit; }
     </div>
     <div class="bo-main">
       <div class="bo-sidebar">
-        <button class="bo-nav-item active" data-section="products">الأصناف</button>
+        <button class="bo-nav-item active" data-section="dashboard">الرئيسية</button>
+        <button class="bo-nav-item" data-section="products">الأصناف</button>
         <button class="bo-nav-item" data-section="categories">مجموعات الاصناف</button>
         <button class="bo-nav-item" data-section="unit-types">نوع الوحدة</button>
         <button class="bo-nav-item" data-section="tax-rates">الضريبة</button>
@@ -546,8 +547,89 @@ a { color: inherit; }
       </div>
 
       <div class="bo-content">
+        <!-- قسم الرئيسية (لوحة المعلومات) -->
+        <div id="bo-section-dashboard">
+          <div class="bo-section-header">
+            <div class="bo-section-title">نظرة عامة</div>
+            <div class="bo-section-actions">
+              <button class="bo-outline-btn" id="refreshDashboardBtn">تحديث</button>
+            </div>
+          </div>
+
+          <div class="report-cards">
+            <div class="report-card">
+              <div class="report-card-label">مبيعات اليوم</div>
+              <div class="report-card-value num positive" id="dashTodaySales">0.00</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">عدد فواتير اليوم</div>
+              <div class="report-card-value num" id="dashTodayCount">0</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">مبيعات الشهر</div>
+              <div class="report-card-value num positive" id="dashMonthSales">0.00</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">مصروفات الشهر</div>
+              <div class="report-card-value num negative" id="dashMonthExpenses">0.00</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">رواتب الشهر</div>
+              <div class="report-card-value num negative" id="dashMonthSalaries">0.00</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">مستحق على العملاء</div>
+              <div class="report-card-value num positive" id="dashCustomerDebts">0.00</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">مستحق للموردين</div>
+              <div class="report-card-value num negative" id="dashSupplierDebts">0.00</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">أصناف منخفضة المخزون</div>
+              <div class="report-card-value num" id="dashLowStockCount">0</div>
+            </div>
+          </div>
+
+          <div class="report-subtitle-row" style="margin-top:8px;">
+            <div class="report-subtitle">آخر الفواتير</div>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>رقم الفاتورة</th><th>العميل</th><th>الكاشير</th><th>الإجمالي</th><th>التاريخ</th></tr></thead>
+              <tbody id="dashRecentSalesBody">
+                <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="report-subtitle-row" style="margin-top:22px;">
+            <div class="report-subtitle">الأصناف الأكثر مبيعًا هذا الشهر</div>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>الصنف</th><th>الكمية المباعة</th><th>الإيراد</th></tr></thead>
+              <tbody id="dashTopProductsBody">
+                <tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="report-subtitle-row" style="margin-top:22px;">
+            <div class="report-subtitle">أصناف منخفضة المخزون</div>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>الصنف</th><th>الرصيد الحالي</th><th>حد إعادة الطلب</th></tr></thead>
+              <tbody id="dashLowStockBody">
+                <tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- قسم الأصناف -->
-        <div id="bo-section-products">
+        <div id="bo-section-products" style="display:none;">
           <div class="bo-section-header">
             <div class="bo-section-title">إدارة الأصناف</div>
             <div class="bo-section-actions">
@@ -3284,45 +3366,189 @@ async function enterBackoffice() {
   renderQuickDiscountsTable();
   document.getElementById('taxInclusiveToggle').checked = taxInclusive;
   populateProductCategorySelect();
+
+  // الرئيسية دايمًا هي أول شاشة تظهر عند دخول لوحة التحكم
+  activateBoSection('dashboard', document.querySelector('.bo-nav-item[data-section="dashboard"]'));
+}
+
+const boAllSections = ['dashboard','products','categories','unit-types','tax-rates','quick-discounts','customer-types',
+  'customers','suppliers','payments','purchases','purchase-returns','sale-returns',
+  'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
+  'soon','users','branches','stock','backup','reset-data','employees','expense-items','expenses','salaries'];
+
+function activateBoSection(section, btn) {
+  document.querySelectorAll('.bo-nav-item:not(.bo-nav-parent)').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.bo-nav-sub-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('reportsNavToggle').classList.remove('active');
+  if (btn) btn.classList.add('active');
+
+  if (section && section.indexOf('reports-') === 0) {
+    document.getElementById('reportsNavToggle').classList.add('active');
+    document.getElementById('reportsNavGroup').classList.add('open');
+  } else {
+    document.getElementById('reportsNavGroup').classList.remove('open');
+  }
+
+  boAllSections.forEach(s => {
+    const el = document.getElementById('bo-section-' + s);
+    if (el) el.style.display = (s === section) ? 'block' : 'none';
+  });
+
+  if (section === 'dashboard') { loadDashboard(); }
+  if (section === 'payments' && !boPaymentsLoadedOnce) { loadBoPayments().then(renderPaymentsTable); boPaymentsLoadedOnce = true; }
+  if (section === 'purchase-returns') { loadBoPurchaseReturns().then(renderPurchaseReturnsTable); }
+  if (section === 'sale-returns') { loadBoSaleReturns().then(renderSaleReturnsTable); }
+  if (section === 'stock' && !stockSectionLoadedOnce) { initStockSection(); stockSectionLoadedOnce = true; }
+  if (section === 'reset-data' && !resetDataLoadedOnce) { initResetDataSection(); resetDataLoadedOnce = true; }
+  if (section === 'reports-sales' && !reportsLoadedOnce) { populateReportBranchFilter(); runReport(); reportsLoadedOnce = true; }
+  if (section === 'reports-accounting' && !accountingReportsLoadedOnce) { refreshDebtsReport(); accountingReportsLoadedOnce = true; }
+  if (section === 'expenses' && !expensesLoadedOnce) { setExpenseQuickRange('month'); runExpenseFilter(); expensesLoadedOnce = true; }
+  if (section === 'salaries' && !salariesLoadedOnce) { setSalaryQuickRange('month'); runSalaryFilter(); salariesLoadedOnce = true; }
+}
+
+async function loadDashboard() {
+  try {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const todayStartISO = toDateInputValue(todayStart) + 'T00:00:00';
+    const monthStartISO = toDateInputValue(monthStart) + 'T00:00:00';
+    const nowISO = now.toISOString();
+    const todayStr = toDateInputValue(todayStart);
+    const monthStartStr = toDateInputValue(monthStart);
+
+    // مبيعات اليوم والشهر
+    const { data: monthSales, error: salesErr } = await supabaseClient
+      .from('sales')
+      .select('id, total, created_at, customer_id, user_id, invoice_number, customers(name), users_profile(full_name)')
+      .eq('status', 'completed')
+      .gte('created_at', monthStartISO)
+      .lte('created_at', nowISO)
+      .order('created_at', { ascending: false });
+    if (salesErr) throw salesErr;
+
+    const todaySalesRows = (monthSales || []).filter(s => s.created_at >= todayStartISO);
+    const todayTotal = todaySalesRows.reduce((sum, s) => sum + Number(s.total), 0);
+    const monthTotal = (monthSales || []).reduce((sum, s) => sum + Number(s.total), 0);
+
+    document.getElementById('dashTodaySales').textContent = todayTotal.toFixed(2);
+    document.getElementById('dashTodayCount').textContent = todaySalesRows.length;
+    document.getElementById('dashMonthSales').textContent = monthTotal.toFixed(2);
+
+    // آخر الفواتير
+    const recentBody = document.getElementById('dashRecentSalesBody');
+    const recentRows = (monthSales || []).slice(0, 8);
+    if (recentRows.length === 0) {
+      recentBody.innerHTML = `<tr><td colspan="5" class="bo-empty">لا توجد فواتير حتى الآن</td></tr>`;
+    } else {
+      recentBody.innerHTML = '';
+      recentRows.forEach(s => {
+        const tr = document.createElement('tr');
+        const dt = new Date(s.created_at);
+        tr.innerHTML = `
+          <td>${escapeHtml(s.invoice_number || '—')}</td>
+          <td>${escapeHtml(s.customers?.name || 'عميل نقدي')}</td>
+          <td>${escapeHtml(s.users_profile?.full_name || '—')}</td>
+          <td class="num">${Number(s.total).toFixed(2)}</td>
+          <td class="num">${dt.toLocaleDateString('ar-EG')} ${dt.toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'})}</td>`;
+        recentBody.appendChild(tr);
+      });
+    }
+
+    // الأصناف الأكثر مبيعًا هذا الشهر
+    const { data: monthItems, error: itemsErr } = await supabaseClient
+      .from('sale_items')
+      .select('quantity, total, product_id, products(name), sales!inner(created_at, status)')
+      .eq('sales.status', 'completed')
+      .gte('sales.created_at', monthStartISO)
+      .lte('sales.created_at', nowISO);
+    if (itemsErr) throw itemsErr;
+
+    const grouped = {};
+    (monthItems || []).forEach(it => {
+      const key = it.product_id;
+      if (!grouped[key]) grouped[key] = { name: it.products?.name || 'صنف محذوف', quantity: 0, revenue: 0 };
+      grouped[key].quantity += Number(it.quantity);
+      grouped[key].revenue += Number(it.total);
+    });
+    const topRows = Object.values(grouped).sort((a, b) => b.quantity - a.quantity).slice(0, 5);
+    const topBody = document.getElementById('dashTopProductsBody');
+    if (topRows.length === 0) {
+      topBody.innerHTML = `<tr><td colspan="3" class="bo-empty">لا توجد مبيعات هذا الشهر</td></tr>`;
+    } else {
+      topBody.innerHTML = '';
+      topRows.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${escapeHtml(r.name)}</td><td class="num">${r.quantity}</td><td class="num">${r.revenue.toFixed(2)}</td>`;
+        topBody.appendChild(tr);
+      });
+    }
+
+    // مصروفات ورواتب الشهر
+    const { data: monthExpenses, error: expErr } = await supabaseClient
+      .from('expenses')
+      .select('amount')
+      .gte('expense_date', monthStartStr)
+      .lte('expense_date', todayStr);
+    if (expErr) throw expErr;
+    const expensesTotal = (monthExpenses || []).reduce((sum, x) => sum + Number(x.amount), 0);
+    document.getElementById('dashMonthExpenses').textContent = expensesTotal.toFixed(2);
+
+    const { data: monthSalaries, error: salErr } = await supabaseClient
+      .from('salary_payments')
+      .select('net_amount')
+      .gte('payment_date', monthStartStr)
+      .lte('payment_date', todayStr);
+    if (salErr) throw salErr;
+    const salariesTotal = (monthSalaries || []).reduce((sum, x) => sum + Number(x.net_amount), 0);
+    document.getElementById('dashMonthSalaries').textContent = salariesTotal.toFixed(2);
+
+    // ديون العملاء والموردين
+    await loadBoCustomers();
+    await loadBoSuppliers();
+    const customersDebt = boCustomers.reduce((sum, c) => sum + Math.max(Number(c.balance) || 0, 0), 0);
+    const suppliersDebt = boSuppliers.reduce((sum, s) => sum + Math.max(Number(s.balance) || 0, 0), 0);
+    document.getElementById('dashCustomerDebts').textContent = customersDebt.toFixed(2);
+    document.getElementById('dashSupplierDebts').textContent = suppliersDebt.toFixed(2);
+
+    // أصناف منخفضة المخزون
+    const { data: balances, error: balErr } = await supabaseClient
+      .from('stock_balances')
+      .select('product_id, quantity');
+    if (balErr) throw balErr;
+    const stockByProduct = {};
+    (balances || []).forEach(b => {
+      stockByProduct[b.product_id] = (stockByProduct[b.product_id] || 0) + Number(b.quantity);
+    });
+    const lowStockRows = boProducts
+      .filter(p => p.is_active && Number(p.reorder_level) > 0 && (stockByProduct[p.id] || 0) <= Number(p.reorder_level))
+      .sort((a, b) => (stockByProduct[a.id] || 0) - (stockByProduct[b.id] || 0));
+
+    document.getElementById('dashLowStockCount').textContent = lowStockRows.length;
+    const lowStockBody = document.getElementById('dashLowStockBody');
+    if (lowStockRows.length === 0) {
+      lowStockBody.innerHTML = `<tr><td colspan="3" class="bo-empty">لا توجد أصناف منخفضة المخزون</td></tr>`;
+    } else {
+      lowStockBody.innerHTML = '';
+      lowStockRows.slice(0, 15).forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${escapeHtml(p.name)}</td>
+          <td class="num">${stockByProduct[p.id] || 0}</td>
+          <td class="num">${Number(p.reorder_level)}</td>`;
+        lowStockBody.appendChild(tr);
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحميل بيانات الرئيسية', true);
+  }
 }
 
 function bindBackofficeEvents() {
   document.getElementById('backToPosBtn').addEventListener('click', () => showView('pos'));
   document.getElementById('boLogoutBtn').addEventListener('click', doLogout);
-
-  const boAllSections = ['products','categories','unit-types','tax-rates','quick-discounts','customer-types',
-    'customers','suppliers','payments','purchases','purchase-returns','sale-returns',
-    'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
-    'soon','users','branches','stock','backup','reset-data','employees','expense-items','expenses','salaries'];
-
-  function activateBoSection(section, btn) {
-    document.querySelectorAll('.bo-nav-item:not(.bo-nav-parent)').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.bo-nav-sub-item').forEach(b => b.classList.remove('active'));
-    document.getElementById('reportsNavToggle').classList.remove('active');
-    if (btn) btn.classList.add('active');
-
-    if (section && section.indexOf('reports-') === 0) {
-      document.getElementById('reportsNavToggle').classList.add('active');
-      document.getElementById('reportsNavGroup').classList.add('open');
-    } else {
-      document.getElementById('reportsNavGroup').classList.remove('open');
-    }
-
-    boAllSections.forEach(s => {
-      const el = document.getElementById('bo-section-' + s);
-      if (el) el.style.display = (s === section) ? 'block' : 'none';
-    });
-
-    if (section === 'payments' && !boPaymentsLoadedOnce) { loadBoPayments().then(renderPaymentsTable); boPaymentsLoadedOnce = true; }
-    if (section === 'purchase-returns') { loadBoPurchaseReturns().then(renderPurchaseReturnsTable); }
-    if (section === 'sale-returns') { loadBoSaleReturns().then(renderSaleReturnsTable); }
-    if (section === 'stock' && !stockSectionLoadedOnce) { initStockSection(); stockSectionLoadedOnce = true; }
-    if (section === 'reset-data' && !resetDataLoadedOnce) { initResetDataSection(); resetDataLoadedOnce = true; }
-    if (section === 'reports-sales' && !reportsLoadedOnce) { populateReportBranchFilter(); runReport(); reportsLoadedOnce = true; }
-    if (section === 'reports-accounting' && !accountingReportsLoadedOnce) { refreshDebtsReport(); accountingReportsLoadedOnce = true; }
-    if (section === 'expenses' && !expensesLoadedOnce) { setExpenseQuickRange('month'); runExpenseFilter(); expensesLoadedOnce = true; }
-    if (section === 'salaries' && !salariesLoadedOnce) { setSalaryQuickRange('month'); runSalaryFilter(); salariesLoadedOnce = true; }
-  }
+  document.getElementById('refreshDashboardBtn').addEventListener('click', loadDashboard);
 
   document.querySelectorAll('.bo-nav-item:not(.bo-nav-parent)').forEach(btn => {
     btn.addEventListener('click', () => activateBoSection(btn.dataset.section, btn));
