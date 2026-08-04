@@ -325,6 +325,7 @@ a { color: inherit; }
   .receipt-modal-box.paper-thermal58 .receipt-paper { padding: 10px 8px; font-size: 11px; }
   .receipt-modal-box.paper-thermal58 .r-title { font-size: 13px; }
   .receipt-modal-box.paper-thermal58 .r-total-row { font-size: 12.5px; }
+  .receipt-modal-box.paper-a5 { page: a5paper; width: 148mm; }
 
   #invoiceDetailModalOverlay.show, #invoiceDetailModalOverlay.show * { visibility: visible; }
   #invoiceDetailModalOverlay.show { position: absolute; inset: 0; background: white; padding: 0; align-items: flex-start; }
@@ -334,6 +335,7 @@ a { color: inherit; }
 
 @page thermal80 { size: 80mm auto; margin: 2mm; }
 @page thermal58 { size: 58mm auto; margin: 1.5mm; }
+@page a5paper { size: A5 portrait; margin: 8mm; }
 </style>
 </head>
 <body>
@@ -1949,7 +1951,8 @@ a { color: inherit; }
     <div class="receipt-paper" id="receiptContent"></div>
     <div class="receipt-actions">
       <select id="receiptPrintMode" class="receipt-print-mode-select">
-        <option value="a4">طباعة عادية (على طابعة ورقية)</option>
+        <option value="a4">طباعة عادية (على طابعة ورقية A4)</option>
+        <option value="a5">طباعة A5</option>
         <option value="thermal80">طباعة حرارية 80مم</option>
         <option value="thermal58">طباعة حرارية 58مم</option>
       </select>
@@ -2315,9 +2318,10 @@ function bindPosEvents() {
   document.getElementById('printReceiptBtn').addEventListener('click', () => {
     const box = document.querySelector('#receiptModalOverlay .receipt-modal-box');
     const mode = receiptPrintModeSelect.value;
-    box.classList.remove('paper-thermal80', 'paper-thermal58');
+    box.classList.remove('paper-thermal80', 'paper-thermal58', 'paper-a5');
     if (mode === 'thermal80') box.classList.add('paper-thermal80');
     else if (mode === 'thermal58') box.classList.add('paper-thermal58');
+    else if (mode === 'a5') box.classList.add('paper-a5');
     window.print();
   });
 
