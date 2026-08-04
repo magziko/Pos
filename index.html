@@ -309,7 +309,8 @@ a { color: inherit; }
 .receipt-paper .r-item-meta { display: flex; justify-content: space-between; font-size: 11px; color: #444; direction: ltr; }
 .receipt-paper .r-total-row { display: flex; justify-content: space-between; font-size: 14px; font-weight: 700; margin-top: 6px; direction: rtl; }
 .receipt-paper .r-footer { text-align: center; font-size: 11px; color: #555; margin-top: 14px; }
-.receipt-actions { display: flex; gap: 8px; padding: 14px 18px 18px; background: var(--surface-sunken); }
+.receipt-actions { display: flex; gap: 8px; padding: 14px 18px 18px; background: var(--surface-sunken); flex-wrap: wrap; align-items: center; }
+.receipt-print-mode-select { flex: 1 1 100%; padding: 8px 10px; font-size: 12.5px; margin-bottom: 2px; }
 
 @media print {
   body * { visibility: hidden; }
@@ -318,11 +319,21 @@ a { color: inherit; }
   .receipt-actions { display: none; }
   .receipt-modal-box { max-width: 100%; box-shadow: none; border: none; }
 
+  /* طباعة حرارية: أحجام ورق مخصصة عبر CSS Named Pages، بتنفصل تمامًا عن الطباعة العادية (A4) */
+  .receipt-modal-box.paper-thermal80 { page: thermal80; width: 80mm; }
+  .receipt-modal-box.paper-thermal58 { page: thermal58; width: 58mm; }
+  .receipt-modal-box.paper-thermal58 .receipt-paper { padding: 10px 8px; font-size: 11px; }
+  .receipt-modal-box.paper-thermal58 .r-title { font-size: 13px; }
+  .receipt-modal-box.paper-thermal58 .r-total-row { font-size: 12.5px; }
+
   #invoiceDetailModalOverlay.show, #invoiceDetailModalOverlay.show * { visibility: visible; }
   #invoiceDetailModalOverlay.show { position: absolute; inset: 0; background: white; padding: 0; align-items: flex-start; }
   #invoiceDetailModalOverlay.show .modal-box { max-width: 100%; box-shadow: none; border: none; }
   #invoiceDetailModalOverlay.show .invoice-detail-actions { display: none; }
 }
+
+@page thermal80 { size: 80mm auto; margin: 2mm; }
+@page thermal58 { size: 58mm auto; margin: 1.5mm; }
 </style>
 </head>
 <body>
@@ -1937,6 +1948,11 @@ a { color: inherit; }
   <div class="modal-box receipt-modal-box">
     <div class="receipt-paper" id="receiptContent"></div>
     <div class="receipt-actions">
+      <select id="receiptPrintMode" class="receipt-print-mode-select">
+        <option value="a4">طباعة عادية (على طابعة ورقية)</option>
+        <option value="thermal80">طباعة حرارية 80مم</option>
+        <option value="thermal58">طباعة حرارية 58مم</option>
+      </select>
       <button type="button" class="modal-cancel-btn" id="closeReceiptBtn">إغلاق</button>
       <button type="button" class="submit-btn" id="printReceiptBtn" style="margin-top:0;">طباعة</button>
     </div>
@@ -2291,7 +2307,19 @@ function bindPosEvents() {
   document.getElementById('closeReceiptBtn').addEventListener('click', () => {
     document.getElementById('receiptModalOverlay').classList.remove('show');
   });
-  document.getElementById('printReceiptBtn').addEventListener('click', () => window.print());
+  const receiptPrintModeSelect = document.getElementById('receiptPrintMode');
+  receiptPrintModeSelect.value = localStorage.getItem('posReceiptPrintMode') || 'a4';
+  receiptPrintModeSelect.addEventListener('change', () => {
+    localStorage.setItem('posReceiptPrintMode', receiptPrintModeSelect.value);
+  });
+  document.getElementById('printReceiptBtn').addEventListener('click', () => {
+    const box = document.querySelector('#receiptModalOverlay .receipt-modal-box');
+    const mode = receiptPrintModeSelect.value;
+    box.classList.remove('paper-thermal80', 'paper-thermal58');
+    if (mode === 'thermal80') box.classList.add('paper-thermal80');
+    else if (mode === 'thermal58') box.classList.add('paper-thermal58');
+    window.print();
+  });
 
   document.getElementById('saleReturnBtn').addEventListener('click', openSaleReturnModal);
   document.getElementById('cancelSaleReturnBtn').addEventListener('click', closeSaleReturnModal);
