@@ -1236,6 +1236,23 @@ a { color: inherit; }
             <button class="bo-add-btn" id="backupJsonBtn">تنزيل نسخة JSON (نسخة كاملة قابلة للاسترجاع)</button>
           </div>
           <div id="backupProgress" style="font-size:12.5px; color:var(--ink-soft); white-space:pre-line; line-height:2; margin-top:14px;"></div>
+
+          <div style="margin-top:34px; padding-top:24px; border-top:1px solid var(--border);">
+            <div class="report-subtitle" style="margin-top:0;">استيراد نسخة احتياطية (استرجاع)</div>
+            <p style="color:var(--ink-soft); font-size:13px; line-height:1.8; max-width:640px; margin-bottom:10px;">
+              بيرجّع بيانات الإعدادات الأساسية فقط: الفروع، المخازن، الأصناف والفئات، وحدات القياس، الضرائب، الخصومات السريعة، العملاء وأنواعهم، الموردون، الموظفون، المستخدمون، والإعدادات العامة.
+            </p>
+            <p style="color:var(--danger); font-size:13px; line-height:1.8; max-width:640px; margin-bottom:14px; font-weight:600;">
+              ⚠️ لا يتم استيراد فواتير المبيعات والمشتريات والمرتجعات وحركة المخزون تلقائيًا، حفاظًا على دقة الأرصدة الحالية (لأنها مرتبطة بحسابات آلية داخل قاعدة البيانات). أي سجل موجود بنفس المعرّف في الملف سيتم استبدال بياناته ببيانات الملف.
+            </p>
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
+              <input type="file" id="restoreFileInput" accept="application/json,.json" style="display:none;">
+              <button class="bo-outline-btn" id="chooseRestoreFileBtn" type="button">اختيار ملف JSON</button>
+              <span id="restoreFileName" style="font-size:12.5px; color:var(--ink-soft);">لم يتم اختيار ملف</span>
+              <button class="rd-btn-danger" id="openRestoreConfirmBtn" type="button" disabled>استيراد النسخة الاحتياطية</button>
+            </div>
+            <div id="restoreProgress" style="font-size:12.5px; color:var(--ink-soft); white-space:pre-line; line-height:2; margin-top:10px;"></div>
+          </div>
         </div>
 
         <!-- قسم تهيئة البيانات -->
@@ -1286,6 +1303,22 @@ a { color: inherit; }
     <div class="modal-actions">
       <button class="modal-cancel-btn" id="rdCancelConfirm" type="button">إلغاء</button>
       <button class="rd-btn-danger" id="rdDoExecute" type="button" disabled style="flex:1;">تنفيذ الحذف</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: تأكيد استيراد نسخة احتياطية -->
+<div class="modal-overlay" id="restoreConfirmOverlay">
+  <div class="modal-box" style="max-width:440px;">
+    <div class="modal-title" style="color:var(--danger);">تأكيد استيراد النسخة الاحتياطية</div>
+    <div style="font-size:13px; color:var(--ink-soft); line-height:1.7; margin-bottom:14px;">
+      سيتم استبدال بيانات الإعدادات الأساسية الحالية (اللي بنفس المعرّف) ببيانات الملف المختار، وهذا الإجراء لا يمكن التراجع عنه. للمتابعة، اكتب العبارة التالية بالضبط:
+    </div>
+    <div class="rd-phrase" id="restoreConfirmPhrase">تأكيد الاستيراد</div>
+    <input type="text" id="restoreConfirmInput" placeholder="اكتب العبارة هنا" autocomplete="off" style="width:100%; padding:11px 12px; font-size:14px; margin-bottom:16px;">
+    <div class="modal-actions">
+      <button class="modal-cancel-btn" id="restoreCancelConfirm" type="button">إلغاء</button>
+      <button class="rd-btn-danger" id="restoreDoExecute" type="button" disabled style="flex:1;">تنفيذ الاستيراد</button>
     </div>
   </div>
 </div>
@@ -3264,6 +3297,7 @@ function bindBackofficeEvents() {
   document.getElementById('exportDebtsBtn').addEventListener('click', () => exportDebtsToExcel());
   document.getElementById('backupExcelBtn').addEventListener('click', () => runBackup('excel'));
   document.getElementById('backupJsonBtn').addEventListener('click', () => runBackup('json'));
+  initRestoreSection();
   document.querySelectorAll('.quick-range-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.quick-range-btn').forEach(b => b.classList.remove('active'));
@@ -6906,6 +6940,151 @@ async function runBackup(mode) {
   } finally {
     excelBtn.disabled = false;
     jsonBtn.disabled = false;
+  }
+}
+
+// ---- استيراد نسخة احتياطية (Restore) ----
+// بنرجّع بيانات الإعدادات الأساسية فقط. الجداول الحركية (المبيعات/المشتريات/المرتجعات/حركة المخزون)
+// مستبعدة عمدًا لأن عليها Triggers بتأثر على الأرصدة (المخزون) وبتتحقق من السعر الحالي،
+// فلو رجّعناها زي ما هي هيحصل ازدواج في حركة المخزون أو فشل في التحقق من السعر.
+const RESTORE_TABLES_ORDER = [
+  'roles', 'branches', 'warehouses',
+  'categories', 'unit_types', 'tax_rates', 'customer_types', 'quick_discounts',
+  'products', 'product_units', 'product_barcodes',
+  'customers', 'suppliers', 'employees', 'users_profile', 'settings', 'expense_items',
+];
+const RESTORE_CONFIRM_PHRASE = 'تأكيد الاستيراد';
+let restoreSelectedFile = null;
+let restoreParsedData = null;
+
+function initRestoreSection() {
+  document.getElementById('restoreConfirmPhrase').textContent = RESTORE_CONFIRM_PHRASE;
+
+  document.getElementById('chooseRestoreFileBtn').addEventListener('click', () => {
+    document.getElementById('restoreFileInput').click();
+  });
+
+  document.getElementById('restoreFileInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    const openBtn = document.getElementById('openRestoreConfirmBtn');
+    const nameEl = document.getElementById('restoreFileName');
+    restoreSelectedFile = null;
+    restoreParsedData = null;
+    openBtn.disabled = true;
+
+    if (!file) { nameEl.textContent = 'لم يتم اختيار ملف'; return; }
+
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      if (!parsed || typeof parsed !== 'object' || !parsed.tables) {
+        throw new Error('صيغة الملف غير صحيحة');
+      }
+      restoreSelectedFile = file;
+      restoreParsedData = parsed;
+      const totalRows = Object.values(parsed.tables).reduce((sum, rows) => sum + (Array.isArray(rows) ? rows.length : 0), 0);
+      nameEl.textContent = `${file.name} — ${totalRows} صف${parsed.generated_at ? ` (تاريخ النسخة: ${new Date(parsed.generated_at).toLocaleString('ar-EG')})` : ''}`;
+      openBtn.disabled = false;
+    } catch (err) {
+      console.error(err);
+      nameEl.textContent = 'الملف غير صالح، يرجى اختيار ملف نسخة احتياطية JSON صحيح';
+      showToast('تعذر قراءة الملف', true);
+    }
+  });
+
+  document.getElementById('openRestoreConfirmBtn').addEventListener('click', () => {
+    if (!restoreParsedData) return;
+    const input = document.getElementById('restoreConfirmInput');
+    input.value = '';
+    document.getElementById('restoreDoExecute').disabled = true;
+    document.getElementById('restoreConfirmOverlay').classList.add('show');
+    input.focus();
+  });
+
+  document.getElementById('restoreCancelConfirm').addEventListener('click', () => {
+    document.getElementById('restoreConfirmOverlay').classList.remove('show');
+  });
+  document.getElementById('restoreConfirmOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'restoreConfirmOverlay') document.getElementById('restoreConfirmOverlay').classList.remove('show');
+  });
+  document.getElementById('restoreConfirmInput').addEventListener('input', (e) => {
+    document.getElementById('restoreDoExecute').disabled = e.target.value.trim() !== RESTORE_CONFIRM_PHRASE;
+  });
+  document.getElementById('restoreDoExecute').addEventListener('click', runRestore);
+}
+
+async function runRestore() {
+  document.getElementById('restoreConfirmOverlay').classList.remove('show');
+  const progressEl = document.getElementById('restoreProgress');
+  const openBtn = document.getElementById('openRestoreConfirmBtn');
+  const chooseBtn = document.getElementById('chooseRestoreFileBtn');
+  progressEl.textContent = '';
+  openBtn.disabled = true;
+  chooseBtn.disabled = true;
+
+  const tables = restoreParsedData.tables;
+
+  for (const table of RESTORE_TABLES_ORDER) {
+    const rows = tables[table];
+    if (!Array.isArray(rows) || rows.length === 0) {
+      progressEl.textContent += `${table}: لا توجد بيانات في الملف، تم التخطي\n`;
+      progressEl.scrollTop = progressEl.scrollHeight;
+      continue;
+    }
+    try {
+      if (table === 'branches') {
+        await restoreBranches(rows);
+      } else if (table === 'settings') {
+        const { error } = await supabaseClient.from('settings').upsert(rows, { onConflict: 'key' });
+        if (error) throw error;
+      } else {
+        const { error } = await supabaseClient.from(table).upsert(rows, { onConflict: 'id' });
+        if (error) throw error;
+      }
+      progressEl.textContent += `${table}: تم استرجاع ${rows.length} صف ✅\n`;
+    } catch (err) {
+      console.error(err);
+      progressEl.textContent += `${table}: تعذر الاسترجاع — ${err.message || 'خطأ غير معروف'} ❌\n`;
+    }
+    progressEl.scrollTop = progressEl.scrollHeight;
+  }
+
+  progressEl.textContent += `\nانتهى الاستيراد. يرجى تحديث الصفحة لمراجعة البيانات المسترجعة.`;
+  showToast('انتهى استيراد النسخة الاحتياطية');
+  openBtn.disabled = false;
+  chooseBtn.disabled = false;
+
+  // إعادة تحميل البيانات الأساسية المعروضة حاليًا في شاشة الإدارة
+  await loadBoBranches();
+  await loadBoCategories();
+  await loadBoProducts();
+  await loadBoCustomers();
+  await loadBoSuppliers();
+  await loadBoEmployees();
+  await loadBoUsers();
+  renderBranchesTable();
+  renderCategoriesTable();
+  renderProductsTable();
+  renderCustomersTable();
+  renderSuppliersTable();
+  renderEmployeesTable();
+  renderUsersTable();
+}
+
+// الفروع لها منطق خاص: عند إضافة فرع جديد فعليًا (Trigger) بيتعمله مخزن رئيسي تلقائي.
+// لو الفرع ده جديد كليًا (مش موجود قبل الاستيراد)، بنمسح المخزن التلقائي فورًا
+// عشان نرجّع المخازن الأصلية من النسخة الاحتياطية بدون تعارض على "مخزن رئيسي واحد لكل فرع".
+async function restoreBranches(rows) {
+  const { data: existing, error: existErr } = await supabaseClient.from('branches').select('id');
+  if (existErr) throw existErr;
+  const existingIds = new Set((existing || []).map(r => r.id));
+
+  const { error } = await supabaseClient.from('branches').upsert(rows, { onConflict: 'id' });
+  if (error) throw error;
+
+  const newBranchIds = rows.map(r => r.id).filter(id => !existingIds.has(id));
+  for (const id of newBranchIds) {
+    await supabaseClient.from('warehouses').delete().eq('branch_id', id);
   }
 }
 
