@@ -334,6 +334,16 @@ a { color: inherit; }
 .purchase-totals-row { display: flex; justify-content: flex-end; gap: 22px; margin: 14px 0; font-size: 13.5px; }
 .purchase-totals-row .num { font-weight: 700; }
 
+/* -------- Smart search combobox -------- */
+.smart-search { position: relative; }
+.smart-search-dropdown { display: none; position: absolute; top: calc(100% + 4px); right: 0; left: 0; z-index: 60; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-card); max-height: 230px; overflow-y: auto; }
+.smart-search-dropdown.show { display: block; }
+.smart-search-option { padding: 9px 12px; font-size: 13.5px; cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
+.smart-search-option:hover, .smart-search-option.active { background: var(--teal-100); }
+.smart-search-option-sub { font-size: 11px; color: var(--ink-soft); }
+.smart-search-empty { padding: 10px 12px; font-size: 13px; color: var(--ink-soft); text-align: center; }
+.purchase-line-row .smart-search-dropdown { font-size: 12.5px; }
+
 @media (max-width: 760px) {
   .bo-main { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
   .bo-sidebar { border-left: none; border-bottom: 1px solid var(--border); display: flex; overflow-x: auto; }
@@ -1991,7 +2001,14 @@ a { color: inherit; }
     <form id="paymentForm">
       <input type="hidden" id="paymentType">
       <div class="modal-grid">
-        <div class="field field-full"><label id="paymentPartyLabel">العميل</label><select id="paymentPartySelect" required></select></div>
+        <div class="field field-full">
+          <label id="paymentPartyLabel">العميل</label>
+          <div class="smart-search" id="paymentPartyWrap">
+            <input type="text" id="paymentPartySelect" autocomplete="off" placeholder="اكتب الاسم أو اضغط للعرض..." required>
+            <input type="hidden" id="paymentPartyValue">
+            <div class="smart-search-dropdown" id="paymentPartyDropdown"></div>
+          </div>
+        </div>
         <div class="field"><label>المبلغ</label><input type="number" id="paymentAmount" min="0.01" step="0.01" required></div>
         <div class="field">
           <label>طريقة الدفع</label>
@@ -2021,7 +2038,11 @@ a { color: inherit; }
       <div class="modal-grid">
         <div class="field">
           <label>المورد</label>
-          <select id="purchaseSupplier" required><option value="">اختر مورد...</option></select>
+          <div class="smart-search" id="purchaseSupplierWrap">
+            <input type="text" id="purchaseSupplier" autocomplete="off" placeholder="اكتب اسم المورد أو اضغط للعرض..." required>
+            <input type="hidden" id="purchaseSupplierValue">
+            <div class="smart-search-dropdown" id="purchaseSupplierDropdown"></div>
+          </div>
         </div>
         <div class="field" id="purchaseWarehouseField" style="display:none;">
           <label>استلام البضاعة في مخزن</label>
@@ -2462,6 +2483,136 @@ function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+/**
+ * خانة بحث ذكية (Smart search combobox).
+ * تحول input نصي إلى خانة بحث: بالضغط عليها تظهر كل القائمة، وبالكتابة تترشح
+ * القائمة فورًا (بحث في أي جزء من الاسم). Enter تختار أول نتيجة ظاهرة،
+ * Escape تقفل القائمة وترجع الاسم المختار كما كان.
+ *
+ * @param {Object} opts
+ * @param {HTMLInputElement} opts.input - خانة الكتابة الظاهرة للمستخدم
+ * @param {HTMLInputElement} opts.hidden - خانة مخفية تحمل القيمة (id) المختارة فعليًا
+ * @param {HTMLElement} opts.dropdown - عنصر القائمة المنسدلة
+ * @param {Function} opts.getItems - دالة ترجع مصفوفة [{value, label, sublabel?}]
+ * @param {Function} [opts.onChange] - يُستدعى عند اختيار عنصر (أو عند المسح: null)
+ */
+function createSmartSearch(opts) {
+  const { input, hidden, dropdown, getItems, onChange } = opts;
+  let items = [];
+  let filtered = [];
+  let selected = null; // { value, label, sublabel }
+  let activeIndex = -1;
+
+  function renderList() {
+    dropdown.innerHTML = '';
+    if (filtered.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'smart-search-empty';
+      empty.textContent = 'لا يوجد مطابق';
+      dropdown.appendChild(empty);
+      dropdown.classList.add('show');
+      return;
+    }
+    filtered.forEach((item, idx) => {
+      const opt = document.createElement('div');
+      opt.className = 'smart-search-option' + (idx === activeIndex ? ' active' : '');
+      const nameLine = document.createElement('div');
+      nameLine.textContent = item.label;
+      opt.appendChild(nameLine);
+      if (item.sublabel) {
+        const subLine = document.createElement('div');
+        subLine.className = 'smart-search-option-sub';
+        subLine.textContent = item.sublabel;
+        opt.appendChild(subLine);
+      }
+      opt.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        selectItem(item);
+      });
+      dropdown.appendChild(opt);
+    });
+    dropdown.classList.add('show');
+  }
+
+  function selectItem(item) {
+    selected = item;
+    input.value = item.label;
+    hidden.value = item.value;
+    closeDropdown();
+    if (onChange) onChange(item);
+  }
+
+  function closeDropdown() {
+    dropdown.classList.remove('show');
+    dropdown.innerHTML = '';
+    activeIndex = -1;
+  }
+
+  function filterAndOpen(query) {
+    items = getItems() || [];
+    const q = (query || '').trim().toLowerCase();
+    filtered = q ? items.filter(it => it.label.toLowerCase().includes(q)) : items.slice();
+    activeIndex = filtered.length > 0 ? 0 : -1;
+    renderList();
+  }
+
+  input.addEventListener('focus', () => filterAndOpen(''));
+  input.addEventListener('click', () => { if (!dropdown.classList.contains('show')) filterAndOpen(''); });
+  input.addEventListener('input', () => filterAndOpen(input.value));
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (filtered.length > 0) selectItem(filtered[activeIndex >= 0 ? activeIndex : 0]);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      input.value = selected ? selected.label : '';
+      closeDropdown();
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (filtered.length > 0) { activeIndex = (activeIndex + 1) % filtered.length; renderList(); }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (filtered.length > 0) { activeIndex = (activeIndex - 1 + filtered.length) % filtered.length; renderList(); }
+    }
+  });
+
+  input.addEventListener('blur', () => {
+    setTimeout(() => {
+      closeDropdown();
+      input.value = selected ? selected.label : '';
+    }, 0);
+  });
+
+  return {
+    setItems(newItems) {
+      items = newItems || [];
+    },
+    setValue(value) {
+      items = getItems() || [];
+      const item = items.find(it => it.value === value);
+      if (item) {
+        selected = item;
+        input.value = item.label;
+        hidden.value = item.value;
+      } else {
+        selected = null;
+        input.value = '';
+        hidden.value = '';
+      }
+    },
+    clear() {
+      selected = null;
+      input.value = '';
+      hidden.value = '';
+      closeDropdown();
+    },
+    getValue() {
+      return hidden.value || '';
+    },
+  };
 }
 
 async function getUserProfile(userId) {
@@ -3919,6 +4070,15 @@ function bindBackofficeEvents() {
     if (e.target.id === 'paymentModalOverlay') closePaymentModal();
   });
   document.getElementById('paymentForm').addEventListener('submit', savePayment);
+  paymentPartySearch = createSmartSearch({
+    input: document.getElementById('paymentPartySelect'),
+    hidden: document.getElementById('paymentPartyValue'),
+    dropdown: document.getElementById('paymentPartyDropdown'),
+    getItems: () => {
+      const list = paymentPartyType === 'customer_receipt' ? boCustomers : boSuppliers;
+      return list.map(p => ({ value: p.id, label: p.name, sublabel: `الرصيد الحالي: ${Number(p.balance).toFixed(2)}` }));
+    },
+  });
 
   // ---- Branch modal ----
   document.getElementById('addBranchBtn').addEventListener('click', () => openBranchModal(null));
@@ -3990,6 +4150,12 @@ function bindBackofficeEvents() {
   document.getElementById('addPurchaseLineBtn').addEventListener('click', () => addPurchaseLine());
   document.getElementById('purchasePaid').addEventListener('input', updatePurchaseTotals);
   document.getElementById('purchaseForm').addEventListener('submit', savePurchase);
+  purchaseSupplierSearch = createSmartSearch({
+    input: document.getElementById('purchaseSupplier'),
+    hidden: document.getElementById('purchaseSupplierValue'),
+    dropdown: document.getElementById('purchaseSupplierDropdown'),
+    getItems: () => boSuppliers.map(s => ({ value: s.id, label: s.name })),
+  });
 
   // ---- Purchase return modal ----
   document.getElementById('addPurchaseReturnBtn').addEventListener('click', openPurchaseReturnModal);
@@ -4688,6 +4854,9 @@ async function toggleCategoryActive(category) {
 
 // ---- Customers ----
 let boCustomers = [];
+let paymentPartySearch = null;
+let paymentPartyType = 'customer_receipt';
+let purchaseSupplierSearch = null;
 
 async function loadBoCustomers() {
   const { data, error } = await supabaseClient.from('customers').select('*, customer_types(name)').order('name');
@@ -6821,20 +6990,14 @@ function renderPaymentsTable() {
 }
 
 function populatePaymentPartySelect(type, currentId) {
-  const sel = document.getElementById('paymentPartySelect');
-  sel.innerHTML = '';
   const list = type === 'customer_receipt' ? boCustomers : boSuppliers;
-  list.forEach(p => {
-    const opt = document.createElement('option');
-    opt.value = p.id;
-    opt.textContent = `${p.name} (الرصيد الحالي: ${Number(p.balance).toFixed(2)})`;
-    sel.appendChild(opt);
-  });
-  sel.value = currentId || (list[0]?.id || '');
+  const id = currentId || (list[0]?.id || '');
+  paymentPartySearch.setValue(id);
 }
 
 function openPaymentModal(type, party) {
   document.getElementById('paymentType').value = type;
+  paymentPartyType = type;
   document.getElementById('paymentModalTitle').textContent =
     type === 'customer_receipt' ? 'تسجيل دفعة من عميل' : 'تسجيل دفعة لمورد';
   document.getElementById('paymentPartyLabel').textContent = type === 'customer_receipt' ? 'العميل' : 'المورد';
@@ -6859,7 +7022,7 @@ async function savePayment(e) {
   saveBtn.textContent = 'جاري الحفظ...';
 
   const type = document.getElementById('paymentType').value;
-  const partyId = document.getElementById('paymentPartySelect').value;
+  const partyId = document.getElementById('paymentPartyValue').value;
   const amount = Number(document.getElementById('paymentAmount').value) || 0;
   const method = document.getElementById('paymentMethod').value;
   const note = document.getElementById('paymentNote').value.trim() || null;
@@ -7032,13 +7195,7 @@ function renderPurchasesTable() {
 }
 
 function openPurchaseModal() {
-  const supplierSel = document.getElementById('purchaseSupplier');
-  supplierSel.innerHTML = '<option value="">اختر مورد...</option>';
-  boSuppliers.forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s.id; opt.textContent = s.name;
-    supplierSel.appendChild(opt);
-  });
+  purchaseSupplierSearch.clear();
 
   const whField = document.getElementById('purchaseWarehouseField');
   const whSel = document.getElementById('purchaseWarehouse');
@@ -7081,17 +7238,33 @@ function renderPurchaseLines() {
     const row = document.createElement('div');
     row.className = 'purchase-line-row';
 
-    const productSelect = document.createElement('select');
-    productSelect.innerHTML = '<option value="">اختر صنف...</option>' +
-      boProducts.map(p => `<option value="${p.id}" ${p.id === line.productId ? 'selected' : ''}>${escapeHtml(p.name)}</option>`).join('');
-    productSelect.addEventListener('change', () => {
-      line.productId = productSelect.value;
-      const prod = boProducts.find(p => p.id === line.productId);
-      if (prod && Number(line.unitCost) === 0) {
-        line.unitCost = Number(prod.cost_price) || 0;
-        renderPurchaseLines();
-      }
+    const productWrap = document.createElement('div');
+    productWrap.className = 'smart-search';
+    const productInput = document.createElement('input');
+    productInput.type = 'text'; productInput.autocomplete = 'off'; productInput.placeholder = 'اكتب اسم الصنف...';
+    const productHidden = document.createElement('input');
+    productHidden.type = 'hidden';
+    const productDropdown = document.createElement('div');
+    productDropdown.className = 'smart-search-dropdown';
+    productWrap.appendChild(productInput);
+    productWrap.appendChild(productHidden);
+    productWrap.appendChild(productDropdown);
+
+    const productSearch = createSmartSearch({
+      input: productInput,
+      hidden: productHidden,
+      dropdown: productDropdown,
+      getItems: () => boProducts.map(p => ({ value: p.id, label: p.name })),
+      onChange: (item) => {
+        line.productId = item.value;
+        const prod = boProducts.find(p => p.id === line.productId);
+        if (prod && Number(line.unitCost) === 0) {
+          line.unitCost = Number(prod.cost_price) || 0;
+          renderPurchaseLines();
+        }
+      },
     });
+    if (line.productId) productSearch.setValue(line.productId);
 
     const qtyInput = document.createElement('input');
     qtyInput.type = 'number'; qtyInput.min = '0.001'; qtyInput.step = '0.001'; qtyInput.value = line.quantity;
@@ -7109,7 +7282,7 @@ function renderPurchaseLines() {
     removeBtn.type = 'button'; removeBtn.className = 'purchase-line-remove'; removeBtn.textContent = '×';
     removeBtn.addEventListener('click', () => removePurchaseLine(idx));
 
-    row.appendChild(productSelect);
+    row.appendChild(productWrap);
     row.appendChild(qtyInput);
     row.appendChild(costInput);
     row.appendChild(totalDiv);
@@ -7139,7 +7312,7 @@ async function savePurchase(e) {
   const errEl = document.getElementById('purchaseModalError');
   errEl.classList.remove('show');
 
-  const supplierId = document.getElementById('purchaseSupplier').value;
+  const supplierId = document.getElementById('purchaseSupplierValue').value;
   if (!supplierId) { errEl.textContent = 'يرجى اختيار المورد أولاً'; errEl.classList.add('show'); return; }
 
   const validLines = purchaseLines.filter(l => l.productId && l.quantity > 0);
