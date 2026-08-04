@@ -274,6 +274,33 @@ a { color: inherit; }
 .debts-col-title { font-size: 13px; font-weight: 700; margin-bottom: 10px; color: var(--ink-soft); }
 .debts-col-title.owed-to-us { color: var(--teal-700); }
 .debts-col-title.we-owe { color: var(--danger); }
+
+.bo-nav-group { margin-bottom: 4px; }
+.bo-nav-parent { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.bo-nav-chevron { font-size: 11px; transition: transform 0.15s ease; color: var(--ink-soft); }
+.bo-nav-group.open .bo-nav-chevron { transform: rotate(-90deg); }
+.bo-nav-group.open .bo-nav-parent { color: var(--teal-900); }
+.bo-nav-sub { display: none; flex-direction: column; margin: 2px 0 6px; padding-inline-end: 12px; border-inline-end: 2px solid var(--border); }
+.bo-nav-group.open .bo-nav-sub { display: flex; }
+.bo-nav-sub-item { width: 100%; text-align: right; padding: 8px 12px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; color: var(--ink-soft); background: none; margin-bottom: 2px; }
+.bo-nav-sub-item:hover { background: var(--surface-sunken); color: var(--ink); }
+.bo-nav-sub-item.active { background: var(--teal-100); color: var(--teal-900); font-weight: 700; }
+
+.report-breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-soft); margin-bottom: 12px; }
+.report-breadcrumb .crumb-sep { color: var(--border); }
+.report-breadcrumb .crumb-current { color: var(--ink); font-weight: 600; }
+
+.report-type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 6px; }
+.report-type-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 18px 14px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; transition: border-color 0.12s ease, transform 0.06s ease; }
+.report-type-card:hover { border-color: var(--teal-500); transform: translateY(-1px); }
+.report-type-icon { width: 44px; height: 44px; border-radius: var(--radius-md); background: var(--teal-100); color: var(--teal-700); display: grid; place-items: center; font-size: 21px; }
+.report-type-label { font-size: 12.5px; font-weight: 600; color: var(--ink); line-height: 1.5; }
+
+.report-back-btn { background: none; color: var(--teal-700); font-size: 13px; font-weight: 600; padding: 6px 0; margin-bottom: 16px; }
+.report-back-btn:hover { text-decoration: underline; }
+
+.report-placeholder { text-align: center; color: var(--ink-soft); padding: 70px 20px; }
+.report-placeholder .rp-icon { font-size: 38px; margin-bottom: 12px; }
 .daily-trend-chart-wrap { overflow-x: auto; margin-bottom: 18px; }
 .daily-trend-chart { display: inline-block; min-width: 100%; }
 .daily-trend-chart svg { display: block; }
@@ -494,7 +521,19 @@ a { color: inherit; }
         <button class="bo-nav-item" data-section="purchases">فواتير الشراء</button>
         <button class="bo-nav-item" data-section="purchase-returns">مرتجعات الشراء</button>
         <button class="bo-nav-item" data-section="sale-returns">مرتجعات البيع</button>
-        <button class="bo-nav-item" data-section="reports">التقارير</button>
+        <div class="bo-nav-group" id="reportsNavGroup">
+          <button class="bo-nav-item bo-nav-parent" id="reportsNavToggle" type="button">
+            <span>التقارير</span>
+            <span class="bo-nav-chevron">‹</span>
+          </button>
+          <div class="bo-nav-sub" id="reportsNavSub">
+            <button class="bo-nav-sub-item" data-section="reports-sales">المبيعات</button>
+            <button class="bo-nav-sub-item" data-section="reports-purchases">المشتريات</button>
+            <button class="bo-nav-sub-item" data-section="reports-inventory">المخزون</button>
+            <button class="bo-nav-sub-item" data-section="reports-accounting">المحاسبة</button>
+            <button class="bo-nav-sub-item" data-section="reports-other">تقارير اخرى</button>
+          </div>
+        </div>
         <button class="bo-nav-item" data-section="expense-items">بنود المصروفات</button>
         <button class="bo-nav-item" data-section="expenses">المصروفات</button>
         <button class="bo-nav-item" data-section="salaries">الرواتب</button>
@@ -808,10 +847,13 @@ a { color: inherit; }
           </div>
         </div>
 
-        <!-- قسم التقارير -->
-        <div id="bo-section-reports" style="display:none;">
+        <!-- قسم تقارير المبيعات -->
+        <div id="bo-section-reports-sales" style="display:none;">
+          <div class="report-breadcrumb">
+            <span>التقارير</span><span class="crumb-sep">»</span><span class="crumb-current" id="salesReportsCrumbCurrent">تقارير المبيعات</span>
+          </div>
           <div class="bo-section-header">
-            <div class="bo-section-title">التقارير الأساسية</div>
+            <div class="bo-section-title">تقارير المبيعات</div>
           </div>
 
           <div class="quick-range-row" id="quickRangeRow" style="margin-bottom:12px;">
@@ -832,167 +874,281 @@ a { color: inherit; }
             <button class="bo-add-btn" id="runReportBtn">تحديث</button>
           </div>
 
-          <div class="report-cards">
-            <div class="report-card">
-              <div class="report-card-label">إجمالي المبيعات</div>
-              <div class="report-card-value num positive" id="reportTotalSales">0.00</div>
-            </div>
-            <div class="report-card">
-              <div class="report-card-label">عدد الفواتير</div>
-              <div class="report-card-value num" id="reportInvoiceCount">0</div>
-            </div>
-            <div class="report-card">
-              <div class="report-card-label">متوسط الفاتورة</div>
-              <div class="report-card-value num" id="reportAvgInvoice">0.00</div>
-            </div>
-            <div class="report-card">
-              <div class="report-card-label">صافي الربح (بعد خصم المصروفات والرواتب)</div>
-              <div class="report-card-value num positive" id="reportProfit">0.00</div>
-            </div>
-            <div class="report-card">
-              <div class="report-card-label">إجمالي المصروفات</div>
-              <div class="report-card-value num" id="reportExpenses">0.00</div>
-            </div>
-            <div class="report-card">
-              <div class="report-card-label">إجمالي الرواتب</div>
-              <div class="report-card-value num" id="reportSalaries">0.00</div>
-            </div>
+          <div class="report-type-grid" id="salesReportTypeGrid">
+            <button type="button" class="report-type-card" data-report="summary">
+              <div class="report-type-icon">📊</div>
+              <div class="report-type-label">إجمالي المبيعات والأرباح</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="trend">
+              <div class="report-type-icon">📈</div>
+              <div class="report-type-label">اتجاه المبيعات اليومي</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="topproducts">
+              <div class="report-type-icon">🏆</div>
+              <div class="report-type-label">الأصناف الأكثر مبيعًا</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="cashier">
+              <div class="report-type-icon">🧾</div>
+              <div class="report-type-label">المبيعات حسب الكاشير</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="payment">
+              <div class="report-type-icon">💳</div>
+              <div class="report-type-label">المبيعات حسب طرق الدفع</div>
+            </button>
+            <button type="button" class="report-type-card" id="salesReportCard-branch" data-report="branch" style="display:none;">
+              <div class="report-type-icon">🏬</div>
+              <div class="report-type-label">المبيعات حسب الفرع</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="category">
+              <div class="report-type-icon">🗂️</div>
+              <div class="report-type-label">المبيعات حسب الفئة</div>
+            </button>
           </div>
 
-          <div class="report-subtitle-row">
-            <div class="report-subtitle">اتجاه المبيعات اليومي</div>
-            <div class="report-subtitle-actions">
-              <button class="bo-icon-btn" id="exportDailyTrendReportBtn">تصدير إكسل</button>
-            </div>
-          </div>
-          <div class="daily-trend-chart-wrap">
-            <div class="daily-trend-chart" id="dailyTrendChart"></div>
-          </div>
-          <div class="bo-table-wrap">
-            <table class="bo-table">
-              <thead><tr><th>اليوم</th><th>عدد الفواتير</th><th>الإجمالي</th></tr></thead>
-              <tbody id="dailyTrendTableBody">
-                <tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>
-              </tbody>
-            </table>
-          </div>
+          <div id="salesReportDetailWrap" style="display:none;">
+            <button type="button" class="report-back-btn" id="salesReportBackBtn">‹ رجوع لكل تقارير المبيعات</button>
 
-          <div class="report-subtitle">الأصناف الأكثر مبيعًا</div>
-          <div class="bo-table-wrap">
-            <table class="bo-table">
-              <thead><tr><th>الصنف</th><th>الكمية المباعة</th><th>الإيراد</th></tr></thead>
-              <tbody id="topProductsTableBody">
-                <tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>
-              </tbody>
-            </table>
-          </div>
+            <div id="salesReportDetail-summary" class="report-detail" style="display:none;">
+              <div class="report-cards">
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي المبيعات</div>
+                  <div class="report-card-value num positive" id="reportTotalSales">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">عدد الفواتير</div>
+                  <div class="report-card-value num" id="reportInvoiceCount">0</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">متوسط الفاتورة</div>
+                  <div class="report-card-value num" id="reportAvgInvoice">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">صافي الربح (بعد خصم المصروفات والرواتب)</div>
+                  <div class="report-card-value num positive" id="reportProfit">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي المصروفات</div>
+                  <div class="report-card-value num" id="reportExpenses">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي الرواتب</div>
+                  <div class="report-card-value num" id="reportSalaries">0.00</div>
+                </div>
+              </div>
+            </div>
 
-          <div class="report-subtitle-row">
-            <div class="report-subtitle">المبيعات حسب الكاشير</div>
-            <div class="report-subtitle-actions">
-              <button class="bo-icon-btn" id="exportCashierReportBtn">تصدير إكسل</button>
-            </div>
-          </div>
-          <div class="bo-table-wrap">
-            <table class="bo-table">
-              <thead><tr><th>الكاشير</th><th>عدد الفواتير</th><th>الإجمالي</th><th>متوسط الفاتورة</th><th>النسبة من المبيعات</th></tr></thead>
-              <tbody id="cashierReportTableBody">
-                <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="report-subtitle-row">
-            <div class="report-subtitle">المبيعات حسب طريقة الدفع</div>
-            <div class="report-subtitle-actions">
-              <button class="bo-icon-btn" id="exportPaymentMethodReportBtn">تصدير إكسل</button>
-            </div>
-          </div>
-          <div class="bo-table-wrap">
-            <table class="bo-table">
-              <thead><tr><th>طريقة الدفع</th><th>عدد الفواتير</th><th>الإجمالي</th><th>النسبة من المبيعات</th></tr></thead>
-              <tbody id="paymentMethodReportTableBody">
-                <tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="report-subtitle-row" id="branchReportSection" style="display:none;">
-            <div class="report-subtitle">المبيعات حسب الفرع</div>
-            <div class="report-subtitle-actions">
-              <button class="bo-icon-btn" id="exportBranchReportBtn">تصدير إكسل</button>
-            </div>
-          </div>
-          <div class="bo-table-wrap" id="branchReportTableWrap" style="display:none;">
-            <table class="bo-table">
-              <thead><tr><th>الفرع</th><th>عدد الفواتير</th><th>الإجمالي</th><th>متوسط الفاتورة</th><th>النسبة من المبيعات</th></tr></thead>
-              <tbody id="branchReportTableBody">
-                <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="report-subtitle-row">
-            <div class="report-subtitle">المبيعات حسب الفئة</div>
-            <div class="report-subtitle-actions">
-              <button class="bo-icon-btn" id="exportCategoryReportBtn">تصدير إكسل</button>
-            </div>
-          </div>
-          <div class="bo-table-wrap">
-            <table class="bo-table">
-              <thead><tr><th>الفئة</th><th>الكمية المباعة</th><th>الإيراد</th><th>النسبة من المبيعات</th></tr></thead>
-              <tbody id="categoryReportTableBody">
-                <tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="report-subtitle-row">
-            <div class="report-subtitle">تقرير الديون (أرصدة العملاء والموردين)</div>
-            <div class="report-subtitle-actions">
-              <button class="bo-icon-btn" id="refreshDebtsBtn">تحديث</button>
-              <button class="bo-icon-btn" id="exportDebtsBtn">تصدير إكسل</button>
-            </div>
-          </div>
-
-          <div class="report-cards">
-            <div class="report-card">
-              <div class="report-card-label">إجمالي مستحق من العملاء</div>
-              <div class="report-card-value num positive" id="debtsCustomersTotal">0.00</div>
-            </div>
-            <div class="report-card">
-              <div class="report-card-label">إجمالي مستحق للموردين</div>
-              <div class="report-card-value num negative" id="debtsSuppliersTotal">0.00</div>
-            </div>
-            <div class="report-card">
-              <div class="report-card-label">صافي الموقف (لنا − علينا)</div>
-              <div class="report-card-value num" id="debtsNetPosition">0.00</div>
-            </div>
-          </div>
-
-          <div class="debts-grid">
-            <div>
-              <div class="debts-col-title owed-to-us">عملاء عليهم مبالغ (مدينون لنا)</div>
+            <div id="salesReportDetail-trend" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">اتجاه المبيعات اليومي</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-icon-btn" id="exportDailyTrendReportBtn">تصدير إكسل</button>
+                </div>
+              </div>
+              <div class="daily-trend-chart-wrap">
+                <div class="daily-trend-chart" id="dailyTrendChart"></div>
+              </div>
               <div class="bo-table-wrap">
                 <table class="bo-table">
-                  <thead><tr><th>العميل</th><th>الهاتف</th><th>الرصيد المستحق</th><th></th></tr></thead>
-                  <tbody id="debtsCustomersTableBody">
+                  <thead><tr><th>اليوم</th><th>عدد الفواتير</th><th>الإجمالي</th></tr></thead>
+                  <tbody id="dailyTrendTableBody">
+                    <tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="salesReportDetail-topproducts" class="report-detail" style="display:none;">
+              <div class="report-subtitle">الأصناف الأكثر مبيعًا</div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>الصنف</th><th>الكمية المباعة</th><th>الإيراد</th></tr></thead>
+                  <tbody id="topProductsTableBody">
+                    <tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="salesReportDetail-cashier" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">المبيعات حسب الكاشير</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-icon-btn" id="exportCashierReportBtn">تصدير إكسل</button>
+                </div>
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>الكاشير</th><th>عدد الفواتير</th><th>الإجمالي</th><th>متوسط الفاتورة</th><th>النسبة من المبيعات</th></tr></thead>
+                  <tbody id="cashierReportTableBody">
+                    <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="salesReportDetail-payment" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">المبيعات حسب طريقة الدفع</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-icon-btn" id="exportPaymentMethodReportBtn">تصدير إكسل</button>
+                </div>
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>طريقة الدفع</th><th>عدد الفواتير</th><th>الإجمالي</th><th>النسبة من المبيعات</th></tr></thead>
+                  <tbody id="paymentMethodReportTableBody">
                     <tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>
                   </tbody>
                 </table>
               </div>
             </div>
-            <div>
-              <div class="debts-col-title we-owe">موردون لهم مبالغ عندنا (نحن مدينون لهم)</div>
+
+            <div id="salesReportDetail-branch" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row" id="branchReportSection" style="display:none;">
+                <div class="report-subtitle">المبيعات حسب الفرع</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-icon-btn" id="exportBranchReportBtn">تصدير إكسل</button>
+                </div>
+              </div>
+              <div class="bo-table-wrap" id="branchReportTableWrap" style="display:none;">
+                <table class="bo-table">
+                  <thead><tr><th>الفرع</th><th>عدد الفواتير</th><th>الإجمالي</th><th>متوسط الفاتورة</th><th>النسبة من المبيعات</th></tr></thead>
+                  <tbody id="branchReportTableBody">
+                    <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="salesReportDetail-category" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">المبيعات حسب الفئة</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-icon-btn" id="exportCategoryReportBtn">تصدير إكسل</button>
+                </div>
+              </div>
               <div class="bo-table-wrap">
                 <table class="bo-table">
-                  <thead><tr><th>المورد</th><th>الهاتف</th><th>المستحق له</th><th></th></tr></thead>
-                  <tbody id="debtsSuppliersTableBody">
+                  <thead><tr><th>الفئة</th><th>الكمية المباعة</th><th>الإيراد</th><th>النسبة من المبيعات</th></tr></thead>
+                  <tbody id="categoryReportTableBody">
                     <tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>
                   </tbody>
                 </table>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- قسم تقارير المشتريات -->
+        <div id="bo-section-reports-purchases" style="display:none;">
+          <div class="report-breadcrumb">
+            <span>التقارير</span><span class="crumb-sep">»</span><span class="crumb-current">تقارير المشتريات</span>
+          </div>
+          <div class="bo-section-header">
+            <div class="bo-section-title">تقارير المشتريات</div>
+          </div>
+          <div class="report-placeholder">
+            <div class="rp-icon">🧾</div>
+            <div>تقارير المشتريات هتضاف قريبًا</div>
+          </div>
+        </div>
+
+        <!-- قسم تقارير المخزون -->
+        <div id="bo-section-reports-inventory" style="display:none;">
+          <div class="report-breadcrumb">
+            <span>التقارير</span><span class="crumb-sep">»</span><span class="crumb-current">تقارير المخزون</span>
+          </div>
+          <div class="bo-section-header">
+            <div class="bo-section-title">تقارير المخزون</div>
+          </div>
+          <div class="report-placeholder">
+            <div class="rp-icon">📦</div>
+            <div>تقارير المخزون هتضاف قريبًا</div>
+          </div>
+        </div>
+
+        <!-- قسم تقارير المحاسبة -->
+        <div id="bo-section-reports-accounting" style="display:none;">
+          <div class="report-breadcrumb">
+            <span>التقارير</span><span class="crumb-sep">»</span><span class="crumb-current" id="accountingReportsCrumbCurrent">تقارير المحاسبة</span>
+          </div>
+          <div class="bo-section-header">
+            <div class="bo-section-title">تقارير المحاسبة</div>
+          </div>
+
+          <div class="report-type-grid" id="accountingReportTypeGrid">
+            <button type="button" class="report-type-card" data-report="debts">
+              <div class="report-type-icon">💰</div>
+              <div class="report-type-label">تقرير الديون (أرصدة العملاء والموردين)</div>
+            </button>
+          </div>
+
+          <div id="accountingReportDetailWrap" style="display:none;">
+            <button type="button" class="report-back-btn" id="accountingReportBackBtn">‹ رجوع لكل تقارير المحاسبة</button>
+
+            <div id="accountingReportDetail-debts" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">تقرير الديون (أرصدة العملاء والموردين)</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-icon-btn" id="refreshDebtsBtn">تحديث</button>
+                  <button class="bo-icon-btn" id="exportDebtsBtn">تصدير إكسل</button>
+                </div>
+              </div>
+
+              <div class="report-cards">
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي مستحق من العملاء</div>
+                  <div class="report-card-value num positive" id="debtsCustomersTotal">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي مستحق للموردين</div>
+                  <div class="report-card-value num negative" id="debtsSuppliersTotal">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">صافي الموقف (لنا − علينا)</div>
+                  <div class="report-card-value num" id="debtsNetPosition">0.00</div>
+                </div>
+              </div>
+
+              <div class="debts-grid">
+                <div>
+                  <div class="debts-col-title owed-to-us">عملاء عليهم مبالغ (مدينون لنا)</div>
+                  <div class="bo-table-wrap">
+                    <table class="bo-table">
+                      <thead><tr><th>العميل</th><th>الهاتف</th><th>الرصيد المستحق</th><th></th></tr></thead>
+                      <tbody id="debtsCustomersTableBody">
+                        <tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div>
+                  <div class="debts-col-title we-owe">موردون لهم مبالغ عندنا (نحن مدينون لهم)</div>
+                  <div class="bo-table-wrap">
+                    <table class="bo-table">
+                      <thead><tr><th>المورد</th><th>الهاتف</th><th>المستحق له</th><th></th></tr></thead>
+                      <tbody id="debtsSuppliersTableBody">
+                        <tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- قسم تقارير اخرى -->
+        <div id="bo-section-reports-other" style="display:none;">
+          <div class="report-breadcrumb">
+            <span>التقارير</span><span class="crumb-sep">»</span><span class="crumb-current">تقارير اخرى</span>
+          </div>
+          <div class="bo-section-header">
+            <div class="bo-section-title">تقارير اخرى</div>
+          </div>
+          <div class="report-placeholder">
+            <div class="rp-icon">🗂️</div>
+            <div>تقارير إضافية هتضاف قريبًا</div>
           </div>
         </div>
 
@@ -3134,43 +3290,95 @@ function bindBackofficeEvents() {
   document.getElementById('backToPosBtn').addEventListener('click', () => showView('pos'));
   document.getElementById('boLogoutBtn').addEventListener('click', doLogout);
 
-  document.querySelectorAll('.bo-nav-item').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.bo-nav-item').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const section = btn.dataset.section;
-      document.getElementById('bo-section-products').style.display = section === 'products' ? 'block' : 'none';
-      document.getElementById('bo-section-categories').style.display = section === 'categories' ? 'block' : 'none';
-      document.getElementById('bo-section-unit-types').style.display = section === 'unit-types' ? 'block' : 'none';
-      document.getElementById('bo-section-tax-rates').style.display = section === 'tax-rates' ? 'block' : 'none';
-      document.getElementById('bo-section-quick-discounts').style.display = section === 'quick-discounts' ? 'block' : 'none';
-      document.getElementById('bo-section-customer-types').style.display = section === 'customer-types' ? 'block' : 'none';
-      document.getElementById('bo-section-customers').style.display = section === 'customers' ? 'block' : 'none';
-      document.getElementById('bo-section-suppliers').style.display = section === 'suppliers' ? 'block' : 'none';
-      document.getElementById('bo-section-payments').style.display = section === 'payments' ? 'block' : 'none';
-      if (section === 'payments' && !boPaymentsLoadedOnce) { loadBoPayments().then(renderPaymentsTable); boPaymentsLoadedOnce = true; }
-      document.getElementById('bo-section-purchases').style.display = section === 'purchases' ? 'block' : 'none';
-      document.getElementById('bo-section-purchase-returns').style.display = section === 'purchase-returns' ? 'block' : 'none';
-      document.getElementById('bo-section-sale-returns').style.display = section === 'sale-returns' ? 'block' : 'none';
-      if (section === 'purchase-returns') { loadBoPurchaseReturns().then(renderPurchaseReturnsTable); }
-      if (section === 'sale-returns') { loadBoSaleReturns().then(renderSaleReturnsTable); }
-      document.getElementById('bo-section-reports').style.display = section === 'reports' ? 'block' : 'none';
-      document.getElementById('bo-section-soon').style.display = section === 'soon' ? 'block' : 'none';
-      document.getElementById('bo-section-users').style.display = section === 'users' ? 'block' : 'none';
-      document.getElementById('bo-section-branches').style.display = section === 'branches' ? 'block' : 'none';
-      document.getElementById('bo-section-stock').style.display = section === 'stock' ? 'block' : 'none';
-      if (section === 'stock' && !stockSectionLoadedOnce) { initStockSection(); stockSectionLoadedOnce = true; }
-      document.getElementById('bo-section-backup').style.display = section === 'backup' ? 'block' : 'none';
-      document.getElementById('bo-section-reset-data').style.display = section === 'reset-data' ? 'block' : 'none';
-      if (section === 'reset-data' && !resetDataLoadedOnce) { initResetDataSection(); resetDataLoadedOnce = true; }
-      document.getElementById('bo-section-employees').style.display = section === 'employees' ? 'block' : 'none';
-      document.getElementById('bo-section-expense-items').style.display = section === 'expense-items' ? 'block' : 'none';
-      document.getElementById('bo-section-expenses').style.display = section === 'expenses' ? 'block' : 'none';
-      document.getElementById('bo-section-salaries').style.display = section === 'salaries' ? 'block' : 'none';
-      if (section === 'reports' && !reportsLoadedOnce) { populateReportBranchFilter(); runReport(); reportsLoadedOnce = true; }
-      if (section === 'expenses' && !expensesLoadedOnce) { setExpenseQuickRange('month'); runExpenseFilter(); expensesLoadedOnce = true; }
-      if (section === 'salaries' && !salariesLoadedOnce) { setSalaryQuickRange('month'); runSalaryFilter(); salariesLoadedOnce = true; }
+  const boAllSections = ['products','categories','unit-types','tax-rates','quick-discounts','customer-types',
+    'customers','suppliers','payments','purchases','purchase-returns','sale-returns',
+    'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
+    'soon','users','branches','stock','backup','reset-data','employees','expense-items','expenses','salaries'];
+
+  function activateBoSection(section, btn) {
+    document.querySelectorAll('.bo-nav-item:not(.bo-nav-parent)').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.bo-nav-sub-item').forEach(b => b.classList.remove('active'));
+    document.getElementById('reportsNavToggle').classList.remove('active');
+    if (btn) btn.classList.add('active');
+
+    if (section && section.indexOf('reports-') === 0) {
+      document.getElementById('reportsNavToggle').classList.add('active');
+      document.getElementById('reportsNavGroup').classList.add('open');
+    } else {
+      document.getElementById('reportsNavGroup').classList.remove('open');
+    }
+
+    boAllSections.forEach(s => {
+      const el = document.getElementById('bo-section-' + s);
+      if (el) el.style.display = (s === section) ? 'block' : 'none';
     });
+
+    if (section === 'payments' && !boPaymentsLoadedOnce) { loadBoPayments().then(renderPaymentsTable); boPaymentsLoadedOnce = true; }
+    if (section === 'purchase-returns') { loadBoPurchaseReturns().then(renderPurchaseReturnsTable); }
+    if (section === 'sale-returns') { loadBoSaleReturns().then(renderSaleReturnsTable); }
+    if (section === 'stock' && !stockSectionLoadedOnce) { initStockSection(); stockSectionLoadedOnce = true; }
+    if (section === 'reset-data' && !resetDataLoadedOnce) { initResetDataSection(); resetDataLoadedOnce = true; }
+    if (section === 'reports-sales' && !reportsLoadedOnce) { populateReportBranchFilter(); runReport(); reportsLoadedOnce = true; }
+    if (section === 'reports-accounting' && !accountingReportsLoadedOnce) { refreshDebtsReport(); accountingReportsLoadedOnce = true; }
+    if (section === 'expenses' && !expensesLoadedOnce) { setExpenseQuickRange('month'); runExpenseFilter(); expensesLoadedOnce = true; }
+    if (section === 'salaries' && !salariesLoadedOnce) { setSalaryQuickRange('month'); runSalaryFilter(); salariesLoadedOnce = true; }
+  }
+
+  document.querySelectorAll('.bo-nav-item:not(.bo-nav-parent)').forEach(btn => {
+    btn.addEventListener('click', () => activateBoSection(btn.dataset.section, btn));
+  });
+
+  document.querySelectorAll('.bo-nav-sub-item').forEach(btn => {
+    btn.addEventListener('click', () => activateBoSection(btn.dataset.section, btn));
+  });
+
+  document.getElementById('reportsNavToggle').addEventListener('click', () => {
+    const group = document.getElementById('reportsNavGroup');
+    const willOpen = !group.classList.contains('open');
+    if (willOpen) {
+      const activeSub = document.querySelector('.bo-nav-sub-item.active');
+      const targetSection = activeSub ? activeSub.dataset.section : 'reports-sales';
+      const targetBtn = document.querySelector(`.bo-nav-sub-item[data-section="${targetSection}"]`);
+      activateBoSection(targetSection, targetBtn);
+    } else {
+      group.classList.remove('open');
+    }
+  });
+
+  // ---- تنقل كروت تقارير المبيعات ----
+  document.querySelectorAll('#salesReportTypeGrid .report-type-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const key = card.dataset.report;
+      document.getElementById('salesReportTypeGrid').style.display = 'none';
+      document.getElementById('salesReportDetailWrap').style.display = 'block';
+      document.querySelectorAll('#salesReportDetailWrap .report-detail').forEach(d => d.style.display = 'none');
+      const target = document.getElementById('salesReportDetail-' + key);
+      if (target) target.style.display = 'block';
+      document.getElementById('salesReportsCrumbCurrent').textContent = card.querySelector('.report-type-label').textContent;
+    });
+  });
+  document.getElementById('salesReportBackBtn').addEventListener('click', () => {
+    document.getElementById('salesReportDetailWrap').style.display = 'none';
+    document.getElementById('salesReportTypeGrid').style.display = 'grid';
+    document.getElementById('salesReportsCrumbCurrent').textContent = 'تقارير المبيعات';
+  });
+
+  // ---- تنقل كروت تقارير المحاسبة ----
+  document.querySelectorAll('#accountingReportTypeGrid .report-type-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const key = card.dataset.report;
+      document.getElementById('accountingReportTypeGrid').style.display = 'none';
+      document.getElementById('accountingReportDetailWrap').style.display = 'block';
+      document.querySelectorAll('#accountingReportDetailWrap .report-detail').forEach(d => d.style.display = 'none');
+      const target = document.getElementById('accountingReportDetail-' + key);
+      if (target) target.style.display = 'block';
+      document.getElementById('accountingReportsCrumbCurrent').textContent = card.querySelector('.report-type-label').textContent;
+    });
+  });
+  document.getElementById('accountingReportBackBtn').addEventListener('click', () => {
+    document.getElementById('accountingReportDetailWrap').style.display = 'none';
+    document.getElementById('accountingReportTypeGrid').style.display = 'grid';
+    document.getElementById('accountingReportsCrumbCurrent').textContent = 'تقارير المحاسبة';
   });
 
   // ---- Product modal ----
@@ -6764,6 +6972,7 @@ async function openSaleReturnDetailModal(ret) {
 
 // ---- Reports ----
 let reportsLoadedOnce = false;
+let accountingReportsLoadedOnce = false;
 let expensesLoadedOnce = false;
 let salariesLoadedOnce = false;
 let lastCashierReportRows = [];
@@ -6971,6 +7180,8 @@ async function runReport() {
     const showBranchBreakdown = boBranchesList.length > 1;
     document.getElementById('branchReportSection').style.display = showBranchBreakdown ? 'flex' : 'none';
     document.getElementById('branchReportTableWrap').style.display = showBranchBreakdown ? 'block' : 'none';
+    const branchCardEl = document.getElementById('salesReportCard-branch');
+    if (branchCardEl) branchCardEl.style.display = showBranchBreakdown ? 'flex' : 'none';
     let branchRows = [];
     if (showBranchBreakdown) {
       const branchGrouped = {};
@@ -7083,8 +7294,6 @@ async function runReport() {
     console.error(err);
     showToast('تعذر تحميل التقرير', true);
   }
-
-  await refreshDebtsReport();
 }
 
 // ---- تقرير الديون ----
