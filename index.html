@@ -429,6 +429,15 @@ a { color: inherit; }
           <div class="discount-row"><input type="number" id="discountInput" placeholder="خصم (قيمة)" min="0" value="0"></div>
           <div class="totals-row" id="taxRow" style="display:none;"><span id="taxRowLabel">الضريبة</span><span class="num" id="taxLabel">0.00</span></div>
           <div class="totals-row grand"><span>الإجمالي</span><span class="num" id="totalLabel">0.00</span></div>
+          <div class="paid-row" id="paymentMethodRow">
+            <label for="posPaymentMethod">طريقة الدفع</label>
+            <select id="posPaymentMethod">
+              <option value="cash">نقدي</option>
+              <option value="card">بطاقة</option>
+              <option value="transfer">تحويل</option>
+              <option value="other">أخرى</option>
+            </select>
+          </div>
           <div class="paid-row" id="paidRow" style="display:none;">
             <label for="paidInput">المدفوع الآن</label>
             <input type="number" id="paidInput" min="0" step="0.01">
@@ -862,6 +871,21 @@ a { color: inherit; }
               <thead><tr><th>الكاشير</th><th>عدد الفواتير</th><th>الإجمالي</th><th>متوسط الفاتورة</th><th>النسبة من المبيعات</th></tr></thead>
               <tbody id="cashierReportTableBody">
                 <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="report-subtitle-row">
+            <div class="report-subtitle">المبيعات حسب طريقة الدفع</div>
+            <div class="report-subtitle-actions">
+              <button class="bo-icon-btn" id="exportPaymentMethodReportBtn">تصدير إكسل</button>
+            </div>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>طريقة الدفع</th><th>عدد الفواتير</th><th>الإجمالي</th><th>النسبة من المبيعات</th></tr></thead>
+              <tbody id="paymentMethodReportTableBody">
+                <tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
@@ -2257,6 +2281,7 @@ function cachePosEls() {
   posEls.checkoutBtn = document.getElementById('checkoutBtn');
   posEls.paidRow = document.getElementById('paidRow');
   posEls.paidInput = document.getElementById('paidInput');
+  posEls.paymentMethodSelect = document.getElementById('posPaymentMethod');
   posEls.dueRow = document.getElementById('dueRow');
   posEls.dueLabel = document.getElementById('dueLabel');
 }
@@ -2322,6 +2347,7 @@ function bindPosEvents() {
       })),
       discount: Number(posEls.discountInput.value) || 0,
       customerId: posEls.customerSelect.value || null,
+      paymentMethod: posEls.paymentMethodSelect.value || 'cash',
     });
     localStorage.setItem('pos_held_orders', JSON.stringify(heldOrders));
     cart = []; posEls.discountInput.value = 0;
@@ -2341,6 +2367,7 @@ function bindPosEvents() {
     }));
     posEls.discountInput.value = last.discount || 0;
     resetQuickDiscountSelection();
+    posEls.paymentMethodSelect.value = last.paymentMethod || 'cash';
     if (last.customerId) posEls.customerSelect.value = last.customerId;
     renderCart(); updateHeldCount();
     showToast('تم استرجاع آخر فاتورة معلّقة');
@@ -2747,6 +2774,7 @@ async function doCheckout() {
     const tax = calcTaxTotal();
     const total = calcTotal();
     const customerId = posEls.customerSelect.value || null;
+    const paymentMethod = posEls.paymentMethodSelect.value || 'cash';
 
     // البيع بالأجل متاح فقط لعميل مسجل — عميل نقدي لازم يدفع كامل المبلغ
     let paidAmount = customerId ? (Number(posEls.paidInput.value) || 0) : total;
@@ -2761,6 +2789,7 @@ async function doCheckout() {
       .insert({
         branch_id: currentProfile.branch_id, user_id: currentProfile.id, customer_id: customerId,
         status: 'completed', subtotal, discount, tax, total, paid_amount: paidAmount, remaining,
+        payment_method: paymentMethod,
       }).select().single();
     if (saleError) throw saleError;
 
@@ -2797,11 +2826,12 @@ async function doCheckout() {
         name: l.unitLabel && l.productUnitId ? `${l.product.name} (${l.unitLabel})` : l.product.name,
         quantity: l.quantity, unitPrice: l.unitPrice,
       })),
-      subtotal, discount, tax, total, paidAmount, remaining,
+      subtotal, discount, tax, total, paidAmount, remaining, paymentMethod,
     });
 
     cart = []; posEls.discountInput.value = 0; posEls.customerSelect.value = '';
     delete posEls.paidInput.dataset.touched; posEls.paidInput.value = '';
+    posEls.paymentMethodSelect.value = 'cash';
     resetQuickDiscountSelection();
     renderCart();
     await loadStockBalances();
@@ -2838,6 +2868,7 @@ function showReceipt(sale) {
     <div class="r-divider"></div>
     <div class="r-row"><span>الكاشير</span><span>${escapeHtml(sale.cashierName)}</span></div>
     ${sale.customerName ? `<div class="r-row"><span>العميل</span><span>${escapeHtml(sale.customerName)}</span></div>` : ''}
+    <div class="r-row"><span>طريقة الدفع</span><span>${escapeHtml(paymentMethodLabels[sale.paymentMethod] || sale.paymentMethod || '—')}</span></div>
     <div class="r-divider"></div>
     ${itemsHtml}
     <div class="r-divider"></div>
@@ -3373,6 +3404,7 @@ function bindBackofficeEvents() {
   document.getElementById('refreshDebtsBtn').addEventListener('click', () => refreshDebtsReport());
   document.getElementById('exportDebtsBtn').addEventListener('click', () => exportDebtsToExcel());
   document.getElementById('exportCashierReportBtn').addEventListener('click', () => exportCashierReportToExcel());
+  document.getElementById('exportPaymentMethodReportBtn').addEventListener('click', () => exportPaymentMethodReportToExcel());
   document.getElementById('exportBranchReportBtn').addEventListener('click', () => exportBranchReportToExcel());
   document.getElementById('exportCategoryReportBtn').addEventListener('click', () => exportCategoryReportToExcel());
   document.getElementById('backupExcelBtn').addEventListener('click', () => runBackup('excel'));
@@ -6707,6 +6739,7 @@ let reportsLoadedOnce = false;
 let expensesLoadedOnce = false;
 let salariesLoadedOnce = false;
 let lastCashierReportRows = [];
+let lastPaymentMethodReportRows = [];
 let lastBranchReportRows = [];
 let lastCategoryReportRows = [];
 
@@ -6777,7 +6810,7 @@ async function runReport() {
     // ملخص الفواتير
     let salesQuery = supabaseClient
       .from('sales')
-      .select('id, total, user_id, branch_id, users_profile(full_name), branches(name)')
+      .select('id, total, user_id, branch_id, payment_method, users_profile(full_name), branches(name)')
       .eq('status', 'completed')
       .gte('created_at', fromISO)
       .lte('created_at', toISO);
@@ -6811,6 +6844,24 @@ async function runReport() {
        <td class="num">${(row.count > 0 ? row.total / row.count : 0).toFixed(2)}</td>
        <td class="num">${(totalSales > 0 ? (row.total / totalSales * 100) : 0).toFixed(1)}%</td>`);
     lastCashierReportRows = cashierRows;
+
+    // المبيعات حسب طريقة الدفع
+    const paymentMethodGrouped = {};
+    (sales || []).forEach(s => {
+      const key = s.payment_method || 'cash';
+      if (!paymentMethodGrouped[key]) {
+        paymentMethodGrouped[key] = { name: paymentMethodLabels[key] || key, count: 0, total: 0 };
+      }
+      paymentMethodGrouped[key].count += 1;
+      paymentMethodGrouped[key].total += Number(s.total);
+    });
+    const paymentMethodRows = Object.values(paymentMethodGrouped).sort((a, b) => b.total - a.total);
+    renderBreakdownTable('paymentMethodReportTableBody', paymentMethodRows, 4, row =>
+      `<td>${escapeHtml(row.name)}</td>
+       <td class="num">${row.count}</td>
+       <td class="num">${row.total.toFixed(2)}</td>
+       <td class="num">${(totalSales > 0 ? (row.total / totalSales * 100) : 0).toFixed(1)}%</td>`);
+    lastPaymentMethodReportRows = paymentMethodRows;
 
     // المبيعات حسب الفرع (تظهر فقط لو أكتر من فرع)
     const showBranchBreakdown = boBranchesList.length > 1;
@@ -7006,6 +7057,17 @@ function exportCashierReportToExcel() {
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'المبيعات حسب الكاشير');
   const dateStr = new Date().toISOString().split('T')[0];
   XLSX.writeFile(wb, `تقرير-المبيعات-حسب-الكاشير-${dateStr}.xlsx`);
+}
+
+function exportPaymentMethodReportToExcel() {
+  if (lastPaymentMethodReportRows.length === 0) { showToast('لا توجد بيانات لتصديرها', true); return; }
+  const rows = lastPaymentMethodReportRows.map(r => ({
+    'طريقة الدفع': r.name, 'عدد الفواتير': r.count, 'الإجمالي': r.total,
+  }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'المبيعات حسب طريقة الدفع');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `تقرير-المبيعات-حسب-طريقة-الدفع-${dateStr}.xlsx`);
 }
 
 function exportBranchReportToExcel() {
