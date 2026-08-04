@@ -510,18 +510,50 @@ a { color: inherit; }
     <div class="bo-main">
       <div class="bo-sidebar">
         <button class="bo-nav-item active" data-section="dashboard">الرئيسية</button>
-        <button class="bo-nav-item" data-section="products">الأصناف</button>
-        <button class="bo-nav-item" data-section="categories">مجموعات الاصناف</button>
-        <button class="bo-nav-item" data-section="unit-types">نوع الوحدة</button>
-        <button class="bo-nav-item" data-section="tax-rates">الضريبة</button>
-        <button class="bo-nav-item" data-section="quick-discounts">الخصومات</button>
-        <button class="bo-nav-item" data-section="customers">العملاء</button>
-        <button class="bo-nav-item" data-section="customer-types">أنواع العملاء</button>
-        <button class="bo-nav-item" data-section="suppliers">الموردون</button>
-        <button class="bo-nav-item" data-section="payments">سجل المدفوعات</button>
-        <button class="bo-nav-item" data-section="purchases">فواتير الشراء</button>
-        <button class="bo-nav-item" data-section="purchase-returns">مرتجعات الشراء</button>
-        <button class="bo-nav-item" data-section="sale-returns">مرتجعات البيع</button>
+
+        <!-- 1. الأصناف والمخزون -->
+        <div class="bo-nav-group" id="stockNavGroup">
+          <button class="bo-nav-item bo-nav-parent" id="stockNavToggle" type="button">
+            <span>الأصناف والمخزون</span>
+            <span class="bo-nav-chevron">‹</span>
+          </button>
+          <div class="bo-nav-sub" id="stockNavSub">
+            <button class="bo-nav-sub-item" data-section="products">الأصناف</button>
+            <button class="bo-nav-sub-item" data-section="categories">مجموعات الاصناف</button>
+            <button class="bo-nav-sub-item" data-section="unit-types">نوع الوحدة</button>
+            <button class="bo-nav-sub-item" data-section="tax-rates">الضريبة</button>
+            <button class="bo-nav-sub-item" data-section="quick-discounts">الخصومات</button>
+            <button class="bo-nav-sub-item" data-section="stock">المخازن ونقل البضاعة</button>
+          </div>
+        </div>
+
+        <!-- 2. المبيعات -->
+        <div class="bo-nav-group" id="salesNavGroup">
+          <button class="bo-nav-item bo-nav-parent" id="salesNavToggle" type="button">
+            <span>المبيعات</span>
+            <span class="bo-nav-chevron">‹</span>
+          </button>
+          <div class="bo-nav-sub" id="salesNavSub">
+            <button class="bo-nav-sub-item" data-section="customers">العملاء</button>
+            <button class="bo-nav-sub-item" data-section="customer-types">أنواع العملاء</button>
+            <button class="bo-nav-sub-item" data-section="sale-returns">مرتجعات البيع</button>
+          </div>
+        </div>
+
+        <!-- 3. المشتريات -->
+        <div class="bo-nav-group" id="purchasesNavGroup">
+          <button class="bo-nav-item bo-nav-parent" id="purchasesNavToggle" type="button">
+            <span>المشتريات</span>
+            <span class="bo-nav-chevron">‹</span>
+          </button>
+          <div class="bo-nav-sub" id="purchasesNavSub">
+            <button class="bo-nav-sub-item" data-section="suppliers">الموردون</button>
+            <button class="bo-nav-sub-item" data-section="purchases">فواتير الشراء</button>
+            <button class="bo-nav-sub-item" data-section="purchase-returns">مرتجعات الشراء</button>
+          </div>
+        </div>
+
+        <!-- 4. التقارير -->
         <div class="bo-nav-group" id="reportsNavGroup">
           <button class="bo-nav-item bo-nav-parent" id="reportsNavToggle" type="button">
             <span>التقارير</span>
@@ -535,15 +567,45 @@ a { color: inherit; }
             <button class="bo-nav-sub-item" data-section="reports-other">تقارير اخرى</button>
           </div>
         </div>
-        <button class="bo-nav-item" data-section="expense-items">بنود المصروفات</button>
-        <button class="bo-nav-item" data-section="expenses">المصروفات</button>
-        <button class="bo-nav-item" data-section="salaries">الرواتب</button>
-        <button class="bo-nav-item" data-section="employees">بيانات الموظفين</button>
-        <button class="bo-nav-item" data-section="users">إدارة المستخدمين</button>
-        <button class="bo-nav-item" data-section="branches">الفروع</button>
-        <button class="bo-nav-item" data-section="stock">المخازن ونقل البضاعة</button>
-        <button class="bo-nav-item" data-section="backup">نسخة احتياطية</button>
-        <button class="bo-nav-item" data-section="reset-data">تهيئة البيانات</button>
+
+        <!-- 5. الحسابات المالية -->
+        <div class="bo-nav-group" id="financeNavGroup">
+          <button class="bo-nav-item bo-nav-parent" id="financeNavToggle" type="button">
+            <span>الحسابات المالية</span>
+            <span class="bo-nav-chevron">‹</span>
+          </button>
+          <div class="bo-nav-sub" id="financeNavSub">
+            <button class="bo-nav-sub-item" data-section="payments">سجل المدفوعات</button>
+            <button class="bo-nav-sub-item" data-section="expense-items">بنود المصروفات</button>
+            <button class="bo-nav-sub-item" data-section="expenses">المصروفات</button>
+          </div>
+        </div>
+
+        <!-- 6. الموارد البشرية -->
+        <div class="bo-nav-group" id="hrNavGroup">
+          <button class="bo-nav-item bo-nav-parent" id="hrNavToggle" type="button">
+            <span>الموارد البشرية</span>
+            <span class="bo-nav-chevron">‹</span>
+          </button>
+          <div class="bo-nav-sub" id="hrNavSub">
+            <button class="bo-nav-sub-item" data-section="employees">بيانات الموظفين</button>
+            <button class="bo-nav-sub-item" data-section="salaries">الرواتب</button>
+          </div>
+        </div>
+
+        <!-- 7. الإدارة والنظام -->
+        <div class="bo-nav-group" id="adminNavGroup">
+          <button class="bo-nav-item bo-nav-parent" id="adminNavToggle" type="button">
+            <span>الإدارة والنظام</span>
+            <span class="bo-nav-chevron">‹</span>
+          </button>
+          <div class="bo-nav-sub" id="adminNavSub">
+            <button class="bo-nav-sub-item" data-section="users">إدارة المستخدمين</button>
+            <button class="bo-nav-sub-item" data-section="branches">الفروع</button>
+            <button class="bo-nav-sub-item" data-section="backup">نسخة احتياطية</button>
+            <button class="bo-nav-sub-item" data-section="reset-data">تهيئة البيانات</button>
+          </div>
+        </div>
       </div>
 
       <div class="bo-content">
@@ -3376,17 +3438,27 @@ const boAllSections = ['dashboard','products','categories','unit-types','tax-rat
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
   'soon','users','branches','stock','backup','reset-data','employees','expense-items','expenses','salaries'];
 
+const boNavGroups = [
+  { toggle: 'stockNavToggle', group: 'stockNavGroup', sections: ['products','categories','unit-types','tax-rates','quick-discounts','stock'] },
+  { toggle: 'salesNavToggle', group: 'salesNavGroup', sections: ['customers','customer-types','sale-returns'] },
+  { toggle: 'purchasesNavToggle', group: 'purchasesNavGroup', sections: ['suppliers','purchases','purchase-returns'] },
+  { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
+  { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['payments','expense-items','expenses'] },
+  { toggle: 'hrNavToggle', group: 'hrNavGroup', sections: ['employees','salaries'] },
+  { toggle: 'adminNavToggle', group: 'adminNavGroup', sections: ['users','branches','backup','reset-data'] }
+];
+
 function activateBoSection(section, btn) {
   document.querySelectorAll('.bo-nav-item:not(.bo-nav-parent)').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.bo-nav-sub-item').forEach(b => b.classList.remove('active'));
-  document.getElementById('reportsNavToggle').classList.remove('active');
+  document.querySelectorAll('.bo-nav-parent').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.bo-nav-group').forEach(g => g.classList.remove('open'));
   if (btn) btn.classList.add('active');
 
-  if (section && section.indexOf('reports-') === 0) {
-    document.getElementById('reportsNavToggle').classList.add('active');
-    document.getElementById('reportsNavGroup').classList.add('open');
-  } else {
-    document.getElementById('reportsNavGroup').classList.remove('open');
+  const activeGroup = boNavGroups.find(g => g.sections.includes(section));
+  if (activeGroup) {
+    document.getElementById(activeGroup.toggle).classList.add('active');
+    document.getElementById(activeGroup.group).classList.add('open');
   }
 
   boAllSections.forEach(s => {
@@ -3558,17 +3630,19 @@ function bindBackofficeEvents() {
     btn.addEventListener('click', () => activateBoSection(btn.dataset.section, btn));
   });
 
-  document.getElementById('reportsNavToggle').addEventListener('click', () => {
-    const group = document.getElementById('reportsNavGroup');
-    const willOpen = !group.classList.contains('open');
-    if (willOpen) {
-      const activeSub = document.querySelector('.bo-nav-sub-item.active');
-      const targetSection = activeSub ? activeSub.dataset.section : 'reports-sales';
-      const targetBtn = document.querySelector(`.bo-nav-sub-item[data-section="${targetSection}"]`);
-      activateBoSection(targetSection, targetBtn);
-    } else {
-      group.classList.remove('open');
-    }
+  boNavGroups.forEach(navGroup => {
+    document.getElementById(navGroup.toggle).addEventListener('click', () => {
+      const group = document.getElementById(navGroup.group);
+      const willOpen = !group.classList.contains('open');
+      if (willOpen) {
+        const activeSub = group.querySelector('.bo-nav-sub-item.active');
+        const targetSection = activeSub ? activeSub.dataset.section : navGroup.sections[0];
+        const targetBtn = document.querySelector(`.bo-nav-sub-item[data-section="${targetSection}"]`);
+        activateBoSection(targetSection, targetBtn);
+      } else {
+        group.classList.remove('open');
+      }
+    });
   });
 
   // ---- تنقل كروت تقارير المبيعات ----
