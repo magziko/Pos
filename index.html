@@ -471,6 +471,7 @@ a { color: inherit; }
         <button class="bo-nav-item" data-section="users">إدارة المستخدمين</button>
         <button class="bo-nav-item" data-section="branches">الفروع</button>
         <button class="bo-nav-item" data-section="stock">المخازن ونقل البضاعة</button>
+        <button class="bo-nav-item" data-section="backup">نسخة احتياطية</button>
         <button class="bo-nav-item" data-section="reset-data">تهيئة البيانات</button>
       </div>
 
@@ -1220,6 +1221,21 @@ a { color: inherit; }
               </table>
             </div>
           </div>
+        </div>
+
+        <!-- قسم النسخة الاحتياطية -->
+        <div id="bo-section-backup" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">نسخة احتياطية</div>
+          </div>
+          <p style="color:var(--ink-soft); font-size:13.5px; line-height:1.8; max-width:640px; margin-bottom:20px;">
+            اعمل نسخة احتياطية من كل بيانات النظام (المنتجات، المبيعات، المشتريات، العملاء، الموردون، المخزون، المصروفات، الرواتب... إلخ) وحمّلها على جهازك. يُنصح بعمل نسخة بشكل دوري (أسبوعيًا مثلًا) والاحتفاظ بها في مكان آمن خارج الجهاز.
+          </p>
+          <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:8px;">
+            <button class="bo-add-btn" id="backupExcelBtn">تنزيل نسخة Excel (للمراجعة والقراءة)</button>
+            <button class="bo-add-btn" id="backupJsonBtn">تنزيل نسخة JSON (نسخة كاملة قابلة للاسترجاع)</button>
+          </div>
+          <div id="backupProgress" style="font-size:12.5px; color:var(--ink-soft); white-space:pre-line; line-height:2; margin-top:14px;"></div>
         </div>
 
         <!-- قسم تهيئة البيانات -->
@@ -2976,6 +2992,7 @@ function bindBackofficeEvents() {
       document.getElementById('bo-section-branches').style.display = section === 'branches' ? 'block' : 'none';
       document.getElementById('bo-section-stock').style.display = section === 'stock' ? 'block' : 'none';
       if (section === 'stock' && !stockSectionLoadedOnce) { initStockSection(); stockSectionLoadedOnce = true; }
+      document.getElementById('bo-section-backup').style.display = section === 'backup' ? 'block' : 'none';
       document.getElementById('bo-section-reset-data').style.display = section === 'reset-data' ? 'block' : 'none';
       if (section === 'reset-data' && !resetDataLoadedOnce) { initResetDataSection(); resetDataLoadedOnce = true; }
       document.getElementById('bo-section-employees').style.display = section === 'employees' ? 'block' : 'none';
@@ -3245,6 +3262,8 @@ function bindBackofficeEvents() {
   document.getElementById('reportBranchFilter').addEventListener('change', () => runReport());
   document.getElementById('refreshDebtsBtn').addEventListener('click', () => refreshDebtsReport());
   document.getElementById('exportDebtsBtn').addEventListener('click', () => exportDebtsToExcel());
+  document.getElementById('backupExcelBtn').addEventListener('click', () => runBackup('excel'));
+  document.getElementById('backupJsonBtn').addEventListener('click', () => runBackup('json'));
   document.querySelectorAll('.quick-range-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.quick-range-btn').forEach(b => b.classList.remove('active'));
@@ -6801,6 +6820,93 @@ function exportDebtsToExcel() {
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(suppliersRows), 'مستحقات الموردين');
   const dateStr = new Date().toISOString().split('T')[0];
   XLSX.writeFile(wb, `تقرير-الديون-${dateStr}.xlsx`);
+}
+
+// ============================================================
+// نسخة احتياطية (Backup)
+// ============================================================
+const BACKUP_TABLES = [
+  'branches', 'roles', 'users_profile', 'employees',
+  'categories', 'unit_types', 'tax_rates', 'customer_types', 'quick_discounts',
+  'products', 'product_units', 'product_barcodes',
+  'customers', 'suppliers',
+  'warehouses', 'stock_balances', 'stock_transactions', 'stock_transfers', 'stock_transfer_items',
+  'stock_adjustments', 'stock_adjustment_items',
+  'sales', 'sale_items', 'sale_returns', 'sale_return_items',
+  'purchases', 'purchase_items', 'purchase_returns', 'purchase_return_items',
+  'payments', 'expense_items', 'expenses', 'salary_payments', 'settings',
+];
+
+async function fetchAllRows(table) {
+  const pageSize = 1000;
+  let allRows = [];
+  let from = 0;
+  while (true) {
+    const { data, error } = await supabaseClient.from(table).select('*').range(from, from + pageSize - 1);
+    if (error) throw error;
+    allRows = allRows.concat(data || []);
+    if (!data || data.length < pageSize) break;
+    from += pageSize;
+  }
+  return allRows;
+}
+
+function downloadJsonFile(obj, filename) {
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function runBackup(mode) {
+  const excelBtn = document.getElementById('backupExcelBtn');
+  const jsonBtn = document.getElementById('backupJsonBtn');
+  const progressEl = document.getElementById('backupProgress');
+  excelBtn.disabled = true;
+  jsonBtn.disabled = true;
+  progressEl.textContent = '';
+
+  try {
+    const dataByTable = {};
+    for (const table of BACKUP_TABLES) {
+      progressEl.textContent += `جاري تحميل: ${table} ...\n`;
+      progressEl.scrollTop = progressEl.scrollHeight;
+      dataByTable[table] = await fetchAllRows(table);
+    }
+
+    const dateStr = new Date().toISOString().split('T')[0];
+
+    if (mode === 'excel') {
+      const wb = XLSX.utils.book_new();
+      BACKUP_TABLES.forEach(table => {
+        const rows = dataByTable[table];
+        const sheet = rows.length > 0 ? XLSX.utils.json_to_sheet(rows) : XLSX.utils.aoa_to_sheet([['لا توجد بيانات']]);
+        XLSX.utils.book_append_sheet(wb, sheet, table.slice(0, 31));
+      });
+      XLSX.writeFile(wb, `نسخة-احتياطية-${dateStr}.xlsx`);
+    } else {
+      const totalRows = Object.values(dataByTable).reduce((sum, rows) => sum + rows.length, 0);
+      downloadJsonFile(
+        { generated_at: new Date().toISOString(), total_rows: totalRows, tables: dataByTable },
+        `نسخة-احتياطية-${dateStr}.json`
+      );
+    }
+
+    progressEl.textContent += `\nتم إنشاء وتنزيل النسخة الاحتياطية بنجاح ✅`;
+    showToast('تم إنشاء النسخة الاحتياطية بنجاح');
+  } catch (err) {
+    console.error(err);
+    progressEl.textContent += `\nحدث خطأ أثناء إنشاء النسخة الاحتياطية ❌`;
+    showToast('تعذر إنشاء النسخة الاحتياطية', true);
+  } finally {
+    excelBtn.disabled = false;
+    jsonBtn.disabled = false;
+  }
 }
 
 // ============================================================
