@@ -534,6 +534,7 @@ a { color: inherit; }
             <span class="bo-nav-chevron">‹</span>
           </button>
           <div class="bo-nav-sub" id="salesNavSub">
+            <button class="bo-nav-sub-item" data-section="sales-list">فواتير البيع</button>
             <button class="bo-nav-sub-item" data-section="customers">العملاء</button>
             <button class="bo-nav-sub-item" data-section="customer-types">أنواع العملاء</button>
             <button class="bo-nav-sub-item" data-section="sale-returns">مرتجعات البيع</button>
@@ -909,6 +910,35 @@ a { color: inherit; }
               </thead>
               <tbody id="paymentsTableBody">
                 <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم فواتير البيع -->
+        <div id="bo-section-sales-list" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">فواتير البيع</div>
+          </div>
+          <div class="bo-table-wrap" style="overflow-x:auto;">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>رقم الفاتورة</th>
+                  <th>التاريخ</th>
+                  <th>العميل</th>
+                  <th>إجمالي المبيعات</th>
+                  <th>الخصم</th>
+                  <th>الضريبة</th>
+                  <th>صافي المبيعات</th>
+                  <th>الكاشير</th>
+                  <th>طريقة الدفع</th>
+                  <th>الفرع</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="salesListTableBody">
+                <tr><td colspan="11" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
@@ -3434,13 +3464,13 @@ async function enterBackoffice() {
 }
 
 const boAllSections = ['dashboard','products','categories','unit-types','tax-rates','quick-discounts','customer-types',
-  'customers','suppliers','payments','purchases','purchase-returns','sale-returns',
+  'sales-list','customers','suppliers','payments','purchases','purchase-returns','sale-returns',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
   'soon','users','branches','stock','backup','reset-data','employees','expense-items','expenses','salaries'];
 
 const boNavGroups = [
   { toggle: 'stockNavToggle', group: 'stockNavGroup', sections: ['products','categories','unit-types','tax-rates','quick-discounts','stock'] },
-  { toggle: 'salesNavToggle', group: 'salesNavGroup', sections: ['customers','customer-types','sale-returns'] },
+  { toggle: 'salesNavToggle', group: 'salesNavGroup', sections: ['sales-list','customers','customer-types','sale-returns'] },
   { toggle: 'purchasesNavToggle', group: 'purchasesNavGroup', sections: ['suppliers','purchases','purchase-returns'] },
   { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
   { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['payments','expense-items','expenses'] },
@@ -3468,6 +3498,7 @@ function activateBoSection(section, btn) {
 
   if (section === 'dashboard') { loadDashboard(); }
   if (section === 'payments' && !boPaymentsLoadedOnce) { loadBoPayments().then(renderPaymentsTable); boPaymentsLoadedOnce = true; }
+  if (section === 'sales-list' && !boSalesListLoadedOnce) { loadBoSalesList().then(renderSalesListTable); boSalesListLoadedOnce = true; }
   if (section === 'purchase-returns') { loadBoPurchaseReturns().then(renderPurchaseReturnsTable); }
   if (section === 'sale-returns') { loadBoSaleReturns().then(renderSaleReturnsTable); }
   if (section === 'stock' && !stockSectionLoadedOnce) { initStockSection(); stockSectionLoadedOnce = true; }
@@ -6740,6 +6771,72 @@ async function deletePayment(payment) {
   }
 }
 
+// ---- Sales List (فواتير البيع) ----
+let boSalesList = [];
+
+async function loadBoSalesList() {
+  const { data, error } = await supabaseClient
+    .from('sales')
+    .select('id, invoice_number, created_at, subtotal, discount, tax, total, payment_method, customers(name), users_profile(full_name), branches(name)')
+    .order('created_at', { ascending: false })
+    .limit(200);
+  if (error) { console.error(error); showToast('تعذر تحميل فواتير البيع', true); return; }
+  boSalesList = data || [];
+}
+
+function renderSalesListTable() {
+  const tbody = document.getElementById('salesListTableBody');
+  if (boSalesList.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="11" class="bo-empty">لا توجد فواتير بيع مسجّلة حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boSalesList.forEach(s => {
+    const tr = document.createElement('tr');
+    const date = new Date(s.created_at).toLocaleString('ar-EG');
+    tr.innerHTML = `
+      <td class="num">#${s.invoice_number}</td>
+      <td class="num">${date}</td>
+      <td>${escapeHtml(s.customers?.name || 'عميل نقدي')}</td>
+      <td class="num">${Number(s.subtotal).toFixed(2)}</td>
+      <td class="num">${Number(s.discount).toFixed(2)}</td>
+      <td class="num">${Number(s.tax).toFixed(2)}</td>
+      <td class="num">${Number(s.total).toFixed(2)}</td>
+      <td>${escapeHtml(s.users_profile?.full_name || '—')}</td>
+      <td>${paymentMethodLabels[s.payment_method] || escapeHtml(s.payment_method || '—')}</td>
+      <td>${escapeHtml(s.branches?.name || '—')}</td>
+      <td><button class="bo-icon-btn" data-action="view">عرض</button></td>`;
+    tr.querySelector('[data-action="view"]').addEventListener('click', () => openSaleDetailModal(s));
+    tbody.appendChild(tr);
+  });
+}
+
+async function openSaleDetailModal(sale) {
+  document.getElementById('invoiceDetailModalTitle').textContent = `فاتورة بيع رقم #${sale.invoice_number}`;
+  const body = document.getElementById('invoiceDetailModalBody');
+  body.innerHTML = `<div class="bo-empty">جاري تحميل التفاصيل...</div>`;
+  document.getElementById('invoiceDetailModalOverlay').classList.add('show');
+
+  const { data: items, error } = await supabaseClient
+    .from('sale_items')
+    .select('quantity, unit_price, total, products(name)')
+    .eq('sale_id', sale.id);
+  if (error) { console.error(error); body.innerHTML = `<div class="bo-empty">تعذر تحميل تفاصيل الفاتورة</div>`; return; }
+
+  const date = new Date(sale.created_at).toLocaleString('ar-EG');
+  body.innerHTML = `
+    <div class="totals-row"><span>العميل</span><span>${escapeHtml(sale.customers?.name || 'عميل نقدي')}</span></div>
+    <div class="totals-row"><span>التاريخ</span><span class="num">${date}</span></div>
+    <div class="totals-row"><span>الكاشير</span><span>${escapeHtml(sale.users_profile?.full_name || '—')}</span></div>
+    <div class="totals-row"><span>الفرع</span><span>${escapeHtml(sale.branches?.name || '—')}</span></div>
+    <div class="totals-row"><span>طريقة الدفع</span><span>${paymentMethodLabels[sale.payment_method] || escapeHtml(sale.payment_method || '—')}</span></div>
+    ${renderInvoiceDetailItemsTable(items, 'سعر الوحدة')}
+    <div class="totals-row"><span>إجمالي المبيعات</span><span class="num">${Number(sale.subtotal).toFixed(2)}</span></div>
+    <div class="totals-row"><span>الخصم</span><span class="num">${Number(sale.discount).toFixed(2)}</span></div>
+    <div class="totals-row"><span>الضريبة</span><span class="num">${Number(sale.tax).toFixed(2)}</span></div>
+    <div class="totals-row grand"><span>صافي المبيعات</span><span class="num">${Number(sale.total).toFixed(2)}</span></div>`;
+}
+
 // ---- Purchases ----
 let boPurchases = [];
 let purchaseLines = []; // [{ productId, quantity, unitCost }]
@@ -7271,6 +7368,7 @@ async function openSaleReturnDetailModal(ret) {
 }
 
 // ---- Reports ----
+let boSalesListLoadedOnce = false;
 let reportsLoadedOnce = false;
 let accountingReportsLoadedOnce = false;
 let expensesLoadedOnce = false;
