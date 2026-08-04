@@ -273,6 +273,14 @@ a { color: inherit; }
 .debts-col-title { font-size: 13px; font-weight: 700; margin-bottom: 10px; color: var(--ink-soft); }
 .debts-col-title.owed-to-us { color: var(--teal-700); }
 .debts-col-title.we-owe { color: var(--danger); }
+.daily-trend-chart-wrap { overflow-x: auto; margin-bottom: 18px; }
+.daily-trend-chart { display: inline-block; min-width: 100%; }
+.daily-trend-chart svg { display: block; }
+.daily-trend-bar { fill: var(--teal-500); }
+.daily-trend-bar:hover { fill: var(--teal-700); }
+.daily-trend-axis-line { stroke: var(--border); stroke-width: 1; }
+.daily-trend-label { fill: var(--ink-soft); font-family: var(--font-num); font-size: 10px; }
+.daily-trend-empty { padding: 24px; text-align: center; color: var(--ink-soft); font-size: 13px; }
 
 /* -------- Purchases -------- */
 .modal-box.wide { max-width: 680px; }
@@ -848,6 +856,24 @@ a { color: inherit; }
               <div class="report-card-label">إجمالي الرواتب</div>
               <div class="report-card-value num" id="reportSalaries">0.00</div>
             </div>
+          </div>
+
+          <div class="report-subtitle-row">
+            <div class="report-subtitle">اتجاه المبيعات اليومي</div>
+            <div class="report-subtitle-actions">
+              <button class="bo-icon-btn" id="exportDailyTrendReportBtn">تصدير إكسل</button>
+            </div>
+          </div>
+          <div class="daily-trend-chart-wrap">
+            <div class="daily-trend-chart" id="dailyTrendChart"></div>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>اليوم</th><th>عدد الفواتير</th><th>الإجمالي</th></tr></thead>
+              <tbody id="dailyTrendTableBody">
+                <tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
           </div>
 
           <div class="report-subtitle">الأصناف الأكثر مبيعًا</div>
@@ -3405,6 +3431,7 @@ function bindBackofficeEvents() {
   document.getElementById('exportDebtsBtn').addEventListener('click', () => exportDebtsToExcel());
   document.getElementById('exportCashierReportBtn').addEventListener('click', () => exportCashierReportToExcel());
   document.getElementById('exportPaymentMethodReportBtn').addEventListener('click', () => exportPaymentMethodReportToExcel());
+  document.getElementById('exportDailyTrendReportBtn').addEventListener('click', () => exportDailyTrendReportToExcel());
   document.getElementById('exportBranchReportBtn').addEventListener('click', () => exportBranchReportToExcel());
   document.getElementById('exportCategoryReportBtn').addEventListener('click', () => exportCategoryReportToExcel());
   document.getElementById('backupExcelBtn').addEventListener('click', () => runBackup('excel'));
@@ -6740,6 +6767,7 @@ let expensesLoadedOnce = false;
 let salariesLoadedOnce = false;
 let lastCashierReportRows = [];
 let lastPaymentMethodReportRows = [];
+let lastDailyTrendReportRows = [];
 let lastBranchReportRows = [];
 let lastCategoryReportRows = [];
 
@@ -6755,6 +6783,64 @@ function renderBreakdownTable(tbodyId, rows, colspan, rowHtmlFn) {
     tr.innerHTML = rowHtmlFn(row);
     tbody.appendChild(tr);
   });
+}
+
+function buildDateRangeDays(fromDate, toDate) {
+  const days = [];
+  const cur = new Date(`${fromDate}T00:00:00Z`);
+  const end = new Date(`${toDate}T00:00:00Z`);
+  if (isNaN(cur) || isNaN(end) || cur > end) return days;
+  // حد أقصى للأمان (سنة كاملة) عشان مانعملش لووب لا نهائي لو التواريخ غلط
+  let guard = 0;
+  while (cur <= end && guard < 366) {
+    days.push(cur.toISOString().split('T')[0]);
+    cur.setUTCDate(cur.getUTCDate() + 1);
+    guard += 1;
+  }
+  return days;
+}
+
+function formatDayLabel(isoDate) {
+  const [y, m, d] = isoDate.split('-');
+  return `${d}/${m}`;
+}
+
+function renderDailyTrendChart(rows) {
+  const container = document.getElementById('dailyTrendChart');
+  if (!rows || rows.length === 0) {
+    container.innerHTML = `<div class="daily-trend-empty">لا توجد بيانات لعرضها</div>`;
+    return;
+  }
+
+  const barWidth = 22;
+  const gap = 12;
+  const chartHeight = 150;
+  const topPadding = 12;
+  const bottomPadding = 34;
+  const leftPadding = 8;
+  const width = leftPadding + rows.length * (barWidth + gap);
+  const svgHeight = topPadding + chartHeight + bottomPadding;
+  const maxTotal = Math.max(...rows.map(r => r.total), 0);
+  const labelStep = Math.max(1, Math.ceil(rows.length / 15));
+
+  const bars = rows.map((row, i) => {
+    const x = leftPadding + i * (barWidth + gap);
+    const barHeight = maxTotal > 0 ? (row.total / maxTotal) * chartHeight : 0;
+    const y = topPadding + chartHeight - barHeight;
+    const showLabel = i % labelStep === 0 || i === rows.length - 1;
+    const labelX = x + barWidth / 2;
+    return `
+      <rect class="daily-trend-bar" x="${x}" y="${y}" width="${barWidth}" height="${Math.max(barHeight, 1)}" rx="3">
+        <title>${row.date} — ${row.count} فاتورة — ${row.total.toFixed(2)}</title>
+      </rect>
+      ${showLabel ? `<text class="daily-trend-label" x="${labelX}" y="${topPadding + chartHeight + 16}" text-anchor="middle">${formatDayLabel(row.date)}</text>` : ''}`;
+  }).join('');
+
+  container.innerHTML = `
+    <svg viewBox="0 0 ${width} ${svgHeight}" width="${width}" height="${svgHeight}">
+      <line class="daily-trend-axis-line" x1="0" y1="${topPadding + chartHeight}" x2="${width}" y2="${topPadding + chartHeight}"></line>
+      ${bars}
+    </svg>`;
 }
 
 function toDateInputValue(d) {
@@ -6810,7 +6896,7 @@ async function runReport() {
     // ملخص الفواتير
     let salesQuery = supabaseClient
       .from('sales')
-      .select('id, total, user_id, branch_id, payment_method, users_profile(full_name), branches(name)')
+      .select('id, total, user_id, branch_id, payment_method, created_at, users_profile(full_name), branches(name)')
       .eq('status', 'completed')
       .gte('created_at', fromISO)
       .lte('created_at', toISO);
@@ -6862,6 +6948,23 @@ async function runReport() {
        <td class="num">${row.total.toFixed(2)}</td>
        <td class="num">${(totalSales > 0 ? (row.total / totalSales * 100) : 0).toFixed(1)}%</td>`);
     lastPaymentMethodReportRows = paymentMethodRows;
+
+    // اتجاه المبيعات اليومي
+    const dailyMap = {};
+    buildDateRangeDays(fromDate, toDate).forEach(d => { dailyMap[d] = { count: 0, total: 0 }; });
+    (sales || []).forEach(s => {
+      const day = new Date(s.created_at).toISOString().split('T')[0];
+      if (!dailyMap[day]) dailyMap[day] = { count: 0, total: 0 };
+      dailyMap[day].count += 1;
+      dailyMap[day].total += Number(s.total);
+    });
+    const dailyRows = Object.keys(dailyMap).sort().map(d => ({ date: d, count: dailyMap[d].count, total: dailyMap[d].total }));
+    renderDailyTrendChart(dailyRows);
+    renderBreakdownTable('dailyTrendTableBody', dailyRows, 3, row =>
+      `<td>${formatDayLabel(row.date)}</td>
+       <td class="num">${row.count}</td>
+       <td class="num">${row.total.toFixed(2)}</td>`);
+    lastDailyTrendReportRows = dailyRows;
 
     // المبيعات حسب الفرع (تظهر فقط لو أكتر من فرع)
     const showBranchBreakdown = boBranchesList.length > 1;
@@ -7057,6 +7160,17 @@ function exportCashierReportToExcel() {
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'المبيعات حسب الكاشير');
   const dateStr = new Date().toISOString().split('T')[0];
   XLSX.writeFile(wb, `تقرير-المبيعات-حسب-الكاشير-${dateStr}.xlsx`);
+}
+
+function exportDailyTrendReportToExcel() {
+  if (lastDailyTrendReportRows.length === 0) { showToast('لا توجد بيانات لتصديرها', true); return; }
+  const rows = lastDailyTrendReportRows.map(r => ({
+    'اليوم': r.date, 'عدد الفواتير': r.count, 'الإجمالي': r.total,
+  }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'اتجاه المبيعات اليومي');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `تقرير-اتجاه-المبيعات-اليومي-${dateStr}.xlsx`);
 }
 
 function exportPaymentMethodReportToExcel() {
