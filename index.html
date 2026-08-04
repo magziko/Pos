@@ -2662,6 +2662,61 @@ async function enterPos() {
   renderCategories();
   renderProducts();
   renderQuickDiscountButtons();
+  subscribePosRealtime();
+}
+
+// ------------------------------------------------------------
+// المزامنة اللحظية (Realtime): أي تعديل في لوحة التحكم (أسعار،
+// كميات، أصناف، فئات...) يوصل لشاشة المبيعات تلقائيًا من غير ريفرش.
+// ملاحظة مهمة: لازم تفعّل Realtime على الجداول دي من Supabase
+// (Database > Replication > supabase_realtime) عشان التغييرات توصل.
+// ------------------------------------------------------------
+let posRealtimeChannel = null;
+const posRealtimeDebounceTimers = {};
+
+function posRealtimeDebounced(key, fn, delay = 400) {
+  clearTimeout(posRealtimeDebounceTimers[key]);
+  posRealtimeDebounceTimers[key] = setTimeout(fn, delay);
+}
+
+function subscribePosRealtime() {
+  if (posRealtimeChannel) return; // مشترك بالفعل
+
+  posRealtimeChannel = supabaseClient
+    .channel('pos-live-sync')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
+      posRealtimeDebounced('products', async () => { await loadProducts(); renderProducts(); });
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'product_units' }, () => {
+      posRealtimeDebounced('products', async () => { await loadProducts(); renderProducts(); });
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'product_barcodes' }, () => {
+      posRealtimeDebounced('products', async () => { await loadProducts(); renderProducts(); });
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => {
+      posRealtimeDebounced('categories', async () => { await loadCategories(); renderCategories(); renderProducts(); });
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'stock_balances' }, () => {
+      posRealtimeDebounced('stock', async () => { await loadStockBalances(); renderProducts(); });
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'quick_discounts' }, () => {
+      posRealtimeDebounced('quickDiscounts', async () => { await loadQuickDiscounts(); renderQuickDiscountButtons(); });
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'settings', filter: 'key=eq.tax_inclusive' }, () => {
+      posRealtimeDebounced('taxSetting', async () => { await loadTaxInclusiveSetting(); renderCart(); });
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, () => {
+      posRealtimeDebounced('customers', async () => { await loadCustomers(); });
+    })
+    .subscribe();
+}
+
+function unsubscribePosRealtime() {
+  if (posRealtimeChannel) {
+    supabaseClient.removeChannel(posRealtimeChannel);
+    posRealtimeChannel = null;
+  }
+  Object.values(posRealtimeDebounceTimers).forEach(t => clearTimeout(t));
 }
 
 function startClock() {
@@ -3113,6 +3168,7 @@ function renderCart() {
 function updateHeldCount() { posEls.heldCount.textContent = heldOrders.length; }
 
 async function doLogout() {
+  unsubscribePosRealtime();
   await supabaseClient.auth.signOut();
   currentProfile = null;
   cart = [];
