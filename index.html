@@ -852,6 +852,51 @@ a { color: inherit; }
           </div>
 
           <div class="report-subtitle-row">
+            <div class="report-subtitle">المبيعات حسب الكاشير</div>
+            <div class="report-subtitle-actions">
+              <button class="bo-icon-btn" id="exportCashierReportBtn">تصدير إكسل</button>
+            </div>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>الكاشير</th><th>عدد الفواتير</th><th>الإجمالي</th><th>متوسط الفاتورة</th><th>النسبة من المبيعات</th></tr></thead>
+              <tbody id="cashierReportTableBody">
+                <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="report-subtitle-row" id="branchReportSection" style="display:none;">
+            <div class="report-subtitle">المبيعات حسب الفرع</div>
+            <div class="report-subtitle-actions">
+              <button class="bo-icon-btn" id="exportBranchReportBtn">تصدير إكسل</button>
+            </div>
+          </div>
+          <div class="bo-table-wrap" id="branchReportTableWrap" style="display:none;">
+            <table class="bo-table">
+              <thead><tr><th>الفرع</th><th>عدد الفواتير</th><th>الإجمالي</th><th>متوسط الفاتورة</th><th>النسبة من المبيعات</th></tr></thead>
+              <tbody id="branchReportTableBody">
+                <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="report-subtitle-row">
+            <div class="report-subtitle">المبيعات حسب الفئة</div>
+            <div class="report-subtitle-actions">
+              <button class="bo-icon-btn" id="exportCategoryReportBtn">تصدير إكسل</button>
+            </div>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>الفئة</th><th>الكمية المباعة</th><th>الإيراد</th><th>النسبة من المبيعات</th></tr></thead>
+              <tbody id="categoryReportTableBody">
+                <tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="report-subtitle-row">
             <div class="report-subtitle">تقرير الديون (أرصدة العملاء والموردين)</div>
             <div class="report-subtitle-actions">
               <button class="bo-icon-btn" id="refreshDebtsBtn">تحديث</button>
@@ -3327,6 +3372,9 @@ function bindBackofficeEvents() {
   document.getElementById('reportBranchFilter').addEventListener('change', () => runReport());
   document.getElementById('refreshDebtsBtn').addEventListener('click', () => refreshDebtsReport());
   document.getElementById('exportDebtsBtn').addEventListener('click', () => exportDebtsToExcel());
+  document.getElementById('exportCashierReportBtn').addEventListener('click', () => exportCashierReportToExcel());
+  document.getElementById('exportBranchReportBtn').addEventListener('click', () => exportBranchReportToExcel());
+  document.getElementById('exportCategoryReportBtn').addEventListener('click', () => exportCategoryReportToExcel());
   document.getElementById('backupExcelBtn').addEventListener('click', () => runBackup('excel'));
   document.getElementById('backupJsonBtn').addEventListener('click', () => runBackup('json'));
   initRestoreSection();
@@ -6658,6 +6706,23 @@ async function openSaleReturnDetailModal(ret) {
 let reportsLoadedOnce = false;
 let expensesLoadedOnce = false;
 let salariesLoadedOnce = false;
+let lastCashierReportRows = [];
+let lastBranchReportRows = [];
+let lastCategoryReportRows = [];
+
+function renderBreakdownTable(tbodyId, rows, colspan, rowHtmlFn) {
+  const tbody = document.getElementById(tbodyId);
+  if (!rows || rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="${colspan}" class="bo-empty">لا توجد بيانات في هذه الفترة</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  rows.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = rowHtmlFn(row);
+    tbody.appendChild(tr);
+  });
+}
 
 function toDateInputValue(d) {
   return d.toISOString().split('T')[0];
@@ -6712,7 +6777,7 @@ async function runReport() {
     // ملخص الفواتير
     let salesQuery = supabaseClient
       .from('sales')
-      .select('id, total')
+      .select('id, total, user_id, branch_id, users_profile(full_name), branches(name)')
       .eq('status', 'completed')
       .gte('created_at', fromISO)
       .lte('created_at', toISO);
@@ -6728,10 +6793,54 @@ async function runReport() {
     document.getElementById('reportInvoiceCount').textContent = invoiceCount;
     document.getElementById('reportAvgInvoice').textContent = avgInvoice.toFixed(2);
 
-    // الأصناف الأكثر مبيعًا + الربح التقريبي
+    // المبيعات حسب الكاشير
+    const cashierGrouped = {};
+    (sales || []).forEach(s => {
+      const key = s.user_id || 'unknown';
+      if (!cashierGrouped[key]) {
+        cashierGrouped[key] = { name: s.users_profile?.full_name || 'مستخدم محذوف', count: 0, total: 0 };
+      }
+      cashierGrouped[key].count += 1;
+      cashierGrouped[key].total += Number(s.total);
+    });
+    const cashierRows = Object.values(cashierGrouped).sort((a, b) => b.total - a.total);
+    renderBreakdownTable('cashierReportTableBody', cashierRows, 5, row =>
+      `<td>${escapeHtml(row.name)}</td>
+       <td class="num">${row.count}</td>
+       <td class="num">${row.total.toFixed(2)}</td>
+       <td class="num">${(row.count > 0 ? row.total / row.count : 0).toFixed(2)}</td>
+       <td class="num">${(totalSales > 0 ? (row.total / totalSales * 100) : 0).toFixed(1)}%</td>`);
+    lastCashierReportRows = cashierRows;
+
+    // المبيعات حسب الفرع (تظهر فقط لو أكتر من فرع)
+    const showBranchBreakdown = boBranchesList.length > 1;
+    document.getElementById('branchReportSection').style.display = showBranchBreakdown ? 'flex' : 'none';
+    document.getElementById('branchReportTableWrap').style.display = showBranchBreakdown ? 'block' : 'none';
+    let branchRows = [];
+    if (showBranchBreakdown) {
+      const branchGrouped = {};
+      (sales || []).forEach(s => {
+        const key = s.branch_id || 'unknown';
+        if (!branchGrouped[key]) {
+          branchGrouped[key] = { name: s.branches?.name || 'فرع محذوف', count: 0, total: 0 };
+        }
+        branchGrouped[key].count += 1;
+        branchGrouped[key].total += Number(s.total);
+      });
+      branchRows = Object.values(branchGrouped).sort((a, b) => b.total - a.total);
+      renderBreakdownTable('branchReportTableBody', branchRows, 5, row =>
+        `<td>${escapeHtml(row.name)}</td>
+         <td class="num">${row.count}</td>
+         <td class="num">${row.total.toFixed(2)}</td>
+         <td class="num">${(row.count > 0 ? row.total / row.count : 0).toFixed(2)}</td>
+         <td class="num">${(totalSales > 0 ? (row.total / totalSales * 100) : 0).toFixed(1)}%</td>`);
+    }
+    lastBranchReportRows = branchRows;
+
+    // الأصناف الأكثر مبيعًا + الربح التقريبي + المبيعات حسب الفئة
     let itemsQuery = supabaseClient
       .from('sale_items')
-      .select('quantity, total, product_id, products(name, cost_price), sales!inner(created_at, status, branch_id)')
+      .select('quantity, total, product_id, products(name, cost_price, categories(name)), sales!inner(created_at, status, branch_id)')
       .eq('sales.status', 'completed')
       .gte('sales.created_at', fromISO)
       .lte('sales.created_at', toISO);
@@ -6740,6 +6849,7 @@ async function runReport() {
     if (itemsError) throw itemsError;
 
     const grouped = {};
+    const categoryGrouped = {};
     let totalCost = 0;
     (items || []).forEach(it => {
       const key = it.product_id;
@@ -6749,7 +6859,23 @@ async function runReport() {
       grouped[key].quantity += Number(it.quantity);
       grouped[key].revenue += Number(it.total);
       totalCost += Number(it.quantity) * Number(it.products?.cost_price || 0);
+
+      const catName = it.products?.categories?.name || 'بدون فئة';
+      if (!categoryGrouped[catName]) {
+        categoryGrouped[catName] = { name: catName, quantity: 0, revenue: 0 };
+      }
+      categoryGrouped[catName].quantity += Number(it.quantity);
+      categoryGrouped[catName].revenue += Number(it.total);
     });
+
+    const categoryRows = Object.values(categoryGrouped).sort((a, b) => b.revenue - a.revenue);
+    const categoryRevenueTotal = categoryRows.reduce((sum, c) => sum + c.revenue, 0);
+    renderBreakdownTable('categoryReportTableBody', categoryRows, 4, row =>
+      `<td>${escapeHtml(row.name)}</td>
+       <td class="num">${row.quantity}</td>
+       <td class="num">${row.revenue.toFixed(2)}</td>
+       <td class="num">${(categoryRevenueTotal > 0 ? (row.revenue / categoryRevenueTotal * 100) : 0).toFixed(1)}%</td>`);
+    lastCategoryReportRows = categoryRows;
 
     const grossProfit = totalSales - totalCost;
 
@@ -6868,6 +6994,41 @@ function renderDebtsReport() {
       suppBody.appendChild(tr);
     });
   }
+}
+
+function exportCashierReportToExcel() {
+  if (lastCashierReportRows.length === 0) { showToast('لا توجد بيانات لتصديرها', true); return; }
+  const rows = lastCashierReportRows.map(r => ({
+    'الكاشير': r.name, 'عدد الفواتير': r.count, 'الإجمالي': r.total,
+    'متوسط الفاتورة': r.count > 0 ? Number((r.total / r.count).toFixed(2)) : 0,
+  }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'المبيعات حسب الكاشير');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `تقرير-المبيعات-حسب-الكاشير-${dateStr}.xlsx`);
+}
+
+function exportBranchReportToExcel() {
+  if (lastBranchReportRows.length === 0) { showToast('لا توجد بيانات لتصديرها', true); return; }
+  const rows = lastBranchReportRows.map(r => ({
+    'الفرع': r.name, 'عدد الفواتير': r.count, 'الإجمالي': r.total,
+    'متوسط الفاتورة': r.count > 0 ? Number((r.total / r.count).toFixed(2)) : 0,
+  }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'المبيعات حسب الفرع');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `تقرير-المبيعات-حسب-الفرع-${dateStr}.xlsx`);
+}
+
+function exportCategoryReportToExcel() {
+  if (lastCategoryReportRows.length === 0) { showToast('لا توجد بيانات لتصديرها', true); return; }
+  const rows = lastCategoryReportRows.map(r => ({
+    'الفئة': r.name, 'الكمية المباعة': r.quantity, 'الإيراد': r.revenue,
+  }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'المبيعات حسب الفئة');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `تقرير-المبيعات-حسب-الفئة-${dateStr}.xlsx`);
 }
 
 function exportDebtsToExcel() {
