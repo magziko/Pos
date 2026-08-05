@@ -719,25 +719,34 @@ a { color: inherit; }
             </div>
           </div>
 
+          <div class="quick-range-row" id="dashQuickRangeRow" style="margin-bottom:12px;">
+            <button class="quick-range-btn active" data-dash-range="today">اليوم</button>
+            <button class="quick-range-btn" data-dash-range="7days">آخر 7 أيام</button>
+            <button class="quick-range-btn" data-dash-range="mtd">من بداية الشهر (MTD)</button>
+            <button class="quick-range-btn" data-dash-range="ytd">من بداية السنة (YTD)</button>
+          </div>
+
+          <div class="report-filters">
+            <div class="field"><label>من تاريخ</label><input type="date" id="dashFromDate"></div>
+            <div class="field"><label>إلى تاريخ</label><input type="date" id="dashToDate"></div>
+            <button class="bo-add-btn" id="dashApplyRangeBtn">تطبيق</button>
+          </div>
+
           <div class="report-cards">
             <div class="report-card">
-              <div class="report-card-label">مبيعات اليوم</div>
+              <div class="report-card-label">مبيعات الفترة</div>
               <div class="report-card-value num positive" id="dashTodaySales">0.00</div>
             </div>
             <div class="report-card">
-              <div class="report-card-label">عدد فواتير اليوم</div>
+              <div class="report-card-label">عدد الفواتير</div>
               <div class="report-card-value num" id="dashTodayCount">0</div>
             </div>
             <div class="report-card">
-              <div class="report-card-label">مبيعات الشهر</div>
-              <div class="report-card-value num positive" id="dashMonthSales">0.00</div>
-            </div>
-            <div class="report-card">
-              <div class="report-card-label">مصروفات الشهر</div>
+              <div class="report-card-label">مصروفات الفترة</div>
               <div class="report-card-value num negative" id="dashMonthExpenses">0.00</div>
             </div>
             <div class="report-card">
-              <div class="report-card-label">رواتب الشهر</div>
+              <div class="report-card-label">رواتب الفترة</div>
               <div class="report-card-value num negative" id="dashMonthSalaries">0.00</div>
             </div>
             <div class="report-card">
@@ -767,7 +776,7 @@ a { color: inherit; }
           </div>
 
           <div class="report-subtitle-row" style="margin-top:22px;">
-            <div class="report-subtitle">الأصناف الأكثر مبيعًا هذا الشهر</div>
+            <div class="report-subtitle">الأصناف الأكثر مبيعًا خلال الفترة</div>
           </div>
           <div class="bo-table-wrap">
             <table class="bo-table">
@@ -3918,38 +3927,38 @@ function activateBoSection(section, btn) {
   if (section === 'salaries' && !salariesLoadedOnce) { setSalaryQuickRange('month'); runSalaryFilter(); salariesLoadedOnce = true; }
 }
 
-async function loadDashboard() {
+async function loadDashboard(fromDate, toDate) {
   try {
-    const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const todayStartISO = toDateInputValue(todayStart) + 'T00:00:00';
-    const monthStartISO = toDateInputValue(monthStart) + 'T00:00:00';
-    const nowISO = now.toISOString();
-    const todayStr = toDateInputValue(todayStart);
-    const monthStartStr = toDateInputValue(monthStart);
+    // بيقرا نطاق التاريخ من حقول الفلترة لو مفيش تاريخ متبعت له مباشرة
+    fromDate = fromDate || document.getElementById('dashFromDate')?.value;
+    toDate = toDate || document.getElementById('dashToDate')?.value;
+    if (!fromDate || !toDate) {
+      setDashboardQuickRange('today');
+      fromDate = document.getElementById('dashFromDate').value;
+      toDate = document.getElementById('dashToDate').value;
+    }
 
-    // مبيعات اليوم والشهر
-    const { data: monthSales, error: salesErr } = await supabaseClient
+    const periodStartISO = `${fromDate}T00:00:00`;
+    const periodEndISO = `${toDate}T23:59:59`;
+
+    // مبيعات الفترة المختارة
+    const { data: periodSales, error: salesErr } = await supabaseClient
       .from('sales')
       .select('id, total, created_at, customer_id, user_id, invoice_number, customers(name), users_profile(full_name)')
       .eq('status', 'completed')
-      .gte('created_at', monthStartISO)
-      .lte('created_at', nowISO)
+      .gte('created_at', periodStartISO)
+      .lte('created_at', periodEndISO)
       .order('created_at', { ascending: false });
     if (salesErr) throw salesErr;
 
-    const todaySalesRows = (monthSales || []).filter(s => s.created_at >= todayStartISO);
-    const todayTotal = todaySalesRows.reduce((sum, s) => sum + Number(s.total), 0);
-    const monthTotal = (monthSales || []).reduce((sum, s) => sum + Number(s.total), 0);
+    const periodTotal = (periodSales || []).reduce((sum, s) => sum + Number(s.total), 0);
 
-    document.getElementById('dashTodaySales').textContent = todayTotal.toFixed(2);
-    document.getElementById('dashTodayCount').textContent = todaySalesRows.length;
-    document.getElementById('dashMonthSales').textContent = monthTotal.toFixed(2);
+    document.getElementById('dashTodaySales').textContent = periodTotal.toFixed(2);
+    document.getElementById('dashTodayCount').textContent = (periodSales || []).length;
 
     // آخر الفواتير
     const recentBody = document.getElementById('dashRecentSalesBody');
-    const recentRows = (monthSales || []).slice(0, 8);
+    const recentRows = (periodSales || []).slice(0, 8);
     if (recentRows.length === 0) {
       recentBody.innerHTML = `<tr><td colspan="5" class="bo-empty">لا توجد فواتير حتى الآن</td></tr>`;
     } else {
@@ -3967,17 +3976,17 @@ async function loadDashboard() {
       });
     }
 
-    // الأصناف الأكثر مبيعًا هذا الشهر
-    const { data: monthItems, error: itemsErr } = await supabaseClient
+    // الأصناف الأكثر مبيعًا خلال الفترة
+    const { data: periodItems, error: itemsErr } = await supabaseClient
       .from('sale_items')
       .select('quantity, total, product_id, products(name), sales!inner(created_at, status)')
       .eq('sales.status', 'completed')
-      .gte('sales.created_at', monthStartISO)
-      .lte('sales.created_at', nowISO);
+      .gte('sales.created_at', periodStartISO)
+      .lte('sales.created_at', periodEndISO);
     if (itemsErr) throw itemsErr;
 
     const grouped = {};
-    (monthItems || []).forEach(it => {
+    (periodItems || []).forEach(it => {
       const key = it.product_id;
       if (!grouped[key]) grouped[key] = { name: it.products?.name || 'صنف محذوف', quantity: 0, revenue: 0 };
       grouped[key].quantity += Number(it.quantity);
@@ -3986,7 +3995,7 @@ async function loadDashboard() {
     const topRows = Object.values(grouped).sort((a, b) => b.quantity - a.quantity).slice(0, 5);
     const topBody = document.getElementById('dashTopProductsBody');
     if (topRows.length === 0) {
-      topBody.innerHTML = `<tr><td colspan="3" class="bo-empty">لا توجد مبيعات هذا الشهر</td></tr>`;
+      topBody.innerHTML = `<tr><td colspan="3" class="bo-empty">لا توجد مبيعات خلال هذه الفترة</td></tr>`;
     } else {
       topBody.innerHTML = '';
       topRows.forEach(r => {
@@ -3996,23 +4005,23 @@ async function loadDashboard() {
       });
     }
 
-    // مصروفات ورواتب الشهر
-    const { data: monthExpenses, error: expErr } = await supabaseClient
+    // مصروفات ورواتب الفترة
+    const { data: periodExpenses, error: expErr } = await supabaseClient
       .from('expenses')
       .select('amount')
-      .gte('expense_date', monthStartStr)
-      .lte('expense_date', todayStr);
+      .gte('expense_date', fromDate)
+      .lte('expense_date', toDate);
     if (expErr) throw expErr;
-    const expensesTotal = (monthExpenses || []).reduce((sum, x) => sum + Number(x.amount), 0);
+    const expensesTotal = (periodExpenses || []).reduce((sum, x) => sum + Number(x.amount), 0);
     document.getElementById('dashMonthExpenses').textContent = expensesTotal.toFixed(2);
 
-    const { data: monthSalaries, error: salErr } = await supabaseClient
+    const { data: periodSalaries, error: salErr } = await supabaseClient
       .from('salary_payments')
       .select('net_amount')
-      .gte('payment_date', monthStartStr)
-      .lte('payment_date', todayStr);
+      .gte('payment_date', fromDate)
+      .lte('payment_date', toDate);
     if (salErr) throw salErr;
-    const salariesTotal = (monthSalaries || []).reduce((sum, x) => sum + Number(x.net_amount), 0);
+    const salariesTotal = (periodSalaries || []).reduce((sum, x) => sum + Number(x.net_amount), 0);
     document.getElementById('dashMonthSalaries').textContent = salariesTotal.toFixed(2);
 
     // ديون العملاء والموردين
@@ -4401,13 +4410,28 @@ function bindBackofficeEvents() {
   document.getElementById('backupExcelBtn').addEventListener('click', () => runBackup('excel'));
   document.getElementById('backupJsonBtn').addEventListener('click', () => runBackup('json'));
   initRestoreSection();
-  document.querySelectorAll('.quick-range-btn').forEach(btn => {
+  document.querySelectorAll('[data-range]').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.quick-range-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('[data-range]').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       setQuickRange(btn.dataset.range);
       runReport();
     });
+  });
+
+  // ---- Dashboard (نظرة عامة) date filter ----
+  setDashboardQuickRange('today');
+  document.querySelectorAll('[data-dash-range]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-dash-range]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      setDashboardQuickRange(btn.dataset.dashRange);
+      loadDashboard();
+    });
+  });
+  document.getElementById('dashApplyRangeBtn').addEventListener('click', () => {
+    document.querySelectorAll('[data-dash-range]').forEach(b => b.classList.remove('active'));
+    loadDashboard();
   });
 }
 
@@ -7884,6 +7908,24 @@ function renderDailyTrendChart(rows) {
 
 function toDateInputValue(d) {
   return d.toISOString().split('T')[0];
+}
+
+function setDashboardQuickRange(range) {
+  const today = new Date();
+  let from = new Date(today);
+  let to = new Date(today);
+
+  if (range === '7days') {
+    from.setDate(from.getDate() - 6);
+  } else if (range === 'mtd') {
+    from = new Date(today.getFullYear(), today.getMonth(), 1);
+  } else if (range === 'ytd') {
+    from = new Date(today.getFullYear(), 0, 1);
+  }
+  // 'today' يسيب from = to = النهاردة
+
+  document.getElementById('dashFromDate').value = toDateInputValue(from);
+  document.getElementById('dashToDate').value = toDateInputValue(to);
 }
 
 function setQuickRange(range) {
