@@ -1692,7 +1692,10 @@ a { color: inherit; }
         <div id="bo-section-users" style="display:none;">
           <div class="bo-section-header">
             <div class="bo-section-title">إدارة المستخدمين</div>
-            <button class="bo-add-btn" id="addUserBtn">+ مستخدم جديد</button>
+            <div class="bo-section-actions">
+              <button class="bo-outline-btn" id="exportUsersBtn">تصدير إكسل</button>
+              <button class="bo-add-btn" id="addUserBtn">+ مستخدم جديد</button>
+            </div>
           </div>
 
           <div class="quick-range-row" style="margin-bottom:14px;">
@@ -1700,12 +1703,28 @@ a { color: inherit; }
           </div>
 
           <div id="userTab-data">
+            <div class="search-row" style="margin-bottom:14px;">
+              <input type="text" id="userSearchInput" placeholder="ابحث بالاسم أو اسم المستخدم أو رقم الهاتف...">
+              <select id="userDepartmentFilter" style="max-width:200px;">
+                <option value="">كل الأقسام</option>
+                <option value="المبيعات">المبيعات</option>
+                <option value="المخازن">المخازن</option>
+                <option value="المحاسبة">المحاسبة</option>
+                <option value="الإدارة">الإدارة</option>
+                <option value="خدمة العملاء">خدمة العملاء</option>
+                <option value="المشتريات">المشتريات</option>
+                <option value="الموارد البشرية">الموارد البشرية</option>
+                <option value="تقنية المعلومات">تقنية المعلومات</option>
+              </select>
+            </div>
             <div class="bo-table-wrap">
               <table class="bo-table">
                 <thead>
                   <tr>
                     <th>الاسم الكامل</th>
                     <th>اسم المستخدم</th>
+                    <th>رقم الهاتف</th>
+                    <th>القسم</th>
                     <th>الفرع</th>
                     <th>مستوى الصلاحية</th>
                     <th>الموظف المرتبط</th>
@@ -1714,7 +1733,7 @@ a { color: inherit; }
                   </tr>
                 </thead>
                 <tbody id="usersTableBody">
-                  <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
+                  <tr><td colspan="9" class="bo-empty">جاري التحميل...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -2558,7 +2577,9 @@ a { color: inherit; }
       <div class="modal-grid">
         <div class="field field-full"><label>الاسم *</label><input type="text" id="userFullName" required></div>
         <div class="field field-full"><label>اسم المستخدم *</label>
-          <input type="text" id="userUsername" required autocomplete="off" style="direction:ltr; text-align:right;"></div>
+          <input type="text" id="userUsername" required autocomplete="off" style="direction:ltr; text-align:right;">
+          <div id="userUsernameCheckMsg" style="font-size:12px; margin-top:4px;"></div>
+        </div>
         <div class="field field-full" id="userPasswordField"><label>كلمة المرور</label>
           <input type="password" id="userPassword" autocomplete="new-password" placeholder="6 أحرف على الأقل" minlength="6" style="direction:ltr; text-align:right;">
           <div id="userPasswordHint" style="font-size:12px; color:var(--ink-soft); margin-top:4px; display:none;">اتركها فارغة إذا كنت لا ترغب في تغيير كلمة المرور</div>
@@ -4609,6 +4630,13 @@ function bindBackofficeEvents() {
 
   // ---- Users ----
   document.getElementById('addUserBtn').addEventListener('click', () => openUserModal(null));
+  document.getElementById('userUsername').addEventListener('input', () => {
+    clearTimeout(userUsernameCheckTimeout);
+    userUsernameCheckTimeout = setTimeout(checkUserUsernameAvailability, 500);
+  });
+  document.getElementById('userSearchInput').addEventListener('input', renderUsersTable);
+  document.getElementById('userDepartmentFilter').addEventListener('change', renderUsersTable);
+  document.getElementById('exportUsersBtn').addEventListener('click', exportUsersToExcel);
   document.getElementById('cancelUserBtn').addEventListener('click', closeUserModal);
   document.getElementById('userModalOverlay').addEventListener('click', (e) => {
     if (e.target.id === 'userModalOverlay') closeUserModal();
@@ -7095,17 +7123,29 @@ async function loadBoUsers() {
 
 function renderUsersTable() {
   const tbody = document.getElementById('usersTableBody');
-  if (boUsers.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لا يوجد مستخدمون مضافون حتى الآن</td></tr>`;
+  const q = (document.getElementById('userSearchInput').value || '').trim().toLowerCase();
+  const deptFilter = document.getElementById('userDepartmentFilter').value;
+  const filtered = boUsers.filter(u => {
+    if (deptFilter && (u.department || '') !== deptFilter) return false;
+    if (!q) return true;
+    return (u.full_name || '').toLowerCase().includes(q)
+      || (u.username || '').toLowerCase().includes(q)
+      || (u.phone || '').includes(q);
+  });
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" class="bo-empty">${boUsers.length === 0 ? 'لا يوجد مستخدمون مضافون حتى الآن' : 'لا يوجد مستخدمون مطابقون للبحث'}</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
-  boUsers.forEach(u => {
+  filtered.forEach(u => {
     const roleLabel = u.roles?.name === 'admin' ? 'أدمن' : (u.roles?.name === 'cashier' ? 'كاشير' : (u.roles?.name || '—'));
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${escapeHtml(u.full_name || '—')}</td>
       <td class="num">${escapeHtml(u.username || '—')}</td>
+      <td class="num">${escapeHtml(u.phone || '—')}</td>
+      <td>${escapeHtml(u.department || '—')}</td>
       <td>${escapeHtml(u.branches?.name || '—')}</td>
       <td>${escapeHtml(roleLabel)}</td>
       <td>${escapeHtml(u.employees?.full_name || '—')}</td>
@@ -7122,7 +7162,71 @@ function renderUsersTable() {
   });
 }
 
+function exportUsersToExcel() {
+  if (boUsers.length === 0) {
+    showToast('لا يوجد مستخدمون لتصديرهم', true);
+    return;
+  }
+  const rows = boUsers.map(u => ({
+    'الاسم الكامل': u.full_name || '',
+    'اسم المستخدم': u.username || '',
+    'رقم الهاتف': u.phone || '',
+    'بريد العمل الالكتروني': u.work_email || '',
+    'رقم هاتف العمل': u.work_phone || '',
+    'القسم': u.department || '',
+    'الفرع': u.branches?.name || '',
+    'مستوى الأمان': u.roles?.name === 'admin' ? 'أدمن' : (u.roles?.name === 'cashier' ? 'كاشير' : (u.roles?.name || '')),
+    'الموظف المرتبط': u.employees?.full_name || '',
+    'المنطقة الزمنية': u.timezone || '',
+    'رقم الهوية': u.national_id || '',
+    'رقم جواز السفر': u.passport_number || '',
+    'اللغة': u.language === 'en' ? 'English' : 'عربي',
+    'الجنس': u.gender === 'male' ? 'ذكر' : (u.gender === 'female' ? 'أنثى' : ''),
+    'الحالة': u.is_active ? 'مفعّل' : 'موقّف',
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [{ wch: 22 }, { wch: 16 }, { wch: 16 }, { wch: 24 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 12 }, { wch: 20 }, { wch: 20 }, { wch: 16 }, { wch: 16 }, { wch: 10 }, { wch: 10 }, { wch: 10 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'المستخدمين');
+  const dateStr = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(wb, `المستخدمين-${dateStr}.xlsx`);
+  showToast('تم تصدير ملف الإكسل بنجاح');
+}
+
 let editingUserOriginalUsername = '';
+let userUsernameTaken = false;
+let userUsernameCheckTimeout = null;
+
+async function checkUserUsernameAvailability() {
+  const input = document.getElementById('userUsername');
+  const msgEl = document.getElementById('userUsernameCheckMsg');
+  const username = input.value.trim();
+  const currentId = document.getElementById('userId').value || null;
+  userUsernameTaken = false;
+  if (!username) { msgEl.textContent = ''; return; }
+  if (currentId && username === editingUserOriginalUsername) { msgEl.textContent = ''; return; }
+
+  msgEl.textContent = 'جاري التحقق...';
+  msgEl.style.color = 'var(--ink-soft)';
+
+  const { data, error } = await supabaseClient
+    .from('users_profile')
+    .select('id')
+    .ilike('username', username)
+    .limit(5);
+  if (error) { msgEl.textContent = ''; return; }
+
+  const taken = (data || []).some(r => r.id !== currentId);
+  if (taken) {
+    userUsernameTaken = true;
+    msgEl.textContent = 'اسم المستخدم ده مستخدم بالفعل';
+    msgEl.style.color = 'var(--danger)';
+  } else {
+    userUsernameTaken = false;
+    msgEl.textContent = 'اسم المستخدم متاح';
+    msgEl.style.color = 'var(--teal-700)';
+  }
+}
 
 function openUserModal(user) {
   document.getElementById('userModalTitle').textContent = user ? 'تعديل مستخدم' : 'مستخدم جديد';
@@ -7130,6 +7234,8 @@ function openUserModal(user) {
   document.getElementById('userFullName').value = user ? (user.full_name || '') : '';
   document.getElementById('userUsername').value = user ? (user.username || '') : '';
   editingUserOriginalUsername = user ? (user.username || '') : '';
+  document.getElementById('userUsernameCheckMsg').textContent = '';
+  userUsernameTaken = false;
   document.getElementById('userUsername').disabled = false;
   document.getElementById('userPassword').value = '';
   document.getElementById('userPassword').required = !user;
@@ -7186,6 +7292,12 @@ async function saveUser(e) {
   };
 
   try {
+    // تحقق أخير من توفر اسم المستخدم قبل الحفظ (تحسبًا لأي تغيير بعد آخر تحقق)
+    if (username !== editingUserOriginalUsername) {
+      await checkUserUsernameAvailability();
+      if (userUsernameTaken) throw new Error('اسم المستخدم ده مستخدم بالفعل، اختار اسم تاني');
+    }
+
     if (id) {
       // لو اسم المستخدم اتغيّر، لازم نحدّث إيميل الدخول في auth.users الأول
       // عشان تسجيل الدخول يشتغل بالاسم الجديد فورًا
@@ -7235,7 +7347,11 @@ async function saveUser(e) {
     renderUsersTable();
   } catch (err) {
     console.error(err);
-    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    let msg = err.message || 'حدث خطأ أثناء الحفظ';
+    if (/duplicate key|already.*registered|users_profile_username_idx/i.test(msg)) {
+      msg = 'اسم المستخدم ده مستخدم بالفعل، اختار اسم تاني';
+    }
+    errEl.textContent = msg;
     errEl.classList.add('show');
   } finally {
     saveBtn.disabled = false;
