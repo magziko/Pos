@@ -7122,11 +7122,14 @@ function renderUsersTable() {
   });
 }
 
+let editingUserOriginalUsername = '';
+
 function openUserModal(user) {
   document.getElementById('userModalTitle').textContent = user ? 'تعديل مستخدم' : 'مستخدم جديد';
   document.getElementById('userId').value = user ? user.id : '';
   document.getElementById('userFullName').value = user ? (user.full_name || '') : '';
   document.getElementById('userUsername').value = user ? (user.username || '') : '';
+  editingUserOriginalUsername = user ? (user.username || '') : '';
   document.getElementById('userUsername').disabled = false;
   document.getElementById('userPassword').value = '';
   document.getElementById('userPassword').required = !user;
@@ -7184,6 +7187,15 @@ async function saveUser(e) {
 
   try {
     if (id) {
+      // لو اسم المستخدم اتغيّر، لازم نحدّث إيميل الدخول في auth.users الأول
+      // عشان تسجيل الدخول يشتغل بالاسم الجديد فورًا
+      if (username && username !== editingUserOriginalUsername) {
+        const { error: usernameRpcError } = await supabaseClient.rpc('admin_update_username', {
+          target_user_id: id, new_username: username,
+        });
+        if (usernameRpcError) throw usernameRpcError;
+      }
+
       // تحديث مستخدم موجود: بيانات البروفايل + تغيير كلمة المرور لو اتكتبت
       const { error } = await supabaseClient
         .from('users_profile')
