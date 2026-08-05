@@ -3048,8 +3048,8 @@ async function enterPos() {
   }
   posEls.branchLabel.textContent = currentProfile.branches?.name || 'بدون فرع';
   posEls.cashierLabel.textContent = currentProfile.full_name;
-  const isAdmin = currentProfile.roles?.name === 'admin';
-  document.getElementById('backofficeBtn').style.display = isAdmin ? 'inline-block' : 'none';
+  const canAccessBackoffice = boAllSections.some(s => hasBoPermission(SECTION_PERMISSION_MAP[s]));
+  document.getElementById('backofficeBtn').style.display = canAccessBackoffice ? 'inline-block' : 'none';
   startClock();
   updateHeldCount();
   renderCart();
@@ -4006,8 +4006,15 @@ async function enterBackoffice() {
   document.getElementById('taxInclusiveToggle').checked = taxInclusive;
   populateProductCategorySelect();
 
-  // الرئيسية دايمًا هي أول شاشة تظهر عند دخول لوحة التحكم
-  activateBoSection('dashboard', document.querySelector('.bo-nav-item[data-section="dashboard"]'));
+  applyBoPermissions();
+  const landingSection = firstAllowedSection();
+  if (!landingSection) {
+    alert('ليس لديك صلاحية للوصول إلى أي قسم في لوحة التحكم');
+    showView('pos');
+    return;
+  }
+  const landingBtn = document.querySelector(`.bo-nav-item[data-section="${landingSection}"], .bo-nav-sub-item[data-section="${landingSection}"]`);
+  activateBoSection(landingSection, landingBtn);
 }
 
 const boAllSections = ['dashboard','products','categories','unit-types','tax-rates','quick-discounts','customer-types',
@@ -4024,6 +4031,43 @@ const boNavGroups = [
   { toggle: 'hrNavToggle', group: 'hrNavGroup', sections: ['employees','salaries'] },
   { toggle: 'adminNavToggle', group: 'adminNavGroup', sections: ['company-info','permissions','users','branches','backup','reset-data'] }
 ];
+
+// كل قسم في القائمة الجانبية بيتبع لأنهي مفتاح صلاحية (roles.permissions)
+const SECTION_PERMISSION_MAP = {
+  'dashboard': 'dashboard',
+  'products': 'stock_management', 'categories': 'stock_management', 'unit-types': 'stock_management',
+  'tax-rates': 'stock_management', 'quick-discounts': 'stock_management', 'stock': 'stock_management',
+  'sales-list': 'sales_management', 'customers': 'sales_management', 'customer-types': 'sales_management', 'sale-returns': 'sales_management',
+  'suppliers': 'purchases_management', 'purchases': 'purchases_management', 'purchase-returns': 'purchases_management',
+  'reports-sales': 'reports', 'reports-purchases': 'reports', 'reports-inventory': 'reports', 'reports-accounting': 'reports', 'reports-other': 'reports',
+  'payments': 'finance', 'expense-items': 'finance', 'expenses': 'finance',
+  'employees': 'hr', 'salaries': 'hr',
+  'company-info': 'admin', 'permissions': 'admin', 'users': 'admin', 'branches': 'admin', 'backup': 'admin', 'reset-data': 'admin',
+  'soon': null
+};
+
+function hasBoPermission(permKey) {
+  if (!permKey) return true;
+  const perms = currentProfile.roles?.permissions || {};
+  return perms.all === true || perms[permKey] === true;
+}
+
+function applyBoPermissions() {
+  document.querySelectorAll('[data-section]').forEach(btn => {
+    const section = btn.dataset.section;
+    btn.style.display = hasBoPermission(SECTION_PERMISSION_MAP[section]) ? '' : 'none';
+  });
+  boNavGroups.forEach(g => {
+    const groupEl = document.getElementById(g.group);
+    if (!groupEl) return;
+    const anyVisible = g.sections.some(s => hasBoPermission(SECTION_PERMISSION_MAP[s]));
+    groupEl.style.display = anyVisible ? '' : 'none';
+  });
+}
+
+function firstAllowedSection() {
+  return boAllSections.find(s => hasBoPermission(SECTION_PERMISSION_MAP[s])) || null;
+}
 
 function activateBoSection(section, btn) {
   document.querySelectorAll('.bo-nav-item:not(.bo-nav-parent)').forEach(b => b.classList.remove('active'));
