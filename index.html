@@ -328,6 +328,20 @@ a { color: inherit; }
 .ci-save-row .submit-btn { width: auto; padding: 13px 32px; margin-top: 0; }
 .ci-saved-note { font-size: 12.5px; color: var(--ink-soft); }
 
+.perm-select-all { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--teal-700); cursor: pointer; margin: 2px 0 14px; width: fit-content; }
+.perm-select-all input { width: 16px; height: 16px; cursor: pointer; }
+.perm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+.perm-card { display: flex; align-items: flex-start; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px; cursor: pointer; transition: border-color 0.15s ease; }
+.perm-card:hover { border-color: var(--teal-500); }
+.perm-card.checked { border-color: var(--teal-700); background: var(--teal-100); }
+.perm-card input[type="checkbox"] { appearance: none; width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 5px; margin-top: 1px; flex-shrink: 0; cursor: pointer; position: relative; background: var(--surface); }
+.perm-card input[type="checkbox"]:checked { border-color: var(--teal-700); background: var(--teal-700); }
+.perm-card input[type="checkbox"]:checked::after { content: ""; position: absolute; right: 4px; top: 0px; width: 5px; height: 10px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(40deg); }
+.perm-card-title { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.perm-card-desc { font-size: 11.5px; color: var(--ink-soft); margin-top: 3px; line-height: 1.5; }
+.role-count-badge { font-size: 11.5px; background: var(--teal-100); color: var(--teal-900); padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+.role-locked-note { font-size: 11.5px; color: var(--ink-soft); }
+
 .barcode-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 .barcode-chip { display: flex; align-items: center; gap: 6px; background: var(--surface-sunken); padding: 5px 10px; border-radius: 16px; font-size: 12px; font-family: var(--font-num); direction: ltr; }
 .barcode-chip button { color: var(--danger); font-weight: 700; font-size: 13px; }
@@ -722,6 +736,7 @@ a { color: inherit; }
           </button>
           <div class="bo-nav-sub" id="adminNavSub">
             <button class="bo-nav-sub-item" data-section="company-info">بيانات الشركة</button>
+            <button class="bo-nav-sub-item" data-section="permissions">الصلاحية الأمنية</button>
             <button class="bo-nav-sub-item" data-section="users">إدارة المستخدمين</button>
             <button class="bo-nav-sub-item" data-section="branches">الفروع</button>
             <button class="bo-nav-sub-item" data-section="backup">نسخة احتياطية</button>
@@ -1651,6 +1666,29 @@ a { color: inherit; }
           </form>
         </div>
 
+        <!-- قسم الصلاحية الأمنية -->
+        <div id="bo-section-permissions" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">الصلاحية الأمنية</div>
+            <button class="bo-add-btn" id="addPermissionBtn">+ إضافة صلاحية أمنية جديدة</button>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>الاسم</th>
+                  <th>الأقسام المفعّلة</th>
+                  <th>عدد المستخدمين</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="permissionsTableBody">
+                <tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <div id="bo-section-users" style="display:none;">
           <div class="bo-section-header">
             <div class="bo-section-title">إدارة المستخدمين</div>
@@ -2058,6 +2096,30 @@ a { color: inherit; }
 </div>
 
 <!-- Modal: إضافة / تعديل فرع -->
+<!-- Modal: إضافة / تعديل صلاحية أمنية -->
+<div class="modal-overlay" id="permissionModalOverlay">
+  <div class="modal-box" style="max-width:660px;">
+    <div class="modal-title" id="permissionModalTitle">صلاحية أمنية جديدة</div>
+    <form id="permissionForm">
+      <input type="hidden" id="permissionId">
+      <div class="field field-full"><label for="permissionName">الاسم *</label><input type="text" id="permissionName" required placeholder="مثال: مشرف فرع، أمين خزينة..."></div>
+
+      <label class="perm-select-all"><input type="checkbox" id="permSelectAll"> تحديد كل الصلاحيات</label>
+
+      <div class="field field-full" style="margin-bottom:6px;">
+        <label style="margin-bottom:10px;">الصلاحيات</label>
+        <div class="perm-grid" id="permGrid"></div>
+      </div>
+
+      <div class="error-msg" id="permissionModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelPermissionBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="savePermissionBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="modal-overlay" id="branchModalOverlay">
   <div class="modal-box">
     <div class="modal-title" id="branchModalTitle">فرع جديد</div>
@@ -3951,7 +4013,7 @@ async function enterBackoffice() {
 const boAllSections = ['dashboard','products','categories','unit-types','tax-rates','quick-discounts','customer-types',
   'sales-list','customers','suppliers','payments','purchases','purchase-returns','sale-returns',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
-  'soon','company-info','users','branches','stock','backup','reset-data','employees','expense-items','expenses','salaries'];
+  'soon','company-info','permissions','users','branches','stock','backup','reset-data','employees','expense-items','expenses','salaries'];
 
 const boNavGroups = [
   { toggle: 'stockNavToggle', group: 'stockNavGroup', sections: ['products','categories','unit-types','tax-rates','quick-discounts','stock'] },
@@ -3960,7 +4022,7 @@ const boNavGroups = [
   { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
   { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['payments','expense-items','expenses'] },
   { toggle: 'hrNavToggle', group: 'hrNavGroup', sections: ['employees','salaries'] },
-  { toggle: 'adminNavToggle', group: 'adminNavGroup', sections: ['company-info','users','branches','backup','reset-data'] }
+  { toggle: 'adminNavToggle', group: 'adminNavGroup', sections: ['company-info','permissions','users','branches','backup','reset-data'] }
 ];
 
 function activateBoSection(section, btn) {
@@ -3989,6 +4051,7 @@ function activateBoSection(section, btn) {
   if (section === 'stock' && !stockSectionLoadedOnce) { initStockSection(); stockSectionLoadedOnce = true; }
   if (section === 'reset-data' && !resetDataLoadedOnce) { initResetDataSection(); resetDataLoadedOnce = true; }
   if (section === 'company-info' && !companyInfoLoadedOnce) { initCompanyInfoSection(); companyInfoLoadedOnce = true; }
+  if (section === 'permissions') { renderPermissionsTable(); }
   if (section === 'reports-sales' && !reportsLoadedOnce) { populateReportBranchFilter(); runReport(); reportsLoadedOnce = true; }
   if (section === 'reports-accounting' && !accountingReportsLoadedOnce) { refreshDebtsReport(); accountingReportsLoadedOnce = true; }
   if (section === 'expenses' && !expensesLoadedOnce) { setExpenseQuickRange('month'); runExpenseFilter(); expensesLoadedOnce = true; }
@@ -4265,6 +4328,21 @@ function bindBackofficeEvents() {
     if (e.target.id === 'branchModalOverlay') closeBranchModal();
   });
   document.getElementById('branchForm').addEventListener('submit', saveBranch);
+
+  // ---- Permission (role) modal ----
+  document.getElementById('addPermissionBtn').addEventListener('click', () => openPermissionModal(null));
+  document.getElementById('cancelPermissionBtn').addEventListener('click', closePermissionModal);
+  document.getElementById('permissionModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'permissionModalOverlay') closePermissionModal();
+  });
+  document.getElementById('permissionForm').addEventListener('submit', savePermission);
+  document.getElementById('permSelectAll').addEventListener('change', (e) => {
+    const checked = e.target.checked;
+    document.querySelectorAll('#permGrid input[type="checkbox"]').forEach(cb => {
+      cb.checked = checked;
+      cb.closest('.perm-card').classList.toggle('checked', checked);
+    });
+  });
 
   // ---- Stock / warehouses ----
   document.querySelectorAll('[data-stock-tab]').forEach(btn => {
@@ -6180,6 +6258,153 @@ async function deleteBranch(branch) {
   showToast('تم حذف الفرع');
   await loadBoBranches();
   renderBranchesTable();
+}
+
+// ---- الصلاحية الأمنية (الأدوار والصلاحيات) ----
+const PERMISSION_GROUPS = [
+  { key: 'pos', title: 'شاشة المبيعات (الكاشير)', desc: 'الدخول لشاشة البيع وإتمام الفواتير' },
+  { key: 'dashboard', title: 'الرئيسية', desc: 'لوحة التحكم والنظرة العامة على المبيعات' },
+  { key: 'stock_management', title: 'المخزون والأصناف', desc: 'الأصناف، المجموعات، الوحدات، الضريبة، الخصومات، المخازن ونقل البضاعة' },
+  { key: 'sales_management', title: 'المبيعات', desc: 'فواتير البيع، العملاء، أنواع العملاء، مرتجعات البيع' },
+  { key: 'purchases_management', title: 'المشتريات', desc: 'الموردون، فواتير الشراء، مرتجعات الشراء' },
+  { key: 'reports', title: 'التقارير', desc: 'تقارير المبيعات والمشتريات والمخزون والمحاسبة' },
+  { key: 'finance', title: 'المالية', desc: 'سجل المدفوعات، بنود المصروفات، المصروفات' },
+  { key: 'hr', title: 'الموارد البشرية', desc: 'بيانات الموظفين والرواتب' },
+  { key: 'admin', title: 'الإدارة والنظام', desc: 'المستخدمين، الفروع، بيانات الشركة، النسخ الاحتياطي، تهيئة البيانات' }
+];
+
+function renderPermissionsTable() {
+  const tbody = document.getElementById('permissionsTableBody');
+  if (!tbody) return;
+  if (boRoles.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" class="bo-empty">لا توجد صلاحيات أمنية مضافة حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boRoles.forEach(r => {
+    const perms = r.permissions || {};
+    const isAll = perms.all === true;
+    const activeCount = isAll ? PERMISSION_GROUPS.length : PERMISSION_GROUPS.filter(g => perms[g.key] === true).length;
+    const userCount = boUsers.filter(u => u.role_id === r.id).length;
+    const isBaseRole = r.name === 'admin' || r.name === 'cashier';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(r.name)}${isBaseRole ? ' <span class="role-locked-note">(أساسية)</span>' : ''}</td>
+      <td><span class="role-count-badge">${isAll ? 'كل الصلاحيات' : `${activeCount} من ${PERMISSION_GROUPS.length}`}</span></td>
+      <td class="num">${userCount}</td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openPermissionModal(r));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deletePermission(r));
+    tbody.appendChild(tr);
+  });
+}
+
+function renderPermGrid(selected) {
+  const grid = document.getElementById('permGrid');
+  const isAll = !!(selected && selected.all === true);
+  grid.innerHTML = '';
+  PERMISSION_GROUPS.forEach(g => {
+    const checked = isAll || !!(selected && selected[g.key] === true);
+    const card = document.createElement('label');
+    card.className = 'perm-card' + (checked ? ' checked' : '');
+    card.innerHTML = `
+      <input type="checkbox" data-perm-key="${g.key}" ${checked ? 'checked' : ''}>
+      <div>
+        <div class="perm-card-title">${escapeHtml(g.title)}</div>
+        <div class="perm-card-desc">${escapeHtml(g.desc)}</div>
+      </div>`;
+    const cb = card.querySelector('input');
+    cb.addEventListener('change', () => {
+      card.classList.toggle('checked', cb.checked);
+      syncPermSelectAllState();
+    });
+    grid.appendChild(card);
+  });
+  syncPermSelectAllState();
+}
+
+function syncPermSelectAllState() {
+  const boxes = [...document.querySelectorAll('#permGrid input[type="checkbox"]')];
+  document.getElementById('permSelectAll').checked = boxes.length > 0 && boxes.every(cb => cb.checked);
+}
+
+function openPermissionModal(role) {
+  document.getElementById('permissionModalTitle').textContent = role ? 'تعديل صلاحية أمنية' : 'صلاحية أمنية جديدة';
+  document.getElementById('permissionId').value = role ? role.id : '';
+  document.getElementById('permissionName').value = role ? role.name : '';
+  renderPermGrid(role ? role.permissions : null);
+  document.getElementById('permissionModalError').classList.remove('show');
+  document.getElementById('permissionModalOverlay').classList.add('show');
+}
+
+function closePermissionModal() {
+  document.getElementById('permissionModalOverlay').classList.remove('show');
+}
+
+async function savePermission(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('permissionModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('savePermissionBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('permissionId').value || null;
+  const name = document.getElementById('permissionName').value.trim();
+  const permissions = {};
+  document.querySelectorAll('#permGrid input[type="checkbox"]').forEach(cb => {
+    permissions[cb.dataset.permKey] = cb.checked;
+  });
+
+  try {
+    if (!name) throw new Error('من فضلك اكتب اسم الصلاحية');
+    if (id) {
+      const { error } = await supabaseClient.from('roles').update({ name, permissions }).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('roles').insert({ name, permissions });
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث الصلاحية الأمنية' : 'تمت إضافة الصلاحية الأمنية بنجاح');
+    closePermissionModal();
+    await loadBoRoles();
+    renderPermissionsTable();
+    populateUserSelects();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ — تأكد أن الاسم غير مستخدم من قبل';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function deletePermission(role) {
+  if (role.name === 'admin' || role.name === 'cashier') {
+    showToast('لا يمكن حذف الصلاحيات الأساسية للنظام (أدمن / كاشير)', true);
+    return;
+  }
+  const userCount = boUsers.filter(u => u.role_id === role.id).length;
+  if (userCount > 0) {
+    showToast('لا يمكن حذف هذه الصلاحية لوجود مستخدمين مرتبطين بها — غيّر صلاحيتهم أولاً', true);
+    return;
+  }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف صلاحية "${role.name}"؟`)) return;
+  const { error } = await supabaseClient.from('roles').delete().eq('id', role.id);
+  if (error) {
+    console.error(error);
+    showToast('تعذر حذف الصلاحية', true);
+    return;
+  }
+  showToast('تم حذف الصلاحية الأمنية');
+  await loadBoRoles();
+  renderPermissionsTable();
 }
 
 // ---- Stock & warehouse transfers ----
