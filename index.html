@@ -3697,7 +3697,7 @@ function dataUrlSizeBytes(dataUrl) {
   return Math.max(0, Math.round(base64.length * 3 / 4) - padding);
 }
 function compressImageFile(file, opts = {}) {
-  const { maxWidth = 900, maxHeight = 900, maxBytes = 350 * 1024, mimeType = 'image/jpeg' } = opts;
+  const { maxWidth = 640, maxHeight = 640, maxBytes = 120 * 1024, mimeType = 'image/jpeg', minQuality = 0.5, minDim = 200 } = opts;
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = () => reject(new Error('تعذرت قراءة الملف'));
@@ -3705,25 +3705,43 @@ function compressImageFile(file, opts = {}) {
       const img = new Image();
       img.onerror = () => reject(new Error('الملف ليس صورة صالحة'));
       img.onload = () => {
-        let { width, height } = img;
+        let width = img.width, height = img.height;
         const ratio = Math.min(1, maxWidth / width, maxHeight / height);
         width = Math.max(1, Math.round(width * ratio));
         height = Math.max(1, Math.round(height * ratio));
         const canvas = document.createElement('canvas');
-        canvas.width = width; canvas.height = height;
         const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, width, height);
-        ctx.drawImage(img, 0, 0, width, height);
 
-        let quality = 0.9;
-        let dataUrl = canvas.toDataURL(mimeType, quality);
-        let size = dataUrlSizeBytes(dataUrl);
-        while (size > maxBytes && quality > 0.35) {
-          quality -= 0.1;
-          dataUrl = canvas.toDataURL(mimeType, quality);
-          size = dataUrlSizeBytes(dataUrl);
+        function renderAt(w, h) {
+          canvas.width = w; canvas.height = h;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
         }
+        function encodeAtQuality(startQuality) {
+          let quality = startQuality;
+          let dataUrl = canvas.toDataURL(mimeType, quality);
+          let size = dataUrlSizeBytes(dataUrl);
+          while (size > maxBytes && quality > minQuality) {
+            quality -= 0.1;
+            dataUrl = canvas.toDataURL(mimeType, quality);
+            size = dataUrlSizeBytes(dataUrl);
+          }
+          return { dataUrl, size };
+        }
+
+        renderAt(width, height);
+        let { dataUrl, size } = encodeAtQuality(0.85);
+
+        // لو لسه أكبر من المطلوب بعد تقليل الجودة، قلّل الأبعاد كمان تدريجيًا
+        // (أفضل من تصغير الجودة لحد ما تبقى الصورة مش واضحة)
+        while (size > maxBytes && Math.min(width, height) > minDim) {
+          width = Math.round(width * 0.85);
+          height = Math.round(height * 0.85);
+          renderAt(width, height);
+          ({ dataUrl, size } = encodeAtQuality(0.8));
+        }
+
         resolve({ dataUrl, size });
       };
       img.src = reader.result;
@@ -4504,12 +4522,12 @@ function bindBackofficeEvents() {
   setupImageUploadField({
     fileInputId: 'productImageFile', uploadBtnId: 'productImageUploadBtn', removeBtnId: 'productImageRemoveBtn',
     hiddenInputId: 'productImage', previewImgId: 'productImagePreview', placeholderId: 'productImagePlaceholder',
-    sizeLabelId: 'productImageSizeLabel', compressOpts: { maxWidth: 900, maxHeight: 900, maxBytes: 350 * 1024 }
+    sizeLabelId: 'productImageSizeLabel', compressOpts: { maxWidth: 480, maxHeight: 480, maxBytes: 60 * 1024, minDim: 200 }
   });
   setupImageUploadField({
     fileInputId: 'ciLogoFile', uploadBtnId: 'ciLogoUploadBtn', removeBtnId: 'ciLogoRemoveBtn',
     hiddenInputId: 'ciLogo', previewImgId: 'ciLogoPreview', placeholderId: 'ciLogoPlaceholder',
-    sizeLabelId: 'ciLogoSizeLabel', compressOpts: { maxWidth: 500, maxHeight: 300, maxBytes: 150 * 1024 }
+    sizeLabelId: 'ciLogoSizeLabel', compressOpts: { maxWidth: 240, maxHeight: 120, maxBytes: 20 * 1024, minDim: 80 }
   });
 
   document.getElementById('backToPosBtn').addEventListener('click', () => showView('pos'));
