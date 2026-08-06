@@ -605,6 +605,7 @@ a { color: inherit; }
           <div class="totals-row"><span>الإجمالي الفرعي</span><span class="num" id="subtotalLabel">0.00</span></div>
           <div class="quick-discount-row" id="quickDiscountRow"></div>
           <div class="discount-row"><input type="number" id="discountInput" placeholder="خصم (قيمة)" min="0" value="0"></div>
+          <div class="discount-row" id="instantNoteRow" style="display:none;"><input type="text" id="instantNoteInput" placeholder="ملاحظة فورية (تُطبع مع الفاتورة)"></div>
           <div class="totals-row" id="taxRow" style="display:none;"><span id="taxRowLabel">الضريبة</span><span class="num" id="taxLabel">0.00</span></div>
           <div class="totals-row grand"><span>الإجمالي</span><span class="num" id="totalLabel">0.00</span></div>
           <div class="paid-row" id="paymentMethodRow">
@@ -752,6 +753,8 @@ a { color: inherit; }
             <button class="bo-nav-sub-item" data-section="permissions">الصلاحية الأمنية</button>
             <button class="bo-nav-sub-item" data-section="users">إدارة المستخدمين</button>
             <button class="bo-nav-sub-item" data-section="branches">الفروع</button>
+            <button class="bo-nav-sub-item" data-section="branch-settings">إعدادات الفرع</button>
+            <button class="bo-nav-sub-item" data-section="print-settings">إعدادات الطباعة</button>
             <button class="bo-nav-sub-item" data-section="backup">نسخة احتياطية</button>
             <button class="bo-nav-sub-item" data-section="reset-data">تهيئة البيانات</button>
           </div>
@@ -1709,6 +1712,95 @@ a { color: inherit; }
             <div class="ci-save-row">
               <button type="submit" class="submit-btn" id="companyInfoSaveBtn">حفظ بيانات الشركة</button>
               <span class="ci-saved-note" id="companyInfoSavedNote"></span>
+            </div>
+          </form>
+        </div>
+
+        <!-- قسم إعدادات الفرع -->
+        <div id="bo-section-branch-settings" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">إعدادات الفرع</div>
+          </div>
+          <form id="branchSettingsForm">
+            <div class="ci-grid">
+              <div class="field field-full" style="flex-direction:row; align-items:center; gap:8px;">
+                <input type="checkbox" id="bsContinuousInvoice" style="width:auto;">
+                <label for="bsContinuousInvoice" style="margin:0;">استمرار عداد أرقام الطلبات في جميع الأيام (بدون تصفير الترقيم يوميًا)</label>
+              </div>
+              <div class="field field-full" style="flex-direction:row; align-items:center; gap:8px;">
+                <input type="checkbox" id="bsShowAvailableQty" style="width:auto;">
+                <label for="bsShowAvailableQty" style="margin:0;">عرض الكمية المتوفرة في شاشة الطلبات (نقطة البيع)</label>
+              </div>
+              <div class="field field-full" style="flex-direction:row; align-items:center; gap:8px;">
+                <input type="checkbox" id="bsRequireCustomer" style="width:auto;">
+                <label for="bsRequireCustomer" style="margin:0;">يجب تحديد العميل قبل إتمام البيع في شاشة الطلب</label>
+              </div>
+              <div class="field field-full">
+                <label>تأثير نفاذ الكمية (عندما يكون رصيد الصنف صفر أو أقل)</label>
+                <select id="bsOutOfStockBehavior">
+                  <option value="warn">قبول البيع مع إظهار رسالة تنبيه للكاشير</option>
+                  <option value="block">رفض البيع نهائيًا لو الرصيد صفر أو أقل</option>
+                  <option value="allow">السماح بالبيع بدون رصيد وبدون أي تنبيه</option>
+                </select>
+              </div>
+            </div>
+            <div class="error-msg" id="branchSettingsError"></div>
+            <div class="ci-save-row">
+              <button type="submit" class="submit-btn" id="branchSettingsSaveBtn">حفظ إعدادات الفرع</button>
+              <span class="ci-saved-note" id="branchSettingsSavedNote"></span>
+            </div>
+          </form>
+        </div>
+
+        <!-- قسم إعدادات الطباعة -->
+        <div id="bo-section-print-settings" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">إعدادات الطباعة</div>
+          </div>
+          <form id="printSettingsForm">
+            <div class="ci-grid">
+              <div class="field field-full" style="flex-direction:row; align-items:center; gap:8px;">
+                <input type="checkbox" id="psPrintLogo" style="width:auto;">
+                <label for="psPrintLogo" style="margin:0;">طباعة الشعار</label>
+              </div>
+              <div class="field field-full" style="flex-direction:row; align-items:center; gap:8px;">
+                <input type="checkbox" id="psPrintDeviceName" style="width:auto;">
+                <label for="psPrintDeviceName" style="margin:0;">طباعة اسم الفرع (الجهاز)</label>
+              </div>
+              <div class="field field-full" style="flex-direction:row; align-items:center; gap:8px;">
+                <input type="checkbox" id="psPrintUnitPrice" style="width:auto;">
+                <label for="psPrintUnitPrice" style="margin:0;">طباعة سعر الوحدة</label>
+              </div>
+              <div class="field field-full" style="flex-direction:row; align-items:center; gap:8px;">
+                <input type="checkbox" id="psPrintOriginalPrice" style="width:auto;">
+                <label for="psPrintOriginalPrice" style="margin:0;">طباعة السعر الأصلي (قبل أي خصم على الصنف)</label>
+              </div>
+              <div class="field field-full" style="flex-direction:row; align-items:center; gap:8px;">
+                <input type="checkbox" id="psPrintProductNotes" style="width:auto;">
+                <label for="psPrintProductNotes" style="margin:0;">طباعة ملاحظات المنتج (لو متاحة)</label>
+              </div>
+              <div class="field field-full" style="flex-direction:row; align-items:center; gap:8px;">
+                <input type="checkbox" id="psPrintDiscount" style="width:auto;">
+                <label for="psPrintDiscount" style="margin:0;">طباعة الخصم</label>
+              </div>
+              <div class="field field-full" style="flex-direction:row; align-items:center; gap:8px;">
+                <input type="checkbox" id="psPrintTaxTotal" style="width:auto;">
+                <label for="psPrintTaxTotal" style="margin:0;">طباعة إجمالي الضريبة</label>
+              </div>
+              <div class="field field-full" style="flex-direction:row; align-items:center; gap:8px;">
+                <input type="checkbox" id="psPrintInstantNote" style="width:auto;">
+                <label for="psPrintInstantNote" style="margin:0;">طباعة الملاحظة الفورية (تُكتب وقت البيع في شاشة الكاشير)</label>
+              </div>
+              <div class="field field-full" style="flex-direction:row; align-items:center; gap:8px;">
+                <input type="checkbox" id="psPrintItemCode" style="width:auto;">
+                <label for="psPrintItemCode" style="margin:0;">طباعة رمز (باركود) الصنف</label>
+              </div>
+              <div class="field"><label for="psCopies">عدد نسخ الطباعة</label><input type="number" id="psCopies" min="1" max="5" step="1" value="1"></div>
+            </div>
+            <div class="error-msg" id="printSettingsError"></div>
+            <div class="ci-save-row">
+              <button type="submit" class="submit-btn" id="printSettingsSaveBtn">حفظ إعدادات الطباعة</button>
+              <span class="ci-saved-note" id="printSettingsSavedNote"></span>
             </div>
           </form>
         </div>
@@ -3257,7 +3349,8 @@ async function enterPos() {
   updateHeldCount();
   renderCart();
   await loadPosWarehouses();
-  await Promise.all([loadCategories(), loadProducts(), loadCustomers(), loadStockBalances(), loadQuickDiscounts(), loadTaxInclusiveSetting(), loadCompanyInfoGlobal()]);
+  await Promise.all([loadCategories(), loadProducts(), loadCustomers(), loadStockBalances(), loadQuickDiscounts(), loadTaxInclusiveSetting(), loadCompanyInfoGlobal(), loadBranchSettings(), loadPrintSettings()]);
+  applyPrintSettingsToPosUI();
   renderCategories();
   renderProducts();
   renderQuickDiscountButtons();
@@ -3648,7 +3741,7 @@ function renderProducts() {
       <div class="product-thumb">${p.image_url ? `<img src="${p.image_url}" alt="">` : '🛒'}</div>
       <div class="product-name">${escapeHtml(p.name)}</div>
       <div class="product-price"><span class="num">${Number(p.sale_price).toFixed(2)}</span></div>
-      <div style="font-size:11px;">${stockLabel}</div>`;
+      <div style="font-size:11px;">${branchSettings.show_available_qty_pos ? stockLabel : ''}</div>`;
     card.addEventListener('click', () => addToCart(p));
     posEls.productGrid.appendChild(card);
   });
@@ -3702,7 +3795,7 @@ function addUnitToCart(product, productUnitId, unitPrice, factor, unitLabel) {
   const requestedQty = existing ? existing.quantity + 1 : 1;
   if (!confirmStockIfNeeded(product, requestedQty, factor)) return;
   if (existing) existing.quantity += 1;
-  else cart.push({ product, quantity: 1, unitPrice, productUnitId, unitLabel, factor });
+  else cart.push({ product, quantity: 1, unitPrice, productUnitId, unitLabel, factor, basePrice: Number(product.sale_price) });
   renderCart();
   renderProducts();
 }
@@ -3724,6 +3817,11 @@ function confirmStockIfNeeded(product, requestedQty, factor) {
   const available = availableStock(product.id);
   const requestedBaseQty = requestedQty * (factor || 1);
   if (requestedBaseQty <= available) return true;
+  if (branchSettings.out_of_stock_behavior === 'allow') return true;
+  if (branchSettings.out_of_stock_behavior === 'block') {
+    showToast(`لا يمكن البيع: الرصيد المتاح من "${product.name}" هو ${available} فقط والمطلوب ${requestedBaseQty}`, true);
+    return false;
+  }
   return confirm(`الرصيد المتاح من "${product.name}" هو ${available} (بالوحدة الأساسية) فقط، والمطلوب ${requestedBaseQty}. هل تريد إتمام عملية البيع؟`);
 }
 
@@ -3925,6 +4023,140 @@ async function loadTaxInclusiveSetting() {
   taxInclusive = data ? (data.value === true || data.value === 'true') : false;
 }
 
+// ------------------------------------------------------------
+// إعدادات الفرع وإعدادات الطباعة — مخزّنة في جدول settings
+// بمفتاح فريد لكل فرع (branch_settings:<branch_id> / print_settings:<branch_id>)
+// ------------------------------------------------------------
+let branchSettingsLoadedOnce = false;
+let printSettingsLoadedOnce = false;
+const defaultBranchSettings = {
+  continuous_invoice_numbering: true,
+  show_available_qty_pos: true,
+  require_customer_pos: false,
+  out_of_stock_behavior: 'warn' // 'warn' = يسمح مع تنبيه | 'block' = يرفض البيع | 'allow' = يسمح بدون أي تنبيه
+};
+const defaultPrintSettings = {
+  print_logo: true,
+  print_device_name: true,
+  print_unit_price: true,
+  print_original_price: false,
+  print_product_notes: false,
+  print_discount: true,
+  print_tax_total: true,
+  print_instant_note: false,
+  print_item_code: false,
+  copies: 1
+};
+let branchSettings = { ...defaultBranchSettings };
+let printSettings = { ...defaultPrintSettings };
+
+function branchSettingsKey() { return `branch_settings:${currentProfile?.branch_id || 'global'}`; }
+function printSettingsKey() { return `print_settings:${currentProfile?.branch_id || 'global'}`; }
+
+async function loadBranchSettings() {
+  if (!currentProfile?.branch_id) { branchSettings = { ...defaultBranchSettings }; return; }
+  const { data, error } = await supabaseClient.from('settings').select('value').eq('key', branchSettingsKey()).maybeSingle();
+  if (error) { console.error(error); return; }
+  branchSettings = { ...defaultBranchSettings, ...(data && data.value ? data.value : {}) };
+}
+
+async function loadPrintSettings() {
+  if (!currentProfile?.branch_id) { printSettings = { ...defaultPrintSettings }; return; }
+  const { data, error } = await supabaseClient.from('settings').select('value').eq('key', printSettingsKey()).maybeSingle();
+  if (error) { console.error(error); return; }
+  printSettings = { ...defaultPrintSettings, ...(data && data.value ? data.value : {}) };
+}
+
+function initBranchSettingsSection() {
+  document.getElementById('bsContinuousInvoice').checked = branchSettings.continuous_invoice_numbering;
+  document.getElementById('bsShowAvailableQty').checked = branchSettings.show_available_qty_pos;
+  document.getElementById('bsRequireCustomer').checked = branchSettings.require_customer_pos;
+  document.getElementById('bsOutOfStockBehavior').value = branchSettings.out_of_stock_behavior;
+  document.getElementById('branchSettingsForm').addEventListener('submit', saveBranchSettings);
+}
+
+async function saveBranchSettings(e) {
+  e.preventDefault();
+  if (!currentProfile?.branch_id) return;
+  const errBox = document.getElementById('branchSettingsError');
+  errBox.classList.remove('show');
+  const btn = document.getElementById('branchSettingsSaveBtn');
+  const payload = {
+    continuous_invoice_numbering: document.getElementById('bsContinuousInvoice').checked,
+    show_available_qty_pos: document.getElementById('bsShowAvailableQty').checked,
+    require_customer_pos: document.getElementById('bsRequireCustomer').checked,
+    out_of_stock_behavior: document.getElementById('bsOutOfStockBehavior').value,
+    updated_at: new Date().toISOString()
+  };
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  try {
+    const { error } = await supabaseClient.from('settings')
+      .upsert({ key: branchSettingsKey(), value: payload, branch_id: currentProfile.branch_id, updated_at: new Date().toISOString() });
+    if (error) throw error;
+    branchSettings = payload;
+    renderProducts();
+    showToast('تم حفظ إعدادات الفرع بنجاح');
+    document.getElementById('branchSettingsSavedNote').textContent = 'آخر حفظ: ' + new Date().toLocaleString('ar-EG');
+  } catch (err) {
+    console.error(err);
+    errBox.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errBox.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ إعدادات الفرع';
+  }
+}
+
+function initPrintSettingsSection() {
+  document.getElementById('psPrintLogo').checked = printSettings.print_logo;
+  document.getElementById('psPrintDeviceName').checked = printSettings.print_device_name;
+  document.getElementById('psPrintUnitPrice').checked = printSettings.print_unit_price;
+  document.getElementById('psPrintOriginalPrice').checked = printSettings.print_original_price;
+  document.getElementById('psPrintProductNotes').checked = printSettings.print_product_notes;
+  document.getElementById('psPrintDiscount').checked = printSettings.print_discount;
+  document.getElementById('psPrintTaxTotal').checked = printSettings.print_tax_total;
+  document.getElementById('psPrintInstantNote').checked = printSettings.print_instant_note;
+  document.getElementById('psPrintItemCode').checked = printSettings.print_item_code;
+  document.getElementById('psCopies').value = printSettings.copies;
+  document.getElementById('printSettingsForm').addEventListener('submit', savePrintSettings);
+}
+
+async function savePrintSettings(e) {
+  e.preventDefault();
+  if (!currentProfile?.branch_id) return;
+  const errBox = document.getElementById('printSettingsError');
+  errBox.classList.remove('show');
+  const btn = document.getElementById('printSettingsSaveBtn');
+  const payload = {
+    print_logo: document.getElementById('psPrintLogo').checked,
+    print_device_name: document.getElementById('psPrintDeviceName').checked,
+    print_unit_price: document.getElementById('psPrintUnitPrice').checked,
+    print_original_price: document.getElementById('psPrintOriginalPrice').checked,
+    print_product_notes: document.getElementById('psPrintProductNotes').checked,
+    print_discount: document.getElementById('psPrintDiscount').checked,
+    print_tax_total: document.getElementById('psPrintTaxTotal').checked,
+    print_instant_note: document.getElementById('psPrintInstantNote').checked,
+    print_item_code: document.getElementById('psPrintItemCode').checked,
+    copies: Math.max(1, Math.min(5, Number(document.getElementById('psCopies').value) || 1)),
+    updated_at: new Date().toISOString()
+  };
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  try {
+    const { error } = await supabaseClient.from('settings')
+      .upsert({ key: printSettingsKey(), value: payload, branch_id: currentProfile.branch_id, updated_at: new Date().toISOString() });
+    if (error) throw error;
+    printSettings = payload;
+    applyPrintSettingsToPosUI();
+    showToast('تم حفظ إعدادات الطباعة بنجاح');
+    document.getElementById('printSettingsSavedNote').textContent = 'آخر حفظ: ' + new Date().toLocaleString('ar-EG');
+  } catch (err) {
+    console.error(err);
+    errBox.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errBox.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ إعدادات الطباعة';
+  }
+}
+
 let activeQuickDiscounts = [];
 let selectedQuickDiscount = null;
 async function loadQuickDiscounts() {
@@ -3966,6 +4198,11 @@ function resetQuickDiscountSelection() {
   selectedQuickDiscount = null;
   posEls.discountInput.readOnly = false;
   document.querySelectorAll('.quick-discount-btn').forEach(b => b.classList.remove('active'));
+}
+
+function applyPrintSettingsToPosUI() {
+  const row = document.getElementById('instantNoteRow');
+  if (row) row.style.display = printSettings.print_instant_note ? '' : 'none';
 }
 
 function renderCart() {
@@ -4038,6 +4275,26 @@ async function doLogout() {
   showView('login');
 }
 
+// لو إعداد "استمرار العداد فى كل الأيام" متعطّل، بنحسب رقم فاتورة يومي (تسلسلي من جديد كل يوم)
+// للعرض فقط فى الإيصال/التنبيه — رقم الفاتورة الحقيقي فى قاعدة البيانات (invoice_number) بيفضل مستمر دايمًا.
+async function computeDailyInvoiceNumber(sale) {
+  try {
+    const dayStart = new Date(sale.created_at);
+    dayStart.setHours(0, 0, 0, 0);
+    const { count, error } = await supabaseClient
+      .from('sales')
+      .select('id', { count: 'exact', head: true })
+      .eq('branch_id', sale.branch_id)
+      .gte('created_at', dayStart.toISOString())
+      .lte('created_at', sale.created_at);
+    if (error) throw error;
+    return count || 1;
+  } catch (err) {
+    console.error(err);
+    return sale.invoice_number;
+  }
+}
+
 async function doCheckout() {
   if (cart.length === 0) return;
   posEls.checkoutBtn.disabled = true;
@@ -4049,6 +4306,10 @@ async function doCheckout() {
     const total = calcTotal();
     const customerId = posEls.customerSelect.value || null;
     const paymentMethod = posEls.paymentMethodSelect.value || 'cash';
+
+    if (branchSettings.require_customer_pos && !customerId) {
+      throw new Error('من إعدادات الفرع: يجب تحديد العميل قبل إتمام البيع');
+    }
 
     // البيع بالأجل متاح فقط لعميل مسجل — عميل نقدي لازم يدفع كامل المبلغ
     let paidAmount = customerId ? (Number(posEls.paidInput.value) || 0) : total;
@@ -4087,18 +4348,30 @@ async function doCheckout() {
 
     showToast(`تمت الفاتورة رقم ${sale.invoice_number} بنجاح`);
 
+    let displayInvoiceNumber = sale.invoice_number;
+    if (!branchSettings.continuous_invoice_numbering) {
+      displayInvoiceNumber = await computeDailyInvoiceNumber(sale);
+    }
+
     const customerName = customerId
       ? (posEls.customerSelect.selectedOptions[0]?.textContent || '')
       : '';
+    const instantNote = printSettings.print_instant_note
+      ? (document.getElementById('instantNoteInput')?.value || '').trim()
+      : '';
     showReceipt({
-      invoiceNumber: sale.invoice_number,
+      invoiceNumber: displayInvoiceNumber,
+      realInvoiceNumber: sale.invoice_number,
       createdAt: sale.created_at,
       cashierName: currentProfile.full_name,
       branchName: currentProfile.branches?.name || '',
       customerName,
+      instantNote,
       lines: cart.map(l => ({
         name: l.unitLabel && l.productUnitId ? `${l.product.name} (${l.unitLabel})` : l.product.name,
         quantity: l.quantity, unitPrice: l.unitPrice,
+        originalPrice: l.basePrice,
+        code: (l.product.product_barcodes && l.product.product_barcodes[0]?.barcode) || '',
       })),
       subtotal, discount, tax, total, paidAmount, remaining, paymentMethod,
     });
@@ -4106,6 +4379,8 @@ async function doCheckout() {
     cart = []; posEls.discountInput.value = 0; setCustomerSelection('', { silent: true });
     delete posEls.paidInput.dataset.touched; posEls.paidInput.value = '';
     posEls.paymentMethodSelect.value = 'cash';
+    const instantNoteEl = document.getElementById('instantNoteInput');
+    if (instantNoteEl) instantNoteEl.value = '';
     resetQuickDiscountSelection();
     renderCart();
     closeMobileCart();
@@ -4120,25 +4395,29 @@ async function doCheckout() {
   }
 }
 
-function showReceipt(sale) {
-  const dateStr = new Date(sale.createdAt).toLocaleString('ar-EG', {
-    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
-  });
-
-  const itemsHtml = sale.lines.map(l => `
+function buildReceiptHtml(sale, dateStr) {
+  const itemsHtml = sale.lines.map(l => {
+    const originalRow = (printSettings.print_original_price && l.originalPrice && Math.abs(l.originalPrice - l.unitPrice) > 0.001)
+      ? `<div class="r-item-meta" style="color:#999; text-decoration:line-through;"><span>سعر أصلي</span><span>${l.originalPrice.toFixed(2)}</span></div>` : '';
+    const codeRow = (printSettings.print_item_code && l.code)
+      ? `<div class="r-item-meta" style="color:#777;"><span>الرمز</span><span>${escapeHtml(l.code)}</span></div>` : '';
+    const priceRow = printSettings.print_unit_price
+      ? `<div class="r-item-meta"><span>${l.quantity} × ${l.unitPrice.toFixed(2)}</span><span>${(l.quantity * l.unitPrice).toFixed(2)}</span></div>`
+      : `<div class="r-item-meta"><span>الكمية: ${l.quantity}</span><span>${(l.quantity * l.unitPrice).toFixed(2)}</span></div>`;
+    return `
     <div class="r-item-row">
       <div class="r-item-name">${escapeHtml(l.name)}</div>
-      <div class="r-item-meta">
-        <span>${l.quantity} × ${l.unitPrice.toFixed(2)}</span>
-        <span>${(l.quantity * l.unitPrice).toFixed(2)}</span>
-      </div>
-    </div>`).join('');
+      ${codeRow}
+      ${originalRow}
+      ${priceRow}
+    </div>`;
+  }).join('');
 
   const receiptLogo = currentProfile?.branches?.logo || companyInfo.logo;
-  document.getElementById('receiptContent').innerHTML = `
+  return `
     <div class="r-center">
-      ${receiptLogo ? `<img src="${receiptLogo}" class="r-logo" alt="">` : ''}
-      <div class="r-title">${escapeHtml(sale.branchName || 'نظام نقاط البيع')}</div>
+      ${(printSettings.print_logo && receiptLogo) ? `<img src="${receiptLogo}" class="r-logo" alt="">` : ''}
+      ${printSettings.print_device_name ? `<div class="r-title">${escapeHtml(sale.branchName || 'نظام نقاط البيع')}</div>` : ''}
       <div class="r-sub">فاتورة رقم #${sale.invoiceNumber}</div>
       <div class="r-sub num">${dateStr}</div>
     </div>
@@ -4150,15 +4429,31 @@ function showReceipt(sale) {
     ${itemsHtml}
     <div class="r-divider"></div>
     <div class="r-row"><span>الإجمالي الفرعي</span><span class="num">${sale.subtotal.toFixed(2)}</span></div>
-    ${sale.discount > 0 ? `<div class="r-row"><span>الخصم</span><span class="num">-${sale.discount.toFixed(2)}</span></div>` : ''}
-    ${sale.tax > 0 ? `<div class="r-row"><span>${taxInclusive ? 'منها ضريبة' : 'الضريبة'}</span><span class="num">${sale.tax.toFixed(2)}</span></div>` : ''}
+    ${(printSettings.print_discount && sale.discount > 0) ? `<div class="r-row"><span>الخصم</span><span class="num">-${sale.discount.toFixed(2)}</span></div>` : ''}
+    ${(printSettings.print_tax_total && sale.tax > 0) ? `<div class="r-row"><span>${taxInclusive ? 'منها ضريبة' : 'الضريبة'}</span><span class="num">${sale.tax.toFixed(2)}</span></div>` : ''}
     <div class="r-total-row"><span>الإجمالي</span><span class="num">${sale.total.toFixed(2)}</span></div>
     ${sale.remaining > 0 ? `
     <div class="r-row"><span>المدفوع</span><span class="num">${sale.paidAmount.toFixed(2)}</span></div>
     <div class="r-row" style="color:#C13B3B; font-weight:700;"><span>آجل على حساب العميل</span><span class="num">${sale.remaining.toFixed(2)}</span></div>` : ''}
+    ${(printSettings.print_instant_note && sale.instantNote) ? `<div class="r-divider"></div><div class="r-row" style="flex-direction:column; align-items:flex-start;"><span>ملاحظة</span><span>${escapeHtml(sale.instantNote)}</span></div>` : ''}
     <div class="r-footer">شكرًا لتعاملكم معنا 🌿</div>
   `;
+}
 
+function showReceipt(sale) {
+  const dateStr = new Date(sale.createdAt).toLocaleString('ar-EG', {
+    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+  });
+
+  const singleCopyHtml = buildReceiptHtml(sale, dateStr);
+  const copies = Math.max(1, Math.min(5, Number(printSettings.copies) || 1));
+  const finalHtml = copies > 1
+    ? Array.from({ length: copies }, (_, i) =>
+        `<div class="r-copy-page"${i < copies - 1 ? ' style="page-break-after: always; margin-bottom: 14px; border-bottom: 2px dashed #ccc; padding-bottom: 14px;"' : ''}>${singleCopyHtml}</div>`
+      ).join('')
+    : singleCopyHtml;
+
+  document.getElementById('receiptContent').innerHTML = finalHtml;
   document.getElementById('receiptModalOverlay').classList.add('show');
 }
 
@@ -4334,6 +4629,7 @@ async function saveSaleReturn(e) {
 // المكتب الخلفي (لوحة التحكم) — إدارة الأصناف والمجموعات
 // ------------------------------------------------------------
 let boInitialized = false;
+let userNavigatedDuringBoLoad = false;
 let boProducts = [];
 let boCategories = [];
 let currentBarcodes = []; // الباركود المرتبط بالصنف المفتوح حاليًا في المودال
@@ -4341,6 +4637,7 @@ let currentUnits = []; // وحدات البيع الإضافية المرتبط�
 
 async function enterBackoffice() {
   showView('backoffice');
+  userNavigatedDuringBoLoad = false;
   if (!boInitialized) {
     document.getElementById('boBranchLabel').textContent = currentProfile.branches?.name || 'بدون فرع';
     document.getElementById('boCashierLabel').textContent = currentProfile.full_name;
@@ -4364,6 +4661,8 @@ async function enterBackoffice() {
   await loadBoQuickDiscounts();
   await loadTaxInclusiveSetting();
   await loadCompanyInfoGlobal();
+  await loadBranchSettings();
+  await loadPrintSettings();
   renderProductsTable();
   renderCategoriesTable();
   renderCustomersTable();
@@ -4387,6 +4686,7 @@ async function enterBackoffice() {
     showView('pos');
     return;
   }
+  if (userNavigatedDuringBoLoad) return; // المستخدم فتح شاشة بنفسه أثناء التحميل، ما نرجعوش للرئيسية
   const landingBtn = document.querySelector(`.bo-nav-item[data-section="${landingSection}"], .bo-nav-sub-item[data-section="${landingSection}"]`);
   activateBoSection(landingSection, landingBtn);
 }
@@ -4394,7 +4694,7 @@ async function enterBackoffice() {
 const boAllSections = ['dashboard','products','categories','unit-types','tax-rates','quick-discounts','customer-types',
   'sales-list','customers','suppliers','payments','purchases','purchase-returns','sale-returns',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
-  'soon','company-info','permissions','users','branches','stock','backup','reset-data','employees','expense-items','expenses','salaries'];
+  'soon','company-info','permissions','users','branches','branch-settings','print-settings','stock','backup','reset-data','employees','expense-items','expenses','salaries'];
 
 const boNavGroups = [
   { toggle: 'stockNavToggle', group: 'stockNavGroup', sections: ['products','categories','unit-types','tax-rates','quick-discounts','stock'] },
@@ -4403,7 +4703,7 @@ const boNavGroups = [
   { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
   { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['payments','expense-items','expenses'] },
   { toggle: 'hrNavToggle', group: 'hrNavGroup', sections: ['employees','salaries'] },
-  { toggle: 'adminNavToggle', group: 'adminNavGroup', sections: ['company-info','permissions','users','branches','backup','reset-data'] }
+  { toggle: 'adminNavToggle', group: 'adminNavGroup', sections: ['company-info','permissions','users','branches','branch-settings','print-settings','backup','reset-data'] }
 ];
 
 // كل قسم في القائمة الجانبية بيتبع لأنهي مفتاح صلاحية (roles.permissions)
@@ -4416,7 +4716,8 @@ const SECTION_PERMISSION_MAP = {
   'reports-sales': 'reports', 'reports-purchases': 'reports', 'reports-inventory': 'reports', 'reports-accounting': 'reports', 'reports-other': 'reports',
   'payments': 'finance', 'expense-items': 'finance', 'expenses': 'finance',
   'employees': 'hr', 'salaries': 'hr',
-  'company-info': 'admin', 'permissions': 'admin', 'users': 'admin', 'branches': 'admin', 'backup': 'admin', 'reset-data': 'admin',
+  'company-info': 'admin', 'permissions': 'admin', 'users': 'admin', 'branches': 'admin',
+  'branch-settings': 'admin', 'print-settings': 'admin', 'backup': 'admin', 'reset-data': 'admin',
   'soon': null
 };
 
@@ -4469,6 +4770,8 @@ function activateBoSection(section, btn) {
   if (section === 'stock' && !stockSectionLoadedOnce) { initStockSection(); stockSectionLoadedOnce = true; }
   if (section === 'reset-data' && !resetDataLoadedOnce) { initResetDataSection(); resetDataLoadedOnce = true; }
   if (section === 'company-info' && !companyInfoLoadedOnce) { initCompanyInfoSection(); companyInfoLoadedOnce = true; }
+  if (section === 'branch-settings' && !branchSettingsLoadedOnce) { initBranchSettingsSection(); branchSettingsLoadedOnce = true; }
+  if (section === 'print-settings' && !printSettingsLoadedOnce) { initPrintSettingsSection(); printSettingsLoadedOnce = true; }
   if (section === 'permissions') { renderPermissionsTable(); }
   if (section === 'reports-sales' && !reportsLoadedOnce) { populateReportBranchFilter(); runReport(); reportsLoadedOnce = true; }
   if (section === 'reports-accounting' && !accountingReportsLoadedOnce) { refreshDebtsReport(); accountingReportsLoadedOnce = true; }
@@ -4638,14 +4941,14 @@ function bindBackofficeEvents() {
 
   document.getElementById('backToPosBtn').addEventListener('click', () => showView('pos'));
   document.getElementById('boLogoutBtn').addEventListener('click', doLogout);
-  document.getElementById('refreshDashboardBtn').addEventListener('click', loadDashboard);
+  document.getElementById('refreshDashboardBtn').addEventListener('click', () => loadDashboard());
 
   document.querySelectorAll('.bo-nav-item:not(.bo-nav-parent)').forEach(btn => {
-    btn.addEventListener('click', () => activateBoSection(btn.dataset.section, btn));
+    btn.addEventListener('click', () => { userNavigatedDuringBoLoad = true; activateBoSection(btn.dataset.section, btn); });
   });
 
   document.querySelectorAll('.bo-nav-sub-item').forEach(btn => {
-    btn.addEventListener('click', () => activateBoSection(btn.dataset.section, btn));
+    btn.addEventListener('click', () => { userNavigatedDuringBoLoad = true; activateBoSection(btn.dataset.section, btn); });
   });
 
   boNavGroups.forEach(navGroup => {
