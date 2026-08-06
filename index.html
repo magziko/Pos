@@ -88,6 +88,30 @@ a { color: inherit; }
 .topbar-clock { font-family: var(--font-num); direction: ltr; opacity: 0.9; }
 .logout-btn { background: rgba(255,255,255,0.12); color: white; padding: 7px 14px; border-radius: var(--radius-sm); font-size: 13px; }
 .logout-btn:hover { background: rgba(255,255,255,0.22); }
+.shift-badge { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.12); padding: 6px 12px; border-radius: 20px; font-size: 12.5px; }
+.shift-badge-dot { width: 8px; height: 8px; border-radius: 50%; background: #6FE3B8; flex-shrink: 0; }
+.shift-badge.closed .shift-badge-dot { background: #E0A94E; }
+.close-shift-btn { background: var(--amber-100); color: var(--amber-600); padding: 7px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; }
+.close-shift-btn:hover { background: #F5DCB0; }
+.shift-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; margin: 6px 0 16px; }
+.shift-summary-box { background: var(--surface-sunken); border-radius: var(--radius-sm); padding: 10px 12px; }
+.shift-summary-box-label { font-size: 12px; color: var(--ink-soft); margin-bottom: 4px; }
+.shift-summary-box-value { font-size: 16px; font-weight: 700; font-family: var(--font-num); direction: ltr; text-align: right; }
+.shift-diff-row { display: flex; justify-content: space-between; align-items: center; background: var(--teal-100); border-radius: var(--radius-sm); padding: 12px 14px; margin-top: 10px; }
+.shift-diff-row .shift-diff-label { font-size: 13.5px; font-weight: 700; color: var(--teal-900); }
+.shift-diff-row .shift-diff-value { font-size: 18px; font-weight: 700; font-family: var(--font-num); direction: ltr; }
+.shift-forced-note { font-size: 12.5px; color: var(--ink-soft); background: var(--amber-100); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 16px; }
+.z-report-row { display: flex; justify-content: space-between; font-size: 12.5px; margin-bottom: 6px; }
+.z-report-row.total { font-weight: 700; font-size: 14px; border-top: 1px dashed #999; padding-top: 8px; margin-top: 4px; }
+.z-report-section-title { font-family: var(--font-ar); font-weight: 700; font-size: 12.5px; margin: 12px 0 6px; color: #333; }
+
+@media print {
+  body * { visibility: hidden; }
+  #zReportModalOverlay, #zReportModalOverlay * { visibility: visible; }
+  #zReportModalOverlay { position: absolute; inset: 0; background: white; padding: 0; }
+  .z-report-actions { display: none; }
+  .z-report-modal-box { max-width: 100%; box-shadow: none; border: none; }
+}
 .main { display: grid; grid-template-columns: 1fr 380px; overflow: hidden; }
 .product-side { display: flex; flex-direction: column; overflow: hidden; padding: 16px 18px; }
 .search-row { display: flex; gap: 10px; margin-bottom: 14px; }
@@ -142,6 +166,18 @@ a { color: inherit; }
 .paid-row label { font-size: 12.5px; color: var(--ink-soft); white-space: nowrap; }
 .paid-row input { flex: 1; padding: 8px 10px; font-size: 12.5px; text-align: center; }
 .totals-row.due { color: var(--danger); font-weight: 700; }
+.split-toggle-row { margin: 6px 0; font-size: 12.5px; }
+.split-toggle-label { display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--ink-soft); }
+.split-toggle-label input { cursor: pointer; }
+.split-pay-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+.split-pay-row select { flex: 1.3; padding: 7px 6px; font-size: 12px; }
+.split-pay-row input { flex: 1; padding: 7px 8px; font-size: 12.5px; text-align: center; }
+.split-pay-row .split-remove-btn { flex: 0 0 auto; padding: 6px 9px; font-size: 12px; background: #fbe9e9; color: var(--danger); border: none; border-radius: 6px; cursor: pointer; }
+.split-add-btn { width: 100%; margin-bottom: 8px; font-size: 12px; padding: 7px; }
+#splitDiffRow, .split-diff-row { font-size: 12.5px; margin-bottom: 6px; display: flex; justify-content: space-between; }
+#splitDiffRow.balanced, .split-diff-row.balanced { color: var(--ink-soft); }
+#splitDiffRow.unbalanced, .split-diff-row.unbalanced { color: var(--danger); font-weight: 700; }
+.edit-payment-note { font-size: 13px; color: var(--ink-soft); margin-bottom: 10px; line-height: 1.6; }
 .quick-discount-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
 .quick-discount-btn { background: var(--surface-sunken); color: var(--ink-soft); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
 .quick-discount-btn:hover { background: var(--teal-100); color: var(--teal-700); }
@@ -366,6 +402,11 @@ a { color: inherit; }
 .bc-label svg { display: block; max-width: 100%; }
 .bc-label-empty { font-size: 12.5px; color: var(--ink-soft); padding: 10px; text-align: center; width: 100%; }
 .bc-print-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; align-items: center; }
+.bc-multi-items-list { display: flex; flex-direction: column; gap: 6px; max-height: 180px; overflow-y: auto; background: var(--surface-sunken); border-radius: var(--radius-sm); padding: 8px; }
+.bc-multi-item { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 6px 8px; }
+.bc-multi-item-name { font-size: 12.5px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bc-multi-item-qty { width: 64px; flex-shrink: 0; padding: 6px 8px; font-size: 12.5px; text-align: center; }
+.bc-multi-item-skipped { font-size: 11.5px; color: var(--amber-600); padding: 2px 2px 0; }
 
 @media print {
   #barcodeLabelModalOverlay.show, #barcodeLabelModalOverlay.show * { visibility: visible; }
@@ -616,7 +657,9 @@ a { color: inherit; }
       </div>
       <div class="topbar-right">
         <span id="cashierLabel">—</span>
+        <div class="shift-badge closed" id="shiftBadge"><span class="shift-badge-dot"></span><span id="shiftStatusLabel">لا توجد وردية مفتوحة</span></div>
         <span class="topbar-clock" id="clockLabel">--:--</span>
+        <button class="close-shift-btn" id="closeShiftBtn" style="display:none;">إغلاق الوردية</button>
         <button class="logout-btn" id="backofficeBtn" style="display:none;">لوحة التحكم</button>
         <button class="logout-btn" id="logoutBtn">تسجيل الخروج</button>
       </div>
@@ -655,6 +698,17 @@ a { color: inherit; }
               <option value="transfer">تحويل</option>
               <option value="other">أخرى</option>
             </select>
+          </div>
+          <div class="split-toggle-row">
+            <label class="split-toggle-label">
+              <input type="checkbox" id="splitPaymentToggle">
+              <span>دفع بأكثر من طريقة (نقدي + بطاقة...)</span>
+            </label>
+          </div>
+          <div id="splitPaymentBlock" style="display:none;">
+            <div id="splitPaymentRows"></div>
+            <button type="button" class="btn-secondary split-add-btn" id="splitAddRowBtn">+ إضافة طريقة دفع</button>
+            <div id="splitDiffRow" class="split-diff-row balanced"><span id="splitDiffLabel">إجمالي المدخل</span><span class="num" id="splitDiffValue">0.00</span></div>
           </div>
           <div class="paid-row" id="paidRow" style="display:none;">
             <label for="paidInput">المدفوع الآن</label>
@@ -697,6 +751,7 @@ a { color: inherit; }
     <div class="bo-main">
       <div class="bo-sidebar">
         <button class="bo-nav-item active" data-section="dashboard">الرئيسية</button>
+        <button class="bo-nav-item" data-section="shifts">الورديات وإغلاق الخزينة</button>
 
         <!-- 1. الأصناف والمخزون -->
         <div class="bo-nav-group" id="stockNavGroup">
@@ -1194,6 +1249,49 @@ a { color: inherit; }
               </thead>
               <tbody id="purchaseReturnsTableBody">
                 <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم الورديات وإغلاق الخزينة -->
+        <div id="bo-section-shifts" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">الورديات وإغلاق الخزينة</div>
+            <button class="bo-add-btn" id="refreshShiftsBtn" type="button">تحديث</button>
+          </div>
+          <div class="report-filters" style="margin-bottom:14px;">
+            <div class="field">
+              <label>الحالة</label>
+              <select id="shiftsStatusFilter">
+                <option value="">الكل</option>
+                <option value="open">مفتوحة</option>
+                <option value="closed">مغلقة</option>
+              </select>
+            </div>
+            <div class="field" id="shiftsBranchField" style="display:none;">
+              <label>الفرع</label>
+              <select id="shiftsBranchFilter"><option value="">كل الفروع</option></select>
+            </div>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>الكاشير</th>
+                  <th>الفرع</th>
+                  <th>وقت الفتح</th>
+                  <th>العهدة</th>
+                  <th>وقت الإغلاق</th>
+                  <th>المتوقع</th>
+                  <th>الفعلي</th>
+                  <th>الفرق</th>
+                  <th>الحالة</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="shiftsTableBody">
+                <tr><td colspan="10" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
@@ -2603,6 +2701,20 @@ a { color: inherit; }
   </div>
 </div>
 
+<!-- Modal: تم حفظ فاتورة الشراء (طباعة ملصقات) -->
+<div class="modal-overlay" id="purchaseSavedModalOverlay">
+  <div class="modal-box" style="max-width:420px;">
+    <div class="modal-title">تم حفظ فاتورة الشراء رقم <span id="purchaseSavedNumber" class="num"></span></div>
+    <div style="font-size:13px; color:var(--ink-soft); line-height:1.7; margin-bottom:18px;">
+      هل تريد طباعة ملصقات الباركود للأصناف المستلمة في هذه الفاتورة الآن؟ عدد الملصقات لكل صنف = الكمية المسجلة في السطر تلقائيًا، وممكن تعدله قبل الطباعة.
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel-btn" id="skipPurchaseLabelsBtn" type="button">إغلاق</button>
+      <button class="submit-btn" id="printPurchaseLabelsBtn" type="button" style="margin-top:0; flex:1;">طباعة ملصقات الأصناف المستلمة</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: مرتجع بيع -->
 <div class="modal-overlay" id="saleReturnModalOverlay">
   <div class="modal-box wide">
@@ -2636,14 +2748,29 @@ a { color: inherit; }
             <label>سبب المرتجع (اختياري)</label>
             <input type="text" id="saleReturnReasonInput" placeholder="مثال: عيب في المنتج">
           </div>
-          <div class="field">
+          <div class="field" id="saleReturnMethodField">
             <label>طريقة الاسترداد</label>
             <select id="saleReturnMethodSelect">
               <option value="cash">استرداد نقدي</option>
+              <option value="card">استرداد على البطاقة</option>
+              <option value="transfer">استرداد بتحويل</option>
+              <option value="other">أخرى</option>
               <option value="credit">رصيد على حساب العميل</option>
               <option value="exchange">استبدال بصنف آخر</option>
             </select>
           </div>
+        </div>
+
+        <div class="split-toggle-row" id="saleReturnSplitToggleRow">
+          <label class="split-toggle-label">
+            <input type="checkbox" id="saleReturnSplitToggle">
+            <span>استرداد المبلغ بأكثر من طريقة (نقدي + بطاقة...)</span>
+          </label>
+        </div>
+        <div id="saleReturnSplitBlock" style="display:none;">
+          <div id="saleReturnSplitRows"></div>
+          <button type="button" class="btn-secondary split-add-btn" id="saleReturnSplitAddBtn">+ إضافة طريقة استرداد</button>
+          <div id="saleReturnSplitDiffRow" class="split-diff-row balanced"><span id="saleReturnSplitDiffLabel">إجمالي المدخل</span><span class="num" id="saleReturnSplitDiffValue">0.00</span></div>
         </div>
       </div>
 
@@ -2735,6 +2862,14 @@ a { color: inherit; }
         <div class="field"><label>البند</label><select id="expenseItemSelect" required></select></div>
         <div class="field"><label>الفرع</label><select id="expenseBranchSelect" required></select></div>
         <div class="field"><label>المبلغ</label><input type="number" id="expenseAmount" step="0.01" min="0" required value="0"></div>
+        <div class="field"><label>طريقة الدفع</label>
+          <select id="expenseMethod">
+            <option value="cash">نقدي</option>
+            <option value="card">بطاقة</option>
+            <option value="transfer">تحويل</option>
+            <option value="other">أخرى</option>
+          </select>
+        </div>
         <div class="field"><label>التاريخ</label><input type="date" id="expenseDate" required></div>
         <div class="field field-full"><label>ملاحظات (اختياري)</label><input type="text" id="expenseNotes"></div>
       </div>
@@ -3003,7 +3138,27 @@ a { color: inherit; }
     <div id="invoiceDetailModalBody"></div>
     <div class="modal-actions invoice-detail-actions" style="margin-top:18px;">
       <button type="button" class="modal-cancel-btn" id="closeInvoiceDetailBtn">إغلاق</button>
+      <button type="button" class="btn-secondary" id="editSalePaymentBtn" style="display:none;">تصحيح طريقة الدفع</button>
       <button type="button" class="submit-btn" id="printInvoiceDetailBtn" style="margin-top:0;">طباعة</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: تصحيح طريقة دفع فاتورة بيع مكتملة (أدمن فقط) -->
+<div class="modal-overlay" id="editSalePaymentModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">تصحيح طريقة الدفع — فاتورة #<span id="editSalePaymentInvoiceNo"></span></div>
+    <div class="edit-payment-note">
+      المبلغ المحصّل فعليًا من الفاتورة: <span class="num" id="editSalePaymentFixedAmount">0.00</span> —
+      هنا بتصحّح طريقة (أو طرق) الدفع المسجّلة بس، من غير ما يتغيّر إجمالي المبلغ المحصّل.
+    </div>
+    <div id="editSalePaymentRows"></div>
+    <button type="button" class="btn-secondary split-add-btn" id="editSalePaymentAddBtn">+ إضافة طريقة دفع</button>
+    <div id="editSalePaymentDiffRow" class="split-diff-row balanced"><span id="editSalePaymentDiffLabel">إجمالي المدخل</span><span class="num" id="editSalePaymentDiffValue">0.00</span></div>
+    <div class="error-msg" id="editSalePaymentError"></div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="cancelEditSalePaymentBtn">إلغاء</button>
+      <button type="button" class="submit-btn" id="saveEditSalePaymentBtn">حفظ التصحيح</button>
     </div>
   </div>
 </div>
@@ -3021,6 +3176,67 @@ a { color: inherit; }
       </select>
       <button type="button" class="modal-cancel-btn" id="closeReceiptBtn">إغلاق</button>
       <button type="button" class="submit-btn" id="printReceiptBtn" style="margin-top:0;">طباعة</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: فتح وردية -->
+<div class="modal-overlay" id="openShiftModalOverlay">
+  <div class="modal-box" style="max-width:420px;">
+    <div class="modal-title">فتح وردية جديدة</div>
+    <div class="shift-forced-note" id="openShiftForcedNote" style="display:none;">لازم تفتح وردية بمبلغ العهدة قبل ما تقدر تبيع.</div>
+    <form id="openShiftForm">
+      <div class="field field-full"><label for="openShiftAmount">العهدة / المبلغ الافتتاحي *</label><input type="number" id="openShiftAmount" min="0" step="0.01" value="0" required></div>
+      <div class="field field-full"><label for="openShiftNotes">ملاحظات (اختياري)</label><input type="text" id="openShiftNotes" placeholder="مثال: تسليم من الوردية السابقة..."></div>
+      <div class="error-msg" id="openShiftError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="openShiftLogoutBtn">تسجيل الخروج</button>
+        <button type="submit" class="submit-btn" style="margin-top:0;" id="openShiftSubmitBtn">بدء الوردية</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: إغلاق وردية -->
+<div class="modal-overlay" id="closeShiftModalOverlay">
+  <div class="modal-box" style="max-width:460px;">
+    <div class="modal-title">إغلاق الوردية</div>
+    <div class="shift-summary-grid">
+      <div class="shift-summary-box"><div class="shift-summary-box-label">العهدة الافتتاحية</div><div class="shift-summary-box-value num" id="csOpeningAmount">0.00</div></div>
+      <div class="shift-summary-box"><div class="shift-summary-box-label">عدد الفواتير</div><div class="shift-summary-box-value num" id="csInvoiceCount">0</div></div>
+      <div class="shift-summary-box"><div class="shift-summary-box-label">مبيعات نقدي</div><div class="shift-summary-box-value num" id="csCashSales">0.00</div></div>
+      <div class="shift-summary-box"><div class="shift-summary-box-label">مبيعات بطاقة</div><div class="shift-summary-box-value num" id="csCardSales">0.00</div></div>
+      <div class="shift-summary-box"><div class="shift-summary-box-label">مبيعات تحويل</div><div class="shift-summary-box-value num" id="csTransferSales">0.00</div></div>
+      <div class="shift-summary-box"><div class="shift-summary-box-label">مبيعات أخرى</div><div class="shift-summary-box-value num" id="csOtherSales">0.00</div></div>
+      <div class="shift-summary-box"><div class="shift-summary-box-label">مقبوضات نقدية (تحصيل من عملاء)</div><div class="shift-summary-box-value num" id="csCashReceipts">0.00</div></div>
+      <div class="shift-summary-box"><div class="shift-summary-box-label">مدفوعات نقدية (سداد لموردين)</div><div class="shift-summary-box-value num" id="csCashPayouts">0.00</div></div>
+      <div class="shift-summary-box"><div class="shift-summary-box-label">مصروفات نقدية</div><div class="shift-summary-box-value num" id="csCashExpenses">0.00</div></div>
+    </div>
+    <div class="shift-summary-box" style="margin-bottom:14px;">
+      <div class="shift-summary-box-label">صافي النقدية المتوقع في الدرج (عهدة + مبيعات نقدي + مقبوضات − مدفوعات − مصروفات)</div>
+      <div class="shift-summary-box-value num" id="csExpectedCash" style="font-size:19px;">0.00</div>
+    </div>
+    <div class="field field-full"><label for="csCountedInput">النقدية الفعلية بعد الجرد *</label><input type="number" id="csCountedInput" min="0" step="0.01" placeholder="اكتب المبلغ اللي عددته في الدرج"></div>
+    <div class="shift-diff-row">
+      <span class="shift-diff-label">الفرق (عجز / زيادة)</span>
+      <span class="shift-diff-value num" id="csDiffValue">—</span>
+    </div>
+    <div class="field field-full" style="margin-top:12px;"><label for="closeShiftNotes">ملاحظات (اختياري)</label><input type="text" id="closeShiftNotes" placeholder="سبب العجز/الزيادة إن وجد..."></div>
+    <div class="error-msg" id="closeShiftError"></div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="cancelCloseShiftBtn">تراجع</button>
+      <button type="button" class="submit-btn" style="margin-top:0;" id="submitCloseShiftBtn">إغلاق الوردية</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: تقرير Z (تقرير إغلاق الوردية) -->
+<div class="modal-overlay" id="zReportModalOverlay">
+  <div class="modal-box receipt-modal-box z-report-modal-box">
+    <div class="receipt-paper" id="zReportContent"></div>
+    <div class="receipt-actions z-report-actions">
+      <button type="button" class="modal-cancel-btn" id="zReportLogoutBtn">تسجيل الخروج</button>
+      <button type="button" class="submit-btn" id="printZReportBtn" style="margin-top:0;">طباعة</button>
     </div>
   </div>
 </div>
@@ -3043,9 +3259,13 @@ a { color: inherit; }
           <option value="a4grid">شبكة ملصقات (ورق A4)</option>
         </select>
       </div>
-      <div>
+      <div id="bcSingleQtyWrap">
         <label>عدد الملصقات</label>
         <input type="number" id="bcLabelQty" min="1" max="200" value="1">
+      </div>
+      <div class="field-full" id="bcMultiItemsWrap" style="display:none;">
+        <label>الأصناف وعدد الملصقات لكل صنف (افتراضيًا = الكمية المستلمة، وقابل للتعديل)</label>
+        <div class="bc-multi-items-list" id="bcMultiItemsList"></div>
       </div>
       <div class="bc-print-toggles">
         <label><input type="checkbox" id="bcShowName" checked> إظهار اسم الصنف</label>
@@ -3100,6 +3320,8 @@ function loginIdentifierToEmail(identifier) {
 }
 
 let currentProfile = null;
+let currentShift = null;
+let shiftCloseSummary = null;
 
 function showView(name) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -3412,6 +3634,7 @@ let allCategories = [];
 let activeCategory = 'all';
 let cart = [];
 let heldOrders = JSON.parse(localStorage.getItem('pos_held_orders') || '[]');
+let splitPaymentLines = []; // [{ method, amount }] — لدفع الفاتورة بأكثر من طريقة دفع فى نفس العملية
 let posInitialized = false;
 
 const posEls = {};
@@ -3445,12 +3668,22 @@ function cachePosEls() {
   posEls.paymentMethodSelect = document.getElementById('posPaymentMethod');
   posEls.dueRow = document.getElementById('dueRow');
   posEls.dueLabel = document.getElementById('dueLabel');
+  posEls.splitToggle = document.getElementById('splitPaymentToggle');
+  posEls.splitBlock = document.getElementById('splitPaymentBlock');
+  posEls.splitRowsContainer = document.getElementById('splitPaymentRows');
+  posEls.splitAddBtn = document.getElementById('splitAddRowBtn');
+  posEls.splitDiffRow = document.getElementById('splitDiffRow');
+  posEls.splitDiffLabel = document.getElementById('splitDiffLabel');
+  posEls.splitDiffValue = document.getElementById('splitDiffValue');
   posEls.cartSide = document.getElementById('cartSide');
   posEls.cartDrawerBackdrop = document.getElementById('cartDrawerBackdrop');
   posEls.cartMobileClose = document.getElementById('cartMobileClose');
   posEls.mobileCartBar = document.getElementById('mobileCartBar');
   posEls.mobileCartCount = document.getElementById('mobileCartCount');
   posEls.mobileCartTotal = document.getElementById('mobileCartTotal');
+  posEls.shiftBadge = document.getElementById('shiftBadge');
+  posEls.shiftStatusLabel = document.getElementById('shiftStatusLabel');
+  posEls.closeShiftBtn = document.getElementById('closeShiftBtn');
 }
 
 function openMobileCart() {
@@ -3460,6 +3693,239 @@ function openMobileCart() {
 function closeMobileCart() {
   posEls.cartSide.classList.remove('open');
   posEls.cartDrawerBackdrop.classList.remove('show');
+}
+
+// ------------------------------------------------------------
+// الورديات وإغلاق الخزينة (Shifts & Cash Drawer Management)
+// ------------------------------------------------------------
+async function loadActiveShift() {
+  const { data, error } = await supabaseClient
+    .from('shifts')
+    .select('*')
+    .eq('user_id', currentProfile.id)
+    .eq('status', 'open')
+    .maybeSingle();
+  if (error) { console.error('loadActiveShift error', error); return null; }
+  return data;
+}
+
+function updateShiftBadge() {
+  if (!posEls.shiftBadge) return;
+  if (currentShift) {
+    const t = new Date(currentShift.opening_at);
+    posEls.shiftStatusLabel.textContent = `وردية مفتوحة منذ ${t.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}`;
+    posEls.shiftBadge.classList.remove('closed');
+    posEls.closeShiftBtn.style.display = 'inline-block';
+  } else {
+    posEls.shiftStatusLabel.textContent = 'لا توجد وردية مفتوحة';
+    posEls.shiftBadge.classList.add('closed');
+    posEls.closeShiftBtn.style.display = 'none';
+  }
+  if (posEls.checkoutBtn) posEls.checkoutBtn.disabled = cart.length === 0 || !currentShift;
+}
+
+function requireOpenShift() {
+  if (!currentShift) {
+    showToast('يجب فتح وردية أولاً قبل إتمام البيع', true);
+    openOpenShiftModal(true);
+    return false;
+  }
+  return true;
+}
+
+function openOpenShiftModal(forced = false) {
+  document.getElementById('openShiftForcedNote').style.display = forced ? 'block' : 'none';
+  document.getElementById('openShiftLogoutBtn').style.display = forced ? 'inline-block' : 'none';
+  document.getElementById('openShiftAmount').value = 0;
+  document.getElementById('openShiftNotes').value = '';
+  const errEl = document.getElementById('openShiftError');
+  errEl.textContent = ''; errEl.classList.remove('show');
+  document.getElementById('openShiftModalOverlay').classList.add('show');
+}
+function closeOpenShiftModal() {
+  document.getElementById('openShiftModalOverlay').classList.remove('show');
+}
+
+async function submitOpenShift(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('openShiftError');
+  errEl.classList.remove('show');
+  const amount = Number(document.getElementById('openShiftAmount').value);
+  if (isNaN(amount) || amount < 0) {
+    errEl.textContent = 'أدخل مبلغ عهدة صحيح'; errEl.classList.add('show'); return;
+  }
+  const notes = document.getElementById('openShiftNotes').value.trim();
+  const submitBtn = document.getElementById('openShiftSubmitBtn');
+  submitBtn.disabled = true; submitBtn.textContent = 'جاري الفتح...';
+  try {
+    const { data, error } = await supabaseClient
+      .from('shifts')
+      .insert({ branch_id: currentProfile.branch_id, user_id: currentProfile.id, opening_amount: amount, opening_notes: notes || null })
+      .select().single();
+    if (error) throw error;
+    currentShift = data;
+    updateShiftBadge();
+    closeOpenShiftModal();
+    showToast('تم فتح الوردية بنجاح');
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = (err.message || '').includes('uniq_open_shift_per_user') ? 'لديك وردية مفتوحة بالفعل' : (err.message || 'تعذر فتح الوردية');
+    errEl.classList.add('show');
+  } finally {
+    submitBtn.disabled = false; submitBtn.textContent = 'بدء الوردية';
+  }
+}
+
+async function computeShiftCashSummary(shiftId, openingAmount) {
+  const [{ data: sales, error: salesErr }, { data: salePayments, error: salePaymentsErr }, { data: payments, error: paymentsErr }, { data: expenses, error: expensesErr }] = await Promise.all([
+    supabaseClient.from('sales').select('id, total, paid_amount, payment_method').eq('shift_id', shiftId).eq('status', 'completed'),
+    supabaseClient.from('sale_payments').select('amount, method, sales!inner(shift_id, status)').eq('sales.shift_id', shiftId).eq('sales.status', 'completed'),
+    supabaseClient.from('payments').select('amount, method, payment_type').eq('shift_id', shiftId),
+    supabaseClient.from('expenses').select('amount, payment_method').eq('shift_id', shiftId),
+  ]);
+  if (salesErr) throw salesErr;
+  if (salePaymentsErr) throw salePaymentsErr;
+  if (paymentsErr) throw paymentsErr;
+  if (expensesErr) throw expensesErr;
+
+  // بنعتمد على sale_payments (تفصيل كل طريقة دفع فعليًا) بدل sales.payment_method
+  // عشان الفواتير اللي اتدفعت بأكثر من طريقة (مدفوع مقسّم) تتحسب صح فى كل طريقة على حدة
+  const byMethod = { cash: 0, card: 0, transfer: 0, other: 0 };
+  let totalSales = 0;
+  (sales || []).forEach(s => { totalSales += Number(s.total) || 0; });
+  (salePayments || []).forEach(p => {
+    const m = Object.prototype.hasOwnProperty.call(byMethod, p.method) ? p.method : 'other';
+    byMethod[m] += Number(p.amount) || 0;
+  });
+
+  const cashReceipts = (payments || [])
+    .filter(p => p.method === 'cash' && p.payment_type === 'customer_receipt')
+    .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+  const cashPayouts = (payments || [])
+    .filter(p => p.method === 'cash' && p.payment_type === 'supplier_payment')
+    .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+  const cashExpenses = (expenses || [])
+    .filter(e => e.payment_method === 'cash')
+    .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+
+  const expectedCash = Number(openingAmount) + byMethod.cash + cashReceipts - cashPayouts - cashExpenses;
+
+  return { byMethod, cashReceipts, cashPayouts, cashExpenses, expectedCash, invoiceCount: (sales || []).length, totalSales };
+}
+
+async function openCloseShiftModal() {
+  if (!currentShift) return;
+  try {
+    const summary = await computeShiftCashSummary(currentShift.id, currentShift.opening_amount);
+    shiftCloseSummary = summary;
+
+    document.getElementById('csOpeningAmount').textContent = Number(currentShift.opening_amount).toFixed(2);
+    document.getElementById('csInvoiceCount').textContent = summary.invoiceCount;
+    document.getElementById('csCashSales').textContent = summary.byMethod.cash.toFixed(2);
+    document.getElementById('csCardSales').textContent = summary.byMethod.card.toFixed(2);
+    document.getElementById('csTransferSales').textContent = summary.byMethod.transfer.toFixed(2);
+    document.getElementById('csOtherSales').textContent = summary.byMethod.other.toFixed(2);
+    document.getElementById('csCashReceipts').textContent = summary.cashReceipts.toFixed(2);
+    document.getElementById('csCashPayouts').textContent = summary.cashPayouts.toFixed(2);
+    document.getElementById('csCashExpenses').textContent = summary.cashExpenses.toFixed(2);
+    document.getElementById('csExpectedCash').textContent = summary.expectedCash.toFixed(2);
+    document.getElementById('csCountedInput').value = '';
+    document.getElementById('closeShiftNotes').value = '';
+    document.getElementById('csDiffValue').textContent = '—';
+    document.getElementById('csDiffValue').style.color = 'var(--ink)';
+    const errEl = document.getElementById('closeShiftError');
+    errEl.textContent = ''; errEl.classList.remove('show');
+
+    document.getElementById('closeShiftModalOverlay').classList.add('show');
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحميل ملخص الوردية', true);
+  }
+}
+
+function updateShiftDiffPreview() {
+  if (!shiftCloseSummary) return;
+  const raw = document.getElementById('csCountedInput').value;
+  const diffEl = document.getElementById('csDiffValue');
+  if (raw === '' || isNaN(Number(raw))) {
+    diffEl.textContent = '—'; diffEl.style.color = 'var(--ink)'; return;
+  }
+  const counted = Number(raw);
+  const diff = Math.round((counted - shiftCloseSummary.expectedCash) * 100) / 100;
+  diffEl.textContent = (diff > 0 ? '+' : '') + diff.toFixed(2);
+  diffEl.style.color = diff === 0 ? 'var(--ink)' : (diff > 0 ? 'var(--teal-700)' : 'var(--danger)');
+}
+
+async function submitCloseShift() {
+  const errEl = document.getElementById('closeShiftError');
+  errEl.classList.remove('show');
+  const countedRaw = document.getElementById('csCountedInput').value;
+  const counted = Number(countedRaw);
+  if (countedRaw === '' || isNaN(counted) || counted < 0) {
+    errEl.textContent = 'أدخل قيمة النقدية الفعلية بعد الجرد'; errEl.classList.add('show'); return;
+  }
+  const notes = document.getElementById('closeShiftNotes').value.trim();
+  const difference = Math.round((counted - shiftCloseSummary.expectedCash) * 100) / 100;
+  const submitBtn = document.getElementById('submitCloseShiftBtn');
+  submitBtn.disabled = true; submitBtn.textContent = 'جاري الإغلاق...';
+  try {
+    const { data, error } = await supabaseClient
+      .from('shifts')
+      .update({
+        status: 'closed', expected_cash: shiftCloseSummary.expectedCash, counted_cash: counted,
+        difference, closing_notes: notes || null, closed_by: currentProfile.id, closed_at: new Date().toISOString(),
+      })
+      .eq('id', currentShift.id).select().single();
+    if (error) throw error;
+    document.getElementById('closeShiftModalOverlay').classList.remove('show');
+    showZReport(data, shiftCloseSummary);
+    currentShift = null;
+    updateShiftBadge();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'تعذر إغلاق الوردية';
+    errEl.classList.add('show');
+  } finally {
+    submitBtn.disabled = false; submitBtn.textContent = 'إغلاق الوردية';
+  }
+}
+
+function showZReport(shift, summary) {
+  document.getElementById('zReportLogoutBtn').style.display = 'inline-block';
+  const openedAt = new Date(shift.opening_at);
+  const closedAt = new Date(shift.closed_at);
+  const diff = Number(shift.difference);
+  const diffLabel = diff === 0 ? 'مطابق تمامًا' : (diff > 0 ? `زيادة ${diff.toFixed(2)}` : `عجز ${Math.abs(diff).toFixed(2)}`);
+  document.getElementById('zReportContent').innerHTML = `
+    <div class="r-center">
+      <div class="r-title">تقرير إغلاق وردية (Z-Report)</div>
+      <div class="r-sub">${escapeHtml(currentProfile.branches?.name || '')}</div>
+      <div class="r-sub">الكاشير: ${escapeHtml(currentProfile.full_name)}</div>
+    </div>
+    <div class="r-divider"></div>
+    <div class="r-row"><span>فتح الوردية</span><span class="num">${openedAt.toLocaleString('ar-EG')}</span></div>
+    <div class="r-row"><span>إغلاق الوردية</span><span class="num">${closedAt.toLocaleString('ar-EG')}</span></div>
+    <div class="r-row"><span>عدد الفواتير</span><span class="num">${summary.invoiceCount}</span></div>
+    <div class="r-divider"></div>
+    <div class="z-report-section-title">المبيعات حسب طريقة الدفع</div>
+    <div class="r-row"><span>نقدي</span><span class="num">${summary.byMethod.cash.toFixed(2)}</span></div>
+    <div class="r-row"><span>بطاقة</span><span class="num">${summary.byMethod.card.toFixed(2)}</span></div>
+    <div class="r-row"><span>تحويل</span><span class="num">${summary.byMethod.transfer.toFixed(2)}</span></div>
+    <div class="r-row"><span>أخرى</span><span class="num">${summary.byMethod.other.toFixed(2)}</span></div>
+    <div class="r-row" style="font-weight:700;"><span>إجمالي المبيعات</span><span class="num">${summary.totalSales.toFixed(2)}</span></div>
+    <div class="r-divider"></div>
+    <div class="z-report-section-title">جرد الخزينة</div>
+    <div class="r-row"><span>العهدة الافتتاحية</span><span class="num">${Number(shift.opening_amount).toFixed(2)}</span></div>
+    <div class="r-row"><span>مبيعات نقدي</span><span class="num">${summary.byMethod.cash.toFixed(2)}</span></div>
+    <div class="r-row"><span>مقبوضات نقدية (تحصيل من عملاء)</span><span class="num">${summary.cashReceipts.toFixed(2)}</span></div>
+    <div class="r-row"><span>مدفوعات نقدية (سداد لموردين)</span><span class="num">−${summary.cashPayouts.toFixed(2)}</span></div>
+    <div class="r-row"><span>مصروفات نقدية</span><span class="num">−${summary.cashExpenses.toFixed(2)}</span></div>
+    <div class="r-row" style="font-weight:700;"><span>النقدية المتوقعة</span><span class="num">${Number(shift.expected_cash).toFixed(2)}</span></div>
+    <div class="r-row"><span>النقدية الفعلية (بعد الجرد)</span><span class="num">${Number(shift.counted_cash).toFixed(2)}</span></div>
+    <div class="r-total-row"><span>${diffLabel}</span><span class="num">${diff >= 0 ? '+' : ''}${diff.toFixed(2)}</span></div>
+    ${shift.closing_notes ? `<div class="r-divider"></div><div class="r-sub">ملاحظات: ${escapeHtml(shift.closing_notes)}</div>` : ''}
+    <div class="r-footer">تم الإنشاء بواسطة نظام نقاط البيع</div>`;
+  document.getElementById('zReportModalOverlay').classList.add('show');
 }
 
 async function enterPos() {
@@ -3483,6 +3949,10 @@ async function enterPos() {
   renderProducts();
   renderQuickDiscountButtons();
   subscribePosRealtime();
+
+  currentShift = await loadActiveShift();
+  updateShiftBadge();
+  if (!currentShift) openOpenShiftModal(true);
 }
 
 // ------------------------------------------------------------
@@ -3625,6 +4095,21 @@ function bindPosEvents() {
     showToast('تم استرجاع آخر فاتورة معلّقة');
   });
 
+  posEls.splitToggle.addEventListener('change', (e) => {
+    const on = e.target.checked;
+    posEls.splitBlock.style.display = on ? 'block' : 'none';
+    posEls.paymentMethodRow = posEls.paymentMethodRow || document.getElementById('paymentMethodRow');
+    posEls.paymentMethodRow.style.display = on ? 'none' : 'flex';
+    if (on && splitPaymentLines.length === 0) {
+      const total = calcTotal();
+      addSplitRow('cash', total);
+      addSplitRow('card', 0);
+    }
+    renderCart();
+  });
+
+  posEls.splitAddBtn.addEventListener('click', () => { addSplitRow('cash', 0); renderCart(); });
+
   posEls.checkoutBtn.addEventListener('click', doCheckout);
 
   posEls.mobileCartBar.addEventListener('click', openMobileCart);
@@ -3654,6 +4139,17 @@ function bindPosEvents() {
     window.print();
   });
 
+  document.getElementById('openShiftForm').addEventListener('submit', submitOpenShift);
+  document.getElementById('openShiftLogoutBtn').addEventListener('click', doLogout);
+  document.getElementById('closeShiftBtn').addEventListener('click', openCloseShiftModal);
+  document.getElementById('cancelCloseShiftBtn').addEventListener('click', () => {
+    document.getElementById('closeShiftModalOverlay').classList.remove('show');
+  });
+  document.getElementById('csCountedInput').addEventListener('input', updateShiftDiffPreview);
+  document.getElementById('submitCloseShiftBtn').addEventListener('click', submitCloseShift);
+  document.getElementById('zReportLogoutBtn').addEventListener('click', doLogout);
+  document.getElementById('printZReportBtn').addEventListener('click', () => window.print());
+
   document.getElementById('saleReturnBtn').addEventListener('click', openSaleReturnModal);
   document.getElementById('cancelSaleReturnBtn').addEventListener('click', closeSaleReturnModal);
   document.getElementById('saleReturnModalOverlay').addEventListener('click', (e) => {
@@ -3661,6 +4157,30 @@ function bindPosEvents() {
   });
   document.getElementById('saleReturnSearchBtn').addEventListener('click', searchSaleForReturn);
   document.getElementById('saleReturnForm').addEventListener('submit', saveSaleReturn);
+
+  // الاسترداد بأكثر من طريقة دفع فى مرتجع البيع
+  document.getElementById('saleReturnMethodSelect').addEventListener('change', (e) => {
+    const monetary = ['cash', 'card', 'transfer', 'other'].includes(e.target.value);
+    document.getElementById('saleReturnSplitToggleRow').style.display = monetary ? 'block' : 'none';
+    if (!monetary) {
+      document.getElementById('saleReturnSplitToggle').checked = false;
+      document.getElementById('saleReturnSplitBlock').style.display = 'none';
+      document.getElementById('saleReturnMethodField').style.display = '';
+      saleReturnSplitLines = [];
+    }
+  });
+  document.getElementById('saleReturnSplitToggle').addEventListener('change', (e) => {
+    const on = e.target.checked;
+    document.getElementById('saleReturnSplitBlock').style.display = on ? 'block' : 'none';
+    document.getElementById('saleReturnMethodField').style.display = on ? 'none' : '';
+    if (on && saleReturnSplitLines.length === 0) {
+      const total = calcSaleReturnTotal();
+      addSaleReturnSplitRow('cash', total);
+      addSaleReturnSplitRow('card', 0);
+    }
+    updateSaleReturnSplitDiffIndicator();
+  });
+  document.getElementById('saleReturnSplitAddBtn').addEventListener('click', () => addSaleReturnSplitRow('cash', 0));
 }
 
 async function loadCategories() {
@@ -4333,6 +4853,67 @@ function applyPrintSettingsToPosUI() {
   if (row) row.style.display = printSettings.print_instant_note ? '' : 'none';
 }
 
+// ------------------------------------------------------------
+// الدفع المتعدد (Split Payments) — تقسيم قيمة الفاتورة على أكثر من طريقة دفع
+// ------------------------------------------------------------
+function splitPaymentsTotal() {
+  return splitPaymentLines.reduce((sum, l) => sum + (Number(l.amount) || 0), 0);
+}
+
+function getSplitPayments() {
+  // نرجّع بس السطور اللي فيها مبلغ فعلي (> 0)
+  return splitPaymentLines
+    .map(l => ({ method: l.method || 'cash', amount: Math.round((Number(l.amount) || 0) * 100) / 100 }))
+    .filter(l => l.amount > 0);
+}
+
+function addSplitRow(method, amount) {
+  splitPaymentLines.push({ method: method || 'cash', amount: amount || 0 });
+  renderSplitRows();
+}
+
+function removeSplitRow(index) {
+  splitPaymentLines.splice(index, 1);
+  renderSplitRows();
+}
+
+function renderSplitRows() {
+  posEls.splitRowsContainer.innerHTML = '';
+  splitPaymentLines.forEach((line, idx) => {
+    const row = document.createElement('div');
+    row.className = 'split-pay-row';
+    row.innerHTML = `
+      <select data-idx="${idx}" data-field="method">
+        <option value="cash">نقدي</option>
+        <option value="card">بطاقة</option>
+        <option value="transfer">تحويل</option>
+        <option value="other">أخرى</option>
+      </select>
+      <input type="number" min="0" step="0.01" data-idx="${idx}" data-field="amount" value="${line.amount || ''}" placeholder="0.00">
+      <button type="button" class="split-remove-btn" data-idx="${idx}">حذف</button>`;
+    row.querySelector('select').value = line.method || 'cash';
+    row.querySelector('select').addEventListener('change', (e) => {
+      splitPaymentLines[idx].method = e.target.value;
+      renderCart();
+    });
+    row.querySelector('input').addEventListener('input', (e) => {
+      splitPaymentLines[idx].amount = Number(e.target.value) || 0;
+      renderCart();
+    });
+    row.querySelector('.split-remove-btn').addEventListener('click', () => { removeSplitRow(idx); renderCart(); });
+    posEls.splitRowsContainer.appendChild(row);
+  });
+}
+
+function updateSplitDiffIndicator(total) {
+  const entered = splitPaymentsTotal();
+  const diff = Math.round((total - entered) * 100) / 100;
+  posEls.splitDiffLabel.textContent = diff === 0 ? 'المبلغ مطابق للإجمالي' : (diff > 0 ? 'متبقي لم يُدخل بعد' : 'المُدخل أكبر من الإجمالي');
+  posEls.splitDiffValue.textContent = Math.abs(diff).toFixed(2);
+  posEls.splitDiffRow.className = diff === 0 ? 'balanced' : 'unbalanced';
+  return diff;
+}
+
 function renderCart() {
   if (cart.length === 0) {
     posEls.cartItems.innerHTML = `<div class="cart-empty">لا توجد أصناف مضافة للفاتورة حتى الآن</div>`;
@@ -4371,18 +4952,29 @@ function renderCart() {
 
   // البيع بالأجل متاح فقط لعميل مسجل (مش عميل نقدي)
   const hasCustomer = !!posEls.customerSelect.value;
-  posEls.paidRow.style.display = hasCustomer ? 'flex' : 'none';
-  if (!hasCustomer) {
-    posEls.dueRow.style.display = 'none';
-  } else {
-    if (!posEls.paidInput.dataset.touched) posEls.paidInput.value = total.toFixed(2);
-    const paid = Math.max(0, Math.min(total, Number(posEls.paidInput.value) || 0));
+  const splitOn = posEls.splitToggle.checked;
+
+  if (splitOn) {
+    posEls.paidRow.style.display = 'none';
+    updateSplitDiffIndicator(total);
+    const paid = Math.max(0, Math.min(total, splitPaymentsTotal()));
     const due = Math.round((total - paid) * 100) / 100;
-    posEls.dueRow.style.display = due > 0 ? 'flex' : 'none';
+    posEls.dueRow.style.display = (hasCustomer && due > 0) ? 'flex' : 'none';
     posEls.dueLabel.textContent = due.toFixed(2);
+  } else {
+    posEls.paidRow.style.display = hasCustomer ? 'flex' : 'none';
+    if (!hasCustomer) {
+      posEls.dueRow.style.display = 'none';
+    } else {
+      if (!posEls.paidInput.dataset.touched) posEls.paidInput.value = total.toFixed(2);
+      const paid = Math.max(0, Math.min(total, Number(posEls.paidInput.value) || 0));
+      const due = Math.round((total - paid) * 100) / 100;
+      posEls.dueRow.style.display = due > 0 ? 'flex' : 'none';
+      posEls.dueLabel.textContent = due.toFixed(2);
+    }
   }
 
-  posEls.checkoutBtn.disabled = cart.length === 0;
+  posEls.checkoutBtn.disabled = cart.length === 0 || !currentShift;
 
   const itemCount = cart.reduce((sum, l) => sum + Number(l.quantity), 0);
   posEls.mobileCartCount.textContent = itemCount;
@@ -4397,6 +4989,7 @@ async function doLogout() {
   unsubscribePosRealtime();
   await supabaseClient.auth.signOut();
   currentProfile = null;
+  currentShift = null;
   cart = [];
   document.getElementById('loginUsername').value = '';
   document.getElementById('loginPassword').value = '';
@@ -4425,6 +5018,7 @@ async function computeDailyInvoiceNumber(sale) {
 
 async function doCheckout() {
   if (cart.length === 0) return;
+  if (!requireOpenShift()) return;
   posEls.checkoutBtn.disabled = true;
   posEls.checkoutBtn.textContent = 'جاري إتمام البيع...';
   try {
@@ -4433,18 +5027,40 @@ async function doCheckout() {
     const tax = calcTaxTotal();
     const total = calcTotal();
     const customerId = posEls.customerSelect.value || null;
-    const paymentMethod = posEls.paymentMethodSelect.value || 'cash';
+    const splitOn = posEls.splitToggle.checked;
 
     if (branchSettings.require_customer_pos && !customerId) {
       throw new Error('من إعدادات الفرع: يجب تحديد العميل قبل إتمام البيع');
     }
 
-    // البيع بالأجل متاح فقط لعميل مسجل — عميل نقدي لازم يدفع كامل المبلغ
-    let paidAmount = customerId ? (Number(posEls.paidInput.value) || 0) : total;
-    paidAmount = Math.max(0, Math.min(total, paidAmount));
+    // تحديد سطور الدفع (سطر واحد فى الوضع العادي، أو أكثر فى وضع الدفع المتعدد)
+    let paymentLines;
+    let paymentMethod;
+    if (splitOn) {
+      paymentLines = getSplitPayments();
+      if (paymentLines.length === 0) {
+        throw new Error('أدخل مبلغًا فى طريقة دفع واحدة على الأقل');
+      }
+      paymentMethod = paymentLines.length > 1 ? 'mixed' : paymentLines[0].method;
+    } else {
+      paymentMethod = posEls.paymentMethodSelect.value || 'cash';
+      // البيع بالأجل متاح فقط لعميل مسجل — عميل نقدي لازم يدفع كامل المبلغ
+      const amount = customerId ? (Number(posEls.paidInput.value) || 0) : total;
+      paymentLines = amount > 0 ? [{ method: paymentMethod, amount: Math.round(amount * 100) / 100 }] : [];
+    }
+
+    // تحقق أكثر صرامة: المبلغ المدفوع (سطر واحد أو دفع متعدد) ميزيدش أبدًا عن الإجمالي —
+    // لو زاد، بنوقف العملية بدل ما نقصّه بصمت (زي ما كان بيحصل قبل كده)، عشان مايحصلش فرق
+    // بين المبلغ المسجّل فى sales.paid_amount والمبالغ الفعلية فى sale_payments
+    let paidAmount = Math.round(paymentLines.reduce((sum, l) => sum + l.amount, 0) * 100) / 100;
+    if (paidAmount - total > 0.009) {
+      throw new Error(splitOn
+        ? `مجموع مبالغ الدفع المتعدد (${paidAmount.toFixed(2)}) أكبر من إجمالي الفاتورة (${total.toFixed(2)}) — يرجى تصحيح المبالغ`
+        : `المبلغ المدفوع (${paidAmount.toFixed(2)}) أكبر من إجمالي الفاتورة (${total.toFixed(2)}) — يرجى تصحيح المبلغ`);
+    }
     const remaining = Math.round((total - paidAmount) * 100) / 100;
-    if (remaining > 0 && !customerId) {
-      throw new Error('البيع الآجل متاح فقط لعميل مسجل، اختر عميلًا أولاً');
+    if (remaining > 0.009 && !customerId) {
+      throw new Error('البيع الآجل متاح فقط لعميل مسجل، اختر عميلًا أولاً — والعميل النقدي لازم يدفع كامل المبلغ (فى وضع الدفع المتعدد اجمع المبالغ لتساوي الإجمالي تمامًا)');
     }
 
     const { data: sale, error: saleError } = await supabaseClient
@@ -4452,9 +5068,17 @@ async function doCheckout() {
       .insert({
         branch_id: currentProfile.branch_id, user_id: currentProfile.id, customer_id: customerId,
         status: 'completed', subtotal, discount, tax, total, paid_amount: paidAmount, remaining,
-        payment_method: paymentMethod,
+        payment_method: paymentMethod, shift_id: currentShift ? currentShift.id : null,
       }).select().single();
     if (saleError) throw saleError;
+
+    // تسجيل تفاصيل كل طريقة دفع فى sale_payments (سطر واحد أو أكثر حسب الحالة)
+    if (paymentLines.length > 0) {
+      const { error: paymentsInsertError } = await supabaseClient
+        .from('sale_payments')
+        .insert(paymentLines.map(l => ({ sale_id: sale.id, method: l.method, amount: l.amount })));
+      if (paymentsInsertError) throw paymentsInsertError;
+    }
 
     const saleWarehouseId = posSelectedWarehouseId();
     const saleItems = cart.map(l => ({
@@ -4501,12 +5125,17 @@ async function doCheckout() {
         originalPrice: l.basePrice,
         code: (l.product.product_barcodes && l.product.product_barcodes[0]?.barcode) || '',
       })),
-      subtotal, discount, tax, total, paidAmount, remaining, paymentMethod,
+      subtotal, discount, tax, total, paidAmount, remaining, paymentMethod, paymentLines,
     });
 
     cart = []; posEls.discountInput.value = 0; setCustomerSelection('', { silent: true });
     delete posEls.paidInput.dataset.touched; posEls.paidInput.value = '';
     posEls.paymentMethodSelect.value = 'cash';
+    splitPaymentLines = [];
+    posEls.splitToggle.checked = false;
+    posEls.splitBlock.style.display = 'none';
+    document.getElementById('paymentMethodRow').style.display = 'flex';
+    renderSplitRows();
     const instantNoteEl = document.getElementById('instantNoteInput');
     if (instantNoteEl) instantNoteEl.value = '';
     resetQuickDiscountSelection();
@@ -4518,7 +5147,7 @@ async function doCheckout() {
     console.error(err);
     showToast(err.message || 'حدث خطأ أثناء إتمام عملية البيع، يرجى المحاولة مرة أخرى', true);
   } finally {
-    posEls.checkoutBtn.disabled = cart.length === 0;
+    posEls.checkoutBtn.disabled = cart.length === 0 || !currentShift;
     posEls.checkoutBtn.textContent = 'إتمام البيع';
   }
 }
@@ -4552,7 +5181,9 @@ function buildReceiptHtml(sale, dateStr) {
     <div class="r-divider"></div>
     <div class="r-row"><span>الكاشير</span><span>${escapeHtml(sale.cashierName)}</span></div>
     ${sale.customerName ? `<div class="r-row"><span>العميل</span><span>${escapeHtml(sale.customerName)}</span></div>` : ''}
-    <div class="r-row"><span>طريقة الدفع</span><span>${escapeHtml(paymentMethodLabels[sale.paymentMethod] || sale.paymentMethod || '—')}</span></div>
+    ${(sale.paymentLines && sale.paymentLines.length > 1) ? `
+    ${sale.paymentLines.map(l => `<div class="r-row"><span>${escapeHtml(paymentMethodLabels[l.method] || l.method)}</span><span class="num">${l.amount.toFixed(2)}</span></div>`).join('')}
+    ` : `<div class="r-row"><span>طريقة الدفع</span><span>${escapeHtml(paymentMethodLabels[sale.paymentMethod] || sale.paymentMethod || '—')}</span></div>`}
     <div class="r-divider"></div>
     ${itemsHtml}
     <div class="r-divider"></div>
@@ -4590,18 +5221,89 @@ function showReceipt(sale) {
 // ------------------------------------------------------------
 let saleReturnSale = null;
 let saleReturnLines = []; // [{ saleItemId, productId, name, soldQty, unitPrice, returnQty }]
+let saleReturnSplitLines = []; // [{ method, amount }] — لاسترداد قيمة المرتجع بأكثر من طريقة فى نفس العملية
 
 function openSaleReturnModal() {
   saleReturnSale = null;
   saleReturnLines = [];
+  saleReturnSplitLines = [];
   document.getElementById('saleReturnInvoiceInput').value = '';
   document.getElementById('saleReturnInvoiceInfo').style.display = 'none';
   document.getElementById('saleReturnLinesSection').style.display = 'none';
   document.getElementById('saveSaleReturnBtn').style.display = 'none';
   document.getElementById('saleReturnReasonInput').value = '';
   document.getElementById('saleReturnMethodSelect').value = 'cash';
+  document.getElementById('saleReturnMethodField').style.display = '';
+  document.getElementById('saleReturnSplitToggleRow').style.display = 'block';
+  document.getElementById('saleReturnSplitToggle').checked = false;
+  document.getElementById('saleReturnSplitBlock').style.display = 'none';
+  renderSaleReturnSplitRows();
   document.getElementById('saleReturnModalError').classList.remove('show');
   document.getElementById('saleReturnModalOverlay').classList.add('show');
+}
+
+// ------------------------------------------------------------
+// استرداد بأكثر من طريقة دفع فى مرتجع البيع (مرآة لمنطق الدفع المتعدد فى نقطة البيع)
+// ------------------------------------------------------------
+function saleReturnSplitTotal() {
+  return saleReturnSplitLines.reduce((sum, l) => sum + (Number(l.amount) || 0), 0);
+}
+
+function getSaleReturnSplitPayments() {
+  return saleReturnSplitLines
+    .map(l => ({ method: l.method || 'cash', amount: Math.round((Number(l.amount) || 0) * 100) / 100 }))
+    .filter(l => l.amount > 0);
+}
+
+function addSaleReturnSplitRow(method, amount) {
+  saleReturnSplitLines.push({ method: method || 'cash', amount: amount || 0 });
+  renderSaleReturnSplitRows();
+}
+
+function removeSaleReturnSplitRow(index) {
+  saleReturnSplitLines.splice(index, 1);
+  renderSaleReturnSplitRows();
+}
+
+function renderSaleReturnSplitRows() {
+  const wrap = document.getElementById('saleReturnSplitRows');
+  wrap.innerHTML = '';
+  saleReturnSplitLines.forEach((line, idx) => {
+    const row = document.createElement('div');
+    row.className = 'split-pay-row';
+    row.innerHTML = `
+      <select data-idx="${idx}" data-field="method">
+        <option value="cash">نقدي</option>
+        <option value="card">بطاقة</option>
+        <option value="transfer">تحويل</option>
+        <option value="other">أخرى</option>
+      </select>
+      <input type="number" min="0" step="0.01" data-idx="${idx}" data-field="amount" value="${line.amount || ''}" placeholder="0.00">
+      <button type="button" class="split-remove-btn" data-idx="${idx}">حذف</button>`;
+    row.querySelector('select').value = line.method || 'cash';
+    row.querySelector('select').addEventListener('change', (e) => { saleReturnSplitLines[idx].method = e.target.value; });
+    row.querySelector('input').addEventListener('input', (e) => {
+      saleReturnSplitLines[idx].amount = Number(e.target.value) || 0;
+      updateSaleReturnSplitDiffIndicator();
+    });
+    row.querySelector('.split-remove-btn').addEventListener('click', () => {
+      removeSaleReturnSplitRow(idx);
+      updateSaleReturnSplitDiffIndicator();
+    });
+    wrap.appendChild(row);
+  });
+  updateSaleReturnSplitDiffIndicator();
+}
+
+function updateSaleReturnSplitDiffIndicator() {
+  const total = calcSaleReturnTotal();
+  const entered = saleReturnSplitTotal();
+  const diff = Math.round((total - entered) * 100) / 100;
+  document.getElementById('saleReturnSplitDiffLabel').textContent = diff === 0
+    ? 'المبلغ مطابق لإجمالي المرتجع' : (diff > 0 ? 'متبقي لم يُدخل بعد' : 'المُدخل أكبر من إجمالي المرتجع');
+  document.getElementById('saleReturnSplitDiffValue').textContent = Math.abs(diff).toFixed(2);
+  document.getElementById('saleReturnSplitDiffRow').className = 'split-diff-row ' + (diff === 0 ? 'balanced' : 'unbalanced');
+  return diff;
 }
 
 function closeSaleReturnModal() {
@@ -4693,6 +5395,7 @@ function calcSaleReturnTotal() {
 
 function updateSaleReturnTotal() {
   document.getElementById('saleReturnTotalLabel').textContent = calcSaleReturnTotal().toFixed(2);
+  if (document.getElementById('saleReturnSplitToggle').checked) updateSaleReturnSplitDiffIndicator();
 }
 
 async function saveSaleReturn(e) {
@@ -4705,14 +5408,35 @@ async function saveSaleReturn(e) {
   const validLines = saleReturnLines.filter(l => l.returnQty > 0);
   if (validLines.length === 0) { errEl.textContent = 'حدد كمية مرتجعة لصنف واحد على الأقل'; errEl.classList.add('show'); return; }
 
+  const total = calcSaleReturnTotal();
+  const splitOn = document.getElementById('saleReturnSplitToggle').checked;
+  let refundMethod = document.getElementById('saleReturnMethodSelect').value;
+  let refundPaymentLines = [];
+
+  if (splitOn) {
+    refundPaymentLines = getSaleReturnSplitPayments();
+    if (refundPaymentLines.length === 0) {
+      errEl.textContent = 'أدخل مبلغًا فى طريقة استرداد واحدة على الأقل';
+      errEl.classList.add('show');
+      return;
+    }
+    // تحقق أكثر صرامة: مجموع مبالغ الاسترداد المتعدد لازم يساوي إجمالي المرتجع تمامًا
+    const entered = Math.round(refundPaymentLines.reduce((s, l) => s + l.amount, 0) * 100) / 100;
+    const roundedTotal = Math.round(total * 100) / 100;
+    if (Math.abs(entered - roundedTotal) > 0.009) {
+      errEl.textContent = `مجموع مبالغ الاسترداد (${entered.toFixed(2)}) لازم يساوي إجمالي المرتجع (${roundedTotal.toFixed(2)}) بالظبط — يرجى تصحيح المبالغ`;
+      errEl.classList.add('show');
+      return;
+    }
+    refundMethod = refundPaymentLines.length > 1 ? 'mixed' : refundPaymentLines[0].method;
+  }
+
   const saveBtn = document.getElementById('saveSaleReturnBtn');
   saveBtn.disabled = true;
   saveBtn.textContent = 'جاري الحفظ...';
 
   try {
-    const total = calcSaleReturnTotal();
     const reason = document.getElementById('saleReturnReasonInput').value.trim() || null;
-    const refundMethod = document.getElementById('saleReturnMethodSelect').value;
 
     const { data: saleReturn, error: srError } = await supabaseClient
       .from('sale_returns')
@@ -4728,6 +5452,14 @@ async function saveSaleReturn(e) {
     }));
     const { error: itemsError } = await supabaseClient.from('sale_return_items').insert(returnItems);
     if (itemsError) throw itemsError;
+
+    // تسجيل تفاصيل كل طريقة استرداد فى sale_return_payments لو الاسترداد بأكثر من طريقة
+    if (splitOn && refundPaymentLines.length > 0) {
+      const { error: paymentsInsertError } = await supabaseClient
+        .from('sale_return_payments')
+        .insert(refundPaymentLines.map(l => ({ sale_return_id: saleReturn.id, method: l.method, amount: l.amount })));
+      if (paymentsInsertError) throw paymentsInsertError;
+    }
 
     // لو الاسترداد رصيد على حساب العميل، يتحسم من رصيده (يقل مديونيته أو يزيد له رصيد)
     if (refundMethod === 'credit' && saleReturnSale.customer_id) {
@@ -4820,7 +5552,7 @@ async function enterBackoffice() {
   activateBoSection(landingSection, landingBtn);
 }
 
-const boAllSections = ['dashboard','products','categories','unit-types','tax-rates','quick-discounts','customer-types',
+const boAllSections = ['dashboard','shifts','products','categories','unit-types','tax-rates','quick-discounts','customer-types',
   'sales-list','customers','suppliers','payments','purchases','purchase-returns','sale-returns',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
   'soon','company-info','permissions','users','branches','branch-settings','print-settings','stock','backup','reset-data','employees','expense-items','expenses','salaries'];
@@ -4838,6 +5570,7 @@ const boNavGroups = [
 // كل قسم في القائمة الجانبية بيتبع لأنهي مفتاح صلاحية (roles.permissions)
 const SECTION_PERMISSION_MAP = {
   'dashboard': 'dashboard',
+  'shifts': 'shifts',
   'products': 'stock_management', 'categories': 'stock_management', 'unit-types': 'stock_management',
   'tax-rates': 'stock_management', 'quick-discounts': 'stock_management', 'stock': 'stock_management',
   'sales-list': 'sales_management', 'customers': 'sales_management', 'customer-types': 'sales_management', 'sale-returns': 'sales_management',
@@ -4896,6 +5629,7 @@ function activateBoSection(section, btn) {
   if (section === 'sales-list' && !boSalesListLoadedOnce) { loadBoSalesList().then(renderSalesListTable); boSalesListLoadedOnce = true; }
   if (section === 'purchase-returns') { loadBoPurchaseReturns().then(renderPurchaseReturnsTable); }
   if (section === 'sale-returns') { loadBoSaleReturns().then(renderSaleReturnsTable); }
+  if (section === 'shifts') { initShiftsSection(); }
   if (section === 'stock' && !stockSectionLoadedOnce) { initStockSection(); stockSectionLoadedOnce = true; }
   if (section === 'reset-data' && !resetDataLoadedOnce) { initResetDataSection(); resetDataLoadedOnce = true; }
   if (section === 'company-info' && !companyInfoLoadedOnce) { initCompanyInfoSection(); companyInfoLoadedOnce = true; }
@@ -5318,6 +6052,16 @@ function bindBackofficeEvents() {
   document.getElementById('addPurchaseLineBtn').addEventListener('click', () => addPurchaseLine());
   document.getElementById('purchasePaid').addEventListener('input', updatePurchaseTotals);
   document.getElementById('purchaseForm').addEventListener('submit', savePurchase);
+  document.getElementById('skipPurchaseLabelsBtn').addEventListener('click', () => {
+    document.getElementById('purchaseSavedModalOverlay').classList.remove('show');
+  });
+  document.getElementById('purchaseSavedModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'purchaseSavedModalOverlay') document.getElementById('purchaseSavedModalOverlay').classList.remove('show');
+  });
+  document.getElementById('printPurchaseLabelsBtn').addEventListener('click', () => {
+    document.getElementById('purchaseSavedModalOverlay').classList.remove('show');
+    openBarcodeLabelModalMulti(lastPurchaseSavedItems);
+  });
   purchaseSupplierSearch = createSmartSearch({
     input: document.getElementById('purchaseSupplier'),
     hidden: document.getElementById('purchaseSupplierValue'),
@@ -5342,6 +6086,17 @@ function bindBackofficeEvents() {
   document.getElementById('printInvoiceDetailBtn').addEventListener('click', () => window.print());
   document.getElementById('invoiceDetailModalOverlay').addEventListener('click', (e) => {
     if (e.target.id === 'invoiceDetailModalOverlay') closeInvoiceDetailModal();
+  });
+
+  // ---- تصحيح طريقة دفع فاتورة بيع مكتملة (أدمن) ----
+  document.getElementById('cancelEditSalePaymentBtn').addEventListener('click', closeEditSalePaymentModal);
+  document.getElementById('saveEditSalePaymentBtn').addEventListener('click', saveEditSalePayment);
+  document.getElementById('editSalePaymentAddBtn').addEventListener('click', () => {
+    editSalePaymentLines.push({ method: 'cash', amount: 0 });
+    renderEditSalePaymentRows();
+  });
+  document.getElementById('editSalePaymentModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'editSalePaymentModalOverlay') closeEditSalePaymentModal();
   });
 
   // ---- Salaries ----
@@ -5831,6 +6586,8 @@ function closeProductModal() {
 
 // ---- طباعة ملصقات باركود ----
 let bcPrintProduct = null;
+let bcMultiMode = false;
+let bcMultiItems = []; // [{ product, qty, barcode }] — وضع طباعة أصناف فاتورة شراء دفعة واحدة
 
 function openBarcodeLabelModal(product) {
   const barcodes = (product.product_barcodes || []).map(b => b.barcode).filter(Boolean);
@@ -5838,6 +6595,8 @@ function openBarcodeLabelModal(product) {
     showToast('لا يوجد باركود مسجّل لهذا الصنف، أضف باركود أولاً من زر تعديل', true);
     return;
   }
+  bcMultiMode = false;
+  bcMultiItems = [];
   bcPrintProduct = product;
   document.getElementById('bcPrintProductName').textContent = product.name;
 
@@ -5850,63 +6609,145 @@ function openBarcodeLabelModal(product) {
   document.getElementById('bcShowName').checked = true;
   document.getElementById('bcShowPrice').checked = true;
 
+  document.getElementById('bcSingleQtyWrap').style.display = '';
+  document.getElementById('bcMultiItemsWrap').style.display = 'none';
+
   renderBarcodeLabelSheet();
   document.getElementById('barcodeLabelModalOverlay').classList.add('show');
+}
+
+// طباعة ملصقات كل أصناف فاتورة شراء دفعة واحدة، بعدد ملصقات لكل صنف = الكمية المستلمة (قابل للتعديل)
+function openBarcodeLabelModalMulti(items) {
+  const usable = (items || [])
+    .filter(it => it.product)
+    .map(it => {
+      const barcode = (it.product.product_barcodes || []).map(b => b.barcode).filter(Boolean)[0] || null;
+      return { product: it.product, qty: Math.max(1, Math.round(Number(it.quantity)) || 1), barcode };
+    })
+    .filter(it => it.barcode);
+
+  const skipped = (items || []).length - usable.length;
+  if (usable.length === 0) {
+    showToast('لا يوجد أي صنف من أصناف الفاتورة له باركود مسجّل', true);
+    return;
+  }
+  if (skipped > 0) {
+    showToast(`تم استثناء ${skipped} صنف بدون باركود مسجّل من الطباعة`, true);
+  }
+
+  bcMultiMode = true;
+  bcMultiItems = usable;
+  bcPrintProduct = null;
+
+  document.getElementById('bcPrintProductName').textContent = 'أصناف فاتورة الشراء';
+  document.getElementById('bcBarcodeSelectWrap').style.display = 'none';
+  document.getElementById('bcSingleQtyWrap').style.display = 'none';
+  document.getElementById('bcMultiItemsWrap').style.display = '';
+  document.getElementById('bcLabelSize').value = localStorage.getItem('bcLabelSize') || '50x30';
+  document.getElementById('bcShowName').checked = true;
+  document.getElementById('bcShowPrice').checked = true;
+
+  renderBcMultiItemsList();
+  renderBarcodeLabelSheet();
+  document.getElementById('barcodeLabelModalOverlay').classList.add('show');
+}
+
+function renderBcMultiItemsList() {
+  const wrap = document.getElementById('bcMultiItemsList');
+  wrap.innerHTML = '';
+  bcMultiItems.forEach((it) => {
+    const row = document.createElement('div');
+    row.className = 'bc-multi-item';
+    const nameEl = document.createElement('span');
+    nameEl.className = 'bc-multi-item-name';
+    nameEl.textContent = it.product.name;
+    const qtyInput = document.createElement('input');
+    qtyInput.type = 'number'; qtyInput.className = 'bc-multi-item-qty';
+    qtyInput.min = '0'; qtyInput.max = '200'; qtyInput.step = '1'; qtyInput.value = it.qty;
+    qtyInput.addEventListener('input', () => {
+      it.qty = Math.max(0, Math.min(200, Number(qtyInput.value) || 0));
+      renderBarcodeLabelSheet();
+    });
+    row.appendChild(nameEl);
+    row.appendChild(qtyInput);
+    wrap.appendChild(row);
+  });
 }
 
 function closeBarcodeLabelModal() {
   document.getElementById('barcodeLabelModalOverlay').classList.remove('show');
   bcPrintProduct = null;
+  bcMultiMode = false;
+  bcMultiItems = [];
+}
+
+function buildBarcodeLabel(product, barcodeValue, dims, showName, showPrice) {
+  const label = document.createElement('div');
+  label.className = 'bc-label';
+  label.style.width = dims[0] + 'mm';
+  label.style.height = dims[1] + 'mm';
+  if (showName) {
+    const nameEl = document.createElement('div');
+    nameEl.className = 'bc-label-name';
+    nameEl.textContent = product.name;
+    label.appendChild(nameEl);
+  }
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  label.appendChild(svg);
+  if (showPrice) {
+    const priceEl = document.createElement('div');
+    priceEl.className = 'bc-label-price';
+    priceEl.textContent = Number(product.sale_price).toFixed(2);
+    label.appendChild(priceEl);
+  }
+  try {
+    JsBarcode(svg, barcodeValue, {
+      format: 'CODE128', width: 1.4, height: dims[1] < 25 ? 26 : 34,
+      fontSize: 10, margin: 2, displayValue: true,
+    });
+  } catch (err) {
+    svg.remove();
+    const fallback = document.createElement('div');
+    fallback.className = 'bc-label-price';
+    fallback.textContent = barcodeValue;
+    label.appendChild(fallback);
+  }
+  return label;
 }
 
 function renderBarcodeLabelSheet() {
-  if (!bcPrintProduct) return;
   const sheet = document.getElementById('bcLabelSheet');
-  const barcodeValue = document.getElementById('bcBarcodeSelect').value;
-  const qty = Math.max(1, Math.min(200, Number(document.getElementById('bcLabelQty').value) || 1));
   const showName = document.getElementById('bcShowName').checked;
   const showPrice = document.getElementById('bcShowPrice').checked;
   const sizeKey = document.getElementById('bcLabelSize').value;
+  const dims = { '50x30': [50, 30], '40x30': [40, 30], '30x20': [30, 20], 'a4grid': [45, 25] }[sizeKey] || [50, 30];
+
+  if (bcMultiMode) {
+    sheet.innerHTML = '';
+    bcMultiItems.forEach(it => {
+      const qty = Math.max(0, Math.min(200, Math.round(Number(it.qty)) || 0));
+      for (let i = 0; i < qty; i++) {
+        sheet.appendChild(buildBarcodeLabel(it.product, it.barcode, dims, showName, showPrice));
+      }
+    });
+    if (!sheet.children.length) {
+      sheet.innerHTML = `<div class="bc-label-empty">حدّد عدد ملصقات أكبر من صفر لصنف واحد على الأقل</div>`;
+    }
+    return;
+  }
+
+  if (!bcPrintProduct) return;
+  const barcodeValue = document.getElementById('bcBarcodeSelect').value;
+  const qty = Math.max(1, Math.min(200, Number(document.getElementById('bcLabelQty').value) || 1));
 
   if (!barcodeValue) {
     sheet.innerHTML = `<div class="bc-label-empty">لا يوجد باركود مختار</div>`;
     return;
   }
 
-  const dims = { '50x30': [50, 30], '40x30': [40, 30], '30x20': [30, 20], 'a4grid': [45, 25] }[sizeKey] || [50, 30];
   sheet.innerHTML = '';
   for (let i = 0; i < qty; i++) {
-    const label = document.createElement('div');
-    label.className = 'bc-label';
-    label.style.width = dims[0] + 'mm';
-    label.style.height = dims[1] + 'mm';
-    if (showName) {
-      const nameEl = document.createElement('div');
-      nameEl.className = 'bc-label-name';
-      nameEl.textContent = bcPrintProduct.name;
-      label.appendChild(nameEl);
-    }
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    label.appendChild(svg);
-    if (showPrice) {
-      const priceEl = document.createElement('div');
-      priceEl.className = 'bc-label-price';
-      priceEl.textContent = Number(bcPrintProduct.sale_price).toFixed(2);
-      label.appendChild(priceEl);
-    }
-    sheet.appendChild(label);
-    try {
-      JsBarcode(svg, barcodeValue, {
-        format: 'CODE128', width: 1.4, height: dims[1] < 25 ? 26 : 34,
-        fontSize: 10, margin: 2, displayValue: true,
-      });
-    } catch (err) {
-      svg.remove();
-      const fallback = document.createElement('div');
-      fallback.className = 'bc-label-price';
-      fallback.textContent = barcodeValue;
-      label.appendChild(fallback);
-    }
+    sheet.appendChild(buildBarcodeLabel(bcPrintProduct, barcodeValue, dims, showName, showPrice));
   }
 }
 
@@ -6623,6 +7464,7 @@ function openExpenseModal(expense) {
   document.getElementById('expenseModalTitle').textContent = expense ? 'تعديل مصروف' : 'مصروف جديد';
   document.getElementById('expenseId').value = expense ? expense.id : '';
   document.getElementById('expenseAmount').value = expense ? expense.amount : 0;
+  document.getElementById('expenseMethod').value = expense ? (expense.payment_method || 'cash') : 'cash';
   document.getElementById('expenseDate').value = expense ? expense.expense_date : toDateInputValue(new Date());
   document.getElementById('expenseNotes').value = expense?.notes || '';
   populateExpenseSelects(
@@ -6646,10 +7488,12 @@ async function saveExpense(e) {
   saveBtn.textContent = 'جاري الحفظ...';
 
   const id = document.getElementById('expenseId').value || null;
+  const method = document.getElementById('expenseMethod').value;
   const payload = {
     expense_item_id: document.getElementById('expenseItemSelect').value,
     branch_id: document.getElementById('expenseBranchSelect').value,
     amount: Number(document.getElementById('expenseAmount').value) || 0,
+    payment_method: method,
     expense_date: document.getElementById('expenseDate').value,
     notes: document.getElementById('expenseNotes').value.trim() || null,
   };
@@ -6659,7 +7503,8 @@ async function saveExpense(e) {
       const { error } = await supabaseClient.from('expenses').update(payload).eq('id', id);
       if (error) throw error;
     } else {
-      const { error } = await supabaseClient.from('expenses').insert({ ...payload, created_by: currentProfile?.id || null });
+      const shiftId = (method === 'cash' && currentShift) ? currentShift.id : null;
+      const { error } = await supabaseClient.from('expenses').insert({ ...payload, created_by: currentProfile?.id || null, shift_id: shiftId });
       if (error) throw error;
     }
     showToast(id ? 'تم تحديث المصروف' : 'تمت إضافة المصروف بنجاح');
@@ -7308,6 +8153,7 @@ async function deleteBranch(branch) {
 const PERMISSION_GROUPS = [
   { key: 'pos', title: 'شاشة المبيعات (الكاشير)', desc: 'الدخول لشاشة البيع وإتمام الفواتير' },
   { key: 'dashboard', title: 'الرئيسية', desc: 'لوحة التحكم والنظرة العامة على المبيعات' },
+  { key: 'shifts', title: 'الورديات وإغلاق الخزينة', desc: 'استعراض كل الورديات المفتوحة والمغلقة وتقارير Z لكل الفروع' },
   { key: 'stock_management', title: 'المخزون والأصناف', desc: 'الأصناف، المجموعات، الوحدات، الضريبة، الخصومات، المخازن ونقل البضاعة' },
   { key: 'sales_management', title: 'المبيعات', desc: 'فواتير البيع، العملاء، أنواع العملاء، مرتجعات البيع' },
   { key: 'purchases_management', title: 'المشتريات', desc: 'الموردون، فواتير الشراء، مرتجعات الشراء' },
@@ -8621,7 +9467,7 @@ async function loadBoPayments() {
   boPayments = data || [];
 }
 
-const paymentMethodLabels = { cash: 'نقدي', card: 'بطاقة', transfer: 'تحويل', other: 'أخرى' };
+const paymentMethodLabels = { cash: 'نقدي', card: 'بطاقة', transfer: 'تحويل', other: 'أخرى', mixed: 'متعدد (دفع مقسّم)' };
 
 function renderPaymentsTable() {
   const tbody = document.getElementById('paymentsTableBody');
@@ -8702,6 +9548,7 @@ async function savePayment(e) {
       supplier_id: type === 'supplier_payment' ? partyId : null,
       amount, method,
       branch_id: currentProfile.branch_id, user_id: currentProfile.id, note,
+      shift_id: (method === 'cash' && currentShift) ? currentShift.id : null,
     };
     const { error } = await supabaseClient.from('payments').insert(payload);
     if (error) throw error;
@@ -8762,7 +9609,7 @@ let boSalesList = [];
 async function loadBoSalesList() {
   const { data, error } = await supabaseClient
     .from('sales')
-    .select('id, invoice_number, created_at, subtotal, discount, tax, total, payment_method, branch_id, customers(name), users_profile(full_name), branches(name)')
+    .select('id, invoice_number, created_at, subtotal, discount, tax, total, paid_amount, remaining, status, payment_method, branch_id, customers(name), users_profile(full_name), branches(name)')
     .order('created_at', { ascending: false })
     .limit(200);
   if (error) { console.error(error); showToast('تعذر تحميل فواتير البيع', true); return; }
@@ -8797,35 +9644,170 @@ function renderSalesListTable() {
 }
 
 async function openSaleDetailModal(sale) {
+  document.getElementById('editSalePaymentBtn').style.display = 'none';
   document.getElementById('invoiceDetailModalTitle').textContent = `فاتورة بيع رقم #${sale.invoice_number}`;
   renderInvoiceDetailPrintHeader(sale.branch_id);
   const body = document.getElementById('invoiceDetailModalBody');
   body.innerHTML = `<div class="bo-empty">جاري تحميل التفاصيل...</div>`;
   document.getElementById('invoiceDetailModalOverlay').classList.add('show');
 
-  const { data: items, error } = await supabaseClient
-    .from('sale_items')
-    .select('quantity, unit_price, total, products(name)')
-    .eq('sale_id', sale.id);
+  const [{ data: items, error }, { data: salePayments }] = await Promise.all([
+    supabaseClient.from('sale_items').select('quantity, unit_price, total, products(name)').eq('sale_id', sale.id),
+    supabaseClient.from('sale_payments').select('method, amount').eq('sale_id', sale.id),
+  ]);
   if (error) { console.error(error); body.innerHTML = `<div class="bo-empty">تعذر تحميل تفاصيل الفاتورة</div>`; return; }
 
   const date = new Date(sale.created_at).toLocaleString('ar-EG');
+  const paymentMethodHtml = (salePayments && salePayments.length > 1)
+    ? salePayments.map(p => `<div class="totals-row"><span>${escapeHtml(paymentMethodLabels[p.method] || p.method)}</span><span class="num">${Number(p.amount).toFixed(2)}</span></div>`).join('')
+    : `<div class="totals-row"><span>طريقة الدفع</span><span>${paymentMethodLabels[sale.payment_method] || escapeHtml(sale.payment_method || '—')}</span></div>`;
   body.innerHTML = `
     <div class="totals-row"><span>العميل</span><span>${escapeHtml(sale.customers?.name || 'عميل نقدي')}</span></div>
     <div class="totals-row"><span>التاريخ</span><span class="num">${date}</span></div>
     <div class="totals-row"><span>الكاشير</span><span>${escapeHtml(sale.users_profile?.full_name || '—')}</span></div>
     <div class="totals-row"><span>الفرع</span><span>${escapeHtml(sale.branches?.name || '—')}</span></div>
-    <div class="totals-row"><span>طريقة الدفع</span><span>${paymentMethodLabels[sale.payment_method] || escapeHtml(sale.payment_method || '—')}</span></div>
+    ${paymentMethodHtml}
     ${renderInvoiceDetailItemsTable(items, 'سعر الوحدة')}
     <div class="totals-row"><span>إجمالي المبيعات</span><span class="num">${Number(sale.subtotal).toFixed(2)}</span></div>
     <div class="totals-row"><span>الخصم</span><span class="num">${Number(sale.discount).toFixed(2)}</span></div>
     <div class="totals-row"><span>الضريبة</span><span class="num">${Number(sale.tax).toFixed(2)}</span></div>
     <div class="totals-row grand"><span>صافي المبيعات</span><span class="num">${Number(sale.total).toFixed(2)}</span></div>`;
+
+  // تصحيح طريقة الدفع متاح بس للأدمن ولفواتير البيع المكتملة (الفواتير المعلّقة/الملغاة مالهاش معنى هنا)
+  const editBtn = document.getElementById('editSalePaymentBtn');
+  if (hasBoPermission('admin') && sale.status === 'completed') {
+    editBtn.style.display = 'inline-block';
+    editBtn.onclick = () => openEditSalePaymentModal(sale, salePayments || []);
+  } else {
+    editBtn.style.display = 'none';
+    editBtn.onclick = null;
+  }
+}
+
+// ------------------------------------------------------------
+// تصحيح طريقة دفع فاتورة بيع مكتملة (أدمن فقط) — بيصحّح توزيع المبلغ
+// المحصّل فعليًا على طرق الدفع، من غير ما يغيّر إجمالي المبلغ المحصّل نفسه
+// ------------------------------------------------------------
+let editSalePaymentSale = null;
+let editSalePaymentLines = []; // [{ method, amount }]
+
+function openEditSalePaymentModal(sale, currentPayments) {
+  editSalePaymentSale = sale;
+  editSalePaymentLines = (currentPayments && currentPayments.length > 0)
+    ? currentPayments.map(p => ({ method: p.method, amount: Number(p.amount) || 0 }))
+    : [{ method: sale.payment_method && sale.payment_method !== 'mixed' ? sale.payment_method : 'cash', amount: Number(sale.paid_amount) || 0 }];
+
+  document.getElementById('editSalePaymentInvoiceNo').textContent = sale.invoice_number;
+  document.getElementById('editSalePaymentFixedAmount').textContent = Number(sale.paid_amount).toFixed(2);
+  document.getElementById('editSalePaymentError').classList.remove('show');
+  renderEditSalePaymentRows();
+  document.getElementById('editSalePaymentModalOverlay').classList.add('show');
+}
+
+function closeEditSalePaymentModal() {
+  document.getElementById('editSalePaymentModalOverlay').classList.remove('show');
+}
+
+function renderEditSalePaymentRows() {
+  const wrap = document.getElementById('editSalePaymentRows');
+  wrap.innerHTML = '';
+  editSalePaymentLines.forEach((line, idx) => {
+    const row = document.createElement('div');
+    row.className = 'split-pay-row';
+    row.innerHTML = `
+      <select data-idx="${idx}" data-field="method">
+        <option value="cash">نقدي</option>
+        <option value="card">بطاقة</option>
+        <option value="transfer">تحويل</option>
+        <option value="other">أخرى</option>
+      </select>
+      <input type="number" min="0" step="0.01" data-idx="${idx}" data-field="amount" value="${line.amount || ''}" placeholder="0.00">
+      <button type="button" class="split-remove-btn" data-idx="${idx}">حذف</button>`;
+    row.querySelector('select').value = line.method || 'cash';
+    row.querySelector('select').addEventListener('change', (e) => { editSalePaymentLines[idx].method = e.target.value; });
+    row.querySelector('input').addEventListener('input', (e) => {
+      editSalePaymentLines[idx].amount = Number(e.target.value) || 0;
+      updateEditSalePaymentDiffIndicator();
+    });
+    row.querySelector('.split-remove-btn').addEventListener('click', () => {
+      if (editSalePaymentLines.length <= 1) return; // لازم يفضل سطر واحد على الأقل
+      editSalePaymentLines.splice(idx, 1);
+      renderEditSalePaymentRows();
+    });
+    wrap.appendChild(row);
+  });
+  updateEditSalePaymentDiffIndicator();
+}
+
+function updateEditSalePaymentDiffIndicator() {
+  const target = Math.round((Number(editSalePaymentSale?.paid_amount) || 0) * 100) / 100;
+  const entered = Math.round(editSalePaymentLines.reduce((s, l) => s + (Number(l.amount) || 0), 0) * 100) / 100;
+  const diff = Math.round((target - entered) * 100) / 100;
+  document.getElementById('editSalePaymentDiffLabel').textContent = diff === 0
+    ? 'المبلغ مطابق للمدفوع الفعلي' : (diff > 0 ? 'أقل من المدفوع الفعلي' : 'أكبر من المدفوع الفعلي');
+  document.getElementById('editSalePaymentDiffValue').textContent = Math.abs(diff).toFixed(2);
+  document.getElementById('editSalePaymentDiffRow').className = 'split-diff-row ' + (diff === 0 ? 'balanced' : 'unbalanced');
+  return diff;
+}
+
+async function saveEditSalePayment() {
+  const errEl = document.getElementById('editSalePaymentError');
+  errEl.classList.remove('show');
+  if (!editSalePaymentSale) return;
+
+  const lines = editSalePaymentLines
+    .map(l => ({ method: l.method || 'cash', amount: Math.round((Number(l.amount) || 0) * 100) / 100 }))
+    .filter(l => l.amount > 0);
+  if (lines.length === 0) {
+    errEl.textContent = 'أدخل مبلغًا فى طريقة دفع واحدة على الأقل';
+    errEl.classList.add('show');
+    return;
+  }
+
+  const target = Math.round((Number(editSalePaymentSale.paid_amount) || 0) * 100) / 100;
+  const entered = Math.round(lines.reduce((s, l) => s + l.amount, 0) * 100) / 100;
+  if (Math.abs(entered - target) > 0.009) {
+    errEl.textContent = `مجموع المبالغ (${entered.toFixed(2)}) لازم يساوي المبلغ المحصّل فعليًا من الفاتورة (${target.toFixed(2)}) بالظبط — التصحيح بيغيّر طريقة الدفع بس مش المبلغ`;
+    errEl.classList.add('show');
+    return;
+  }
+
+  const saveBtn = document.getElementById('saveEditSalePaymentBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+  try {
+    const newMethod = lines.length > 1 ? 'mixed' : lines[0].method;
+
+    const { error: delError } = await supabaseClient.from('sale_payments').delete().eq('sale_id', editSalePaymentSale.id);
+    if (delError) throw delError;
+
+    const { error: insError } = await supabaseClient
+      .from('sale_payments')
+      .insert(lines.map(l => ({ sale_id: editSalePaymentSale.id, method: l.method, amount: l.amount })));
+    if (insError) throw insError;
+
+    const { error: updError } = await supabaseClient.from('sales').update({ payment_method: newMethod }).eq('id', editSalePaymentSale.id);
+    if (updError) throw updError;
+
+    editSalePaymentSale.payment_method = newMethod;
+    showToast('تم تصحيح طريقة الدفع بنجاح');
+    closeEditSalePaymentModal();
+    await openSaleDetailModal(editSalePaymentSale);
+    if (boSalesListLoadedOnce) { await loadBoSalesList(); renderSalesListTable(); }
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = 'حدث خطأ أثناء حفظ التصحيح، يرجى المحاولة مرة أخرى';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ التصحيح';
+  }
 }
 
 // ---- Purchases ----
 let boPurchases = [];
 let purchaseLines = []; // [{ productId, quantity, unitCost }]
+let lastPurchaseSavedItems = []; // [{ product, quantity }] — تُستخدم في طباعة ملصقات الأصناف المستلمة
 
 async function loadBoPurchases() {
   const { data, error } = await supabaseClient
@@ -9031,6 +10013,13 @@ async function savePurchase(e) {
     renderPurchasesTable();
     renderProductsTable();
     renderSuppliersTable();
+
+    // تجهيز أصناف الفاتورة (بعد تحديث boProducts) لعرض زرار طباعة ملصقات الأصناف المستلمة
+    lastPurchaseSavedItems = validLines
+      .map(l => ({ product: boProducts.find(p => p.id === l.productId), quantity: l.quantity }))
+      .filter(it => it.product);
+    document.getElementById('purchaseSavedNumber').textContent = purchase.invoice_number;
+    document.getElementById('purchaseSavedModalOverlay').classList.add('show');
   } catch (err) {
     console.error(err);
     errEl.textContent = err.message || 'حدث خطأ أثناء حفظ الفاتورة';
@@ -9256,7 +10245,7 @@ function renderSaleReturnsTable() {
     tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لا توجد مرتجعات بيع مسجّلة حتى الآن</td></tr>`;
     return;
   }
-  const methodLabels = { cash: 'استرداد نقدي', credit: 'رصيد على حساب العميل', exchange: 'استبدال' };
+  const methodLabels = { ...paymentMethodLabels, credit: 'رصيد على حساب العميل', exchange: 'استبدال' };
   tbody.innerHTML = '';
   boSaleReturns.forEach(r => {
     const tr = document.createElement('tr');
@@ -9265,7 +10254,7 @@ function renderSaleReturnsTable() {
       <td class="num">#${r.sales?.invoice_number ?? '—'}</td>
       <td>${escapeHtml(r.customers?.name || 'عميل نقدي')}</td>
       <td class="num">${Number(r.total).toFixed(2)}</td>
-      <td>${methodLabels[r.refund_method] || r.refund_method}</td>
+      <td>${escapeHtml(methodLabels[r.refund_method] || r.refund_method || '—')}</td>
       <td>${escapeHtml(r.reason || '—')}</td>
       <td class="num">${date}</td>
       <td><button class="bo-icon-btn" data-action="view">عرض</button></td>`;
@@ -9274,7 +10263,93 @@ function renderSaleReturnsTable() {
   });
 }
 
-// ---- Invoice detail modal (read-only view — no edit/delete) ----
+// ---- الورديات وإغلاق الخزينة (لوحة التحكم) ----
+let boShifts = [];
+let shiftsSectionInitialized = false;
+
+function initShiftsSection() {
+  if (!shiftsSectionInitialized) {
+    const branchField = document.getElementById('shiftsBranchField');
+    const branchSel = document.getElementById('shiftsBranchFilter');
+    if (boBranchesList.length > 1) {
+      branchSel.innerHTML = '<option value="">كل الفروع</option>' +
+        boBranchesList.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+      branchField.style.display = 'block';
+    }
+    document.getElementById('shiftsStatusFilter').addEventListener('change', () => loadBoShifts().then(renderShiftsTable));
+    document.getElementById('shiftsBranchFilter').addEventListener('change', () => loadBoShifts().then(renderShiftsTable));
+    document.getElementById('refreshShiftsBtn').addEventListener('click', () => loadBoShifts().then(renderShiftsTable));
+    shiftsSectionInitialized = true;
+  }
+  loadBoShifts().then(renderShiftsTable);
+}
+
+async function loadBoShifts() {
+  let query = supabaseClient
+    .from('shifts')
+    .select('*, branches(name), opener:users_profile!shifts_user_id_fkey(full_name), closer:users_profile!shifts_closed_by_fkey(full_name)')
+    .order('opening_at', { ascending: false })
+    .limit(200);
+  const status = document.getElementById('shiftsStatusFilter')?.value;
+  const branchId = document.getElementById('shiftsBranchFilter')?.value;
+  if (status) query = query.eq('status', status);
+  if (branchId) query = query.eq('branch_id', branchId);
+  const { data, error } = await query;
+  if (error) { console.error(error); showToast('تعذر تحميل الورديات', true); return; }
+  boShifts = data || [];
+}
+
+function renderShiftsTable() {
+  const tbody = document.getElementById('shiftsTableBody');
+  if (!tbody) return;
+  if (boShifts.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="10" class="bo-empty">لا توجد ورديات مسجّلة حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boShifts.forEach(s => {
+    const tr = document.createElement('tr');
+    const openedAt = new Date(s.opening_at);
+    const closedAt = s.closed_at ? new Date(s.closed_at) : null;
+    const diff = s.difference !== null && s.difference !== undefined ? Number(s.difference) : null;
+    const diffLabel = diff === null ? '—' : `${diff >= 0 ? '+' : ''}${diff.toFixed(2)}`;
+    const diffColor = diff === null ? 'var(--ink)' : (diff === 0 ? 'var(--ink)' : (diff > 0 ? 'var(--teal-700)' : 'var(--danger)'));
+    tr.innerHTML = `
+      <td>${escapeHtml(s.opener?.full_name || '—')}</td>
+      <td>${escapeHtml(s.branches?.name || '—')}</td>
+      <td class="num">${openedAt.toLocaleString('ar-EG')}</td>
+      <td class="num">${Number(s.opening_amount).toFixed(2)}</td>
+      <td class="num">${closedAt ? closedAt.toLocaleString('ar-EG') : '—'}</td>
+      <td class="num">${s.expected_cash !== null && s.expected_cash !== undefined ? Number(s.expected_cash).toFixed(2) : '—'}</td>
+      <td class="num">${s.counted_cash !== null && s.counted_cash !== undefined ? Number(s.counted_cash).toFixed(2) : '—'}</td>
+      <td class="num" style="color:${diffColor}; font-weight:700;">${diffLabel}</td>
+      <td>${s.status === 'open' ? '<span class="role-count-badge">مفتوحة</span>' : 'مغلقة'}</td>
+      <td>${s.status === 'closed' ? '<button class="bo-icon-btn" data-action="view">عرض التقرير</button>' : ''}</td>`;
+    if (s.status === 'closed') {
+      tr.querySelector('[data-action="view"]').addEventListener('click', () => viewPastZReport(s));
+    }
+    tbody.appendChild(tr);
+  });
+}
+
+async function viewPastZReport(shift) {
+  let summary;
+  try {
+    summary = await computeShiftCashSummary(shift.id, shift.opening_amount);
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحميل تفاصيل الوردية', true);
+    return;
+  }
+  const savedProfile = currentProfile;
+  // شاشة الطباعة بتستخدم بيانات المستخدم الحالي لعرض اسم الفرع/الكاشير — بنستبدلها مؤقتًا ببيانات صاحب الوردية
+  currentProfile = { ...currentProfile, full_name: shift.opener?.full_name || currentProfile.full_name, branches: shift.branches || currentProfile.branches };
+  showZReport(shift, summary);
+  currentProfile = savedProfile;
+  document.getElementById('zReportLogoutBtn').style.display = 'none';
+}
+
+
 function closeInvoiceDetailModal() {
   document.getElementById('invoiceDetailModalOverlay').classList.remove('show');
 }
@@ -9297,6 +10372,7 @@ function renderInvoiceDetailItemsTable(items, unitPriceLabel) {
 }
 
 async function openPurchaseDetailModal(purchase) {
+  document.getElementById('editSalePaymentBtn').style.display = 'none';
   document.getElementById('invoiceDetailModalTitle').textContent = `فاتورة شراء رقم #${purchase.invoice_number}`;
   renderInvoiceDetailPrintHeader(purchase.branch_id);
   const body = document.getElementById('invoiceDetailModalBody');
@@ -9321,6 +10397,7 @@ async function openPurchaseDetailModal(purchase) {
 }
 
 async function openPurchaseReturnDetailModal(ret) {
+  document.getElementById('editSalePaymentBtn').style.display = 'none';
   document.getElementById('invoiceDetailModalTitle').textContent = `مرتجع شراء — فاتورة #${ret.purchases?.invoice_number ?? '—'}`;
   renderInvoiceDetailPrintHeader(ret.branch_id);
   const body = document.getElementById('invoiceDetailModalBody');
@@ -9343,24 +10420,28 @@ async function openPurchaseReturnDetailModal(ret) {
 }
 
 async function openSaleReturnDetailModal(ret) {
+  document.getElementById('editSalePaymentBtn').style.display = 'none';
   document.getElementById('invoiceDetailModalTitle').textContent = `مرتجع بيع — فاتورة #${ret.sales?.invoice_number ?? '—'}`;
   renderInvoiceDetailPrintHeader(ret.branch_id);
   const body = document.getElementById('invoiceDetailModalBody');
   body.innerHTML = `<div class="bo-empty">جاري تحميل التفاصيل...</div>`;
   document.getElementById('invoiceDetailModalOverlay').classList.add('show');
 
-  const { data: items, error } = await supabaseClient
-    .from('sale_return_items')
-    .select('quantity, unit_price, total, products(name)')
-    .eq('sale_return_id', ret.id);
+  const [{ data: items, error }, { data: returnPayments }] = await Promise.all([
+    supabaseClient.from('sale_return_items').select('quantity, unit_price, total, products(name)').eq('sale_return_id', ret.id),
+    supabaseClient.from('sale_return_payments').select('method, amount').eq('sale_return_id', ret.id),
+  ]);
   if (error) { console.error(error); body.innerHTML = `<div class="bo-empty">تعذر تحميل تفاصيل المرتجع</div>`; return; }
 
-  const methodLabels = { cash: 'استرداد نقدي', credit: 'رصيد على حساب العميل', exchange: 'استبدال' };
+  const methodLabels = { ...paymentMethodLabels, credit: 'رصيد على حساب العميل', exchange: 'استبدال' };
+  const refundMethodHtml = (returnPayments && returnPayments.length > 1)
+    ? returnPayments.map(p => `<div class="totals-row"><span>${escapeHtml(methodLabels[p.method] || p.method)}</span><span class="num">${Number(p.amount).toFixed(2)}</span></div>`).join('')
+    : `<div class="totals-row"><span>طريقة الاسترداد</span><span>${escapeHtml(methodLabels[ret.refund_method] || ret.refund_method || '—')}</span></div>`;
   const date = new Date(ret.created_at).toLocaleString('ar-EG');
   body.innerHTML = `
     <div class="totals-row"><span>العميل</span><span>${escapeHtml(ret.customers?.name || 'عميل نقدي')}</span></div>
     <div class="totals-row"><span>التاريخ</span><span class="num">${date}</span></div>
-    <div class="totals-row"><span>طريقة الاسترداد</span><span>${escapeHtml(methodLabels[ret.refund_method] || ret.refund_method || '—')}</span></div>
+    ${refundMethodHtml}
     <div class="totals-row"><span>السبب</span><span>${escapeHtml(ret.reason || '—')}</span></div>
     ${renderInvoiceDetailItemsTable(items, 'سعر الوحدة')}
     <div class="totals-row grand"><span>إجمالي المرتجع</span><span class="num">${Number(ret.total).toFixed(2)}</span></div>`;
@@ -9556,22 +10637,35 @@ async function runReport() {
        <td class="num">${(totalSales > 0 ? (row.total / totalSales * 100) : 0).toFixed(1)}%</td>`);
     lastCashierReportRows = cashierRows;
 
-    // المبيعات حسب طريقة الدفع
+    // المبيعات حسب طريقة الدفع — بنقرأ من sale_payments (تفصيل كل طريقة فعليًا)
+    // بدل sales.payment_method، عشان الفواتير اللي اتدفعت بدفع مقسّم (نقدي + بطاقة مثلًا)
+    // تظهر بكل مبلغ فى بابه الصح
+    const saleIds = (sales || []).map(s => s.id);
+    let salePaymentsForReport = [];
+    if (saleIds.length > 0) {
+      const { data: spData, error: spError } = await supabaseClient
+        .from('sale_payments')
+        .select('method, amount, sale_id')
+        .in('sale_id', saleIds);
+      if (spError) throw spError;
+      salePaymentsForReport = spData || [];
+    }
+    const collectedTotal = salePaymentsForReport.reduce((sum, p) => sum + Number(p.amount), 0);
     const paymentMethodGrouped = {};
-    (sales || []).forEach(s => {
-      const key = s.payment_method || 'cash';
+    salePaymentsForReport.forEach(p => {
+      const key = p.method || 'cash';
       if (!paymentMethodGrouped[key]) {
         paymentMethodGrouped[key] = { name: paymentMethodLabels[key] || key, count: 0, total: 0 };
       }
       paymentMethodGrouped[key].count += 1;
-      paymentMethodGrouped[key].total += Number(s.total);
+      paymentMethodGrouped[key].total += Number(p.amount);
     });
     const paymentMethodRows = Object.values(paymentMethodGrouped).sort((a, b) => b.total - a.total);
     renderBreakdownTable('paymentMethodReportTableBody', paymentMethodRows, 4, row =>
       `<td>${escapeHtml(row.name)}</td>
        <td class="num">${row.count}</td>
        <td class="num">${row.total.toFixed(2)}</td>
-       <td class="num">${(totalSales > 0 ? (row.total / totalSales * 100) : 0).toFixed(1)}%</td>`);
+       <td class="num">${(collectedTotal > 0 ? (row.total / collectedTotal * 100) : 0).toFixed(1)}%</td>`);
     lastPaymentMethodReportRows = paymentMethodRows;
 
     // اتجاه المبيعات اليومي
