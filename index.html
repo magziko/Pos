@@ -498,6 +498,15 @@ a { color: inherit; }
 .daily-trend-chart svg { display: block; }
 .daily-trend-bar { fill: var(--teal-500); }
 .daily-trend-bar:hover { fill: var(--teal-700); }
+.report-inline-select { background: var(--surface-sunken); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font-size: 12.5px; color: var(--ink); }
+.payment-chart-wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 30px; margin-bottom: 18px; }
+.payment-donut svg { display: block; }
+.payment-chart-legend { display: flex; flex-direction: column; gap: 9px; min-width: 190px; flex: 1; }
+.payment-chart-legend-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12.5px; }
+.payment-chart-legend-name { display: flex; align-items: center; gap: 8px; color: var(--ink); font-weight: 600; }
+.payment-chart-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.payment-chart-legend-value { font-family: var(--font-num); color: var(--ink-soft); direction: ltr; font-size: 12px; }
+.payment-chart-empty { color: var(--ink-soft); font-size: 13px; padding: 30px 0; text-align: center; }
 .daily-trend-axis-line { stroke: var(--border); stroke-width: 1; }
 .daily-trend-label { fill: var(--ink-soft); font-family: var(--font-num); font-size: 10px; }
 .daily-trend-empty { padding: 24px; text-align: center; color: var(--ink-soft); font-size: 13px; }
@@ -1371,6 +1380,10 @@ a { color: inherit; }
               <div class="report-type-icon">💳</div>
               <div class="report-type-label">المبيعات حسب طرق الدفع</div>
             </button>
+            <button type="button" class="report-type-card" data-report="mixedpayment">
+              <div class="report-type-icon">🔀</div>
+              <div class="report-type-label">الفواتير متعددة طرق الدفع</div>
+            </button>
             <button type="button" class="report-type-card" id="salesReportCard-branch" data-report="branch" style="display:none;">
               <div class="report-type-icon">🏬</div>
               <div class="report-type-label">المبيعات حسب الفرع</div>
@@ -1466,14 +1479,43 @@ a { color: inherit; }
               <div class="report-subtitle-row">
                 <div class="report-subtitle">المبيعات حسب طريقة الدفع</div>
                 <div class="report-subtitle-actions">
+                  <select id="paymentMethodCashierFilter" class="report-inline-select"><option value="">كل الكاشيرية</option></select>
                   <button class="bo-icon-btn" id="exportPaymentMethodReportBtn">تصدير إكسل</button>
                 </div>
               </div>
+              <div id="paymentMethodChart"></div>
               <div class="bo-table-wrap">
                 <table class="bo-table">
                   <thead><tr><th>طريقة الدفع</th><th>عدد الفواتير</th><th>الإجمالي</th><th>النسبة من المبيعات</th></tr></thead>
                   <tbody id="paymentMethodReportTableBody">
                     <tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="salesReportDetail-mixedpayment" class="report-detail" style="display:none;">
+              <div class="report-cards">
+                <div class="report-card">
+                  <div class="report-card-label">عدد الفواتير متعددة طرق الدفع</div>
+                  <div class="report-card-value num" id="mixedPaymentCount">0</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي المبالغ المحصّلة بدفع متعدد</div>
+                  <div class="report-card-value num positive" id="mixedPaymentTotal">0.00</div>
+                </div>
+              </div>
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">الفواتير المدفوعة بأكثر من طريقة دفع</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-icon-btn" id="exportMixedPaymentReportBtn">تصدير إكسل</button>
+                </div>
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>رقم الفاتورة</th><th>التاريخ</th><th>العميل</th><th>الكاشير</th><th>تفاصيل طرق الدفع</th><th>الإجمالي</th></tr></thead>
+                  <tbody id="mixedPaymentReportTableBody">
+                    <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -3791,11 +3833,13 @@ async function computeShiftCashSummary(shiftId, openingAmount) {
   // بنعتمد على sale_payments (تفصيل كل طريقة دفع فعليًا) بدل sales.payment_method
   // عشان الفواتير اللي اتدفعت بأكثر من طريقة (مدفوع مقسّم) تتحسب صح فى كل طريقة على حدة
   const byMethod = { cash: 0, card: 0, transfer: 0, other: 0 };
+  const byMethodCount = { cash: 0, card: 0, transfer: 0, other: 0 };
   let totalSales = 0;
   (sales || []).forEach(s => { totalSales += Number(s.total) || 0; });
   (salePayments || []).forEach(p => {
     const m = Object.prototype.hasOwnProperty.call(byMethod, p.method) ? p.method : 'other';
     byMethod[m] += Number(p.amount) || 0;
+    byMethodCount[m] += 1;
   });
 
   const cashReceipts = (payments || [])
@@ -3810,7 +3854,7 @@ async function computeShiftCashSummary(shiftId, openingAmount) {
 
   const expectedCash = Number(openingAmount) + byMethod.cash + cashReceipts - cashPayouts - cashExpenses;
 
-  return { byMethod, cashReceipts, cashPayouts, cashExpenses, expectedCash, invoiceCount: (sales || []).length, totalSales };
+  return { byMethod, byMethodCount, cashReceipts, cashPayouts, cashExpenses, expectedCash, invoiceCount: (sales || []).length, totalSales };
 }
 
 async function openCloseShiftModal() {
@@ -3890,6 +3934,14 @@ async function submitCloseShift() {
   }
 }
 
+function zReportMethodRow(labelAr, key, summary) {
+  const collectedTotal = summary.byMethod.cash + summary.byMethod.card + summary.byMethod.transfer + summary.byMethod.other;
+  const amount = summary.byMethod[key];
+  const count = summary.byMethodCount[key];
+  const pct = collectedTotal > 0 ? (amount / collectedTotal * 100) : 0;
+  return `<div class="r-row"><span>${labelAr} <span style="color:#888;">(${count} عملية)</span></span><span class="num">${amount.toFixed(2)} <span style="color:#888;">${pct.toFixed(0)}%</span></span></div>`;
+}
+
 function showZReport(shift, summary) {
   document.getElementById('zReportLogoutBtn').style.display = 'inline-block';
   const openedAt = new Date(shift.opening_at);
@@ -3908,10 +3960,10 @@ function showZReport(shift, summary) {
     <div class="r-row"><span>عدد الفواتير</span><span class="num">${summary.invoiceCount}</span></div>
     <div class="r-divider"></div>
     <div class="z-report-section-title">المبيعات حسب طريقة الدفع</div>
-    <div class="r-row"><span>نقدي</span><span class="num">${summary.byMethod.cash.toFixed(2)}</span></div>
-    <div class="r-row"><span>بطاقة</span><span class="num">${summary.byMethod.card.toFixed(2)}</span></div>
-    <div class="r-row"><span>تحويل</span><span class="num">${summary.byMethod.transfer.toFixed(2)}</span></div>
-    <div class="r-row"><span>أخرى</span><span class="num">${summary.byMethod.other.toFixed(2)}</span></div>
+    ${zReportMethodRow('نقدي', 'cash', summary)}
+    ${zReportMethodRow('بطاقة', 'card', summary)}
+    ${zReportMethodRow('تحويل', 'transfer', summary)}
+    ${zReportMethodRow('أخرى', 'other', summary)}
     <div class="r-row" style="font-weight:700;"><span>إجمالي المبيعات</span><span class="num">${summary.totalSales.toFixed(2)}</span></div>
     <div class="r-divider"></div>
     <div class="z-report-section-title">جرد الخزينة</div>
@@ -6226,6 +6278,8 @@ function bindBackofficeEvents() {
   document.getElementById('exportDebtsBtn').addEventListener('click', () => exportDebtsToExcel());
   document.getElementById('exportCashierReportBtn').addEventListener('click', () => exportCashierReportToExcel());
   document.getElementById('exportPaymentMethodReportBtn').addEventListener('click', () => exportPaymentMethodReportToExcel());
+  document.getElementById('paymentMethodCashierFilter').addEventListener('change', (e) => renderPaymentMethodReport(e.target.value || ''));
+  document.getElementById('exportMixedPaymentReportBtn').addEventListener('click', () => exportMixedPaymentReportToExcel());
   document.getElementById('exportDailyTrendReportBtn').addEventListener('click', () => exportDailyTrendReportToExcel());
   document.getElementById('exportBranchReportBtn').addEventListener('click', () => exportBranchReportToExcel());
   document.getElementById('exportCategoryReportBtn').addEventListener('click', () => exportCategoryReportToExcel());
@@ -10458,6 +10512,141 @@ let lastPaymentMethodReportRows = [];
 let lastDailyTrendReportRows = [];
 let lastBranchReportRows = [];
 let lastCategoryReportRows = [];
+let lastMixedPaymentReportRows = [];
+let lastReportSalesForFilter = [];
+let lastReportSalePaymentsForFilter = [];
+const PAYMENT_METHOD_COLORS = { cash: '#0F6B5C', card: '#C97A1A', transfer: '#2E6F9E', other: '#8A8F98' };
+const PAYMENT_CHART_FALLBACK_COLORS = ['#0F6B5C', '#C97A1A', '#2E6F9E', '#8A8F98', '#7A5FB0', '#C13B3B'];
+function paymentMethodColor(key, index) {
+  return PAYMENT_METHOD_COLORS[key] || PAYMENT_CHART_FALLBACK_COLORS[index % PAYMENT_CHART_FALLBACK_COLORS.length];
+}
+
+function populatePaymentMethodCashierFilter(sales) {
+  const sel = document.getElementById('paymentMethodCashierFilter');
+  if (!sel) return;
+  const prevValue = sel.value;
+  const cashiers = {};
+  (sales || []).forEach(s => {
+    if (!s.user_id) return;
+    cashiers[s.user_id] = s.users_profile?.full_name || 'مستخدم محذوف';
+  });
+  const cashierIds = Object.keys(cashiers).sort((a, b) => cashiers[a].localeCompare(cashiers[b], 'ar'));
+  sel.innerHTML = '<option value="">كل الكاشيرية</option>' +
+    cashierIds.map(id => `<option value="${id}">${escapeHtml(cashiers[id])}</option>`).join('');
+  sel.value = cashierIds.includes(prevValue) ? prevValue : '';
+}
+
+function renderPaymentMethodReport(cashierId) {
+  const salesForFilter = lastReportSalesForFilter;
+  let payments = lastReportSalePaymentsForFilter;
+  if (cashierId) {
+    const allowedSaleIds = new Set(salesForFilter.filter(s => s.user_id === cashierId).map(s => s.id));
+    payments = payments.filter(p => allowedSaleIds.has(p.sale_id));
+  }
+  const collectedTotal = payments.reduce((sum, p) => sum + Number(p.amount), 0);
+  const paymentMethodGrouped = {};
+  payments.forEach(p => {
+    const key = p.method || 'cash';
+    if (!paymentMethodGrouped[key]) {
+      paymentMethodGrouped[key] = { key, name: paymentMethodLabels[key] || key, count: 0, total: 0 };
+    }
+    paymentMethodGrouped[key].count += 1;
+    paymentMethodGrouped[key].total += Number(p.amount);
+  });
+  const paymentMethodRows = Object.values(paymentMethodGrouped).sort((a, b) => b.total - a.total);
+  renderBreakdownTable('paymentMethodReportTableBody', paymentMethodRows, 4, row =>
+    `<td>${escapeHtml(row.name)}</td>
+     <td class="num">${row.count}</td>
+     <td class="num">${row.total.toFixed(2)}</td>
+     <td class="num">${(collectedTotal > 0 ? (row.total / collectedTotal * 100) : 0).toFixed(1)}%</td>`);
+  renderPaymentMethodChart(paymentMethodRows);
+  lastPaymentMethodReportRows = paymentMethodRows;
+}
+
+function renderPaymentMethodChart(rows) {
+  const container = document.getElementById('paymentMethodChart');
+  if (!container) return;
+  const total = (rows || []).reduce((sum, r) => sum + r.total, 0);
+  if (!rows || rows.length === 0 || total <= 0) {
+    container.innerHTML = `<div class="payment-chart-empty">لا توجد بيانات لعرضها</div>`;
+    return;
+  }
+  const r = 52, cx = 60, cy = 60, strokeWidth = 20;
+  const circumference = 2 * Math.PI * r;
+  let cumulative = 0;
+  const segments = rows.map((row, i) => {
+    const fraction = row.total / total;
+    const dash = Math.max(fraction * circumference, 0);
+    const gap = Math.max(circumference - dash, 0);
+    const seg = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${paymentMethodColor(row.key, i)}" stroke-width="${strokeWidth}" stroke-dasharray="${dash} ${gap}" stroke-dashoffset="${-cumulative}"><title>${escapeHtml(row.name)} — ${row.total.toFixed(2)} (${(fraction * 100).toFixed(1)}%)</title></circle>`;
+    cumulative += dash;
+    return seg;
+  }).join('');
+  const legend = rows.map((row, i) => `
+    <div class="payment-chart-legend-item">
+      <span class="payment-chart-legend-name"><span class="payment-chart-legend-dot" style="background:${paymentMethodColor(row.key, i)};"></span>${escapeHtml(row.name)}</span>
+      <span class="payment-chart-legend-value">${row.total.toFixed(2)} (${(total > 0 ? row.total / total * 100 : 0).toFixed(1)}%)</span>
+    </div>`).join('');
+  container.innerHTML = `
+    <div class="payment-chart-wrap">
+      <div class="payment-donut">
+        <svg viewBox="0 0 120 120" width="150" height="150" style="transform:rotate(-90deg);">${segments}</svg>
+      </div>
+      <div class="payment-chart-legend">${legend}</div>
+    </div>`;
+}
+
+function formatMethodBreakdown(methodTotals) {
+  return Object.keys(methodTotals)
+    .map(m => `${paymentMethodLabels[m] || m}: ${methodTotals[m].toFixed(2)}`)
+    .join('، ');
+}
+
+function renderMixedPaymentReport(sales, salePayments) {
+  const salesById = {};
+  (sales || []).forEach(s => { salesById[s.id] = s; });
+  const bySale = {};
+  (salePayments || []).forEach(p => {
+    if (!bySale[p.sale_id]) bySale[p.sale_id] = [];
+    bySale[p.sale_id].push(p);
+  });
+  const rows = [];
+  Object.keys(bySale).forEach(saleId => {
+    const paymentsForSale = bySale[saleId];
+    const distinctMethods = new Set(paymentsForSale.map(p => p.method || 'cash'));
+    if (distinctMethods.size < 2) return;
+    const sale = salesById[saleId];
+    if (!sale) return;
+    const methodTotals = {};
+    paymentsForSale.forEach(p => {
+      const m = p.method || 'cash';
+      methodTotals[m] = (methodTotals[m] || 0) + Number(p.amount);
+    });
+    const collected = paymentsForSale.reduce((sum, p) => sum + Number(p.amount), 0);
+    rows.push({
+      invoiceNumber: sale.invoice_number,
+      date: sale.created_at,
+      customerName: sale.customers?.name || 'عميل نقدي',
+      cashierName: sale.users_profile?.full_name || 'مستخدم محذوف',
+      total: Number(sale.total),
+      collected,
+      methodTotals,
+    });
+  });
+  rows.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  document.getElementById('mixedPaymentCount').textContent = rows.length;
+  document.getElementById('mixedPaymentTotal').textContent = rows.reduce((sum, r) => sum + r.collected, 0).toFixed(2);
+
+  renderBreakdownTable('mixedPaymentReportTableBody', rows, 6, row =>
+    `<td class="num">#${row.invoiceNumber}</td>
+     <td>${new Date(row.date).toLocaleString('ar-EG')}</td>
+     <td>${escapeHtml(row.customerName)}</td>
+     <td>${escapeHtml(row.cashierName)}</td>
+     <td>${escapeHtml(formatMethodBreakdown(row.methodTotals))}</td>
+     <td class="num">${row.total.toFixed(2)}</td>`);
+  lastMixedPaymentReportRows = rows;
+}
 
 function renderBreakdownTable(tbodyId, rows, colspan, rowHtmlFn) {
   const tbody = document.getElementById(tbodyId);
@@ -10602,7 +10791,7 @@ async function runReport() {
     // ملخص الفواتير
     let salesQuery = supabaseClient
       .from('sales')
-      .select('id, total, user_id, branch_id, payment_method, created_at, users_profile(full_name), branches(name)')
+      .select('id, invoice_number, total, user_id, branch_id, payment_method, created_at, customers(name), users_profile(full_name), branches(name)')
       .eq('status', 'completed')
       .gte('created_at', fromISO)
       .lte('created_at', toISO);
@@ -10650,23 +10839,13 @@ async function runReport() {
       if (spError) throw spError;
       salePaymentsForReport = spData || [];
     }
-    const collectedTotal = salePaymentsForReport.reduce((sum, p) => sum + Number(p.amount), 0);
-    const paymentMethodGrouped = {};
-    salePaymentsForReport.forEach(p => {
-      const key = p.method || 'cash';
-      if (!paymentMethodGrouped[key]) {
-        paymentMethodGrouped[key] = { name: paymentMethodLabels[key] || key, count: 0, total: 0 };
-      }
-      paymentMethodGrouped[key].count += 1;
-      paymentMethodGrouped[key].total += Number(p.amount);
-    });
-    const paymentMethodRows = Object.values(paymentMethodGrouped).sort((a, b) => b.total - a.total);
-    renderBreakdownTable('paymentMethodReportTableBody', paymentMethodRows, 4, row =>
-      `<td>${escapeHtml(row.name)}</td>
-       <td class="num">${row.count}</td>
-       <td class="num">${row.total.toFixed(2)}</td>
-       <td class="num">${(collectedTotal > 0 ? (row.total / collectedTotal * 100) : 0).toFixed(1)}%</td>`);
-    lastPaymentMethodReportRows = paymentMethodRows;
+    lastReportSalesForFilter = sales || [];
+    lastReportSalePaymentsForFilter = salePaymentsForReport;
+    populatePaymentMethodCashierFilter(lastReportSalesForFilter);
+    renderPaymentMethodReport(document.getElementById('paymentMethodCashierFilter').value || '');
+
+    // الفواتير المدفوعة بأكثر من طريقة دفع (دفع مقسّم)
+    renderMixedPaymentReport(lastReportSalesForFilter, lastReportSalePaymentsForFilter);
 
     // اتجاه المبيعات اليومي
     const dailyMap = {};
@@ -11033,6 +11212,22 @@ function exportPaymentMethodReportToExcel() {
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'المبيعات حسب طريقة الدفع');
   const dateStr = new Date().toISOString().split('T')[0];
   XLSX.writeFile(wb, `تقرير-المبيعات-حسب-طريقة-الدفع-${dateStr}.xlsx`);
+}
+
+function exportMixedPaymentReportToExcel() {
+  if (lastMixedPaymentReportRows.length === 0) { showToast('لا توجد بيانات لتصديرها', true); return; }
+  const rows = lastMixedPaymentReportRows.map(r => ({
+    'رقم الفاتورة': r.invoiceNumber,
+    'التاريخ': new Date(r.date).toLocaleString('ar-EG'),
+    'العميل': r.customerName,
+    'الكاشير': r.cashierName,
+    'تفاصيل طرق الدفع': formatMethodBreakdown(r.methodTotals),
+    'الإجمالي': r.total,
+  }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'فواتير الدفع المتعدد');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `تقرير-فواتير-الدفع-المتعدد-${dateStr}.xlsx`);
 }
 
 function exportBranchReportToExcel() {
