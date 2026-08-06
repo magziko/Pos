@@ -1606,10 +1606,24 @@ a { color: inherit; }
         <div id="bo-section-employees" style="display:none;">
           <div class="bo-section-header">
             <div class="bo-section-title">بيانات الموظفين</div>
-            <button class="bo-add-btn" id="addEmployeeBtn">+ إضافة موظف</button>
+            <div class="bo-section-actions">
+              <button class="bo-outline-btn" id="exportEmployeesBtn">تصدير إكسل</button>
+              <button class="bo-add-btn" id="addEmployeeBtn">+ إضافة موظف</button>
+            </div>
           </div>
           <div class="search-row" style="margin-bottom:14px;">
-            <input type="text" id="employeeSearchInput" placeholder="ابحث بالاسم...">
+            <input type="text" id="employeeSearchInput" placeholder="ابحث بالاسم أو رقم الهاتف...">
+            <select id="employeeDepartmentFilter" style="max-width:200px;">
+              <option value="">كل الأقسام</option>
+              <option value="المبيعات">المبيعات</option>
+              <option value="المخازن">المخازن</option>
+              <option value="المحاسبة">المحاسبة</option>
+              <option value="الإدارة">الإدارة</option>
+              <option value="خدمة العملاء">خدمة العملاء</option>
+              <option value="المشتريات">المشتريات</option>
+              <option value="الموارد البشرية">الموارد البشرية</option>
+              <option value="تقنية المعلومات">تقنية المعلومات</option>
+            </select>
           </div>
           <div class="bo-table-wrap">
             <table class="bo-table">
@@ -1617,16 +1631,17 @@ a { color: inherit; }
                 <tr>
                   <th>الاسم الكامل</th>
                   <th>الوظيفة</th>
+                  <th>القسم</th>
                   <th>الفرع</th>
                   <th>رقم التليفون</th>
-                  <th>الرقم القومي</th>
-                  <th>تاريخ التعيين</th>
                   <th>الراتب الأساسي</th>
+                  <th>الحالة</th>
+                  <th>حساب مستخدم</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody id="employeesTableBody">
-                <tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr>
+                <tr><td colspan="9" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
@@ -2736,18 +2751,52 @@ a { color: inherit; }
 
 <!-- Modal: إضافة / تعديل بيانات موظف -->
 <div class="modal-overlay" id="employeeModalOverlay">
-  <div class="modal-box">
+  <div class="modal-box wide">
     <div class="modal-title" id="employeeModalTitle">موظف جديد</div>
     <form id="employeeForm">
       <input type="hidden" id="employeeId">
+
+      <div class="ci-section-subtitle" style="margin-top:4px;">بيانات الموظف</div>
       <div class="modal-grid">
         <div class="field field-full"><label>الاسم الكامل</label><input type="text" id="employeeFullName" required></div>
         <div class="field"><label>الوظيفة</label><input type="text" id="employeeJobTitle" placeholder="مثال: عامل نظافة"></div>
+        <div class="field"><label>القسم</label>
+          <select id="employeeDepartment">
+            <option value="">اختر القسم...</option>
+            <option value="المبيعات">المبيعات</option>
+            <option value="المخازن">المخازن</option>
+            <option value="المحاسبة">المحاسبة</option>
+            <option value="الإدارة">الإدارة</option>
+            <option value="خدمة العملاء">خدمة العملاء</option>
+            <option value="المشتريات">المشتريات</option>
+            <option value="الموارد البشرية">الموارد البشرية</option>
+            <option value="تقنية المعلومات">تقنية المعلومات</option>
+          </select>
+        </div>
         <div class="field"><label>الفرع</label><select id="employeeBranch"><option value="">بدون فرع</option></select></div>
         <div class="field"><label>رقم التليفون</label><input type="text" id="employeePhone" style="direction:ltr; text-align:right;"></div>
-        <div class="field"><label>الرقم القومي</label><input type="text" id="employeeNationalId" style="direction:ltr; text-align:right;"></div>
+        <div class="field"><label>بريد العمل الالكتروني</label><input type="email" id="employeeWorkEmail" style="direction:ltr; text-align:right;"></div>
+        <div class="field"><label>رقم هاتف العمل</label><input type="tel" id="employeeWorkPhone" style="direction:ltr; text-align:right;"></div>
         <div class="field"><label>تاريخ التعيين</label><input type="date" id="employeeHireDate"></div>
         <div class="field"><label>الراتب الأساسي</label><input type="number" id="employeeBaseSalary" step="0.01" min="0" value="0"></div>
+        <div class="field field-full">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="employeeActive" checked style="width:auto;"> الموظف على رأس العمل حاليًا
+          </label>
+        </div>
+      </div>
+
+      <div class="ci-section-subtitle">بيانات إضافية</div>
+      <div class="modal-grid">
+        <div class="field"><label>الرقم القومي</label><input type="text" id="employeeNationalId" style="direction:ltr; text-align:right;"></div>
+        <div class="field"><label>رقم جواز السفر</label><input type="text" id="employeePassportNumber" style="direction:ltr; text-align:right;"></div>
+        <div class="field"><label>الجنس</label>
+          <select id="employeeGender">
+            <option value="">غير محدد</option>
+            <option value="male">ذكر</option>
+            <option value="female">أنثى</option>
+          </select>
+        </div>
         <div class="field field-full"><label>العنوان</label><input type="text" id="employeeAddress"></div>
       </div>
 
@@ -4932,6 +4981,8 @@ function bindBackofficeEvents() {
   // ---- Employees ----
   document.getElementById('addEmployeeBtn').addEventListener('click', () => openEmployeeModal(null));
   document.getElementById('employeeSearchInput').addEventListener('input', renderEmployeesTable);
+  document.getElementById('employeeDepartmentFilter').addEventListener('change', renderEmployeesTable);
+  document.getElementById('exportEmployeesBtn').addEventListener('click', exportEmployeesToExcel);
   document.getElementById('cancelEmployeeBtn').addEventListener('click', closeEmployeeModal);
   document.getElementById('employeeModalOverlay').addEventListener('click', (e) => {
     if (e.target.id === 'employeeModalOverlay') closeEmployeeModal();
@@ -7709,33 +7760,76 @@ async function loadBoEmployees() {
 function renderEmployeesTable() {
   const tbody = document.getElementById('employeesTableBody');
   const q = (document.getElementById('employeeSearchInput')?.value || '').trim().toLowerCase();
-  const filtered = boEmployees.filter(e => !q || e.full_name.toLowerCase().includes(q));
+  const deptFilter = document.getElementById('employeeDepartmentFilter')?.value || '';
+  const filtered = boEmployees.filter(e => {
+    if (deptFilter && (e.department || '') !== deptFilter) return false;
+    if (!q) return true;
+    return e.full_name.toLowerCase().includes(q) || (e.phone || '').includes(q);
+  });
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" class="bo-empty">${boEmployees.length === 0 ? 'لا يوجد موظفون مضافون حتى الآن' : 'لا يوجد موظفون مطابقون للبحث'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" class="bo-empty">${boEmployees.length === 0 ? 'لا يوجد موظفون مضافون حتى الآن' : 'لا يوجد موظفون مطابقون للبحث'}</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
   filtered.forEach(e => {
+    const linkedUser = boUsers.find(u => u.employee_id === e.id);
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${escapeHtml(e.full_name)}</td>
       <td>${escapeHtml(e.job_title || '—')}</td>
+      <td>${escapeHtml(e.department || '—')}</td>
       <td>${escapeHtml(e.branches?.name || '—')}</td>
       <td class="num">${escapeHtml(e.phone || '—')}</td>
-      <td class="num">${escapeHtml(e.national_id || '—')}</td>
-      <td>${escapeHtml(e.hire_date || '—')}</td>
       <td class="num">${Number(e.base_salary || 0).toFixed(2)}</td>
+      <td><span class="bo-badge ${e.is_active === false ? 'inactive' : 'active'}">${e.is_active === false ? 'منتهية خدمته' : 'على رأس العمل'}</span></td>
+      <td>${linkedUser ? escapeHtml(linkedUser.username || linkedUser.full_name) : '—'}</td>
       <td>
         <div class="bo-row-actions">
           <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn" data-action="toggle">${e.is_active === false ? 'إعادة تفعيل' : 'إنهاء خدمة'}</button>
           <button class="bo-icon-btn danger" data-action="delete">حذف</button>
         </div>
       </td>`;
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openEmployeeModal(e));
+    tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleEmployeeActive(e));
     tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteEmployee(e));
     tbody.appendChild(tr);
   });
+}
+
+function exportEmployeesToExcel() {
+  if (boEmployees.length === 0) {
+    showToast('لا يوجد موظفون لتصديرهم', true);
+    return;
+  }
+  const rows = boEmployees.map(e => {
+    const linkedUser = boUsers.find(u => u.employee_id === e.id);
+    return {
+      'الاسم الكامل': e.full_name || '',
+      'الوظيفة': e.job_title || '',
+      'القسم': e.department || '',
+      'الفرع': e.branches?.name || '',
+      'رقم التليفون': e.phone || '',
+      'بريد العمل الالكتروني': e.work_email || '',
+      'رقم هاتف العمل': e.work_phone || '',
+      'تاريخ التعيين': e.hire_date || '',
+      'الراتب الأساسي': Number(e.base_salary || 0),
+      'الرقم القومي': e.national_id || '',
+      'رقم جواز السفر': e.passport_number || '',
+      'الجنس': e.gender === 'male' ? 'ذكر' : (e.gender === 'female' ? 'أنثى' : ''),
+      'العنوان': e.address || '',
+      'الحالة': e.is_active === false ? 'منتهية خدمته' : 'على رأس العمل',
+      'حساب مستخدم مرتبط': linkedUser ? (linkedUser.username || linkedUser.full_name) : '',
+    };
+  });
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [{ wch: 22 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 24 }, { wch: 16 }, { wch: 14 }, { wch: 14 }, { wch: 16 }, { wch: 16 }, { wch: 10 }, { wch: 24 }, { wch: 14 }, { wch: 18 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'الموظفين');
+  const dateStr = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(wb, `الموظفين-${dateStr}.xlsx`);
+  showToast('تم تصدير ملف الإكسل بنجاح');
 }
 
 function populateEmployeeBranchSelect(currentValue) {
@@ -7754,11 +7848,17 @@ function openEmployeeModal(employee) {
   document.getElementById('employeeId').value = employee ? employee.id : '';
   document.getElementById('employeeFullName').value = employee ? employee.full_name : '';
   document.getElementById('employeeJobTitle').value = employee?.job_title || '';
+  document.getElementById('employeeDepartment').value = employee?.department || '';
   populateEmployeeBranchSelect(employee?.branch_id || '');
   document.getElementById('employeePhone').value = employee?.phone || '';
-  document.getElementById('employeeNationalId').value = employee?.national_id || '';
+  document.getElementById('employeeWorkEmail').value = employee?.work_email || '';
+  document.getElementById('employeeWorkPhone').value = employee?.work_phone || '';
   document.getElementById('employeeHireDate').value = employee?.hire_date || '';
   document.getElementById('employeeBaseSalary').value = employee ? (employee.base_salary || 0) : 0;
+  document.getElementById('employeeActive').checked = employee ? employee.is_active !== false : true;
+  document.getElementById('employeeNationalId').value = employee?.national_id || '';
+  document.getElementById('employeePassportNumber').value = employee?.passport_number || '';
+  document.getElementById('employeeGender').value = employee?.gender || '';
   document.getElementById('employeeAddress').value = employee?.address || '';
   document.getElementById('employeeModalError').classList.remove('show');
   document.getElementById('employeeModalOverlay').classList.add('show');
@@ -7780,11 +7880,17 @@ async function saveEmployee(e) {
   const payload = {
     full_name: document.getElementById('employeeFullName').value.trim(),
     job_title: document.getElementById('employeeJobTitle').value.trim() || null,
+    department: document.getElementById('employeeDepartment').value || null,
     branch_id: document.getElementById('employeeBranch').value || null,
     phone: document.getElementById('employeePhone').value.trim() || null,
+    work_email: document.getElementById('employeeWorkEmail').value.trim() || null,
+    work_phone: document.getElementById('employeeWorkPhone').value.trim() || null,
     national_id: document.getElementById('employeeNationalId').value.trim() || null,
+    passport_number: document.getElementById('employeePassportNumber').value.trim() || null,
+    gender: document.getElementById('employeeGender').value || null,
     hire_date: document.getElementById('employeeHireDate').value || null,
     base_salary: Number(document.getElementById('employeeBaseSalary').value) || 0,
+    is_active: document.getElementById('employeeActive').checked,
     address: document.getElementById('employeeAddress').value.trim() || null,
   };
 
@@ -7817,6 +7923,15 @@ async function deleteEmployee(employee) {
   const { error } = await supabaseClient.from('employees').delete().eq('id', employee.id);
   if (error) { console.error(error); showToast('تعذر حذف الموظف', true); return; }
   showToast('تم حذف الموظف بنجاح');
+  await loadBoEmployees();
+  renderEmployeesTable();
+}
+
+async function toggleEmployeeActive(employee) {
+  const nowActive = employee.is_active === false;
+  const { error } = await supabaseClient.from('employees').update({ is_active: nowActive }).eq('id', employee.id);
+  if (error) { console.error(error); showToast('تعذر تحديث حالة الموظف', true); return; }
+  showToast(nowActive ? 'تم إعادة تفعيل الموظف' : 'تم تسجيل انتهاء خدمة الموظف');
   await loadBoEmployees();
   renderEmployeesTable();
 }
