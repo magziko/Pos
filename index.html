@@ -2189,15 +2189,60 @@ a { color: inherit; }
 </div>
 
 <div class="modal-overlay" id="branchModalOverlay">
-  <div class="modal-box">
+  <div class="modal-box wide">
     <div class="modal-title" id="branchModalTitle">فرع جديد</div>
     <form id="branchForm">
       <input type="hidden" id="branchId">
-      <div class="modal-grid">
+      <div class="ci-grid">
+        <div class="field field-full">
+          <label>شعار الفرع (اختياري)</label>
+          <input type="hidden" id="biLogo">
+          <input type="file" id="biLogoFile" accept="image/*" style="display:none;">
+          <div class="image-upload-row">
+            <div class="image-upload-preview logo-upload-preview" id="biLogoPreviewWrap">
+              <img id="biLogoPreview" alt="">
+              <span class="image-upload-placeholder" id="biLogoPlaceholder">🏢</span>
+            </div>
+            <div class="image-upload-actions">
+              <div class="btn-row">
+                <button type="button" class="btn-secondary" id="biLogoUploadBtn">اختيار شعار</button>
+                <button type="button" class="btn-secondary" id="biLogoRemoveBtn" style="display:none;">إزالة الشعار</button>
+              </div>
+              <div class="image-upload-size" id="biLogoSizeLabel"></div>
+            </div>
+          </div>
+          <p style="font-size:11.5px; color:var(--ink-soft); margin:6px 0 0;">لو موجود، يظهر بدل شعار الشركة فى فواتير وإيصالات هذا الفرع.</p>
+        </div>
         <div class="field field-full"><label>اسم الفرع</label><input type="text" id="branchName" required></div>
         <div class="field"><label>رقم التليفون</label><input type="text" id="branchPhone" style="direction:ltr; text-align:right;"></div>
-        <div class="field field-full"><label>العنوان</label><input type="text" id="branchAddress"></div>
+        <div class="field"><label for="biEmail">البريد الإلكتروني</label><input type="email" id="biEmail" style="direction:ltr; text-align:right;" placeholder="example@company.com"></div>
+        <div class="field"><label for="biCountry">الدولة</label><select id="biCountry"><option value="">اختر الدولة...</option></select></div>
+        <div class="field field-full"><label for="biTimezone">المنطقة الزمنية</label><select id="biTimezone"><option value="">اختر الدولة أولاً...</option></select></div>
+
+        <div class="field field-full ci-location-wrap">
+          <label for="biLocationSearch">البحث عن موقع الفرع</label>
+          <span class="ci-location-icon">⚲</span>
+          <input type="text" id="biLocationSearch" autocomplete="off" placeholder="اكتب اسم المكان أو العنوان للبحث...">
+          <div class="ci-location-results" id="biLocationResults"></div>
+          <input type="hidden" id="biLat">
+          <input type="hidden" id="biLng">
+        </div>
+        <div class="ci-hint field-full" id="biLocationHint" style="display:none;"></div>
+
+        <div class="field"><label for="biTaxNumber">الرقم الضريبي</label><input type="text" id="biTaxNumber" style="direction:ltr; text-align:right;" placeholder="اختياري"></div>
+        <div class="field"><label for="biCommercialRegister">السجل التجاري</label><input type="text" id="biCommercialRegister" style="direction:ltr; text-align:right;" placeholder="اختياري"></div>
+        <div class="field field-full"><label for="biActivityType">نوع النشاط</label><input type="text" id="biActivityType" placeholder="مثال: مطاعم وكافيهات، تجارة تجزئة..."></div>
       </div>
+
+      <div class="ci-section-subtitle">تفاصيل العنوان</div>
+      <div class="ci-grid">
+        <div class="field field-full"><label for="biAddress1">العنوان 1</label><input type="text" id="biAddress1" placeholder="اسم الشارع، رقم المبنى..."></div>
+        <div class="field field-full"><label for="biAddress2">العنوان 2</label><input type="text" id="biAddress2" placeholder="تفاصيل إضافية (اختياري)"></div>
+        <div class="field"><label for="biCity">المدينة</label><input type="text" id="biCity"></div>
+        <div class="field"><label for="biState">الولاية</label><input type="text" id="biState" placeholder="المحافظة / الولاية"></div>
+        <div class="field"><label for="biPostalCode">الرمز البريدي</label><input type="text" id="biPostalCode" style="direction:ltr; text-align:right;"></div>
+      </div>
+
       <div class="error-msg" id="branchModalError"></div>
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelBranchBtn">إلغاء</button>
@@ -2939,7 +2984,7 @@ function createSmartSearch(opts) {
 async function getUserProfile(userId) {
   const { data, error } = await supabaseClient
     .from('users_profile')
-    .select('*, roles(name, permissions), branches(id, name)')
+    .select('*, roles(name, permissions), branches(id, name, logo)')
     .eq('id', userId)
     .single();
   if (error) { console.error('getUserProfile error', error); return null; }
@@ -3669,12 +3714,14 @@ async function loadCompanyInfoGlobal() {
     console.error(err);
   }
 }
-function renderInvoiceDetailPrintHeader() {
+function renderInvoiceDetailPrintHeader(branchId) {
   const el = document.getElementById('invoiceDetailPrintHeader');
   if (!el) return;
-  if (!companyInfo || (!companyInfo.logo && !companyInfo.name)) { el.innerHTML = ''; return; }
+  const branch = branchId ? (boBranchesList || []).find(b => b.id === branchId) : null;
+  const logo = branch?.logo || companyInfo.logo;
+  if (!companyInfo || (!logo && !companyInfo.name)) { el.innerHTML = ''; return; }
   el.innerHTML = `
-    ${companyInfo.logo ? `<img src="${companyInfo.logo}" alt="">` : ''}
+    ${logo ? `<img src="${logo}" alt="">` : ''}
     ${companyInfo.name ? `<div class="ip-company-name">${escapeHtml(companyInfo.name)}</div>` : ''}
   `;
 }
@@ -4038,9 +4085,10 @@ function showReceipt(sale) {
       </div>
     </div>`).join('');
 
+  const receiptLogo = currentProfile?.branches?.logo || companyInfo.logo;
   document.getElementById('receiptContent').innerHTML = `
     <div class="r-center">
-      ${companyInfo.logo ? `<img src="${companyInfo.logo}" class="r-logo" alt="">` : ''}
+      ${receiptLogo ? `<img src="${receiptLogo}" class="r-logo" alt="">` : ''}
       <div class="r-title">${escapeHtml(sale.branchName || 'نظام نقاط البيع')}</div>
       <div class="r-sub">فاتورة رقم #${sale.invoiceNumber}</div>
       <div class="r-sub num">${dateStr}</div>
@@ -4529,6 +4577,15 @@ function bindBackofficeEvents() {
     hiddenInputId: 'ciLogo', previewImgId: 'ciLogoPreview', placeholderId: 'ciLogoPlaceholder',
     sizeLabelId: 'ciLogoSizeLabel', compressOpts: { maxWidth: 240, maxHeight: 120, maxBytes: 20 * 1024, minDim: 80 }
   });
+  setupImageUploadField({
+    fileInputId: 'biLogoFile', uploadBtnId: 'biLogoUploadBtn', removeBtnId: 'biLogoRemoveBtn',
+    hiddenInputId: 'biLogo', previewImgId: 'biLogoPreview', placeholderId: 'biLogoPlaceholder',
+    sizeLabelId: 'biLogoSizeLabel', compressOpts: { maxWidth: 240, maxHeight: 120, maxBytes: 20 * 1024, minDim: 80 }
+  });
+  document.getElementById('biCountry').addEventListener('change', () => {
+    populateLocationTimezoneSelect('bi', document.getElementById('biCountry').value);
+  });
+  initLocationSearch('bi');
 
   document.getElementById('backToPosBtn').addEventListener('click', () => showView('pos'));
   document.getElementById('boLogoutBtn').addEventListener('click', doLogout);
@@ -6529,7 +6586,26 @@ function openBranchModal(branch) {
   document.getElementById('branchId').value = branch ? branch.id : '';
   document.getElementById('branchName').value = branch ? branch.name : '';
   document.getElementById('branchPhone').value = branch?.phone || '';
-  document.getElementById('branchAddress').value = branch?.address || '';
+  document.getElementById('biEmail').value = branch?.email || '';
+  document.getElementById('biTaxNumber').value = branch?.tax_number || '';
+  document.getElementById('biCommercialRegister').value = branch?.commercial_register || '';
+  document.getElementById('biActivityType').value = branch?.activity_type || '';
+  document.getElementById('biAddress1').value = branch?.address1 || '';
+  document.getElementById('biAddress2').value = branch?.address2 || '';
+  document.getElementById('biCity').value = branch?.city || '';
+  document.getElementById('biState').value = branch?.state || '';
+  document.getElementById('biPostalCode').value = branch?.postal_code || '';
+  document.getElementById('biLocationSearch').value = branch?.location_label || '';
+  document.getElementById('biLat').value = branch?.lat || '';
+  document.getElementById('biLng').value = branch?.lng || '';
+  document.getElementById('biLocationHint').style.display = 'none';
+
+  setImageUploadFieldValue('biLogo', branch?.logo || '', 'biLogoPreview', 'biLogoPlaceholder', 'biLogoRemoveBtn', 'biLogoSizeLabel');
+
+  populateLocationCountrySelect('bi');
+  document.getElementById('biCountry').value = branch?.country || '';
+  populateLocationTimezoneSelect('bi', branch?.country || '', branch?.timezone || '');
+
   document.getElementById('branchModalError').classList.remove('show');
   document.getElementById('branchModalOverlay').classList.add('show');
 }
@@ -6547,10 +6623,31 @@ async function saveBranch(e) {
   saveBtn.textContent = 'جاري الحفظ...';
 
   const id = document.getElementById('branchId').value || null;
+  const address1 = document.getElementById('biAddress1').value.trim();
+  const address2 = document.getElementById('biAddress2').value.trim();
+  const city = document.getElementById('biCity').value.trim();
+  const state = document.getElementById('biState').value.trim();
+  const combinedAddress = [address1, address2, city, state].filter(Boolean).join('، ') || null;
+
   const payload = {
     name: document.getElementById('branchName').value.trim(),
     phone: document.getElementById('branchPhone').value.trim() || null,
-    address: document.getElementById('branchAddress').value.trim() || null,
+    address: combinedAddress,
+    logo: document.getElementById('biLogo').value || null,
+    email: document.getElementById('biEmail').value.trim() || null,
+    country: document.getElementById('biCountry').value || null,
+    timezone: document.getElementById('biTimezone').value || null,
+    tax_number: document.getElementById('biTaxNumber').value.trim() || null,
+    commercial_register: document.getElementById('biCommercialRegister').value.trim() || null,
+    activity_type: document.getElementById('biActivityType').value.trim() || null,
+    address1: address1 || null,
+    address2: address2 || null,
+    city: city || null,
+    state: state || null,
+    postal_code: document.getElementById('biPostalCode').value.trim() || null,
+    location_label: document.getElementById('biLocationSearch').value.trim() || null,
+    lat: document.getElementById('biLat').value || null,
+    lng: document.getElementById('biLng').value || null,
   };
 
   try {
@@ -7993,7 +8090,7 @@ let boSalesList = [];
 async function loadBoSalesList() {
   const { data, error } = await supabaseClient
     .from('sales')
-    .select('id, invoice_number, created_at, subtotal, discount, tax, total, payment_method, customers(name), users_profile(full_name), branches(name)')
+    .select('id, invoice_number, created_at, subtotal, discount, tax, total, payment_method, branch_id, customers(name), users_profile(full_name), branches(name)')
     .order('created_at', { ascending: false })
     .limit(200);
   if (error) { console.error(error); showToast('تعذر تحميل فواتير البيع', true); return; }
@@ -8029,7 +8126,7 @@ function renderSalesListTable() {
 
 async function openSaleDetailModal(sale) {
   document.getElementById('invoiceDetailModalTitle').textContent = `فاتورة بيع رقم #${sale.invoice_number}`;
-  renderInvoiceDetailPrintHeader();
+  renderInvoiceDetailPrintHeader(sale.branch_id);
   const body = document.getElementById('invoiceDetailModalBody');
   body.innerHTML = `<div class="bo-empty">جاري تحميل التفاصيل...</div>`;
   document.getElementById('invoiceDetailModalOverlay').classList.add('show');
@@ -8529,7 +8626,7 @@ function renderInvoiceDetailItemsTable(items, unitPriceLabel) {
 
 async function openPurchaseDetailModal(purchase) {
   document.getElementById('invoiceDetailModalTitle').textContent = `فاتورة شراء رقم #${purchase.invoice_number}`;
-  renderInvoiceDetailPrintHeader();
+  renderInvoiceDetailPrintHeader(purchase.branch_id);
   const body = document.getElementById('invoiceDetailModalBody');
   body.innerHTML = `<div class="bo-empty">جاري تحميل التفاصيل...</div>`;
   document.getElementById('invoiceDetailModalOverlay').classList.add('show');
@@ -8553,7 +8650,7 @@ async function openPurchaseDetailModal(purchase) {
 
 async function openPurchaseReturnDetailModal(ret) {
   document.getElementById('invoiceDetailModalTitle').textContent = `مرتجع شراء — فاتورة #${ret.purchases?.invoice_number ?? '—'}`;
-  renderInvoiceDetailPrintHeader();
+  renderInvoiceDetailPrintHeader(ret.branch_id);
   const body = document.getElementById('invoiceDetailModalBody');
   body.innerHTML = `<div class="bo-empty">جاري تحميل التفاصيل...</div>`;
   document.getElementById('invoiceDetailModalOverlay').classList.add('show');
@@ -8575,7 +8672,7 @@ async function openPurchaseReturnDetailModal(ret) {
 
 async function openSaleReturnDetailModal(ret) {
   document.getElementById('invoiceDetailModalTitle').textContent = `مرتجع بيع — فاتورة #${ret.sales?.invoice_number ?? '—'}`;
-  renderInvoiceDetailPrintHeader();
+  renderInvoiceDetailPrintHeader(ret.branch_id);
   const body = document.getElementById('invoiceDetailModalBody');
   body.innerHTML = `<div class="bo-empty">جاري تحميل التفاصيل...</div>`;
   document.getElementById('invoiceDetailModalOverlay').classList.add('show');
@@ -9389,14 +9486,17 @@ const RD_CONFIRM_PHRASE = 'تأكيد الحذف';
 const COMPANY_COUNTRIES = [{"code":"EG","name":"مصر"},{"code":"SA","name":"المملكة العربية السعودية"},{"code":"AE","name":"الإمارات العربية المتحدة"},{"code":"KW","name":"الكويت"},{"code":"QA","name":"قطر"},{"code":"BH","name":"البحرين"},{"code":"OM","name":"عُمان"},{"code":"JO","name":"الأردن"},{"code":"LB","name":"لبنان"},{"code":"IQ","name":"العراق"},{"code":"SY","name":"سوريا"},{"code":"YE","name":"اليمن"},{"code":"PS","name":"الأراضي الفلسطينية"},{"code":"LY","name":"ليبيا"},{"code":"TN","name":"تونس"},{"code":"DZ","name":"الجزائر"},{"code":"MA","name":"المغرب"},{"code":"SD","name":"السودان"},{"code":"SO","name":"الصومال"},{"code":"DJ","name":"جيبوتي"},{"code":"MR","name":"موريتانيا"},{"code":"KM","name":"جزر القمر"},{"code":"IS","name":"آيسلندا"},{"code":"AZ","name":"أذربيجان"},{"code":"AM","name":"أرمينيا"},{"code":"AW","name":"أروبا"},{"code":"AU","name":"أستراليا"},{"code":"AF","name":"أفغانستان"},{"code":"AL","name":"ألبانيا"},{"code":"DE","name":"ألمانيا"},{"code":"AQ","name":"أنتاركتيكا"},{"code":"AG","name":"أنتيغوا وبربودا"},{"code":"AD","name":"أندورا"},{"code":"AO","name":"أنغولا"},{"code":"AI","name":"أنغويلا"},{"code":"UY","name":"أورغواي"},{"code":"UZ","name":"أوزبكستان"},{"code":"UG","name":"أوغندا"},{"code":"UA","name":"أوكرانيا"},{"code":"IE","name":"أيرلندا"},{"code":"ET","name":"إثيوبيا"},{"code":"ER","name":"إريتريا"},{"code":"ES","name":"إسبانيا"},{"code":"EE","name":"إستونيا"},{"code":"IL","name":"إسرائيل"},{"code":"SZ","name":"إسواتيني"},{"code":"ID","name":"إندونيسيا"},{"code":"IR","name":"إيران"},{"code":"IT","name":"إيطاليا"},{"code":"AR","name":"الأرجنتين"},{"code":"TF","name":"الأقاليم الجنوبية الفرنسية"},{"code":"IO","name":"الإقليم البريطاني في المحيط الهندي"},{"code":"EC","name":"الإكوادور"},{"code":"BR","name":"البرازيل"},{"code":"PT","name":"البرتغال"},{"code":"BA","name":"البوسنة والهرسك"},{"code":"CZ","name":"التشيك"},{"code":"ME","name":"الجبل الأسود"},{"code":"DK","name":"الدانمرك"},{"code":"CV","name":"الرأس الأخضر"},{"code":"SV","name":"السلفادور"},{"code":"SN","name":"السنغال"},{"code":"SE","name":"السويد"},{"code":"EH","name":"الصحراء الغربية"},{"code":"CN","name":"الصين"},{"code":"GA","name":"الغابون"},{"code":"VA","name":"الفاتيكان"},{"code":"PH","name":"الفلبين"},{"code":"CM","name":"الكاميرون"},{"code":"CG","name":"الكونغو - برازافيل"},{"code":"CD","name":"الكونغو - كينشاسا"},{"code":"MX","name":"المكسيك"},{"code":"GB","name":"المملكة المتحدة"},{"code":"NO","name":"النرويج"},{"code":"AT","name":"النمسا"},{"code":"NE","name":"النيجر"},{"code":"IN","name":"الهند"},{"code":"US","name":"الولايات المتحدة"},{"code":"JP","name":"اليابان"},{"code":"GR","name":"اليونان"},{"code":"PG","name":"بابوا غينيا الجديدة"},{"code":"PY","name":"باراغواي"},{"code":"PK","name":"باكستان"},{"code":"PW","name":"بالاو"},{"code":"BB","name":"بربادوس"},{"code":"BM","name":"برمودا"},{"code":"BN","name":"بروناي"},{"code":"BE","name":"بلجيكا"},{"code":"BG","name":"بلغاريا"},{"code":"BZ","name":"بليز"},{"code":"BD","name":"بنغلاديش"},{"code":"PA","name":"بنما"},{"code":"BJ","name":"بنين"},{"code":"BT","name":"بوتان"},{"code":"BW","name":"بوتسوانا"},{"code":"PR","name":"بورتوريكو"},{"code":"BF","name":"بوركينا فاسو"},{"code":"BI","name":"بوروندي"},{"code":"PL","name":"بولندا"},{"code":"BO","name":"بوليفيا"},{"code":"PF","name":"بولينيزيا الفرنسية"},{"code":"PE","name":"بيرو"},{"code":"BY","name":"بيلاروس"},{"code":"TH","name":"تايلاند"},{"code":"TW","name":"تايوان"},{"code":"TM","name":"تركمانستان"},{"code":"TR","name":"تركيا"},{"code":"TT","name":"ترينيداد وتوباغو"},{"code":"TD","name":"تشاد"},{"code":"CL","name":"تشيلي"},{"code":"TZ","name":"تنزانيا"},{"code":"TG","name":"توغو"},{"code":"TV","name":"توفالو"},{"code":"TK","name":"توكيلاو"},{"code":"TO","name":"تونغا"},{"code":"TL","name":"تيمور - ليشتي"},{"code":"JM","name":"جامايكا"},{"code":"GI","name":"جبل طارق"},{"code":"AX","name":"جزر آلاند"},{"code":"BS","name":"جزر البهاما"},{"code":"MQ","name":"جزر المارتينيك"},{"code":"MV","name":"جزر المالديف"},{"code":"UM","name":"جزر الولايات المتحدة النائية"},{"code":"PN","name":"جزر بيتكيرن"},{"code":"TC","name":"جزر توركس وكايكوس"},{"code":"SB","name":"جزر سليمان"},{"code":"FO","name":"جزر فارو"},{"code":"FK","name":"جزر فوكلاند"},{"code":"VI","name":"جزر فيرجن الأمريكية"},{"code":"VG","name":"جزر فيرجن البريطانية"},{"code":"KY","name":"جزر كايمان"},{"code":"CK","name":"جزر كوك"},{"code":"CC","name":"جزر كوكوس (كيلينغ)"},{"code":"MH","name":"جزر مارشال"},{"code":"MP","name":"جزر ماريانا الشمالية"},{"code":"WF","name":"جزر والس وفوتونا"},{"code":"BV","name":"جزيرة بوفيه"},{"code":"CX","name":"جزيرة كريسماس"},{"code":"IM","name":"جزيرة مان"},{"code":"NF","name":"جزيرة نورفولك"},{"code":"HM","name":"جزيرة هيرد وجزر ماكدونالد"},{"code":"CF","name":"جمهورية أفريقيا الوسطى"},{"code":"DO","name":"جمهورية الدومينيكان"},{"code":"ZA","name":"جنوب أفريقيا"},{"code":"SS","name":"جنوب السودان"},{"code":"GE","name":"جورجيا"},{"code":"GS","name":"جورجيا الجنوبية وجزر ساندويتش الجنوبية"},{"code":"JE","name":"جيرسي"},{"code":"DM","name":"دومينيكا"},{"code":"RW","name":"رواندا"},{"code":"RU","name":"روسيا"},{"code":"RO","name":"رومانيا"},{"code":"RE","name":"روينيون"},{"code":"ZM","name":"زامبيا"},{"code":"ZW","name":"زيمبابوي"},{"code":"CI","name":"ساحل العاج"},{"code":"WS","name":"ساموا"},{"code":"AS","name":"ساموا الأمريكية"},{"code":"BL","name":"سان بارتليمي"},{"code":"PM","name":"سان بيير ومكويلون"},{"code":"MF","name":"سان مارتن"},{"code":"SM","name":"سان مارينو"},{"code":"VC","name":"سانت فنسنت وجزر غرينادين"},{"code":"KN","name":"سانت كيتس ونيفيس"},{"code":"LC","name":"سانت لوسيا"},{"code":"SX","name":"سانت مارتن"},{"code":"SH","name":"سانت هيلينا"},{"code":"ST","name":"ساو تومي وبرينسيبي"},{"code":"LK","name":"سريلانكا"},{"code":"SJ","name":"سفالبارد وجان ماين"},{"code":"SK","name":"سلوفاكيا"},{"code":"SI","name":"سلوفينيا"},{"code":"SG","name":"سنغافورة"},{"code":"SR","name":"سورينام"},{"code":"CH","name":"سويسرا"},{"code":"SL","name":"سيراليون"},{"code":"SC","name":"سيشل"},{"code":"RS","name":"صربيا"},{"code":"TJ","name":"طاجيكستان"},{"code":"GM","name":"غامبيا"},{"code":"GH","name":"غانا"},{"code":"GD","name":"غرينادا"},{"code":"GL","name":"غرينلاند"},{"code":"GT","name":"غواتيمالا"},{"code":"GP","name":"غوادلوب"},{"code":"GU","name":"غوام"},{"code":"GF","name":"غويانا الفرنسية"},{"code":"GY","name":"غيانا"},{"code":"GG","name":"غيرنزي"},{"code":"GN","name":"غينيا"},{"code":"GQ","name":"غينيا الاستوائية"},{"code":"GW","name":"غينيا بيساو"},{"code":"VU","name":"فانواتو"},{"code":"FR","name":"فرنسا"},{"code":"VE","name":"فنزويلا"},{"code":"FI","name":"فنلندا"},{"code":"VN","name":"فيتنام"},{"code":"FJ","name":"فيجي"},{"code":"CY","name":"قبرص"},{"code":"KG","name":"قيرغيزستان"},{"code":"KZ","name":"كازاخستان"},{"code":"NC","name":"كاليدونيا الجديدة"},{"code":"HR","name":"كرواتيا"},{"code":"KH","name":"كمبوديا"},{"code":"CA","name":"كندا"},{"code":"CU","name":"كوبا"},{"code":"CW","name":"كوراساو"},{"code":"KR","name":"كوريا الجنوبية"},{"code":"KP","name":"كوريا الشمالية"},{"code":"CR","name":"كوستاريكا"},{"code":"CO","name":"كولومبيا"},{"code":"KI","name":"كيريباتي"},{"code":"KE","name":"كينيا"},{"code":"LV","name":"لاتفيا"},{"code":"LA","name":"لاوس"},{"code":"LU","name":"لوكسمبورغ"},{"code":"LR","name":"ليبيريا"},{"code":"LT","name":"ليتوانيا"},{"code":"LI","name":"ليختنشتاين"},{"code":"LS","name":"ليسوتو"},{"code":"MT","name":"مالطا"},{"code":"ML","name":"مالي"},{"code":"MY","name":"ماليزيا"},{"code":"YT","name":"مايوت"},{"code":"MG","name":"مدغشقر"},{"code":"MK","name":"مقدونيا الشمالية"},{"code":"MW","name":"ملاوي"},{"code":"MO","name":"منطقة ماكاو الإدارية الخاصة"},{"code":"MN","name":"منغوليا"},{"code":"MU","name":"موريشيوس"},{"code":"MZ","name":"موزمبيق"},{"code":"MD","name":"مولدوفا"},{"code":"MC","name":"موناكو"},{"code":"MS","name":"مونتسرات"},{"code":"MM","name":"ميانمار (بورما)"},{"code":"FM","name":"ميكرونيزيا"},{"code":"NA","name":"ناميبيا"},{"code":"NR","name":"ناورو"},{"code":"NP","name":"نيبال"},{"code":"NG","name":"نيجيريا"},{"code":"NI","name":"نيكاراغوا"},{"code":"NZ","name":"نيوزيلندا"},{"code":"NU","name":"نيوي"},{"code":"HT","name":"هايتي"},{"code":"HN","name":"هندوراس"},{"code":"HU","name":"هنغاريا"},{"code":"NL","name":"هولندا"},{"code":"BQ","name":"هولندا الكاريبية"},{"code":"HK","name":"هونغ كونغ الصينية (منطقة إدارية خاصة)"}];
 const COMPANY_TZ_MAP = {"AD":["Europe/Andorra"],"AE":["Asia/Dubai"],"AF":["Asia/Kabul"],"AG":["America/Antigua"],"AI":["America/Anguilla"],"AL":["Europe/Tirane"],"AM":["Asia/Yerevan"],"AO":["Africa/Luanda"],"AQ":["Antarctica/McMurdo","Antarctica/Casey","Antarctica/Davis","Antarctica/DumontDUrville","Antarctica/Mawson","Antarctica/Palmer","Antarctica/Rothera","Antarctica/Syowa","Antarctica/Troll","Antarctica/Vostok"],"AR":["America/Argentina/Buenos_Aires","America/Argentina/Cordoba","America/Argentina/Salta","America/Argentina/Jujuy","America/Argentina/Tucuman","America/Argentina/Catamarca","America/Argentina/La_Rioja","America/Argentina/San_Juan","America/Argentina/Mendoza","America/Argentina/San_Luis","America/Argentina/Rio_Gallegos","America/Argentina/Ushuaia"],"AS":["Pacific/Pago_Pago"],"AT":["Europe/Vienna"],"AU":["Australia/Lord_Howe","Antarctica/Macquarie","Australia/Hobart","Australia/Melbourne","Australia/Sydney","Australia/Broken_Hill","Australia/Brisbane","Australia/Lindeman","Australia/Adelaide","Australia/Darwin","Australia/Perth","Australia/Eucla"],"AW":["America/Aruba"],"AX":["Europe/Mariehamn"],"AZ":["Asia/Baku"],"BA":["Europe/Sarajevo"],"BB":["America/Barbados"],"BD":["Asia/Dhaka"],"BE":["Europe/Brussels"],"BF":["Africa/Ouagadougou"],"BG":["Europe/Sofia"],"BH":["Asia/Bahrain"],"BI":["Africa/Bujumbura"],"BJ":["Africa/Porto-Novo"],"BL":["America/St_Barthelemy"],"BM":["Atlantic/Bermuda"],"BN":["Asia/Brunei"],"BO":["America/La_Paz"],"BQ":["America/Kralendijk"],"BR":["America/Noronha","America/Belem","America/Fortaleza","America/Recife","America/Araguaina","America/Maceio","America/Bahia","America/Sao_Paulo","America/Campo_Grande","America/Cuiaba","America/Santarem","America/Porto_Velho","America/Boa_Vista","America/Manaus","America/Eirunepe","America/Rio_Branco"],"BS":["America/Nassau"],"BT":["Asia/Thimphu"],"BW":["Africa/Gaborone"],"BY":["Europe/Minsk"],"BZ":["America/Belize"],"CA":["America/St_Johns","America/Halifax","America/Glace_Bay","America/Moncton","America/Goose_Bay","America/Blanc-Sablon","America/Toronto","America/Iqaluit","America/Atikokan","America/Winnipeg","America/Resolute","America/Rankin_Inlet","America/Regina","America/Swift_Current","America/Edmonton","America/Cambridge_Bay","America/Inuvik","America/Vancouver","America/Creston","America/Dawson_Creek","America/Fort_Nelson","America/Whitehorse","America/Dawson"],"CC":["Indian/Cocos"],"CD":["Africa/Kinshasa","Africa/Lubumbashi"],"CF":["Africa/Bangui"],"CG":["Africa/Brazzaville"],"CH":["Europe/Zurich"],"CI":["Africa/Abidjan"],"CK":["Pacific/Rarotonga"],"CL":["America/Santiago","America/Coyhaique","America/Punta_Arenas","Pacific/Easter"],"CM":["Africa/Douala"],"CN":["Asia/Shanghai","Asia/Urumqi"],"CO":["America/Bogota"],"CR":["America/Costa_Rica"],"CU":["America/Havana"],"CV":["Atlantic/Cape_Verde"],"CW":["America/Curacao"],"CX":["Indian/Christmas"],"CY":["Asia/Nicosia","Asia/Famagusta"],"CZ":["Europe/Prague"],"DE":["Europe/Berlin","Europe/Busingen"],"DJ":["Africa/Djibouti"],"DK":["Europe/Copenhagen"],"DM":["America/Dominica"],"DO":["America/Santo_Domingo"],"DZ":["Africa/Algiers"],"EC":["America/Guayaquil","Pacific/Galapagos"],"EE":["Europe/Tallinn"],"EG":["Africa/Cairo"],"EH":["Africa/El_Aaiun"],"ER":["Africa/Asmara"],"ES":["Europe/Madrid","Africa/Ceuta","Atlantic/Canary"],"ET":["Africa/Addis_Ababa"],"FI":["Europe/Helsinki"],"FJ":["Pacific/Fiji"],"FK":["Atlantic/Stanley"],"FM":["Pacific/Chuuk","Pacific/Pohnpei","Pacific/Kosrae"],"FO":["Atlantic/Faroe"],"FR":["Europe/Paris"],"GA":["Africa/Libreville"],"GB":["Europe/London"],"GD":["America/Grenada"],"GE":["Asia/Tbilisi"],"GF":["America/Cayenne"],"GG":["Europe/Guernsey"],"GH":["Africa/Accra"],"GI":["Europe/Gibraltar"],"GL":["America/Nuuk","America/Danmarkshavn","America/Scoresbysund","America/Thule"],"GM":["Africa/Banjul"],"GN":["Africa/Conakry"],"GP":["America/Guadeloupe"],"GQ":["Africa/Malabo"],"GR":["Europe/Athens"],"GS":["Atlantic/South_Georgia"],"GT":["America/Guatemala"],"GU":["Pacific/Guam"],"GW":["Africa/Bissau"],"GY":["America/Guyana"],"HK":["Asia/Hong_Kong"],"HN":["America/Tegucigalpa"],"HR":["Europe/Zagreb"],"HT":["America/Port-au-Prince"],"HU":["Europe/Budapest"],"ID":["Asia/Jakarta","Asia/Pontianak","Asia/Makassar","Asia/Jayapura"],"IE":["Europe/Dublin"],"IL":["Asia/Jerusalem"],"IM":["Europe/Isle_of_Man"],"IN":["Asia/Kolkata"],"IO":["Indian/Chagos"],"IQ":["Asia/Baghdad"],"IR":["Asia/Tehran"],"IS":["Atlantic/Reykjavik"],"IT":["Europe/Rome"],"JE":["Europe/Jersey"],"JM":["America/Jamaica"],"JO":["Asia/Amman"],"JP":["Asia/Tokyo"],"KE":["Africa/Nairobi"],"KG":["Asia/Bishkek"],"KH":["Asia/Phnom_Penh"],"KI":["Pacific/Tarawa","Pacific/Kanton","Pacific/Kiritimati"],"KM":["Indian/Comoro"],"KN":["America/St_Kitts"],"KP":["Asia/Pyongyang"],"KR":["Asia/Seoul"],"KW":["Asia/Kuwait"],"KY":["America/Cayman"],"KZ":["Asia/Almaty","Asia/Qyzylorda","Asia/Qostanay","Asia/Aqtobe","Asia/Aqtau","Asia/Atyrau","Asia/Oral"],"LA":["Asia/Vientiane"],"LB":["Asia/Beirut"],"LC":["America/St_Lucia"],"LI":["Europe/Vaduz"],"LK":["Asia/Colombo"],"LR":["Africa/Monrovia"],"LS":["Africa/Maseru"],"LT":["Europe/Vilnius"],"LU":["Europe/Luxembourg"],"LV":["Europe/Riga"],"LY":["Africa/Tripoli"],"MA":["Africa/Casablanca"],"MC":["Europe/Monaco"],"MD":["Europe/Chisinau"],"ME":["Europe/Podgorica"],"MF":["America/Marigot"],"MG":["Indian/Antananarivo"],"MH":["Pacific/Majuro","Pacific/Kwajalein"],"MK":["Europe/Skopje"],"ML":["Africa/Bamako"],"MM":["Asia/Yangon"],"MN":["Asia/Ulaanbaatar","Asia/Hovd"],"MO":["Asia/Macau"],"MP":["Pacific/Saipan"],"MQ":["America/Martinique"],"MR":["Africa/Nouakchott"],"MS":["America/Montserrat"],"MT":["Europe/Malta"],"MU":["Indian/Mauritius"],"MV":["Indian/Maldives"],"MW":["Africa/Blantyre"],"MX":["America/Mexico_City","America/Cancun","America/Merida","America/Monterrey","America/Matamoros","America/Chihuahua","America/Ciudad_Juarez","America/Ojinaga","America/Mazatlan","America/Bahia_Banderas","America/Hermosillo","America/Tijuana"],"MY":["Asia/Kuala_Lumpur","Asia/Kuching"],"MZ":["Africa/Maputo"],"NA":["Africa/Windhoek"],"NC":["Pacific/Noumea"],"NE":["Africa/Niamey"],"NF":["Pacific/Norfolk"],"NG":["Africa/Lagos"],"NI":["America/Managua"],"NL":["Europe/Amsterdam"],"NO":["Europe/Oslo"],"NP":["Asia/Kathmandu"],"NR":["Pacific/Nauru"],"NU":["Pacific/Niue"],"NZ":["Pacific/Auckland","Pacific/Chatham"],"OM":["Asia/Muscat"],"PA":["America/Panama"],"PE":["America/Lima"],"PF":["Pacific/Tahiti","Pacific/Marquesas","Pacific/Gambier"],"PG":["Pacific/Port_Moresby","Pacific/Bougainville"],"PH":["Asia/Manila"],"PK":["Asia/Karachi"],"PL":["Europe/Warsaw"],"PM":["America/Miquelon"],"PN":["Pacific/Pitcairn"],"PR":["America/Puerto_Rico"],"PS":["Asia/Gaza","Asia/Hebron"],"PT":["Europe/Lisbon","Atlantic/Madeira","Atlantic/Azores"],"PW":["Pacific/Palau"],"PY":["America/Asuncion"],"QA":["Asia/Qatar"],"RE":["Indian/Reunion"],"RO":["Europe/Bucharest"],"RS":["Europe/Belgrade"],"RU":["Europe/Kaliningrad","Europe/Moscow","Europe/Kirov","Europe/Volgograd","Europe/Astrakhan","Europe/Saratov","Europe/Ulyanovsk","Europe/Samara","Asia/Yekaterinburg","Asia/Omsk","Asia/Novosibirsk","Asia/Barnaul","Asia/Tomsk","Asia/Novokuznetsk","Asia/Krasnoyarsk","Asia/Irkutsk","Asia/Chita","Asia/Yakutsk","Asia/Khandyga","Asia/Vladivostok","Asia/Ust-Nera","Asia/Magadan","Asia/Sakhalin","Asia/Srednekolymsk","Asia/Kamchatka","Asia/Anadyr"],"UA":["Europe/Simferopol","Europe/Kyiv"],"RW":["Africa/Kigali"],"SA":["Asia/Riyadh"],"SB":["Pacific/Guadalcanal"],"SC":["Indian/Mahe"],"SD":["Africa/Khartoum"],"SE":["Europe/Stockholm"],"SG":["Asia/Singapore"],"SH":["Atlantic/St_Helena"],"SI":["Europe/Ljubljana"],"SJ":["Arctic/Longyearbyen"],"SK":["Europe/Bratislava"],"SL":["Africa/Freetown"],"SM":["Europe/San_Marino"],"SN":["Africa/Dakar"],"SO":["Africa/Mogadishu"],"SR":["America/Paramaribo"],"SS":["Africa/Juba"],"ST":["Africa/Sao_Tome"],"SV":["America/El_Salvador"],"SX":["America/Lower_Princes"],"SY":["Asia/Damascus"],"SZ":["Africa/Mbabane"],"TC":["America/Grand_Turk"],"TD":["Africa/Ndjamena"],"TF":["Indian/Kerguelen"],"TG":["Africa/Lome"],"TH":["Asia/Bangkok"],"TJ":["Asia/Dushanbe"],"TK":["Pacific/Fakaofo"],"TL":["Asia/Dili"],"TM":["Asia/Ashgabat"],"TN":["Africa/Tunis"],"TO":["Pacific/Tongatapu"],"TR":["Europe/Istanbul"],"TT":["America/Port_of_Spain"],"TV":["Pacific/Funafuti"],"TW":["Asia/Taipei"],"TZ":["Africa/Dar_es_Salaam"],"UG":["Africa/Kampala"],"UM":["Pacific/Midway","Pacific/Wake"],"US":["America/New_York","America/Detroit","America/Kentucky/Louisville","America/Kentucky/Monticello","America/Indiana/Indianapolis","America/Indiana/Vincennes","America/Indiana/Winamac","America/Indiana/Marengo","America/Indiana/Petersburg","America/Indiana/Vevay","America/Chicago","America/Indiana/Tell_City","America/Indiana/Knox","America/Menominee","America/North_Dakota/Center","America/North_Dakota/New_Salem","America/North_Dakota/Beulah","America/Denver","America/Boise","America/Phoenix","America/Los_Angeles","America/Anchorage","America/Juneau","America/Sitka","America/Metlakatla","America/Yakutat","America/Nome","America/Adak","Pacific/Honolulu"],"UY":["America/Montevideo"],"UZ":["Asia/Samarkand","Asia/Tashkent"],"VA":["Europe/Vatican"],"VC":["America/St_Vincent"],"VE":["America/Caracas"],"VG":["America/Tortola"],"VI":["America/St_Thomas"],"VN":["Asia/Ho_Chi_Minh"],"VU":["Pacific/Efate"],"WF":["Pacific/Wallis"],"WS":["Pacific/Apia"],"YE":["Asia/Aden"],"YT":["Indian/Mayotte"],"ZA":["Africa/Johannesburg"],"ZM":["Africa/Lusaka"],"ZW":["Africa/Harare"]};
 
-function populateCompanyCountrySelect() {
-  const sel = document.getElementById('ciCountry');
+// دوال عامة لاختيار الدولة/المنطقة الزمنية والبحث عن الموقع — تُستخدم فى بيانات الشركة وبيانات كل فرع
+// (prefix = بادئة الحقول، مثلاً "ci" لبيانات الشركة أو "bi" لبيانات الفرع)
+function populateLocationCountrySelect(prefix) {
+  const sel = document.getElementById(`${prefix}Country`);
   sel.innerHTML = '<option value="">اختر الدولة...</option>' +
     COMPANY_COUNTRIES.map(c => `<option value="${c.code}">${escapeHtml(c.name)}</option>`).join('');
 }
+function populateCompanyCountrySelect() { populateLocationCountrySelect('ci'); }
 
-function populateCompanyTimezoneSelect(countryCode, selectedTz) {
-  const sel = document.getElementById('ciTimezone');
+function populateLocationTimezoneSelect(prefix, countryCode, selectedTz) {
+  const sel = document.getElementById(`${prefix}Timezone`);
   if (!countryCode) {
     sel.innerHTML = '<option value="">اختر الدولة أولاً...</option>';
     return;
@@ -9408,33 +9508,35 @@ function populateCompanyTimezoneSelect(countryCode, selectedTz) {
   sel.innerHTML = zones.map(tz => `<option value="${tz}">${tz.replace(/_/g, ' ')}</option>`).join('');
   if (selectedTz && zones.includes(selectedTz)) sel.value = selectedTz;
 }
+function populateCompanyTimezoneSelect(countryCode, selectedTz) { populateLocationTimezoneSelect('ci', countryCode, selectedTz); }
 
-let ciSearchTimeout = null;
-let ciSearchAbortController = null;
+let locSearchTimeout = {};
+let locSearchAbortController = {};
 
-function initCompanyLocationSearch() {
-  const input = document.getElementById('ciLocationSearch');
-  const resultsBox = document.getElementById('ciLocationResults');
+function initLocationSearch(prefix) {
+  const input = document.getElementById(`${prefix}LocationSearch`);
+  const resultsBox = document.getElementById(`${prefix}LocationResults`);
   input.addEventListener('input', () => {
-    clearTimeout(ciSearchTimeout);
+    clearTimeout(locSearchTimeout[prefix]);
     const q = input.value.trim();
     if (q.length < 3) { resultsBox.classList.remove('show'); resultsBox.innerHTML = ''; return; }
-    ciSearchTimeout = setTimeout(() => runCompanyLocationSearch(q), 500);
+    locSearchTimeout[prefix] = setTimeout(() => runLocationSearch(prefix, q), 500);
   });
   document.addEventListener('click', (e) => {
-    if (!e.target.closest('.ci-location-wrap')) resultsBox.classList.remove('show');
+    if (!e.target.closest(`#${prefix}LocationSearch, #${prefix}LocationResults`)) resultsBox.classList.remove('show');
   });
 }
+function initCompanyLocationSearch() { initLocationSearch('ci'); }
 
-async function runCompanyLocationSearch(q) {
-  const resultsBox = document.getElementById('ciLocationResults');
+async function runLocationSearch(prefix, q) {
+  const resultsBox = document.getElementById(`${prefix}LocationResults`);
   resultsBox.innerHTML = '<div class="ci-location-empty">جاري البحث...</div>';
   resultsBox.classList.add('show');
-  if (ciSearchAbortController) ciSearchAbortController.abort();
-  ciSearchAbortController = new AbortController();
+  if (locSearchAbortController[prefix]) locSearchAbortController[prefix].abort();
+  locSearchAbortController[prefix] = new AbortController();
   try {
     const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&accept-language=ar&limit=6&q=${encodeURIComponent(q)}`;
-    const res = await fetch(url, { signal: ciSearchAbortController.signal, headers: { 'Accept': 'application/json' } });
+    const res = await fetch(url, { signal: locSearchAbortController[prefix].signal, headers: { 'Accept': 'application/json' } });
     const data = await res.json();
     if (!data || data.length === 0) {
       resultsBox.innerHTML = '<div class="ci-location-empty">لا توجد نتائج مطابقة</div>';
@@ -9445,7 +9547,7 @@ async function runCompanyLocationSearch(q) {
       const div = document.createElement('div');
       div.className = 'ci-location-item';
       div.textContent = item.display_name;
-      div.addEventListener('click', () => applyCompanyLocationResult(item));
+      div.addEventListener('click', () => applyLocationResult(prefix, item));
       resultsBox.appendChild(div);
     });
   } catch (err) {
@@ -9455,43 +9557,44 @@ async function runCompanyLocationSearch(q) {
   }
 }
 
-function applyCompanyLocationResult(item) {
+function applyLocationResult(prefix, item) {
   const addr = item.address || {};
-  document.getElementById('ciLocationSearch').value = item.display_name;
-  document.getElementById('ciLocationResults').classList.remove('show');
-  document.getElementById('ciLat').value = item.lat || '';
-  document.getElementById('ciLng').value = item.lon || '';
+  document.getElementById(`${prefix}LocationSearch`).value = item.display_name;
+  document.getElementById(`${prefix}LocationResults`).classList.remove('show');
+  document.getElementById(`${prefix}Lat`).value = item.lat || '';
+  document.getElementById(`${prefix}Lng`).value = item.lon || '';
 
   const countryCode = (addr.country_code || '').toUpperCase();
   if (countryCode) {
-    const sel = document.getElementById('ciCountry');
+    const sel = document.getElementById(`${prefix}Country`);
     if ([...sel.options].some(o => o.value === countryCode)) {
       sel.value = countryCode;
-      populateCompanyTimezoneSelect(countryCode);
+      populateLocationTimezoneSelect(prefix, countryCode);
     }
   }
   const city = addr.city || addr.town || addr.village || addr.municipality || '';
-  if (city) document.getElementById('ciCity').value = city;
+  if (city) document.getElementById(`${prefix}City`).value = city;
   const state = addr.state || addr.governorate || '';
-  if (state) document.getElementById('ciState').value = state;
-  if (addr.postcode) document.getElementById('ciPostalCode').value = addr.postcode;
+  if (state) document.getElementById(`${prefix}State`).value = state;
+  if (addr.postcode) document.getElementById(`${prefix}PostalCode`).value = addr.postcode;
 
   const road = addr.road || '';
   const houseNumber = addr.house_number || '';
   const addr1 = [houseNumber, road].filter(Boolean).join(' ') || (addr.neighbourhood || addr.suburb || '');
-  if (addr1) document.getElementById('ciAddress1').value = addr1;
+  if (addr1) document.getElementById(`${prefix}Address1`).value = addr1;
 
-  const hint = document.getElementById('ciLocationHint');
+  const hint = document.getElementById(`${prefix}LocationHint`);
   hint.style.display = 'block';
   hint.textContent = 'تم تعبئة العنوان تلقائيًا من نتيجة البحث، يمكنك تعديل أي حقل يدويًا.';
 }
+function applyCompanyLocationResult(item) { applyLocationResult('ci', item); }
 
 function initCompanyInfoSection() {
-  populateCompanyCountrySelect();
-  populateCompanyTimezoneSelect('');
-  initCompanyLocationSearch();
+  populateLocationCountrySelect('ci');
+  populateLocationTimezoneSelect('ci', '');
+  initLocationSearch('ci');
   document.getElementById('ciCountry').addEventListener('change', () => {
-    populateCompanyTimezoneSelect(document.getElementById('ciCountry').value);
+    populateLocationTimezoneSelect('ci', document.getElementById('ciCountry').value);
   });
   document.getElementById('companyInfoForm').addEventListener('submit', saveCompanyInfo);
   loadCompanyInfo();
