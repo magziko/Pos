@@ -6,6 +6,7 @@
 <title>نظام نقاط البيع</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 <style>
 /* ============================================================
    Design tokens
@@ -348,6 +349,44 @@ a { color: inherit; }
 .barcode-add-row { display: flex; gap: 6px; }
 .barcode-add-row input { flex: 1; padding: 8px 10px; font-size: 12.5px; }
 .barcode-add-row button { background: var(--teal-100); color: var(--teal-700); padding: 8px 14px; border-radius: var(--radius-sm); font-size: 12.5px; font-weight: 600; }
+
+/* ---- طباعة ملصقات باركود ---- */
+.bc-print-modal-box { max-width: 620px; }
+.bc-print-settings { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.bc-print-settings .field-full { grid-column: 1 / -1; }
+.bc-print-settings label { display: block; font-size: 12px; color: var(--ink-soft); margin-bottom: 4px; }
+.bc-print-settings select, .bc-print-settings input[type="number"] { width: 100%; padding: 8px 10px; font-size: 12.5px; }
+.bc-print-toggles { display: flex; flex-wrap: wrap; gap: 14px; grid-column: 1 / -1; }
+.bc-print-toggles label { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink); cursor: pointer; margin-bottom: 0; }
+.bc-print-toggles input { width: auto; }
+.bc-label-sheet { display: flex; flex-wrap: wrap; gap: 6px; background: var(--surface-sunken); border-radius: var(--radius-sm); padding: 10px; max-height: 300px; overflow-y: auto; }
+.bc-label { background: #fff; border: 1px dashed #bbb; border-radius: 3px; padding: 5px 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; box-sizing: border-box; text-align: center; }
+.bc-label-name { font-size: 9.5px; color: #111; line-height: 1.2; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-ar); }
+.bc-label-price { font-size: 11px; font-weight: 700; color: #111; direction: ltr; }
+.bc-label svg { display: block; max-width: 100%; }
+.bc-label-empty { font-size: 12.5px; color: var(--ink-soft); padding: 10px; text-align: center; width: 100%; }
+.bc-print-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; align-items: center; }
+
+@media print {
+  #barcodeLabelModalOverlay.show, #barcodeLabelModalOverlay.show * { visibility: visible; }
+  #barcodeLabelModalOverlay.show { position: absolute; inset: 0; background: white; padding: 0; align-items: flex-start; }
+  #barcodeLabelModalOverlay.show .modal-box { max-width: 100%; box-shadow: none; border: none; padding: 0; }
+  #barcodeLabelModalOverlay.show .bc-print-settings,
+  #barcodeLabelModalOverlay.show .modal-title,
+  #barcodeLabelModalOverlay.show .bc-print-actions { display: none; }
+  #barcodeLabelModalOverlay.show .bc-label-sheet { background: #fff; padding: 0; max-height: none; overflow: visible; gap: 2mm; }
+  #barcodeLabelModalOverlay.show .bc-label { border: none; break-inside: avoid; page-break-inside: avoid; }
+
+  #barcodeLabelModalOverlay.show.bc-mode-roll .bc-label-sheet { display: block; }
+  #barcodeLabelModalOverlay.show.bc-mode-roll .bc-label { width: 100% !important; page-break-after: always; }
+  #barcodeLabelModalOverlay.show.bc-mode-roll.bc-size-50x30 { page: bcLabel50x30; }
+  #barcodeLabelModalOverlay.show.bc-mode-roll.bc-size-40x30 { page: bcLabel40x30; }
+  #barcodeLabelModalOverlay.show.bc-mode-roll.bc-size-30x20 { page: bcLabel30x20; }
+}
+
+@page bcLabel50x30 { size: 50mm 30mm; margin: 1.5mm; }
+@page bcLabel40x30 { size: 40mm 30mm; margin: 1.5mm; }
+@page bcLabel30x20 { size: 30mm 20mm; margin: 1mm; }
 .units-list { display: flex; flex-direction: column; gap: 8px; }
 .unit-row { display: grid; grid-template-columns: 1.2fr 1fr 1fr auto; gap: 8px; align-items: center; background: var(--surface-sunken); padding: 8px; border-radius: var(--radius-sm); }
 .unit-row input, .unit-row select { padding: 8px 9px; font-size: 12.5px; }
@@ -2986,6 +3025,41 @@ a { color: inherit; }
   </div>
 </div>
 
+<!-- Modal: طباعة ملصقات باركود -->
+<div class="modal-overlay" id="barcodeLabelModalOverlay">
+  <div class="modal-box bc-print-modal-box">
+    <div class="modal-title">طباعة ملصقات باركود — <span id="bcPrintProductName"></span></div>
+    <div class="bc-print-settings">
+      <div class="field-full" id="bcBarcodeSelectWrap">
+        <label>الباركود</label>
+        <select id="bcBarcodeSelect"></select>
+      </div>
+      <div>
+        <label>مقاس الملصق</label>
+        <select id="bcLabelSize">
+          <option value="50x30">حرارية 50×30 مم</option>
+          <option value="40x30">حرارية 40×30 مم</option>
+          <option value="30x20">حرارية 30×20 مم</option>
+          <option value="a4grid">شبكة ملصقات (ورق A4)</option>
+        </select>
+      </div>
+      <div>
+        <label>عدد الملصقات</label>
+        <input type="number" id="bcLabelQty" min="1" max="200" value="1">
+      </div>
+      <div class="bc-print-toggles">
+        <label><input type="checkbox" id="bcShowName" checked> إظهار اسم الصنف</label>
+        <label><input type="checkbox" id="bcShowPrice" checked> إظهار السعر</label>
+      </div>
+    </div>
+    <div class="bc-label-sheet" id="bcLabelSheet"></div>
+    <div class="bc-print-actions">
+      <button type="button" class="modal-cancel-btn" id="closeBarcodeLabelBtn">إغلاق</button>
+      <button type="button" class="submit-btn" id="printBarcodeLabelBtn" style="margin-top:0;">طباعة</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <div class="unit-picker-overlay" id="unitPickerOverlay">
@@ -5095,6 +5169,26 @@ function bindBackofficeEvents() {
   document.getElementById('newBarcodeInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); addBarcodeToCurrentProduct(); }
   });
+
+  // ---- Barcode label print modal ----
+  document.getElementById('closeBarcodeLabelBtn').addEventListener('click', closeBarcodeLabelModal);
+  document.getElementById('barcodeLabelModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'barcodeLabelModalOverlay') closeBarcodeLabelModal();
+  });
+  ['bcBarcodeSelect', 'bcLabelQty', 'bcLabelSize', 'bcShowName', 'bcShowPrice'].forEach(id => {
+    document.getElementById(id).addEventListener('input', renderBarcodeLabelSheet);
+    document.getElementById(id).addEventListener('change', renderBarcodeLabelSheet);
+  });
+  document.getElementById('printBarcodeLabelBtn').addEventListener('click', () => {
+    const overlay = document.getElementById('barcodeLabelModalOverlay');
+    const sizeKey = document.getElementById('bcLabelSize').value;
+    localStorage.setItem('bcLabelSize', sizeKey);
+    overlay.classList.remove('bc-mode-roll', 'bc-size-50x30', 'bc-size-40x30', 'bc-size-30x20');
+    if (sizeKey !== 'a4grid') {
+      overlay.classList.add('bc-mode-roll', `bc-size-${sizeKey}`);
+    }
+    window.print();
+  });
   document.getElementById('productForm').addEventListener('submit', saveProduct);
   document.getElementById('addUnitRowBtn').addEventListener('click', () => {
     currentUnits.push({ id: null, unit_type_id: '', factor_to_base: '', sale_price: '', is_active: true });
@@ -5662,10 +5756,12 @@ function renderProductsTable() {
       <td>
         <div class="bo-row-actions">
           <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn" data-action="barcode">طباعة باركود</button>
           <button class="bo-icon-btn danger" data-action="toggle">${p.is_active ? 'إيقاف' : 'تفعيل'}</button>
         </div>
       </td>`;
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openProductModal(p));
+    tr.querySelector('[data-action="barcode"]').addEventListener('click', () => openBarcodeLabelModal(p));
     tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleProductActive(p));
     tbody.appendChild(tr);
   });
@@ -5731,6 +5827,87 @@ function renderUnitsList() {
 
 function closeProductModal() {
   document.getElementById('productModalOverlay').classList.remove('show');
+}
+
+// ---- طباعة ملصقات باركود ----
+let bcPrintProduct = null;
+
+function openBarcodeLabelModal(product) {
+  const barcodes = (product.product_barcodes || []).map(b => b.barcode).filter(Boolean);
+  if (barcodes.length === 0) {
+    showToast('لا يوجد باركود مسجّل لهذا الصنف، أضف باركود أولاً من زر تعديل', true);
+    return;
+  }
+  bcPrintProduct = product;
+  document.getElementById('bcPrintProductName').textContent = product.name;
+
+  const select = document.getElementById('bcBarcodeSelect');
+  select.innerHTML = barcodes.map(b => `<option value="${escapeHtml(b)}">${escapeHtml(b)}</option>`).join('');
+  document.getElementById('bcBarcodeSelectWrap').style.display = barcodes.length > 1 ? '' : 'none';
+
+  document.getElementById('bcLabelQty').value = 1;
+  document.getElementById('bcLabelSize').value = localStorage.getItem('bcLabelSize') || '50x30';
+  document.getElementById('bcShowName').checked = true;
+  document.getElementById('bcShowPrice').checked = true;
+
+  renderBarcodeLabelSheet();
+  document.getElementById('barcodeLabelModalOverlay').classList.add('show');
+}
+
+function closeBarcodeLabelModal() {
+  document.getElementById('barcodeLabelModalOverlay').classList.remove('show');
+  bcPrintProduct = null;
+}
+
+function renderBarcodeLabelSheet() {
+  if (!bcPrintProduct) return;
+  const sheet = document.getElementById('bcLabelSheet');
+  const barcodeValue = document.getElementById('bcBarcodeSelect').value;
+  const qty = Math.max(1, Math.min(200, Number(document.getElementById('bcLabelQty').value) || 1));
+  const showName = document.getElementById('bcShowName').checked;
+  const showPrice = document.getElementById('bcShowPrice').checked;
+  const sizeKey = document.getElementById('bcLabelSize').value;
+
+  if (!barcodeValue) {
+    sheet.innerHTML = `<div class="bc-label-empty">لا يوجد باركود مختار</div>`;
+    return;
+  }
+
+  const dims = { '50x30': [50, 30], '40x30': [40, 30], '30x20': [30, 20], 'a4grid': [45, 25] }[sizeKey] || [50, 30];
+  sheet.innerHTML = '';
+  for (let i = 0; i < qty; i++) {
+    const label = document.createElement('div');
+    label.className = 'bc-label';
+    label.style.width = dims[0] + 'mm';
+    label.style.height = dims[1] + 'mm';
+    if (showName) {
+      const nameEl = document.createElement('div');
+      nameEl.className = 'bc-label-name';
+      nameEl.textContent = bcPrintProduct.name;
+      label.appendChild(nameEl);
+    }
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    label.appendChild(svg);
+    if (showPrice) {
+      const priceEl = document.createElement('div');
+      priceEl.className = 'bc-label-price';
+      priceEl.textContent = Number(bcPrintProduct.sale_price).toFixed(2);
+      label.appendChild(priceEl);
+    }
+    sheet.appendChild(label);
+    try {
+      JsBarcode(svg, barcodeValue, {
+        format: 'CODE128', width: 1.4, height: dims[1] < 25 ? 26 : 34,
+        fontSize: 10, margin: 2, displayValue: true,
+      });
+    } catch (err) {
+      svg.remove();
+      const fallback = document.createElement('div');
+      fallback.className = 'bc-label-price';
+      fallback.textContent = barcodeValue;
+      label.appendChild(fallback);
+    }
+  }
 }
 
 function renderBarcodeList() {
