@@ -760,7 +760,6 @@ a { color: inherit; }
     <div class="bo-main">
       <div class="bo-sidebar">
         <button class="bo-nav-item active" data-section="dashboard">الرئيسية</button>
-        <button class="bo-nav-item" data-section="shifts">الورديات وإغلاق الخزينة</button>
 
         <!-- 1. الأصناف والمخزون -->
         <div class="bo-nav-group" id="stockNavGroup">
@@ -812,6 +811,7 @@ a { color: inherit; }
             <span class="bo-nav-chevron">‹</span>
           </button>
           <div class="bo-nav-sub" id="reportsNavSub">
+            <button class="bo-nav-sub-item" data-section="shifts">الورديات وإغلاق الخزينة</button>
             <button class="bo-nav-sub-item" data-section="reports-sales">المبيعات</button>
             <button class="bo-nav-sub-item" data-section="reports-purchases">المشتريات</button>
             <button class="bo-nav-sub-item" data-section="reports-inventory">المخزون</button>
@@ -1668,7 +1668,7 @@ a { color: inherit; }
 
               <div class="report-filters" style="align-items:flex-end;">
                 <div class="field">
-                  <label>تنبيه للعملاء اللي رصيدهم مستحق من (يوم)</label>
+                  <label>تنبيه للعملاء الذين تجاوز رصيدهم المستحق (يوم)</label>
                   <input type="number" id="debtReminderDaysInput" min="1" value="30" style="width:110px;">
                 </div>
                 <button class="bo-add-btn" id="applyDebtReminderDaysBtn">تطبيق وحفظ</button>
@@ -2356,7 +2356,7 @@ a { color: inherit; }
   <div class="modal-box" style="max-width:440px;">
     <div class="modal-title" style="color:var(--danger);">تأكيد استيراد النسخة الاحتياطية</div>
     <div style="font-size:13px; color:var(--ink-soft); line-height:1.7; margin-bottom:14px;">
-      سيتم استبدال بيانات الإعدادات الأساسية الحالية (اللي بنفس المعرّف) ببيانات الملف المختار، وهذا الإجراء لا يمكن التراجع عنه. للمتابعة، اكتب العبارة التالية بالضبط:
+      سيتم استبدال بيانات الإعدادات الأساسية الحالية (التي تحمل نفس المعرّف) ببيانات الملف المختار، وهذا الإجراء لا يمكن التراجع عنه. للمتابعة، يرجى كتابة العبارة التالية بالضبط:
     </div>
     <div class="rd-phrase" id="restoreConfirmPhrase">تأكيد الاستيراد</div>
     <input type="text" id="restoreConfirmInput" placeholder="اكتب العبارة هنا" autocomplete="off" style="width:100%; padding:11px 12px; font-size:14px; margin-bottom:16px;">
@@ -3226,7 +3226,7 @@ a { color: inherit; }
 <div class="modal-overlay" id="openShiftModalOverlay">
   <div class="modal-box" style="max-width:420px;">
     <div class="modal-title">فتح وردية جديدة</div>
-    <div class="shift-forced-note" id="openShiftForcedNote" style="display:none;">لازم تفتح وردية بمبلغ العهدة قبل ما تقدر تبيع.</div>
+    <div class="shift-forced-note" id="openShiftForcedNote" style="display:none;">يجب فتح وردية بمبلغ العهدة قبل إتمام أي عملية بيع.</div>
     <form id="openShiftForm">
       <div class="field field-full"><label for="openShiftAmount">العهدة / المبلغ الافتتاحي *</label><input type="number" id="openShiftAmount" min="0" step="0.01" value="0" required></div>
       <div class="field field-full"><label for="openShiftNotes">ملاحظات (اختياري)</label><input type="text" id="openShiftNotes" placeholder="مثال: تسليم من الوردية السابقة..."></div>
@@ -3258,7 +3258,7 @@ a { color: inherit; }
       <div class="shift-summary-box-label">صافي النقدية المتوقع في الدرج (عهدة + مبيعات نقدي + مقبوضات − مدفوعات − مصروفات)</div>
       <div class="shift-summary-box-value num" id="csExpectedCash" style="font-size:19px;">0.00</div>
     </div>
-    <div class="field field-full"><label for="csCountedInput">النقدية الفعلية بعد الجرد *</label><input type="number" id="csCountedInput" min="0" step="0.01" placeholder="اكتب المبلغ اللي عددته في الدرج"></div>
+    <div class="field field-full"><label for="csCountedInput">النقدية الفعلية بعد الجرد *</label><input type="number" id="csCountedInput" min="0" step="0.01" placeholder="أدخل المبلغ الذي تم عدّه في الدرج"></div>
     <div class="shift-diff-row">
       <span class="shift-diff-label">الفرق (عجز / زيادة)</span>
       <span class="shift-diff-value num" id="csDiffValue">—</span>
@@ -3277,6 +3277,7 @@ a { color: inherit; }
   <div class="modal-box receipt-modal-box z-report-modal-box">
     <div class="receipt-paper" id="zReportContent"></div>
     <div class="receipt-actions z-report-actions">
+      <button type="button" class="modal-cancel-btn" id="closeZReportBtn" style="display:none;">إغلاق</button>
       <button type="button" class="modal-cancel-btn" id="zReportLogoutBtn">تسجيل الخروج</button>
       <button type="button" class="submit-btn" id="printZReportBtn" style="margin-top:0;">طباعة</button>
     </div>
@@ -3382,6 +3383,329 @@ function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+// ============================================================
+// نظام العمل دون إنترنت (Offline-First) والمزامنة التلقائية
+// ------------------------------------------------------------
+// الفكرة: بعد كل تحميل ناجح لبيانات الأصناف/العملاء/المخزون...
+// إلخ، بنحفظ نسخة في localStorage. لو النت قطع، الشاشة بتشتغل
+// من النسخة المحفوظة، وأي بيع أو مرتجع بيتسجل في "طابور انتظار"
+// محلي بدل ما يتبعت لسوباابيز على طول، وبيتزامن تلقائي أول ما
+// الاتصال يرجع (أو يدويًا بزرار "مزامنة الآن").
+//
+// ملحوظة مهمة: رقم الفاتورة الحقيقي (invoice_number) بيتولد من
+// قاعدة البيانات نفسها (identity column)، فمفيش طريقة نعرفه أوفلاين.
+// الفواتير اللي بتتعمل أوفلاين بتاخد رقم مؤقت محلي ("أوفلاين-N")
+// وبيتحول لرقم الفاتورة الحقيقي تلقائيًا بعد المزامنة.
+//
+// الوردية (shift): فتح/قفل وردية بيفضل يحتاج اتصال إنترنت (خارج
+// نطاق هذه النسخة)، لكن الوردية المفتوحة بتتخزن محليًا عشان الكاشير
+// يقدر يبيع أوفلاين طول ما فاتح وردية أونلاين قبل كده.
+// ============================================================
+
+const OFF = {
+  products: 'off_products', categories: 'off_categories', customers: 'off_customers',
+  stock: 'off_stock', warehouses: 'off_warehouses', quickDiscounts: 'off_quick_discounts',
+  taxInclusive: 'off_tax_inclusive', profile: 'off_profile', recentSales: 'off_recent_sales',
+  outbox: 'off_outbox', localSeq: 'off_local_seq', mainWarehouse: 'off_main_warehouse',
+  shift: 'off_shift', branchSettings: 'off_branch_settings', printSettings: 'off_print_settings',
+};
+
+function offGet(key, fallback) {
+  try { const raw = localStorage.getItem(key); return raw !== null ? JSON.parse(raw) : fallback; }
+  catch (e) { console.error('offGet error', key, e); return fallback; }
+}
+function offSet(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); }
+  catch (e) { console.error('offSet error (يمكن الذاكرة المحلية امتلأت)', key, e); }
+}
+
+function nextLocalInvoiceLabel() {
+  const n = offGet(OFF.localSeq, 0) + 1;
+  offSet(OFF.localSeq, n);
+  return 'أوفلاين-' + n;
+}
+
+// -------- حالة الاتصال --------
+let appIsOnline = navigator.onLine;
+let isSyncingOutbox = false;
+
+function getOutbox() { return offGet(OFF.outbox, []); }
+function setOutbox(q) { offSet(OFF.outbox, q); updateOfflineBanner(); }
+function pendingCount() { return getOutbox().length; }
+
+// فحص اتصال حقيقي (navigator.onLine لوحده مش كفاية، ممكن يكون متصل بشبكة
+// من غير إنترنت فعلي زي الويفاي العام؛ فبنتأكد بطلب فعلي خفيف من سوباابيز)
+async function checkRealConnectivity() {
+  if (!navigator.onLine) return false;
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 4000);
+    const res = await fetch(SUPABASE_URL + '/auth/v1/health', {
+      method: 'GET', signal: controller.signal, headers: { apikey: SUPABASE_ANON_KEY },
+    });
+    clearTimeout(timer);
+    return true; // وصل رد من السيرفر (أيًا كان status) يعني الاتصال شغال فعليًا
+  } catch { return false; }
+}
+
+async function setOnlineState(online) {
+  const wasOffline = !appIsOnline;
+  appIsOnline = online;
+  updateOfflineBanner();
+  if (online && wasOffline && pendingCount() > 0) {
+    showToast('الاتصال رجع — جاري مزامنة العمليات المعلقة...');
+  }
+  if (online) processOutboxQueue();
+}
+
+window.addEventListener('online', async () => { setOnlineState(await checkRealConnectivity()); });
+window.addEventListener('offline', () => setOnlineState(false));
+setInterval(async () => { setOnlineState(await checkRealConnectivity()); }, 25000);
+
+// بيحدد هل الخطأ ده بسبب انقطاع النت (عشان نرجع للنسخة المحفوظة بهدوء
+// من غير ما نبهدل المستخدم برسالة خطأ مالهاش لازمة)
+function isNetworkError(err) {
+  if (!err) return false;
+  if (!navigator.onLine || !appIsOnline) return true;
+  const msg = ((err && err.message) || String(err) || '').toLowerCase();
+  return msg.includes('fetch') || msg.includes('network') || msg.includes('failed to fetch') || msg.includes('load failed');
+}
+
+// -------- شريط تنبيه أعلى الشاشة --------
+function ensureOfflineBanner() {
+  if (document.getElementById('offlineBanner')) return;
+  const style = document.createElement('style');
+  style.textContent = `
+    #offlineBanner { position: fixed; top: 0; inset-inline: 0; z-index: 9999; display: none;
+      align-items: center; justify-content: center; gap: 10px; padding: 7px 16px;
+      font-family: var(--font-ar); font-size: 12.5px; font-weight: 700; text-align: center; }
+    #offlineBanner.offline { display: flex; background: var(--amber-100); color: var(--amber-600); border-bottom: 1px solid var(--amber-600); }
+    #offlineBanner.syncing { display: flex; background: var(--teal-100); color: var(--teal-700); border-bottom: 1px solid var(--teal-500); }
+    #offlineBanner.pending { display: flex; background: var(--teal-100); color: var(--teal-700); border-bottom: 1px solid var(--teal-500); }
+    #offlineBanner .off-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
+    #offlineBanner button { background: transparent; border: 1px solid currentColor; color: currentColor;
+      border-radius: var(--radius-sm); padding: 3px 10px; font-size: 11.5px; font-weight: 700; font-family: inherit; cursor: pointer; }
+    body.has-offline-banner .app, body.has-offline-banner .bo-app { margin-top: 32px; height: calc(100vh - 32px); }
+    body.has-offline-banner .auth-screen { padding-top: 56px; }
+  `;
+  document.head.appendChild(style);
+  const banner = document.createElement('div');
+  banner.id = 'offlineBanner';
+  banner.innerHTML = `<span class="off-dot"></span><span id="offlineBannerText"></span><button type="button" id="offlineSyncNowBtn" style="display:none;">مزامنة الآن</button>`;
+  document.body.appendChild(banner);
+  document.getElementById('offlineSyncNowBtn').addEventListener('click', async () => {
+    await setOnlineState(await checkRealConnectivity());
+    if (!appIsOnline) showToast('لا يوجد اتصال بالإنترنت حتى الآن', true);
+  });
+}
+
+function updateOfflineBanner() {
+  ensureOfflineBanner();
+  const banner = document.getElementById('offlineBanner');
+  const text = document.getElementById('offlineBannerText');
+  const syncBtn = document.getElementById('offlineSyncNowBtn');
+  const pending = pendingCount();
+  banner.classList.remove('offline', 'syncing', 'pending');
+  document.body.classList.remove('has-offline-banner');
+  if (!appIsOnline) {
+    banner.classList.add('offline');
+    document.body.classList.add('has-offline-banner');
+    text.textContent = pending > 0
+      ? `غير متصل بالإنترنت — سيتم تسجيل ${pending} عملية ومزامنتها فور عودة الاتصال`
+      : 'غير متصل بالإنترنت — يعمل النظام حاليًا من النسخة المحفوظة محليًا';
+    syncBtn.style.display = 'none';
+  } else if (isSyncingOutbox) {
+    banner.classList.add('syncing');
+    document.body.classList.add('has-offline-banner');
+    text.textContent = `جاري مزامنة العمليات المعلقة... (${pending} متبقية)`;
+    syncBtn.style.display = 'none';
+  } else if (pending > 0) {
+    banner.classList.add('pending');
+    document.body.classList.add('has-offline-banner');
+    text.textContent = `${pending} عملية معلقة لم تتم مزامنتها بعد، جرّب "مزامنة الآن"`;
+    syncBtn.style.display = 'inline-block';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+// -------- تعديل المخزون المحلي المخزّن (متفائل، لحد ما يحصل مزامنة حقيقية) --------
+function adjustCachedStock(warehouseId, productId, deltaBaseQty) {
+  if (!warehouseId || !productId || !deltaBaseQty) return;
+  const activeWarehouseId = posSelectedWarehouseId() || offGet(OFF.mainWarehouse, {})[currentProfile?.branch_id];
+  if (warehouseId === activeWarehouseId) {
+    stockMap[productId] = (stockMap[productId] || 0) + deltaBaseQty;
+  }
+  const cache = offGet(OFF.stock, {});
+  if (!cache[warehouseId]) cache[warehouseId] = {};
+  cache[warehouseId][productId] = (cache[warehouseId][productId] || 0) + deltaBaseQty;
+  offSet(OFF.stock, cache);
+}
+
+// -------- كاش الفواتير الأخيرة (لازم عشان نقدر نعمل مرتجع أوفلاين) --------
+function cacheRecentSale(entry) {
+  const list = offGet(OFF.recentSales, []);
+  list.unshift(entry);
+  offSet(OFF.recentSales, list.slice(0, 300));
+}
+function updateCachedSale(localId, patch) {
+  const list = offGet(OFF.recentSales, []);
+  const idx = list.findIndex(s => s.localId === localId);
+  if (idx !== -1) { list[idx] = { ...list[idx], ...patch }; offSet(OFF.recentSales, list); }
+}
+function findCachedSaleByInvoice(invoiceNumber) {
+  const list = offGet(OFF.recentSales, []);
+  return list.find(s => Number(s.invoice_number) === Number(invoiceNumber));
+}
+
+// -------- طابور الانتظار (Outbox) --------
+function queueOutboxItem(item) {
+  const q = getOutbox();
+  q.push(item);
+  setOutbox(q);
+}
+
+async function processOutboxQueue() {
+  if (isSyncingOutbox) return;
+  const q = getOutbox();
+  if (q.length === 0) return;
+  if (!(await checkRealConnectivity())) { appIsOnline = false; updateOfflineBanner(); return; }
+  appIsOnline = true;
+  isSyncingOutbox = true;
+  updateOfflineBanner();
+
+  let keepGoing = false; // فيه عناصر تانية محتاجة مزامنة، هنكمل بعد فاصل زمني
+  let syncedAny = false;
+
+  const queue = getOutbox();
+  const item = queue[0];
+  try {
+    if (item.kind === 'sale') await syncQueuedSale(item);
+    else if (item.kind === 'sale_return') await syncQueuedSaleReturn(item);
+    else if (item.kind === 'shift_open') await syncQueuedShiftOpen(item);
+    const remaining = getOutbox().filter(i => i.localId !== item.localId);
+    setOutbox(remaining);
+    syncedAny = true;
+    keepGoing = remaining.length > 0;
+  } catch (err) {
+    console.error('sync error', err);
+    if (isNetworkError(err)) { appIsOnline = false; } // النت قطع تاني وسط المزامنة — نوقف بهدوء ونحاول تاني بعدين
+    else {
+      // خطأ حقيقي (مش شبكة) — نسجله ونوقف عند العنصر ده عشان نحافظ على الترتيب، ونبلغ المستخدم
+      item.lastError = err.message || String(err);
+      item.attempts = (item.attempts || 0) + 1;
+      const q2 = getOutbox();
+      q2[0] = item;
+      setOutbox(q2);
+      const kindLabel = item.kind === 'sale' ? 'فاتورة بيع' : (item.kind === 'sale_return' ? 'مرتجع' : 'فتح وردية');
+      showToast(`تعذرت مزامنة عملية معلقة (${kindLabel}): ${item.lastError}`, true);
+    }
+  }
+
+  isSyncingOutbox = false;
+  updateOfflineBanner();
+  if (syncedAny) {
+    try {
+      await Promise.all([loadStockBalances(), loadCustomers()]);
+      renderProducts();
+      if (typeof renderCart === 'function') renderCart();
+    } catch (e) { console.error(e); }
+  }
+
+  // لو لسه فيه عناصر في الطابور، نكمل مزامنتها لاحقًا (كل عنصر باستدعاء منفصل، مش لوب متواصل)
+  if (keepGoing) setTimeout(processOutboxQueue, 400);
+}
+
+async function syncQueuedSale(item) {
+  const { data: sale, error: saleError } = await supabaseClient
+    .from('sales').insert(item.payload.saleInsert).select().single();
+  if (saleError) throw saleError;
+
+  const saleItems = item.payload.items.map(it => ({
+    sale_id: sale.id, product_id: it.product_id, product_unit_id: it.product_unit_id || null,
+    quantity: it.quantity, unit_price: it.unit_price, discount: 0, total: it.total, warehouse_id: it.warehouse_id,
+  }));
+  const { data: insertedItems, error: itemsError } = await supabaseClient
+    .from('sale_items').insert(saleItems).select();
+  if (itemsError) throw itemsError;
+
+  if (item.payload.paymentLines && item.payload.paymentLines.length > 0) {
+    const { error: paymentsError } = await supabaseClient
+      .from('sale_payments')
+      .insert(item.payload.paymentLines.map(l => ({ sale_id: sale.id, method: l.method, amount: l.amount })));
+    if (paymentsError) throw paymentsError;
+  }
+
+  if (item.payload.remaining > 0 && item.payload.customerId) {
+    const { data: customer } = await supabaseClient.from('customers').select('balance').eq('id', item.payload.customerId).single();
+    const newBalance = (Number(customer?.balance) || 0) + item.payload.remaining;
+    await supabaseClient.from('customers').update({ balance: newBalance }).eq('id', item.payload.customerId);
+  }
+
+  updateCachedSale(item.localId, {
+    id: sale.id, invoice_number: sale.invoice_number, pending: false,
+    items: item.payload.items.map((it, idx) => ({ ...it, sale_item_id: insertedItems?.[idx]?.id })),
+  });
+  showToast(`تمت مزامنة فاتورة ${item.payload.localInvoiceLabel} → رقمها الآن #${sale.invoice_number}`);
+}
+
+async function syncQueuedSaleReturn(item) {
+  const { data: saleReturn, error: srError } = await supabaseClient
+    .from('sale_returns').insert(item.payload.returnInsert).select().single();
+  if (srError) throw srError;
+
+  const returnItems = item.payload.items.map(it => ({
+    sale_return_id: saleReturn.id, sale_item_id: it.sale_item_id || null, product_id: it.product_id,
+    quantity: it.quantity, unit_price: it.unit_price, total: it.total,
+  }));
+  const { error: itemsError } = await supabaseClient.from('sale_return_items').insert(returnItems);
+  if (itemsError) throw itemsError;
+
+  if (item.payload.refundPaymentLines && item.payload.refundPaymentLines.length > 0) {
+    const { error: paymentsError } = await supabaseClient
+      .from('sale_return_payments')
+      .insert(item.payload.refundPaymentLines.map(l => ({ sale_return_id: saleReturn.id, method: l.method, amount: l.amount })));
+    if (paymentsError) throw paymentsError;
+  }
+
+  if (item.payload.returnInsert.refund_method === 'credit' && item.payload.returnInsert.customer_id) {
+    const { data: customer } = await supabaseClient.from('customers').select('balance').eq('id', item.payload.returnInsert.customer_id).single();
+    const newBalance = (Number(customer?.balance) || 0) - item.payload.returnInsert.total;
+    await supabaseClient.from('customers').update({ balance: newBalance }).eq('id', item.payload.returnInsert.customer_id);
+  }
+  showToast(`تمت مزامنة مرتجع الفاتورة #${item.payload.originalInvoiceLabel}`);
+}
+
+async function syncQueuedShiftOpen(item) {
+  const { data: shift, error } = await supabaseClient
+    .from('shifts').insert(item.payload).select().single();
+  if (error) throw error;
+
+  // نحدّث أي عمليات بيع تانية فى الطابور كانت بتشاور على الوردية دي بالـ id المحلي المؤقت،
+  // ونستبدله بالـ id الحقيقي — عشان لو الجهاز اتقفل أو النت قطع وسط المزامنة، البيانات تفضل متسقة
+  const q = getOutbox();
+  let changed = false;
+  q.forEach(i => {
+    if (i.kind === 'sale' && i.payload.shiftLocalRef === item.localId) {
+      i.payload.saleInsert.shift_id = shift.id;
+      delete i.payload.shiftLocalRef;
+      changed = true;
+    }
+  });
+  if (changed) setOutbox(q);
+
+  // لو الوردية دي هي نفسها المفتوحة حاليًا فى الجهاز، نستبدل النسخة المحلية المؤقتة بالبيانات الحقيقية
+  const cachedShift = offGet(OFF.shift, null);
+  if (cachedShift && cachedShift.id === item.localId) {
+    offSet(OFF.shift, shift);
+    if (typeof currentShift !== 'undefined' && currentShift && currentShift.id === item.localId) {
+      currentShift = shift;
+      if (typeof updateShiftBadge === 'function') updateShiftBadge();
+    }
+  }
+  showToast('تمت مزامنة فتح الوردية');
 }
 
 /**
@@ -3515,26 +3839,44 @@ function createSmartSearch(opts) {
 }
 
 async function getUserProfile(userId) {
-  const { data, error } = await supabaseClient
-    .from('users_profile')
-    .select('*, roles(name, permissions), branches(id, name, logo)')
-    .eq('id', userId)
-    .single();
-  if (error) { console.error('getUserProfile error', error); return null; }
-  return data;
+  try {
+    if (!appIsOnline) throw new Error('offline');
+    const { data, error } = await supabaseClient
+      .from('users_profile')
+      .select('*, roles(name, permissions), branches(id, name, logo)')
+      .eq('id', userId)
+      .single();
+    if (error) throw error;
+    offSet(OFF.profile, { userId, profile: data });
+    return data;
+  } catch (err) {
+    if (!isNetworkError(err)) { console.error('getUserProfile error', err); return null; }
+    // النت مقطوع — نستخدم آخر نسخة محفوظة من بروفايل نفس المستخدم لو موجودة
+    const cached = offGet(OFF.profile, null);
+    if (cached && cached.userId === userId) return cached.profile;
+    return null;
+  }
 }
 
 // ------------------------------------------------------------
-// عند فتح الصفحة: هل فيه جلسة شغّالة؟
+// عند فتح الصفحة: هل فيه جلسة شغّالة؟ (بيشتغل حتى لو النت مقطوع
+// طالما فيه جلسة وبروفايل محفوظين من آخر دخول أونلاين)
 // ------------------------------------------------------------
 (async function boot() {
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  if (session) {
-    currentProfile = await getUserProfile(session.user.id);
-    if (currentProfile && currentProfile.is_active) {
-      enterPos();
-      return;
+  ensureOfflineBanner();
+  appIsOnline = await checkRealConnectivity();
+  updateOfflineBanner();
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) {
+      currentProfile = await getUserProfile(session.user.id);
+      if (currentProfile && currentProfile.is_active) {
+        enterPos();
+        return;
+      }
     }
+  } catch (err) {
+    console.error('boot error', err);
   }
   showView('login');
 })();
@@ -3555,6 +3897,16 @@ loginForm.addEventListener('submit', async (e) => {
   const username = document.getElementById('loginUsername').value.trim();
   const password = document.getElementById('loginPassword').value;
   const email = loginIdentifierToEmail(username);
+
+  if (!(await checkRealConnectivity())) {
+    appIsOnline = false; updateOfflineBanner();
+    loginError.textContent = 'لا يوجد اتصال بالإنترنت — يجب أن يتم تسجيل الدخول الأول أثناء توفر الاتصال، وبعد ذلك سيعمل النظام تلقائيًا في وضع عدم الاتصال';
+    loginError.classList.add('show');
+    loginSubmitBtn.disabled = false;
+    loginSubmitBtn.textContent = 'دخول';
+    return;
+  }
+  appIsOnline = true; updateOfflineBanner();
 
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
   if (error) {
@@ -3741,21 +4093,30 @@ function closeMobileCart() {
 // الورديات وإغلاق الخزينة (Shifts & Cash Drawer Management)
 // ------------------------------------------------------------
 async function loadActiveShift() {
-  const { data, error } = await supabaseClient
-    .from('shifts')
-    .select('*')
-    .eq('user_id', currentProfile.id)
-    .eq('status', 'open')
-    .maybeSingle();
-  if (error) { console.error('loadActiveShift error', error); return null; }
-  return data;
+  try {
+    if (!appIsOnline) throw new Error('offline');
+    const { data, error } = await supabaseClient
+      .from('shifts')
+      .select('*')
+      .eq('user_id', currentProfile.id)
+      .eq('status', 'open')
+      .maybeSingle();
+    if (error) throw error;
+    offSet(OFF.shift, data || null);
+    return data;
+  } catch (err) {
+    if (!isNetworkError(err)) { console.error('loadActiveShift error', err); return null; }
+    // النت مقطوع — نستخدم آخر وردية مفتوحة كانت متسجلة محليًا (لو فتحها الكاشير وهو أونلاين)
+    return offGet(OFF.shift, null);
+  }
 }
 
 function updateShiftBadge() {
   if (!posEls.shiftBadge) return;
   if (currentShift) {
     const t = new Date(currentShift.opening_at);
-    posEls.shiftStatusLabel.textContent = `وردية مفتوحة منذ ${t.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}`;
+    posEls.shiftStatusLabel.textContent = `وردية مفتوحة منذ ${t.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}`
+      + (currentShift.pending ? ' (غير متزامنة)' : '');
     posEls.shiftBadge.classList.remove('closed');
     posEls.closeShiftBtn.style.display = 'inline-block';
   } else {
@@ -3788,6 +4149,26 @@ function closeOpenShiftModal() {
   document.getElementById('openShiftModalOverlay').classList.remove('show');
 }
 
+// فتح وردية أوفلاين: بتتسجل محليًا بـ id مؤقت عشان الكاشير يقدر يبيع على طول،
+// وبتتزامن تلقائي أول ما النت يرجع (وأي فواتير بيعت أثناء ما كانت الوردية معلقة
+// بتتربط بالـ id الحقيقي تلقائيًا وقت المزامنة عبر syncQueuedShiftOpen)
+function queueOfflineShiftOpen(amount, notes) {
+  const localId = 'locshift_' + (crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '_' + Math.random()));
+  const nowIso = new Date().toISOString();
+  const shift = {
+    id: localId, branch_id: currentProfile.branch_id, user_id: currentProfile.id,
+    opening_amount: amount, opening_notes: notes || null, opening_at: nowIso, status: 'open',
+    created_at: nowIso, pending: true,
+  };
+  currentShift = shift;
+  offSet(OFF.shift, shift);
+  queueOutboxItem({
+    localId, kind: 'shift_open', createdAt: nowIso, attempts: 0,
+    payload: { branch_id: currentProfile.branch_id, user_id: currentProfile.id, opening_amount: amount, opening_notes: notes || null },
+  });
+  showToast('اتفتحت الوردية محليًا — هتتزامن أول ما النت يرجع');
+}
+
 async function submitOpenShift(e) {
   e.preventDefault();
   const errEl = document.getElementById('openShiftError');
@@ -3800,15 +4181,29 @@ async function submitOpenShift(e) {
   const submitBtn = document.getElementById('openShiftSubmitBtn');
   submitBtn.disabled = true; submitBtn.textContent = 'جاري الفتح...';
   try {
-    const { data, error } = await supabaseClient
-      .from('shifts')
-      .insert({ branch_id: currentProfile.branch_id, user_id: currentProfile.id, opening_amount: amount, opening_notes: notes || null })
-      .select().single();
-    if (error) throw error;
-    currentShift = data;
+    if (!appIsOnline) {
+      queueOfflineShiftOpen(amount, notes);
+    } else {
+      try {
+        const { data, error } = await supabaseClient
+          .from('shifts')
+          .insert({ branch_id: currentProfile.branch_id, user_id: currentProfile.id, opening_amount: amount, opening_notes: notes || null })
+          .select().single();
+        if (error) throw error;
+        currentShift = data;
+        offSet(OFF.shift, data);
+        showToast('تم فتح الوردية بنجاح');
+      } catch (err) {
+        if (isNetworkError(err)) {
+          appIsOnline = false; updateOfflineBanner();
+          queueOfflineShiftOpen(amount, notes);
+        } else {
+          throw err;
+        }
+      }
+    }
     updateShiftBadge();
     closeOpenShiftModal();
-    showToast('تم فتح الوردية بنجاح');
   } catch (err) {
     console.error(err);
     errEl.textContent = (err.message || '').includes('uniq_open_shift_per_user') ? 'لديك وردية مفتوحة بالفعل' : (err.message || 'تعذر فتح الوردية');
@@ -3859,6 +4254,14 @@ async function computeShiftCashSummary(shiftId, openingAmount) {
 
 async function openCloseShiftModal() {
   if (!currentShift) return;
+  if (currentShift.pending) {
+    showToast('هذه الوردية لا تزال بانتظار المزامنة — يرجى الانتظار حتى تتم مزامنتها قبل إغلاقها', true);
+    return;
+  }
+  if (!appIsOnline) {
+    showToast('يتطلب إغلاق الوردية اتصالاً بالإنترنت لحساب أرقام التسوية بدقة من الخادم', true);
+    return;
+  }
   try {
     const summary = await computeShiftCashSummary(currentShift.id, currentShift.opening_amount);
     shiftCloseSummary = summary;
@@ -3924,6 +4327,7 @@ async function submitCloseShift() {
     document.getElementById('closeShiftModalOverlay').classList.remove('show');
     showZReport(data, shiftCloseSummary);
     currentShift = null;
+    offSet(OFF.shift, null);
     updateShiftBadge();
   } catch (err) {
     console.error(err);
@@ -3944,6 +4348,7 @@ function zReportMethodRow(labelAr, key, summary) {
 
 function showZReport(shift, summary) {
   document.getElementById('zReportLogoutBtn').style.display = 'inline-block';
+  document.getElementById('closeZReportBtn').style.display = 'none';
   const openedAt = new Date(shift.opening_at);
   const closedAt = new Date(shift.closed_at);
   const diff = Number(shift.difference);
@@ -3994,17 +4399,22 @@ async function enterPos() {
   startClock();
   updateHeldCount();
   renderCart();
+  appIsOnline = await checkRealConnectivity();
+  updateOfflineBanner();
   await loadPosWarehouses();
   await Promise.all([loadCategories(), loadProducts(), loadCustomers(), loadStockBalances(), loadQuickDiscounts(), loadTaxInclusiveSetting(), loadCompanyInfoGlobal(), loadBranchSettings(), loadPrintSettings()]);
   applyPrintSettingsToPosUI();
   renderCategories();
   renderProducts();
   renderQuickDiscountButtons();
-  subscribePosRealtime();
+  if (appIsOnline) subscribePosRealtime();
 
   currentShift = await loadActiveShift();
   updateShiftBadge();
-  if (!currentShift) openOpenShiftModal(true);
+  if (!currentShift && appIsOnline) openOpenShiftModal(true);
+  else if (!currentShift) showToast('لا توجد وردية مفتوحة محفوظة محليًا — يجب الاتصال بالإنترنت وفتح وردية قبل البيع', true);
+
+  if (appIsOnline && pendingCount() > 0) processOutboxQueue();
 }
 
 // ------------------------------------------------------------
@@ -4200,6 +4610,9 @@ function bindPosEvents() {
   document.getElementById('csCountedInput').addEventListener('input', updateShiftDiffPreview);
   document.getElementById('submitCloseShiftBtn').addEventListener('click', submitCloseShift);
   document.getElementById('zReportLogoutBtn').addEventListener('click', doLogout);
+  document.getElementById('closeZReportBtn').addEventListener('click', () => {
+    document.getElementById('zReportModalOverlay').classList.remove('show');
+  });
   document.getElementById('printZReportBtn').addEventListener('click', () => window.print());
 
   document.getElementById('saleReturnBtn').addEventListener('click', openSaleReturnModal);
@@ -4236,29 +4649,49 @@ function bindPosEvents() {
 }
 
 async function loadCategories() {
-  const { data, error } = await supabaseClient.from('categories').select('id, name').eq('is_active', true).order('name');
-  if (error) { console.error(error); return; }
-  allCategories = data || [];
+  try {
+    if (!appIsOnline) throw new Error('offline');
+    const { data, error } = await supabaseClient.from('categories').select('id, name').eq('is_active', true).order('name');
+    if (error) throw error;
+    allCategories = data || [];
+    offSet(OFF.categories, allCategories);
+  } catch (err) {
+    if (!isNetworkError(err)) console.error(err);
+    allCategories = offGet(OFF.categories, []);
+  }
 }
 
 async function loadProducts() {
-  const { data, error } = await supabaseClient
-    .from('products')
-    .select('id, name, category_id, sale_price, unit_type, image_url, tax_rate_id, tax_rates(rate), product_barcodes(barcode), product_units(id, unit_type_id, factor_to_base, sale_price, is_active, unit_types(name))')
-    .eq('is_active', true).order('name');
-  if (error) {
-    console.error(error);
-    posEls.productGrid.innerHTML = `<div class="empty-state">تعذر تحميل الأصناف — تأكد من إعداد Supabase في أعلى الكود (SUPABASE_URL / SUPABASE_ANON_KEY)</div>`;
-    return;
+  try {
+    if (!appIsOnline) throw new Error('offline');
+    const { data, error } = await supabaseClient
+      .from('products')
+      .select('id, name, category_id, sale_price, unit_type, image_url, tax_rate_id, tax_rates(rate), product_barcodes(barcode), product_units(id, unit_type_id, factor_to_base, sale_price, is_active, unit_types(name))')
+      .eq('is_active', true).order('name');
+    if (error) throw error;
+    allProducts = data || [];
+    offSet(OFF.products, allProducts);
+  } catch (err) {
+    allProducts = offGet(OFF.products, []);
+    if (allProducts.length === 0) {
+      if (!isNetworkError(err)) console.error(err);
+      posEls.productGrid.innerHTML = `<div class="empty-state">تعذر تحميل الأصناف — تأكد من إعداد Supabase في أعلى الكود (SUPABASE_URL / SUPABASE_ANON_KEY)</div>`;
+    }
   }
-  allProducts = data || [];
 }
 
 let allCustomers = [];
 async function loadCustomers() {
-  const { data, error } = await supabaseClient.from('customers').select('id, name').order('name').limit(200);
-  if (error) { console.error(error); return; }
-  allCustomers = data || [];
+  try {
+    if (!appIsOnline) throw new Error('offline');
+    const { data, error } = await supabaseClient.from('customers').select('id, name, balance').order('name').limit(200);
+    if (error) throw error;
+    allCustomers = data || [];
+    offSet(OFF.customers, allCustomers);
+  } catch (err) {
+    if (!isNetworkError(err)) console.error(err);
+    allCustomers = offGet(OFF.customers, []);
+  }
   const prevValue = posEls.customerSelect.value;
   posEls.customerSelect.innerHTML = '<option value="">عميل نقدي (بدون تسجيل)</option>';
   allCustomers.forEach(c => {
@@ -4338,15 +4771,28 @@ const branchWarehouseCache = {}; // branchId -> id المخزن الرئيسي �
 async function getMainWarehouseId(branchId) {
   if (!branchId) return null;
   if (branchWarehouseCache[branchId]) return branchWarehouseCache[branchId];
-  const { data, error } = await supabaseClient
-    .from('warehouses')
-    .select('id')
-    .eq('branch_id', branchId)
-    .eq('is_main', true)
-    .maybeSingle();
-  if (error) { console.error(error); return null; }
-  if (data) branchWarehouseCache[branchId] = data.id;
-  return data?.id || null;
+  try {
+    if (!appIsOnline) throw new Error('offline');
+    const { data, error } = await supabaseClient
+      .from('warehouses')
+      .select('id')
+      .eq('branch_id', branchId)
+      .eq('is_main', true)
+      .maybeSingle();
+    if (error) throw error;
+    if (data) {
+      branchWarehouseCache[branchId] = data.id;
+      const cache = offGet(OFF.mainWarehouse, {});
+      cache[branchId] = data.id;
+      offSet(OFF.mainWarehouse, cache);
+    }
+    return data?.id || null;
+  } catch (err) {
+    if (!isNetworkError(err)) console.error(err);
+    const cached = offGet(OFF.mainWarehouse, {})[branchId] || null;
+    if (cached) branchWarehouseCache[branchId] = cached;
+    return cached;
+  }
 }
 
 let posWarehouses = []; // مخازن الفرع الحالي المتاحة للكاشير يختار منها وقت البيع
@@ -4354,14 +4800,21 @@ let posWarehouses = []; // مخازن الفرع الحالي المتاحة ل�
 // بتحمّل مخازن فرع الكاشير الحالي وتظهر قائمة الاختيار بس لو فيه أكتر من مخزن نشط
 async function loadPosWarehouses() {
   if (!posEls.warehouseSelect || !currentProfile?.branch_id) return;
-  const { data, error } = await supabaseClient
-    .from('warehouses')
-    .select('id, name, is_main')
-    .eq('branch_id', currentProfile.branch_id)
-    .eq('is_active', true)
-    .order('is_main', { ascending: false });
-  if (error) { console.error(error); return; }
-  posWarehouses = data || [];
+  try {
+    if (!appIsOnline) throw new Error('offline');
+    const { data, error } = await supabaseClient
+      .from('warehouses')
+      .select('id, name, is_main')
+      .eq('branch_id', currentProfile.branch_id)
+      .eq('is_active', true)
+      .order('is_main', { ascending: false });
+    if (error) throw error;
+    posWarehouses = data || [];
+    offSet(OFF.warehouses, posWarehouses);
+  } catch (err) {
+    if (!isNetworkError(err)) console.error(err);
+    posWarehouses = offGet(OFF.warehouses, []);
+  }
   if (posWarehouses.length <= 1) {
     posEls.warehouseSelect.style.display = 'none';
     posEls.warehouseSelect.innerHTML = '';
@@ -4386,13 +4839,22 @@ async function loadStockBalances() {
   if (!currentProfile?.branch_id) { stockMap = {}; return; }
   const warehouseId = posSelectedWarehouseId() || await getMainWarehouseId(currentProfile.branch_id);
   if (!warehouseId) { stockMap = {}; return; }
-  const { data, error } = await supabaseClient
-    .from('stock_balances')
-    .select('product_id, quantity')
-    .eq('warehouse_id', warehouseId);
-  if (error) { console.error(error); return; }
-  stockMap = {};
-  (data || []).forEach(row => { stockMap[row.product_id] = Number(row.quantity); });
+  try {
+    if (!appIsOnline) throw new Error('offline');
+    const { data, error } = await supabaseClient
+      .from('stock_balances')
+      .select('product_id, quantity')
+      .eq('warehouse_id', warehouseId);
+    if (error) throw error;
+    stockMap = {};
+    (data || []).forEach(row => { stockMap[row.product_id] = Number(row.quantity); });
+    const cache = offGet(OFF.stock, {});
+    cache[warehouseId] = { ...stockMap };
+    offSet(OFF.stock, cache);
+  } catch (err) {
+    if (!isNetworkError(err)) console.error(err);
+    stockMap = { ...(offGet(OFF.stock, {})[warehouseId] || {}) };
+  }
 }
 
 function availableStock(productId) {
@@ -4554,11 +5016,14 @@ function calcTotal() {
 let companyInfo = { name: '', logo: null };
 async function loadCompanyInfoGlobal() {
   try {
+    if (!appIsOnline) throw new Error('offline');
     const { data, error } = await supabaseClient.from('settings').select('value').eq('key', 'company_info').maybeSingle();
     if (error) throw error;
     companyInfo = (data && data.value) ? data.value : { name: '', logo: null };
+    offSet('off_company_info', companyInfo);
   } catch (err) {
-    console.error(err);
+    if (!isNetworkError(err)) console.error(err);
+    companyInfo = offGet('off_company_info', companyInfo);
   }
 }
 function renderInvoiceDetailPrintHeader(branchId) {
@@ -4718,9 +5183,16 @@ function setImageUploadFieldValue(hiddenInputId, dataUrlOrUrl, previewImgId, pla
 
 let taxInclusive = false;
 async function loadTaxInclusiveSetting() {
-  const { data, error } = await supabaseClient.from('settings').select('value').eq('key', 'tax_inclusive').maybeSingle();
-  if (error) { console.error(error); return; }
-  taxInclusive = data ? (data.value === true || data.value === 'true') : false;
+  try {
+    if (!appIsOnline) throw new Error('offline');
+    const { data, error } = await supabaseClient.from('settings').select('value').eq('key', 'tax_inclusive').maybeSingle();
+    if (error) throw error;
+    taxInclusive = data ? (data.value === true || data.value === 'true') : false;
+    offSet(OFF.taxInclusive, taxInclusive);
+  } catch (err) {
+    if (!isNetworkError(err)) console.error(err);
+    taxInclusive = offGet(OFF.taxInclusive, false);
+  }
 }
 
 // ------------------------------------------------------------
@@ -4755,16 +5227,30 @@ function printSettingsKey() { return `print_settings:${currentProfile?.branch_id
 
 async function loadBranchSettings() {
   if (!currentProfile?.branch_id) { branchSettings = { ...defaultBranchSettings }; return; }
-  const { data, error } = await supabaseClient.from('settings').select('value').eq('key', branchSettingsKey()).maybeSingle();
-  if (error) { console.error(error); return; }
-  branchSettings = { ...defaultBranchSettings, ...(data && data.value ? data.value : {}) };
+  try {
+    if (!appIsOnline) throw new Error('offline');
+    const { data, error } = await supabaseClient.from('settings').select('value').eq('key', branchSettingsKey()).maybeSingle();
+    if (error) throw error;
+    branchSettings = { ...defaultBranchSettings, ...(data && data.value ? data.value : {}) };
+    offSet(OFF.branchSettings, branchSettings);
+  } catch (err) {
+    if (!isNetworkError(err)) console.error(err);
+    branchSettings = { ...defaultBranchSettings, ...offGet(OFF.branchSettings, {}) };
+  }
 }
 
 async function loadPrintSettings() {
   if (!currentProfile?.branch_id) { printSettings = { ...defaultPrintSettings }; return; }
-  const { data, error } = await supabaseClient.from('settings').select('value').eq('key', printSettingsKey()).maybeSingle();
-  if (error) { console.error(error); return; }
-  printSettings = { ...defaultPrintSettings, ...(data && data.value ? data.value : {}) };
+  try {
+    if (!appIsOnline) throw new Error('offline');
+    const { data, error } = await supabaseClient.from('settings').select('value').eq('key', printSettingsKey()).maybeSingle();
+    if (error) throw error;
+    printSettings = { ...defaultPrintSettings, ...(data && data.value ? data.value : {}) };
+    offSet(OFF.printSettings, printSettings);
+  } catch (err) {
+    if (!isNetworkError(err)) console.error(err);
+    printSettings = { ...defaultPrintSettings, ...offGet(OFF.printSettings, {}) };
+  }
 }
 
 function initBranchSettingsSection() {
@@ -4860,9 +5346,16 @@ async function savePrintSettings(e) {
 let activeQuickDiscounts = [];
 let selectedQuickDiscount = null;
 async function loadQuickDiscounts() {
-  const { data, error } = await supabaseClient.from('quick_discounts').select('*').eq('is_active', true).order('value');
-  if (error) { console.error(error); activeQuickDiscounts = []; return; }
-  activeQuickDiscounts = data || [];
+  try {
+    if (!appIsOnline) throw new Error('offline');
+    const { data, error } = await supabaseClient.from('quick_discounts').select('*').eq('is_active', true).order('value');
+    if (error) throw error;
+    activeQuickDiscounts = data || [];
+    offSet(OFF.quickDiscounts, activeQuickDiscounts);
+  } catch (err) {
+    if (!isNetworkError(err)) console.error(err);
+    activeQuickDiscounts = offGet(OFF.quickDiscounts, []);
+  }
 }
 function renderQuickDiscountButtons() {
   if (!posEls.quickDiscountRow) return;
@@ -5038,6 +5531,10 @@ function renderCart() {
 function updateHeldCount() { posEls.heldCount.textContent = heldOrders.length; }
 
 async function doLogout() {
+  if (pendingCount() > 0) {
+    const ok = confirm(`يوجد ${pendingCount()} عملية بانتظار المزامنة على هذا الجهاز. في حال الخروج الآن، ستبقى محفوظة وسيتم مزامنتها تلقائيًا عند تسجيل الدخول بنفس الحساب على هذا الجهاز مع توفر الاتصال بالإنترنت. هل أنت متأكد من الخروج؟`);
+    if (!ok) return;
+  }
   unsubscribePosRealtime();
   await supabaseClient.auth.signOut();
   currentProfile = null;
@@ -5066,6 +5563,139 @@ async function computeDailyInvoiceNumber(sale) {
     console.error(err);
     return sale.invoice_number;
   }
+}
+
+// البيع أونلاين (المسار العادي): يبعت الفاتورة وتفاصيل الدفع لسوباابيز على طول
+async function performOnlineCheckout(ctx) {
+  const { subtotal, discount, tax, total, customerId, customerName, paymentLines, paymentMethod, paidAmount, remaining, saleWarehouseId, instantNote } = ctx;
+
+  const { data: sale, error: saleError } = await supabaseClient
+    .from('sales')
+    .insert({
+      branch_id: currentProfile.branch_id, user_id: currentProfile.id, customer_id: customerId,
+      status: 'completed', subtotal, discount, tax, total, paid_amount: paidAmount, remaining,
+      payment_method: paymentMethod, shift_id: (currentShift && !currentShift.pending) ? currentShift.id : null,
+    }).select().single();
+  if (saleError) throw saleError;
+
+  // تسجيل تفاصيل كل طريقة دفع فى sale_payments (سطر واحد أو أكثر حسب الحالة)
+  if (paymentLines.length > 0) {
+    const { error: paymentsInsertError } = await supabaseClient
+      .from('sale_payments')
+      .insert(paymentLines.map(l => ({ sale_id: sale.id, method: l.method, amount: l.amount })));
+    if (paymentsInsertError) throw paymentsInsertError;
+  }
+
+  const saleItems = cart.map(l => ({
+    sale_id: sale.id, product_id: l.product.id, product_unit_id: l.productUnitId || null, quantity: l.quantity,
+    unit_price: l.unitPrice, discount: 0, total: l.quantity * l.unitPrice, warehouse_id: saleWarehouseId,
+  }));
+  // ملحوظة: حركة المخزون بقت تلقائية عبر تريجر trg_sale_item_stock_effect
+  // على مستوى قاعدة البيانات (بيحوّل الكمية للوحدة الأساسية بنفسه)،
+  // فمفيش داعي نبعت stock_transactions يدويًا من هنا زي الأول.
+  const { data: insertedItems, error: itemsError } = await supabaseClient.from('sale_items').insert(saleItems).select();
+  if (itemsError) throw itemsError;
+
+  // لو فيه مبلغ آجل، يتضاف على رصيد العميل (مديونية له)
+  if (remaining > 0 && customerId) {
+    const { data: customer } = await supabaseClient.from('customers').select('balance').eq('id', customerId).single();
+    const newBalance = (Number(customer?.balance) || 0) + remaining;
+    await supabaseClient.from('customers').update({ balance: newBalance }).eq('id', customerId);
+  }
+
+  showToast(`تمت الفاتورة رقم ${sale.invoice_number} بنجاح`);
+
+  let displayInvoiceNumber = sale.invoice_number;
+  if (!branchSettings.continuous_invoice_numbering) {
+    displayInvoiceNumber = await computeDailyInvoiceNumber(sale);
+  }
+
+  // نحفظ الفاتورة في كاش "الفواتير الأخيرة" عشان تبقى متاحة لعمل مرتجع عليها حتى لو النت قطع بعدين
+  cacheRecentSale({
+    localId: 'srv_' + sale.id, id: sale.id, invoice_number: sale.invoice_number, customer_id: customerId,
+    customer_name: customerName, total, created_at: sale.created_at, pending: false,
+    items: cart.map((l, idx) => ({
+      sale_item_id: insertedItems?.[idx]?.id, product_id: l.product.id, product_name: l.product.name,
+      quantity: l.quantity, unit_price: l.unitPrice, factor: l.factor || 1, warehouse_id: saleWarehouseId,
+    })),
+  });
+
+  return {
+    invoiceNumber: displayInvoiceNumber, realInvoiceNumber: sale.invoice_number, pendingSync: false,
+    createdAt: sale.created_at, cashierName: currentProfile.full_name, branchName: currentProfile.branches?.name || '',
+    customerName, instantNote,
+    lines: cart.map(l => ({
+      name: l.unitLabel && l.productUnitId ? `${l.product.name} (${l.unitLabel})` : l.product.name,
+      quantity: l.quantity, unitPrice: l.unitPrice,
+      originalPrice: l.basePrice,
+      code: (l.product.product_barcodes && l.product.product_barcodes[0]?.barcode) || '',
+    })),
+    subtotal, discount, tax, total, paidAmount, remaining, paymentMethod, paymentLines,
+  };
+}
+
+// البيع أوفلاين: بيتسجل في طابور الانتظار المحلي (بما فيه سطور الدفع المتعدد
+// وربطه بالوردية المفتوحة)، وبيتزامن تلقائي أول ما النت يرجع
+async function queueOfflineSale(ctx) {
+  const { subtotal, discount, tax, total, customerId, customerName, paymentLines, paymentMethod, paidAmount, remaining, saleWarehouseId, instantNote } = ctx;
+
+  const localId = 'loc_' + (crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '_' + Math.random()));
+  const invoiceLabel = nextLocalInvoiceLabel();
+  const createdAt = new Date().toISOString();
+
+  const items = cart.map(l => ({
+    product_id: l.product.id, product_unit_id: l.productUnitId || null, quantity: l.quantity,
+    unit_price: l.unitPrice, total: l.quantity * l.unitPrice, warehouse_id: saleWarehouseId,
+    product_name: l.product.name, factor: l.factor || 1,
+  }));
+
+  // خصم متفائل من نسخة المخزون المحفوظة محليًا (ممكن يعدّي بالسالب مؤقتًا لحد ما يحصل تزامن حقيقي)
+  items.forEach(it => adjustCachedStock(saleWarehouseId, it.product_id, -(it.quantity * (it.factor || 1))));
+
+  // تحديث متفائل لرصيد العميل محليًا (بيتظبط فعليًا برقم دقيق وقت المزامنة، بنفس منطق الأونلاين)
+  if (remaining > 0 && customerId) {
+    const idx = allCustomers.findIndex(c => c.id === customerId);
+    if (idx !== -1) {
+      allCustomers[idx] = { ...allCustomers[idx], balance: (Number(allCustomers[idx].balance) || 0) + remaining };
+      offSet(OFF.customers, allCustomers);
+    }
+  }
+
+  queueOutboxItem({
+    localId, kind: 'sale', createdAt, attempts: 0,
+    payload: {
+      saleInsert: {
+        branch_id: currentProfile.branch_id, user_id: currentProfile.id, customer_id: customerId,
+        status: 'completed', subtotal, discount, tax, total, paid_amount: paidAmount, remaining,
+        payment_method: paymentMethod, shift_id: (currentShift && !currentShift.pending) ? currentShift.id : null,
+      },
+      // لو الوردية نفسها لسه معلقة مزامنة، بنسجل مرجع مؤقت ليها عشان تتربط بالـ id
+      // الحقيقي تلقائيًا وقت ما الوردية تتزامن (شوف syncQueuedShiftOpen)
+      shiftLocalRef: (currentShift && currentShift.pending) ? currentShift.id : undefined,
+      items, paymentLines, customerId, remaining, localInvoiceLabel: invoiceLabel,
+    },
+  });
+
+  cacheRecentSale({
+    localId, id: null, invoice_number: null, customer_id: customerId, customer_name: customerName,
+    total, created_at: createdAt, pending: true, invoiceLabel,
+    items: items.map(it => ({ ...it, sale_item_id: null })),
+  });
+
+  showToast(`الفاتورة اتسجلت محليًا (${invoiceLabel}) — هتتزامن تلقائي أول ما النت يرجع`);
+
+  return {
+    invoiceNumber: invoiceLabel, realInvoiceNumber: null, pendingSync: true,
+    createdAt, cashierName: currentProfile.full_name, branchName: currentProfile.branches?.name || '',
+    customerName, instantNote,
+    lines: cart.map(l => ({
+      name: l.unitLabel && l.productUnitId ? `${l.product.name} (${l.unitLabel})` : l.product.name,
+      quantity: l.quantity, unitPrice: l.unitPrice,
+      originalPrice: l.basePrice,
+      code: (l.product.product_barcodes && l.product.product_barcodes[0]?.barcode) || '',
+    })),
+    subtotal, discount, tax, total, paidAmount, remaining, paymentMethod, paymentLines,
+  };
 }
 
 async function doCheckout() {
@@ -5112,73 +5742,38 @@ async function doCheckout() {
     }
     const remaining = Math.round((total - paidAmount) * 100) / 100;
     if (remaining > 0.009 && !customerId) {
-      throw new Error('البيع الآجل متاح فقط لعميل مسجل، اختر عميلًا أولاً — والعميل النقدي لازم يدفع كامل المبلغ (فى وضع الدفع المتعدد اجمع المبالغ لتساوي الإجمالي تمامًا)');
+      throw new Error('البيع الآجل متاح فقط لعميل مسجَّل، يرجى اختيار عميل أولاً — ويجب على العميل النقدي دفع كامل المبلغ (في حالة الدفع بأكثر من طريقة، يجب أن يساوي مجموع المبالغ الإجمالي تمامًا)');
     }
 
-    const { data: sale, error: saleError } = await supabaseClient
-      .from('sales')
-      .insert({
-        branch_id: currentProfile.branch_id, user_id: currentProfile.id, customer_id: customerId,
-        status: 'completed', subtotal, discount, tax, total, paid_amount: paidAmount, remaining,
-        payment_method: paymentMethod, shift_id: currentShift ? currentShift.id : null,
-      }).select().single();
-    if (saleError) throw saleError;
-
-    // تسجيل تفاصيل كل طريقة دفع فى sale_payments (سطر واحد أو أكثر حسب الحالة)
-    if (paymentLines.length > 0) {
-      const { error: paymentsInsertError } = await supabaseClient
-        .from('sale_payments')
-        .insert(paymentLines.map(l => ({ sale_id: sale.id, method: l.method, amount: l.amount })));
-      if (paymentsInsertError) throw paymentsInsertError;
-    }
-
-    const saleWarehouseId = posSelectedWarehouseId();
-    const saleItems = cart.map(l => ({
-      sale_id: sale.id, product_id: l.product.id, product_unit_id: l.productUnitId || null, quantity: l.quantity,
-      unit_price: l.unitPrice, discount: 0, total: l.quantity * l.unitPrice, warehouse_id: saleWarehouseId,
-    }));
-    // ملحوظة: حركة المخزون بقت تلقائية عبر تريجر trg_sale_item_stock_effect
-    // على مستوى قاعدة البيانات (بيحوّل الكمية للوحدة الأساسية بنفسه)،
-    // فمفيش داعي نبعت stock_transactions يدويًا من هنا زي الأول.
-    const { error: itemsError } = await supabaseClient.from('sale_items').insert(saleItems);
-    if (itemsError) throw itemsError;
-
-    // لو فيه مبلغ آجل، يتضاف على رصيد العميل (مديونية له)
-    if (remaining > 0 && customerId) {
-      const { data: customer } = await supabaseClient.from('customers').select('balance').eq('id', customerId).single();
-      const newBalance = (Number(customer?.balance) || 0) + remaining;
-      await supabaseClient.from('customers').update({ balance: newBalance }).eq('id', customerId);
-    }
-
-    showToast(`تمت الفاتورة رقم ${sale.invoice_number} بنجاح`);
-
-    let displayInvoiceNumber = sale.invoice_number;
-    if (!branchSettings.continuous_invoice_numbering) {
-      displayInvoiceNumber = await computeDailyInvoiceNumber(sale);
-    }
-
+    const saleWarehouseId = posSelectedWarehouseId() || await getMainWarehouseId(currentProfile.branch_id);
     const customerName = customerId
       ? (posEls.customerSelect.selectedOptions[0]?.textContent || '')
       : '';
     const instantNote = printSettings.print_instant_note
       ? (document.getElementById('instantNoteInput')?.value || '').trim()
       : '';
-    showReceipt({
-      invoiceNumber: displayInvoiceNumber,
-      realInvoiceNumber: sale.invoice_number,
-      createdAt: sale.created_at,
-      cashierName: currentProfile.full_name,
-      branchName: currentProfile.branches?.name || '',
-      customerName,
-      instantNote,
-      lines: cart.map(l => ({
-        name: l.unitLabel && l.productUnitId ? `${l.product.name} (${l.unitLabel})` : l.product.name,
-        quantity: l.quantity, unitPrice: l.unitPrice,
-        originalPrice: l.basePrice,
-        code: (l.product.product_barcodes && l.product.product_barcodes[0]?.barcode) || '',
-      })),
-      subtotal, discount, tax, total, paidAmount, remaining, paymentMethod, paymentLines,
-    });
+    const ctx = { subtotal, discount, tax, total, customerId, customerName, paymentLines, paymentMethod, paidAmount, remaining, saleWarehouseId, instantNote };
+
+    let receiptData;
+    // لو الوردية نفسها لسه معلقة مزامنة، لازم البيع يتسجل أوفلاين برضو (حتى لو النت شغال)
+    // عشان يتحافظ على الترتيب الصحيح ويتربط بالوردية صح لحظة المزامنة
+    if (!appIsOnline || (currentShift && currentShift.pending)) {
+      receiptData = await queueOfflineSale(ctx);
+    } else {
+      try {
+        receiptData = await performOnlineCheckout(ctx);
+      } catch (err) {
+        // النت اتقطع أثناء المحاولة نفسها — نرجع تلقائي لمسار الأوفلاين بدل ما نضيّع البيعة
+        if (isNetworkError(err)) {
+          appIsOnline = false; updateOfflineBanner();
+          receiptData = await queueOfflineSale(ctx);
+        } else {
+          throw err;
+        }
+      }
+    }
+
+    showReceipt(receiptData);
 
     cart = []; posEls.discountInput.value = 0; setCustomerSelection('', { silent: true });
     delete posEls.paidInput.dataset.touched; posEls.paidInput.value = '';
@@ -5229,6 +5824,7 @@ function buildReceiptHtml(sale, dateStr) {
       ${printSettings.print_device_name ? `<div class="r-title">${escapeHtml(sale.branchName || 'نظام نقاط البيع')}</div>` : ''}
       <div class="r-sub">فاتورة رقم #${sale.invoiceNumber}</div>
       <div class="r-sub num">${dateStr}</div>
+      ${sale.pendingSync ? `<div class="r-sub" style="color:var(--amber-600); font-weight:700;">⏳ غير متزامنة — هتتحدث برقم الفاتورة الحقيقي أول ما النت يرجع</div>` : ''}
     </div>
     <div class="r-divider"></div>
     <div class="r-row"><span>الكاشير</span><span>${escapeHtml(sale.cashierName)}</span></div>
@@ -5362,20 +5958,67 @@ function closeSaleReturnModal() {
   document.getElementById('saleReturnModalOverlay').classList.remove('show');
 }
 
+// بترجع معامل التحويل للوحدة الأساسية لسطر فاتورة معين (مستخدم لتصحيح المخزون المحلي وقت المرتجع الأوفلاين)
+function factorForSaleItem(productId, productUnitId) {
+  if (!productUnitId) return 1;
+  const product = allProducts.find(p => p.id === productId);
+  const unit = product?.product_units?.find(u => u.id === productUnitId);
+  return unit ? (Number(unit.factor_to_base) || 1) : 1;
+}
+
 async function searchSaleForReturn() {
   const errEl = document.getElementById('saleReturnModalError');
   errEl.classList.remove('show');
   const invoiceNumber = Number(document.getElementById('saleReturnInvoiceInput').value);
   if (!invoiceNumber) { errEl.textContent = 'اكتب رقم فاتورة صحيح'; errEl.classList.add('show'); return; }
 
-  const { data: sale, error: saleError } = await supabaseClient
-    .from('sales')
-    .select('*, customers(name), sale_items(*, products(name))')
-    .eq('invoice_number', invoiceNumber)
-    .maybeSingle();
+  let sale = null;
+  let fromCache = false;
 
-  if (saleError || !sale) {
-    errEl.textContent = 'لا توجد فاتورة بيع بهذا الرقم';
+  if (appIsOnline) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('sales')
+        .select('*, customers(name), sale_items(*, products(name))')
+        .eq('invoice_number', invoiceNumber)
+        .maybeSingle();
+      if (error) throw error;
+      sale = data;
+    } catch (err) {
+      if (isNetworkError(err)) { appIsOnline = false; updateOfflineBanner(); }
+      else console.error(err);
+    }
+  }
+
+  // مفيش نت، أو الفاتورة مش موجودة أونلاين — نجرب كاش آخر الفواتير المحفوظة محليًا
+  if (!sale) {
+    const cached = findCachedSaleByInvoice(invoiceNumber);
+    if (cached) {
+      if (cached.pending) {
+        errEl.textContent = `الفاتورة (${cached.invoiceLabel}) لا تزال بانتظار المزامنة — يرجى الانتظار حتى تتم مزامنتها قبل تنفيذ مرتجع عليها`;
+        errEl.classList.add('show');
+        document.getElementById('saleReturnInvoiceInfo').style.display = 'none';
+        document.getElementById('saleReturnLinesSection').style.display = 'none';
+        document.getElementById('saveSaleReturnBtn').style.display = 'none';
+        return;
+      }
+      sale = {
+        id: cached.id, invoice_number: cached.invoice_number, customer_id: cached.customer_id, total: cached.total,
+        created_at: cached.created_at, branch_id: currentProfile.branch_id,
+        customers: cached.customer_name ? { name: cached.customer_name } : null,
+        sale_items: cached.items.map(it => ({
+          id: it.sale_item_id, product_id: it.product_id, quantity: it.quantity, unit_price: it.unit_price,
+          warehouse_id: it.warehouse_id, products: { name: it.product_name }, _cachedFactor: it.factor,
+        })),
+      };
+      fromCache = true;
+    }
+  }
+
+  if (!sale) {
+    errEl.textContent = appIsOnline
+      ? 'لا توجد فاتورة بيع بهذا الرقم'
+      : 'لا توجد فاتورة بهذا الرقم في النسخة المحفوظة محليًا — الفواتير الأقدم تتطلب اتصالاً بالإنترنت';
     errEl.classList.add('show');
     document.getElementById('saleReturnInvoiceInfo').style.display = 'none';
     document.getElementById('saleReturnLinesSection').style.display = 'none';
@@ -5386,12 +6029,15 @@ async function searchSaleForReturn() {
   saleReturnSale = sale;
   const date = new Date(sale.created_at).toLocaleDateString('ar-EG');
   const infoEl = document.getElementById('saleReturnInvoiceInfo');
-  infoEl.textContent = `العميل: ${sale.customers?.name || 'عميل نقدي'} — الإجمالي: ${Number(sale.total).toFixed(2)} — التاريخ: ${date}`;
+  infoEl.textContent = `العميل: ${sale.customers?.name || 'عميل نقدي'} — الإجمالي: ${Number(sale.total).toFixed(2)} — التاريخ: ${date}`
+    + (fromCache ? ' (من النسخة المحلية)' : '');
   infoEl.style.display = 'block';
 
   saleReturnLines = (sale.sale_items || []).map(si => ({
     saleItemId: si.id, productId: si.product_id, name: si.products?.name || '—',
     soldQty: Number(si.quantity), unitPrice: Number(si.unit_price), returnQty: 0,
+    warehouseId: si.warehouse_id || null,
+    factor: si._cachedFactor != null ? si._cachedFactor : factorForSaleItem(si.product_id, si.product_unit_id),
   }));
 
   renderSaleReturnLines();
@@ -5450,6 +6096,78 @@ function updateSaleReturnTotal() {
   if (document.getElementById('saleReturnSplitToggle').checked) updateSaleReturnSplitDiffIndicator();
 }
 
+// مرتجع بيع أونلاين: يتبعت لسوباابيز على طول (بما فيه سطور الاسترداد المتعدد لو موجودة)
+async function performOnlineSaleReturn(ctx) {
+  const { total, reason, refundMethod, refundPaymentLines, validLines } = ctx;
+
+  const { data: saleReturn, error: srError } = await supabaseClient
+    .from('sale_returns')
+    .insert({
+      sale_id: saleReturnSale.id, branch_id: currentProfile.branch_id, user_id: currentProfile.id,
+      customer_id: saleReturnSale.customer_id, reason, refund_method: refundMethod, total,
+    }).select().single();
+  if (srError) throw srError;
+
+  const returnItems = validLines.map(l => ({
+    sale_return_id: saleReturn.id, sale_item_id: l.saleItemId, product_id: l.productId,
+    quantity: l.returnQty, unit_price: l.unitPrice, total: l.returnQty * l.unitPrice,
+  }));
+  const { error: itemsError } = await supabaseClient.from('sale_return_items').insert(returnItems);
+  if (itemsError) throw itemsError;
+
+  // تسجيل تفاصيل كل طريقة استرداد فى sale_return_payments لو الاسترداد بأكثر من طريقة
+  if (refundPaymentLines.length > 0) {
+    const { error: paymentsInsertError } = await supabaseClient
+      .from('sale_return_payments')
+      .insert(refundPaymentLines.map(l => ({ sale_return_id: saleReturn.id, method: l.method, amount: l.amount })));
+    if (paymentsInsertError) throw paymentsInsertError;
+  }
+
+  // لو الاسترداد رصيد على حساب العميل، يتحسم من رصيده (يقل مديونيته أو يزيد له رصيد)
+  if (refundMethod === 'credit' && saleReturnSale.customer_id) {
+    const { data: customer } = await supabaseClient.from('customers').select('balance').eq('id', saleReturnSale.customer_id).single();
+    const newBalance = (Number(customer?.balance) || 0) - total;
+    await supabaseClient.from('customers').update({ balance: newBalance }).eq('id', saleReturnSale.customer_id);
+  }
+
+  showToast('تم تسجيل مرتجع البيع وتحديث المخزون تلقائيًا');
+}
+
+// مرتجع بيع أوفلاين: بيتسجل في طابور الانتظار المحلي، والمخزون بيتزود متفائل
+// في نفس المخزن اللي اتباع منه أصلاً، وبيتزامن أول ما النت يرجع
+function queueOfflineSaleReturn(ctx) {
+  const { total, reason, refundMethod, refundPaymentLines, validLines } = ctx;
+  const localId = 'locret_' + (crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '_' + Math.random()));
+
+  validLines.forEach(l => adjustCachedStock(l.warehouseId, l.productId, l.returnQty * (l.factor || 1)));
+
+  if (refundMethod === 'credit' && saleReturnSale.customer_id) {
+    const idx = allCustomers.findIndex(c => c.id === saleReturnSale.customer_id);
+    if (idx !== -1) {
+      allCustomers[idx] = { ...allCustomers[idx], balance: (Number(allCustomers[idx].balance) || 0) - total };
+      offSet(OFF.customers, allCustomers);
+    }
+  }
+
+  queueOutboxItem({
+    localId, kind: 'sale_return', createdAt: new Date().toISOString(), attempts: 0,
+    payload: {
+      returnInsert: {
+        sale_id: saleReturnSale.id, branch_id: currentProfile.branch_id, user_id: currentProfile.id,
+        customer_id: saleReturnSale.customer_id, reason, refund_method: refundMethod, total,
+      },
+      items: validLines.map(l => ({
+        sale_item_id: l.saleItemId, product_id: l.productId, quantity: l.returnQty,
+        unit_price: l.unitPrice, total: l.returnQty * l.unitPrice,
+      })),
+      refundPaymentLines,
+      originalInvoiceLabel: saleReturnSale.invoice_number || saleReturnSale.id,
+    },
+  });
+
+  showToast('تم تسجيل المرتجع محليًا — هيتزامن تلقائي أول ما النت يرجع');
+}
+
 async function saveSaleReturn(e) {
   e.preventDefault();
   const errEl = document.getElementById('saleReturnModalError');
@@ -5476,7 +6194,7 @@ async function saveSaleReturn(e) {
     const entered = Math.round(refundPaymentLines.reduce((s, l) => s + l.amount, 0) * 100) / 100;
     const roundedTotal = Math.round(total * 100) / 100;
     if (Math.abs(entered - roundedTotal) > 0.009) {
-      errEl.textContent = `مجموع مبالغ الاسترداد (${entered.toFixed(2)}) لازم يساوي إجمالي المرتجع (${roundedTotal.toFixed(2)}) بالظبط — يرجى تصحيح المبالغ`;
+      errEl.textContent = `يجب أن يساوي مجموع مبالغ الاسترداد (${entered.toFixed(2)}) إجمالي المرتجع (${roundedTotal.toFixed(2)}) بالضبط — يرجى تصحيح المبالغ`;
       errEl.classList.add('show');
       return;
     }
@@ -5489,38 +6207,23 @@ async function saveSaleReturn(e) {
 
   try {
     const reason = document.getElementById('saleReturnReasonInput').value.trim() || null;
+    const ctx = { total, reason, refundMethod, refundPaymentLines, validLines };
 
-    const { data: saleReturn, error: srError } = await supabaseClient
-      .from('sale_returns')
-      .insert({
-        sale_id: saleReturnSale.id, branch_id: currentProfile.branch_id, user_id: currentProfile.id,
-        customer_id: saleReturnSale.customer_id, reason, refund_method: refundMethod, total,
-      }).select().single();
-    if (srError) throw srError;
-
-    const returnItems = validLines.map(l => ({
-      sale_return_id: saleReturn.id, sale_item_id: l.saleItemId, product_id: l.productId,
-      quantity: l.returnQty, unit_price: l.unitPrice, total: l.returnQty * l.unitPrice,
-    }));
-    const { error: itemsError } = await supabaseClient.from('sale_return_items').insert(returnItems);
-    if (itemsError) throw itemsError;
-
-    // تسجيل تفاصيل كل طريقة استرداد فى sale_return_payments لو الاسترداد بأكثر من طريقة
-    if (splitOn && refundPaymentLines.length > 0) {
-      const { error: paymentsInsertError } = await supabaseClient
-        .from('sale_return_payments')
-        .insert(refundPaymentLines.map(l => ({ sale_return_id: saleReturn.id, method: l.method, amount: l.amount })));
-      if (paymentsInsertError) throw paymentsInsertError;
+    if (!appIsOnline) {
+      queueOfflineSaleReturn(ctx);
+    } else {
+      try {
+        await performOnlineSaleReturn(ctx);
+      } catch (err) {
+        if (isNetworkError(err)) {
+          appIsOnline = false; updateOfflineBanner();
+          queueOfflineSaleReturn(ctx);
+        } else {
+          throw err;
+        }
+      }
     }
 
-    // لو الاسترداد رصيد على حساب العميل، يتحسم من رصيده (يقل مديونيته أو يزيد له رصيد)
-    if (refundMethod === 'credit' && saleReturnSale.customer_id) {
-      const { data: customer } = await supabaseClient.from('customers').select('balance').eq('id', saleReturnSale.customer_id).single();
-      const newBalance = (Number(customer?.balance) || 0) - total;
-      await supabaseClient.from('customers').update({ balance: newBalance }).eq('id', saleReturnSale.customer_id);
-    }
-
-    showToast('تم تسجيل مرتجع البيع وتحديث المخزون تلقائيًا');
     closeSaleReturnModal();
     await loadStockBalances();
     renderProducts();
@@ -5613,7 +6316,7 @@ const boNavGroups = [
   { toggle: 'stockNavToggle', group: 'stockNavGroup', sections: ['products','categories','unit-types','tax-rates','quick-discounts','stock'] },
   { toggle: 'salesNavToggle', group: 'salesNavGroup', sections: ['sales-list','customers','customer-types','sale-returns'] },
   { toggle: 'purchasesNavToggle', group: 'purchasesNavGroup', sections: ['suppliers','purchases','purchase-returns'] },
-  { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
+  { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['shifts','reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
   { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['payments','expense-items','expenses'] },
   { toggle: 'hrNavToggle', group: 'hrNavGroup', sections: ['employees','salaries'] },
   { toggle: 'adminNavToggle', group: 'adminNavGroup', sections: ['company-info','permissions','users','branches','branch-settings','print-settings','backup','reset-data'] }
@@ -6889,7 +7592,7 @@ async function saveProduct(e) {
     if (id) {
       for (const u of currentUnits) {
         if (!u.unit_type_id || !u.factor_to_base || u.sale_price === '' || u.sale_price === null) {
-          throw new Error('لازم تحدد نوع الوحدة والكمية والسعر لكل وحدة بيع إضافية مضافة');
+          throw new Error('يجب تحديد نوع الوحدة والكمية والسعر لكل وحدة بيع إضافية مضافة');
         }
       }
       const { data: existingUnits } = await supabaseClient
@@ -8580,7 +9283,7 @@ async function saveTransfer(e) {
   const note = document.getElementById('transferNote').value.trim() || null;
 
   if (!fromWarehouse || !toWarehouse) { errEl.textContent = 'اختر المخزنين'; errEl.classList.add('show'); return; }
-  if (fromWarehouse === toWarehouse) { errEl.textContent = 'لازم يكون مخزن المصدر مختلف عن مخزن الوجهة'; errEl.classList.add('show'); return; }
+  if (fromWarehouse === toWarehouse) { errEl.textContent = 'يجب أن يكون مخزن المصدر مختلفًا عن مخزن الوجهة'; errEl.classList.add('show'); return; }
 
   const lines = currentTransferItems
     .filter(i => i.product_id && Number(i.quantity) > 0)
@@ -9821,7 +10524,7 @@ async function saveEditSalePayment() {
   const target = Math.round((Number(editSalePaymentSale.paid_amount) || 0) * 100) / 100;
   const entered = Math.round(lines.reduce((s, l) => s + l.amount, 0) * 100) / 100;
   if (Math.abs(entered - target) > 0.009) {
-    errEl.textContent = `مجموع المبالغ (${entered.toFixed(2)}) لازم يساوي المبلغ المحصّل فعليًا من الفاتورة (${target.toFixed(2)}) بالظبط — التصحيح بيغيّر طريقة الدفع بس مش المبلغ`;
+    errEl.textContent = `يجب أن يساوي مجموع المبالغ (${entered.toFixed(2)}) المبلغ المحصَّل فعليًا من الفاتورة (${target.toFixed(2)}) بالضبط — التصحيح يغيّر طريقة الدفع فقط دون المبلغ`;
     errEl.classList.add('show');
     return;
   }
@@ -10401,6 +11104,7 @@ async function viewPastZReport(shift) {
   showZReport(shift, summary);
   currentProfile = savedProfile;
   document.getElementById('zReportLogoutBtn').style.display = 'none';
+  document.getElementById('closeZReportBtn').style.display = 'inline-block';
 }
 
 
