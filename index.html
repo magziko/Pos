@@ -79,7 +79,8 @@ a { color: inherit; }
 .footnote a, .footnote button.link-btn { color: var(--teal-700); font-weight: 600; text-decoration: none; background: none; padding: 0; font-size: inherit; }
 
 /* -------- Quick PIN login -------- */
-.pin-dots { display: flex; justify-content: center; gap: 14px; margin: 8px 0 24px; }
+.pin-dots { position: relative; display: flex; justify-content: center; align-items: center; gap: 14px; margin: 8px 0 24px; padding: 14px 0; cursor: text; }
+.pin-hidden-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: none; padding: 0; margin: 0; background: transparent; font-size: 16px; cursor: text; }
 .pin-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border); background: var(--surface-sunken); transition: background 0.12s ease, border-color 0.12s ease, transform 0.12s ease; }
 .pin-dot.filled { background: var(--teal-700); border-color: var(--teal-700); transform: scale(1.1); }
 .pin-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
@@ -567,6 +568,17 @@ a { color: inherit; }
 .daily-trend-bar { fill: var(--teal-500); }
 .daily-trend-bar:hover { fill: var(--teal-700); }
 .report-inline-select { background: var(--surface-sunken); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font-size: 12.5px; color: var(--ink); }
+.searchable-select { position: relative; width: 100%; }
+.searchable-select--compact { width: 190px; }
+.searchable-select-input { width: 100%; cursor: text; }
+.searchable-select--compact .searchable-select-input { background: var(--surface-sunken); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font-size: 12.5px; color: var(--ink); }
+.searchable-select-dropdown { display: none; position: absolute; top: calc(100% + 4px); right: 0; left: 0; z-index: 40; max-height: 260px; overflow-y: auto; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow-card); }
+.searchable-select-dropdown.show { display: block; }
+.searchable-select-option { padding: 9px 14px; font-size: 13.5px; cursor: pointer; }
+.searchable-select-option:hover, .searchable-select-option.active { background: var(--teal-100); }
+.searchable-select-option.selected { font-weight: 700; color: var(--teal-700); }
+.searchable-select-option.clear-option { color: var(--ink-soft); font-style: italic; border-bottom: 1px solid var(--border); }
+.searchable-select-empty { padding: 12px 14px; font-size: 13px; color: var(--ink-soft); text-align: center; }
 .payment-chart-wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 30px; margin-bottom: 18px; }
 .payment-donut svg { display: block; }
 .payment-chart-legend { display: flex; flex-direction: column; gap: 9px; min-width: 190px; flex: 1; }
@@ -764,17 +776,18 @@ a { color: inherit; }
       <div class="error-msg" id="pinLoginError"></div>
       <div class="pin-dots" id="pinDots">
         <span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span><span class="pin-dot"></span>
+        <input type="tel" id="pinHiddenInput" class="pin-hidden-input" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" aria-label="رمز PIN">
       </div>
       <div class="pin-keypad">
-        <button type="button" class="pin-key" onclick="pinKeyPress('1')">1</button>
-        <button type="button" class="pin-key" onclick="pinKeyPress('2')">2</button>
-        <button type="button" class="pin-key" onclick="pinKeyPress('3')">3</button>
-        <button type="button" class="pin-key" onclick="pinKeyPress('4')">4</button>
-        <button type="button" class="pin-key" onclick="pinKeyPress('5')">5</button>
-        <button type="button" class="pin-key" onclick="pinKeyPress('6')">6</button>
-        <button type="button" class="pin-key" onclick="pinKeyPress('7')">7</button>
-        <button type="button" class="pin-key" onclick="pinKeyPress('8')">8</button>
         <button type="button" class="pin-key" onclick="pinKeyPress('9')">9</button>
+        <button type="button" class="pin-key" onclick="pinKeyPress('8')">8</button>
+        <button type="button" class="pin-key" onclick="pinKeyPress('7')">7</button>
+        <button type="button" class="pin-key" onclick="pinKeyPress('6')">6</button>
+        <button type="button" class="pin-key" onclick="pinKeyPress('5')">5</button>
+        <button type="button" class="pin-key" onclick="pinKeyPress('4')">4</button>
+        <button type="button" class="pin-key" onclick="pinKeyPress('3')">3</button>
+        <button type="button" class="pin-key" onclick="pinKeyPress('2')">2</button>
+        <button type="button" class="pin-key" onclick="pinKeyPress('1')">1</button>
         <button type="button" class="pin-key pin-key-ghost" onclick="pinClear()">مسح</button>
         <button type="button" class="pin-key" onclick="pinKeyPress('0')">0</button>
         <button type="button" class="pin-key pin-key-ghost" onclick="pinBackspace()">⌫</button>
@@ -1985,7 +1998,11 @@ a { color: inherit; }
               <div class="report-subtitle-row">
                 <div class="report-subtitle">مقارنة سعر الشراء عبر الوقت</div>
                 <div class="report-subtitle-actions">
-                  <select id="ppcProductSelect" class="report-inline-select"><option value="">اختر صنفًا...</option></select>
+                  <div class="searchable-select searchable-select--compact" id="ppcProductSelect_wrap">
+                    <input type="text" id="ppcProductSelect_search" class="searchable-select-input" placeholder="ابحث عن صنف..." autocomplete="off">
+                    <input type="hidden" id="ppcProductSelect">
+                    <div class="searchable-select-dropdown" id="ppcProductSelect_dropdown"></div>
+                  </div>
                   <button class="bo-icon-btn" id="exportPurchasePriceCompareBtn">تصدير إكسل</button>
                 </div>
               </div>
@@ -2032,6 +2049,10 @@ a { color: inherit; }
               <div class="report-type-icon">📦</div>
               <div class="report-type-label">مستوى المخزون الحالي</div>
             </button>
+            <button type="button" class="report-type-card" data-report="stocktake-items">
+              <div class="report-type-icon">🗂️</div>
+              <div class="report-type-label">تقرير جرد الأصناف (المتحركة فقط)</div>
+            </button>
             <button type="button" class="report-type-card" data-report="low-stock">
               <div class="report-type-icon">⚠️</div>
               <div class="report-type-label">تنبيهات نقص المخزون</div>
@@ -2052,13 +2073,21 @@ a { color: inherit; }
               <div class="report-type-icon">🔄</div>
               <div class="report-type-label">حركة المخزون التفصيلية</div>
             </button>
+            <button type="button" class="report-type-card" data-report="product-ledger">
+              <div class="report-type-icon">🧾</div>
+              <div class="report-type-label">كشف حركة صنف (تاريخ كامل)</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="movement-analysis">
+              <div class="report-type-icon">📊</div>
+              <div class="report-type-label">تحليل حركة الصنف</div>
+            </button>
             <button type="button" class="report-type-card" data-report="transfers">
               <div class="report-type-icon">🚚</div>
               <div class="report-type-label">التحويلات بين المخازن</div>
             </button>
             <button type="button" class="report-type-card" data-report="adjustments">
               <div class="report-type-icon">📝</div>
-              <div class="report-type-label">تسويات الجرد (الفروقات)</div>
+              <div class="report-type-label">تقرير الجرد (تسويات وفروقات)</div>
             </button>
           </div>
 
@@ -2096,6 +2125,42 @@ a { color: inherit; }
                   <thead><tr><th>الصنف</th><th>الفئة</th><th>الوحدة</th><th>الكمية المتاحة</th><th>حد الطلب</th><th>الحالة</th></tr></thead>
                   <tbody id="invLevelsTableBody">
                     <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- تقرير جرد الأصناف (المتحركة فقط) -->
+            <div id="inventoryReportDetail-stocktake-items" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">تقرير جرد الأصناف — كل صنف تم عليه حركة ورصيده الحالي</div>
+                <div class="report-subtitle-actions">
+                  <select id="stItemsWarehouseFilter" class="report-inline-select"><option value="">كل المخازن</option></select>
+                  <button class="bo-icon-btn" id="exportStItemsBtn">تصدير إكسل</button>
+                </div>
+              </div>
+              <div class="search-row" style="margin-bottom:14px;">
+                <input type="text" id="stItemsSearchInput" placeholder="ابحث باسم الصنف...">
+              </div>
+              <div class="report-cards">
+                <div class="report-card">
+                  <div class="report-card-label">عدد الأصناف التي عليها حركة</div>
+                  <div class="report-card-value num" id="stItemsCount">0</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي الرصيد الحالي</div>
+                  <div class="report-card-value num positive" id="stItemsTotalQty">0</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">قيمة الرصيد الحالي (بسعر التكلفة)</div>
+                  <div class="report-card-value num" id="stItemsTotalValue">0.00</div>
+                </div>
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>الصنف</th><th>الفئة</th><th>الوحدة</th><th>الرصيد الحالي</th><th>قيمة الرصيد</th><th>عدد الحركات</th><th>آخر حركة</th></tr></thead>
+                  <tbody id="stItemsTableBody">
+                    <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -2212,6 +2277,155 @@ a { color: inherit; }
               </div>
             </div>
 
+            <!-- كشف حركة صنف (تاريخ كامل) -->
+            <div id="inventoryReportDetail-product-ledger" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">كشف حركة صنف — كل الحركات بالتاريخ مع الرصيد التراكمي</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-icon-btn" id="exportProductLedgerBtn">تصدير إكسل</button>
+                </div>
+              </div>
+
+              <div class="report-filters">
+                <div class="field" style="min-width:220px;">
+                  <label>الصنف</label>
+                  <div class="searchable-select" id="plProductSelect_wrap">
+                    <input type="text" id="plProductSelect_search" class="searchable-select-input" placeholder="ابحث عن صنف بالاسم..." autocomplete="off">
+                    <input type="hidden" id="plProductSelect">
+                    <div class="searchable-select-dropdown" id="plProductSelect_dropdown"></div>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>المخزن</label>
+                  <select id="plWarehouseFilter"><option value="">كل المخازن</option></select>
+                </div>
+                <div class="field"><label>من تاريخ (اختياري)</label><input type="date" id="plFromDate"></div>
+                <div class="field"><label>إلى تاريخ (اختياري)</label><input type="date" id="plToDate"></div>
+                <button class="bo-add-btn" id="runProductLedgerBtn">عرض الكشف</button>
+              </div>
+
+              <div class="report-cards" id="plCardsRow" style="display:none;">
+                <div class="report-card">
+                  <div class="report-card-label">الرصيد الافتتاحي</div>
+                  <div class="report-card-value num" id="plOpeningBalance">0</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي الوارد</div>
+                  <div class="report-card-value num positive" id="plTotalIn">0</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي الصادر</div>
+                  <div class="report-card-value num negative" id="plTotalOut">0</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">الرصيد الختامي (الحالي)</div>
+                  <div class="report-card-value num" id="plClosingBalance">0</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">عدد الحركات</div>
+                  <div class="report-card-value num" id="plMovementCount">0</div>
+                </div>
+              </div>
+
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead>
+                    <tr><th>التاريخ</th><th>نوع الحركة</th><th>المخزن</th><th>وارد</th><th>صادر</th><th>الرصيد بعد الحركة</th><th>ملاحظة</th></tr>
+                  </thead>
+                  <tbody id="productLedgerTableBody">
+                    <tr><td colspan="7" class="bo-empty">اختر صنفًا ثم اضغط "عرض الكشف"</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- تحليل حركة الصنف -->
+            <div id="inventoryReportDetail-movement-analysis" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">تحليل حركة الصنف — مبيعات ومشتريات ومرتجعات وتحويلات لصنف واحد خلال فترة، مع معدلات البيع والدوران والتغطية</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-icon-btn" id="exportMoveAnalysisBtn">تصدير إكسل</button>
+                </div>
+              </div>
+
+              <div class="quick-range-row" id="invMoveAnalysisQuickRange" style="margin-bottom:12px;">
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn active" data-invqr="30days">آخر 30 يوم</button>
+                <button class="quick-range-btn" data-invqr="90days">آخر 90 يوم</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+              </div>
+
+              <div class="report-filters">
+                <div class="field" style="min-width:220px;">
+                  <label>الصنف</label>
+                  <div class="searchable-select" id="maProductSelect_wrap">
+                    <input type="text" id="maProductSelect_search" class="searchable-select-input" placeholder="ابحث عن صنف بالاسم..." autocomplete="off">
+                    <input type="hidden" id="maProductSelect">
+                    <div class="searchable-select-dropdown" id="maProductSelect_dropdown"></div>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>المخزن</label>
+                  <select id="maWarehouseFilter"><option value="">كل المخازن</option></select>
+                </div>
+                <div class="field"><label>من تاريخ</label><input type="date" id="maFromDate"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="maToDate"></div>
+                <button class="bo-add-btn" id="runMoveAnalysisBtn">تحليل</button>
+              </div>
+
+              <div class="report-cards" id="maCardsRow" style="display:none;">
+                <div class="report-card">
+                  <div class="report-card-label">الرصيد الحالي</div>
+                  <div class="report-card-value num" id="maCurrentStock">0</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي المبيعات (الكمية)</div>
+                  <div class="report-card-value num negative" id="maSoldQty">0</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي المشتريات (الكمية)</div>
+                  <div class="report-card-value num positive" id="maPurchasedQty">0</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">مرتجعات المبيعات</div>
+                  <div class="report-card-value num positive" id="maSaleReturnQty">0</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">مرتجعات المشتريات</div>
+                  <div class="report-card-value num negative" id="maPurchaseReturnQty">0</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">تحويل وارد / صادر</div>
+                  <div class="report-card-value num" id="maTransfers">0 / 0</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">صافي الحركة خلال الفترة</div>
+                  <div class="report-card-value num" id="maNetMovement">0</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">متوسط المبيعات اليومية</div>
+                  <div class="report-card-value num" id="maAvgDailySales">0</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">معدل دوران المخزون خلال الفترة</div>
+                  <div class="report-card-value num" id="maTurnoverRate">—</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">أيام التغطية المتبقية (تقديري)</div>
+                  <div class="report-card-value num" id="maDaysCoverage">—</div>
+                </div>
+              </div>
+
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>نوع الحركة</th><th>وارد</th><th>صادر</th><th>عدد الحركات</th></tr></thead>
+                  <tbody id="maBreakdownTableBody">
+                    <tr><td colspan="4" class="bo-empty">اختر صنفًا ثم اضغط "تحليل"</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
             <!-- التحويلات بين المخازن -->
             <div id="inventoryReportDetail-transfers" class="report-detail" style="display:none;">
               <div class="report-subtitle-row">
@@ -2255,7 +2469,7 @@ a { color: inherit; }
             <!-- تسويات الجرد -->
             <div id="inventoryReportDetail-adjustments" class="report-detail" style="display:none;">
               <div class="report-subtitle-row">
-                <div class="report-subtitle">تسويات الجرد (الفروقات)</div>
+                <div class="report-subtitle">تقرير الجرد — عمليات الجرد وفروقات الكميات والقيمة</div>
                 <div class="report-subtitle-actions">
                   <button class="bo-icon-btn" id="exportInvAdjustBtn">تصدير إكسل</button>
                 </div>
@@ -2270,6 +2484,10 @@ a { color: inherit; }
               <div class="report-filters">
                 <div class="field"><label>من تاريخ</label><input type="date" id="invAdjustFromDate"></div>
                 <div class="field"><label>إلى تاريخ</label><input type="date" id="invAdjustToDate"></div>
+                <div class="field">
+                  <label>المخزن</label>
+                  <select id="invAdjustWarehouseFilter"><option value="">كل المخازن</option></select>
+                </div>
                 <button class="bo-add-btn" id="runInvAdjustBtn">تحديث</button>
               </div>
               <div class="report-cards">
@@ -2278,23 +2496,40 @@ a { color: inherit; }
                   <div class="report-card-value num" id="invAdjustCount">0</div>
                 </div>
                 <div class="report-card">
-                  <div class="report-card-label">إجمالي الزيادة</div>
+                  <div class="report-card-label">عدد الأصناف المتأثرة</div>
+                  <div class="report-card-value num" id="invAdjustItemsCount">0</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي الزيادة (كمية)</div>
                   <div class="report-card-value num positive" id="invAdjustIncrease">0</div>
                 </div>
                 <div class="report-card">
-                  <div class="report-card-label">إجمالي النقص</div>
+                  <div class="report-card-label">إجمالي النقص (كمية)</div>
                   <div class="report-card-value num negative" id="invAdjustDecrease">0</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">قيمة الزيادة (بسعر التكلفة)</div>
+                  <div class="report-card-value num positive" id="invAdjustIncreaseValue">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">قيمة النقص (بسعر التكلفة)</div>
+                  <div class="report-card-value num negative" id="invAdjustDecreaseValue">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">صافي أثر الجرد على قيمة المخزون</div>
+                  <div class="report-card-value num" id="invAdjustNetValue">0.00</div>
                 </div>
               </div>
               <div class="bo-table-wrap">
                 <table class="bo-table">
-                  <thead><tr><th>التاريخ</th><th>المخزن</th><th>الصنف</th><th>الرصيد قبل</th><th>الرصيد بعد</th><th>الفرق</th></tr></thead>
+                  <thead><tr><th>التاريخ</th><th>المخزن</th><th>الصنف</th><th>الرصيد قبل</th><th>الرصيد بعد</th><th>الفرق (كمية)</th><th>قيمة الفرق</th><th>بواسطة</th><th>السبب / الملاحظة</th></tr></thead>
                   <tbody id="invAdjustmentsTableBody">
-                    <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+                    <tr><td colspan="9" class="bo-empty">جاري التحميل...</td></tr>
                   </tbody>
                 </table>
               </div>
             </div>
+
 
             <!-- الأصناف الأكثر حركة -->
             <div id="inventoryReportDetail-top-movers" class="report-detail" style="display:none;">
@@ -2415,6 +2650,22 @@ a { color: inherit; }
             <button type="button" class="report-type-card" data-report="tax">
               <div class="report-type-icon">🧮</div>
               <div class="report-type-label">تقرير الضريبة المحصلة</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="fixed-assets">
+              <div class="report-type-icon">🏭</div>
+              <div class="report-type-label">الأصول الثابتة والإهلاك</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="cash-movements">
+              <div class="report-type-icon">🏦</div>
+              <div class="report-type-label">حركة الخزائن والحسابات البنكية</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="capital-movements">
+              <div class="report-type-icon">🏛️</div>
+              <div class="report-type-label">حركة رأس المال</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="expenses-analysis">
+              <div class="report-type-icon">🧾</div>
+              <div class="report-type-label">تحليل المصروفات</div>
             </button>
           </div>
 
@@ -2921,6 +3172,303 @@ a { color: inherit; }
                 </table>
               </div>
             </div>
+
+            <div id="accountingReportDetail-fixed-assets" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">الأصول الثابتة والإهلاك</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-icon-btn" id="refreshFixedAssetsReportBtn">تحديث</button>
+                  <button class="bo-icon-btn" id="exportFixedAssetsReportBtn">تصدير إكسل</button>
+                </div>
+              </div>
+              <div style="font-size:12.5px; color:var(--ink-soft); margin:-10px 0 16px;">
+                القيمة الدفترية ومجمع الإهلاك محسوبين لحظيًا حتى تاريخ اليوم (قسط ثابت سنوي بالتناسب مع عدد الأيام من تاريخ الشراء).
+              </div>
+
+              <div class="report-filters">
+                <div class="field" id="faReportBranchField" style="display:none;">
+                  <label>الفرع</label>
+                  <select id="faReportBranchFilter"><option value="">كل الفروع</option></select>
+                </div>
+                <div class="field">
+                  <label>الحالة</label>
+                  <select id="faReportStatusFilter">
+                    <option value="active">الأصول النشطة فقط</option>
+                    <option value="disposed">المستبعدة فقط</option>
+                    <option value="all">الكل</option>
+                  </select>
+                </div>
+                <button class="bo-add-btn" id="runFixedAssetsReportBtn">تحديث</button>
+              </div>
+
+              <div class="report-cards">
+                <div class="report-card">
+                  <div class="report-card-label">عدد الأصول</div>
+                  <div class="report-card-value num" id="faReportCount">0</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي قيمة الشراء</div>
+                  <div class="report-card-value num" id="faReportTotalPurchase">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي مجمع الإهلاك</div>
+                  <div class="report-card-value num negative" id="faReportTotalDepreciation">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي القيمة الدفترية</div>
+                  <div class="report-card-value num positive" id="faReportTotalBookValue">0.00</div>
+                </div>
+              </div>
+
+              <div id="faReportByBranchWrap" style="display:none;">
+                <div class="report-subtitle-row">
+                  <div class="report-subtitle" style="font-size:14px;">ملخص حسب الفرع</div>
+                </div>
+                <div class="bo-table-wrap">
+                  <table class="bo-table">
+                    <thead><tr><th>الفرع</th><th>عدد الأصول</th><th>قيمة الشراء</th><th>مجمع الإهلاك</th><th>القيمة الدفترية</th></tr></thead>
+                    <tbody id="faReportByBranchTableBody">
+                      <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="report-subtitle-row">
+                <div class="report-subtitle" style="font-size:14px;">تفصيل الأصول</div>
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead>
+                    <tr>
+                      <th>الفرع</th>
+                      <th>الكود</th>
+                      <th>الاسم</th>
+                      <th>الفئة</th>
+                      <th>تاريخ الشراء</th>
+                      <th>قيمة الشراء</th>
+                      <th>نسبة الإهلاك السنوية</th>
+                      <th>مجمع الإهلاك</th>
+                      <th>القيمة الدفترية</th>
+                      <th>الحالة</th>
+                    </tr>
+                  </thead>
+                  <tbody id="faReportTableBody">
+                    <tr><td colspan="10" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="accountingReportDetail-cash-movements" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">حركة الخزائن والحسابات البنكية</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-icon-btn" id="exportCashMovementsReportBtn">تصدير إكسل</button>
+                </div>
+              </div>
+
+              <div class="quick-range-row" id="cmQuickRange" style="margin-bottom:12px;">
+                <button class="quick-range-btn active" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="yesterday">أمس</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn" data-invqr="30days">آخر 30 يوم</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+              </div>
+
+              <div class="report-filters">
+                <div class="field"><label>من تاريخ</label><input type="date" id="cmFromDate"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="cmToDate"></div>
+                <div class="field" id="cmBranchField" style="display:none;">
+                  <label>الفرع</label>
+                  <select id="cmBranchFilter"><option value="">كل الفروع</option></select>
+                </div>
+                <div class="field">
+                  <label>الخزينة / الحساب</label>
+                  <select id="cmAccountFilter"><option value="">كل الخزائن والحسابات</option></select>
+                </div>
+                <button class="bo-add-btn" id="runCashMovementsReportBtn">تحديث</button>
+              </div>
+
+              <div class="report-cards">
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي الإيداعات</div>
+                  <div class="report-card-value num positive" id="cmTotalDeposits">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي المسحوبات</div>
+                  <div class="report-card-value num negative" id="cmTotalWithdrawals">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي التحويلات</div>
+                  <div class="report-card-value num" id="cmTotalTransfers">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">عدد الحركات</div>
+                  <div class="report-card-value num" id="cmMovementsCount">0</div>
+                </div>
+              </div>
+
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead>
+                    <tr>
+                      <th>التاريخ</th>
+                      <th>الفرع</th>
+                      <th>الخزينة / الحساب</th>
+                      <th>نوع الحركة</th>
+                      <th>البيان</th>
+                      <th>المبلغ</th>
+                      <th>بواسطة</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cmReportTableBody">
+                    <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="accountingReportDetail-capital-movements" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">حركة رأس المال</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-icon-btn" id="exportCapitalMovementsReportBtn">تصدير إكسل</button>
+                </div>
+              </div>
+              <div style="font-size:12.5px; color:var(--ink-soft); margin:-10px 0 16px;">
+                سجل تاريخي لرأس المال المبدئي وأي ضخ إضافي من المالك والمسحوبات الشخصية. الأرقام دي بتمثل صافي مساهمات المالك فقط، مش صافي حقوق الملكية الكامل.
+              </div>
+
+              <div class="quick-range-row" id="cmpQuickRange" style="margin-bottom:12px;">
+                <button class="quick-range-btn active" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="yesterday">أمس</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn" data-invqr="30days">آخر 30 يوم</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+              </div>
+
+              <div class="report-filters">
+                <div class="field"><label>من تاريخ</label><input type="date" id="cmpFromDate"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="cmpToDate"></div>
+                <div class="field" id="cmpBranchField" style="display:none;">
+                  <label>الفرع</label>
+                  <select id="cmpBranchFilter"><option value="">كل الفروع</option></select>
+                </div>
+                <button class="bo-add-btn" id="runCapitalMovementsReportBtn">تحديث</button>
+              </div>
+
+              <div class="report-cards">
+                <div class="report-card">
+                  <div class="report-card-label">رأس المال المبدئي</div>
+                  <div class="report-card-value num" id="cmpInitialTotal">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي الضخ الإضافي</div>
+                  <div class="report-card-value num positive" id="cmpInjectionTotal">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي المسحوبات الشخصية</div>
+                  <div class="report-card-value num negative" id="cmpDrawingTotal">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">صافي مساهمات المالك (خلال الفترة)</div>
+                  <div class="report-card-value num" id="cmpNetTotal">0.00</div>
+                </div>
+              </div>
+
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead>
+                    <tr>
+                      <th>التاريخ</th>
+                      <th>الفرع</th>
+                      <th>النوع</th>
+                      <th>المبلغ</th>
+                      <th>الخزينة / الحساب</th>
+                      <th>أثّرت على الرصيد؟</th>
+                      <th>ملاحظة</th>
+                      <th>بواسطة</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cmpReportTableBody">
+                    <tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="accountingReportDetail-expenses-analysis" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">تحليل المصروفات</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-icon-btn" id="refreshExpensesAnalysisBtn">تحديث</button>
+                  <button class="bo-icon-btn" id="exportExpensesAnalysisBtn">تصدير إكسل</button>
+                </div>
+              </div>
+
+              <div class="quick-range-row" id="expensesAnalysisQuickRange" style="margin-bottom:12px;">
+                <button class="quick-range-btn active" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+                <button class="quick-range-btn" data-invqr="30days">آخر 30 يوم</button>
+              </div>
+
+              <div class="report-filters">
+                <div class="field"><label>من تاريخ</label><input type="date" id="expensesAnalysisFromDate"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="expensesAnalysisToDate"></div>
+                <div class="field" id="expensesAnalysisBranchField" style="display:none;">
+                  <label>الفرع</label>
+                  <select id="expensesAnalysisBranchFilter"><option value="">كل الفروع</option></select>
+                </div>
+                <button class="bo-add-btn" id="runExpensesAnalysisBtn">تحديث</button>
+              </div>
+
+              <div class="report-cards">
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي المصروفات في الفترة</div>
+                  <div class="report-card-value num negative" id="expensesAnalysisTotal">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">عدد المصروفات</div>
+                  <div class="report-card-value num" id="expensesAnalysisCount">0</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">متوسط المصروف</div>
+                  <div class="report-card-value num" id="expensesAnalysisAvg">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">أعلى بند</div>
+                  <div class="report-card-value" id="expensesAnalysisTopItem" style="font-size:15px;">—</div>
+                </div>
+              </div>
+
+              <div class="report-subtitle-row">
+                <div class="report-subtitle" style="font-size:14px;">التوزيع حسب البند</div>
+              </div>
+              <div id="expensesByItemChart"></div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>البند</th><th>عدد المصروفات</th><th>الإجمالي</th><th>النسبة%</th></tr></thead>
+                  <tbody id="expensesByItemTableBody">
+                    <tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="report-subtitle-row" id="expensesByBranchTitleRow" style="display:none;">
+                <div class="report-subtitle" style="font-size:14px;">التوزيع حسب الفرع</div>
+              </div>
+              <div id="expensesByBranchChart"></div>
+              <div class="bo-table-wrap" id="expensesByBranchTableWrap" style="display:none;">
+                <table class="bo-table">
+                  <thead><tr><th>الفرع</th><th>عدد المصروفات</th><th>الإجمالي</th><th>النسبة%</th></tr></thead>
+                  <tbody id="expensesByBranchTableBody">
+                    <tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -2949,6 +3497,10 @@ a { color: inherit; }
             <button type="button" class="report-type-card" data-report="activity-log">
               <div class="report-type-icon">🔍</div>
               <div class="report-type-label">سجل نشاط المستخدمين</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="returns-analysis">
+              <div class="report-type-icon">↩️</div>
+              <div class="report-type-label">تحليل المرتجعات</div>
             </button>
           </div>
 
@@ -3139,6 +3691,92 @@ a { color: inherit; }
               </div>
               <div id="activityLogNotSetupNote" class="bo-empty" style="display:none; padding:16px;">
                 سجل النشاط غير مُفعّل بعد على قاعدة البيانات. راجع ملف SQL المرفق لتفعيله.
+              </div>
+            </div>
+
+            <!-- تحليل المرتجعات -->
+            <div id="otherReportDetail-returns-analysis" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">تحليل المرتجعات</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-icon-btn" id="refreshReturnsAnalysisBtn">تحديث</button>
+                  <button class="bo-icon-btn" id="exportReturnsAnalysisBtn">تصدير إكسل</button>
+                </div>
+              </div>
+              <div class="quick-range-row" id="otherReturnsQuickRange" style="margin-bottom:12px;">
+                <button class="quick-range-btn active" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="yesterday">أمس</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn" data-invqr="30days">آخر 30 يوم</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+              </div>
+              <div class="report-filters">
+                <div class="field"><label>من تاريخ</label><input type="date" id="otherReturnsFromDate"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="otherReturnsToDate"></div>
+                <div class="field">
+                  <label>نوع المرتجع</label>
+                  <select id="otherReturnsTypeFilter">
+                    <option value="">الكل (مبيعات + مشتريات)</option>
+                    <option value="sale">مرتجعات المبيعات فقط</option>
+                    <option value="purchase">مرتجعات المشتريات فقط</option>
+                  </select>
+                </div>
+                <div class="field" id="otherReturnsBranchField" style="display:none;">
+                  <label>الفرع</label>
+                  <select id="otherReturnsBranchFilter"><option value="">كل الفروع</option></select>
+                </div>
+                <button class="bo-add-btn" id="runReturnsAnalysisBtn">تحديث</button>
+              </div>
+
+              <div class="report-cards">
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي مرتجعات المبيعات</div>
+                  <div class="report-card-value num negative" id="returnsAnalysisSalesTotal">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي مرتجعات المشتريات</div>
+                  <div class="report-card-value num negative" id="returnsAnalysisPurchaseTotal">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي المرتجعات (الكل)</div>
+                  <div class="report-card-value num negative" id="returnsAnalysisGrandTotal">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">عدد عمليات الإرجاع</div>
+                  <div class="report-card-value num" id="returnsAnalysisCount">0</div>
+                </div>
+              </div>
+
+              <div class="report-subtitle-row">
+                <div class="report-subtitle" style="font-size:14px;">قيمة المرتجعات بمرور الوقت</div>
+              </div>
+              <div class="daily-trend-chart-wrap">
+                <div class="daily-trend-chart" id="returnsTrendChart"></div>
+              </div>
+
+              <div class="report-subtitle-row">
+                <div class="report-subtitle" style="font-size:14px;">الأصناف الأكثر إرجاعًا</div>
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>الصنف</th><th>النوع</th><th>عدد مرات الإرجاع</th><th>الكمية المرتجعة</th><th>القيمة</th></tr></thead>
+                  <tbody id="returnsTopProductsTableBody">
+                    <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="report-subtitle-row">
+                <div class="report-subtitle" style="font-size:14px;">أسباب الإرجاع</div>
+              </div>
+              <div id="returnsReasonsChart"></div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>السبب</th><th>النوع</th><th>عدد العمليات</th><th>القيمة</th><th>النسبة%</th></tr></thead>
+                  <tbody id="returnsReasonsTableBody">
+                    <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -4973,6 +5611,17 @@ const SUPABASE_URL = 'https://aagyaxicphooldhwycko.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhZ3lheGljcGhvb2xkaHd5Y2tvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1ODI0MTQsImV4cCI6MjEwMTE1ODQxNH0.IXId6VALd6WwufMwyHjwK12zYXAozPOXUdyjM4omUh4';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Supabase بيجدّد التوكن تلقائيًا فى الخلفية بين الحين والتاني (والـ refresh token يتغيّر
+// معاه فى كل مرة، وميصلحش يُستخدم مرة تانية). لو ماتابعناش هذا التجديد، الكاش المحفوظ وقت
+// آخر دخول بكلمة المرور هيبقى قديم بسرعة، وأول محاولة دخول بالـ PIN بعده هترفض. الحل: كل
+// ما الجلسة تتجدّد لنفس المستخدم الحالي، نحدّث الكاش فورًا بأحدث زوج توكنات صالح
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  if ((event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') && session?.user && currentProfile && session.user.id === currentProfile.id) {
+    cachePinProfile(currentProfile, session);
+    needsReloginToSync = false;
+  }
+});
+
 // عميل مساعد لإنشاء مستخدمين جدد من لوحة التحكم من غير ما نفصل جلسة الأدمن الحالي
 // (signUp العادي يستبدل الجلسة النشطة؛ هذا العميل منفصل ولا يحفظ جلسة، لذا يبقى الأدمن مسجلاً دخوله)
 const adminCreateClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -4996,7 +5645,17 @@ function loginIdentifierToEmail(identifier) {
 let currentProfile = null;
 // pinOfflineSession: true لو الدخول تم بالـ PIN بدون جلسة سوباابيز حقيقية (شوف قسم دخول PIN تحت)
 let pinOfflineSession = false;
+// needsReloginToSync: true لما جلسة Supabase الحقيقية المخزَّنة محليًا (وقت آخر دخول بكلمة
+// المرور) تكون انتهت صلاحيتها أو استُبدلت (الـ refresh token دوّار ولا يُستخدم أكثر من مرة)،
+// فمحاولة استعادتها بعد الدخول بالـ PIN تفشل. فى هذه الحالة auth.uid() فى قاعدة البيانات
+// بيبقى فارغًا، فأي قراءة أو كتابة حقيقية هترفضها سياسات RLS (تظهر النتائج فارغة فى القراءة،
+// أو تظهر رسالة "new row violates row-level security policy" فى الكتابة) — لذلك نتعامل مع
+// هذه الحالة تمامًا زي انقطاع الإنترنت: نستخدم النسخة المحلية المخزَّنة ونضيف العمليات لقائمة
+// الانتظار (outbox) بدل محاولة تنفيذها مباشرة على السيرفر بجلسة غير صالحة
 let needsReloginToSync = false;
+// تُستخدم فى أي مكان كان بيتحقق من appIsOnline فقط قبل عمل قراءة/كتابة حقيقية على
+// Supabase، حتى لا يحاول التنفيذ بجلسة PIN فشلت استعادتها رغم توفر الإنترنت فعليًا
+function sessionUsable() { return appIsOnline && !needsReloginToSync; }
 let currentShift = null;
 let shiftCloseSummary = null;
 
@@ -5017,6 +5676,128 @@ function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+// ============================================================
+// قائمة صنف قابلة للبحث (Searchable product select)
+// ------------------------------------------------------------
+// بديل لقائمة <select> عادية في اختيار الصنف بالتقارير: بتفضل
+// قائمة منسدلة زي ما هي، لكن مع مربع بحث بيفلتر الأصناف بأي جزء
+// من الاسم — مفيد لما تكون قائمة الأصناف فيها آلاف العناصر.
+// الاستخدام:
+//   HTML: <div class="field"><label>الصنف</label>
+//           <div class="searchable-select" id="xProductSelect_wrap">
+//             <input type="text" id="xProductSelect_search" class="searchable-select-input" placeholder="ابحث عن صنف بالاسم..." autocomplete="off">
+//             <input type="hidden" id="xProductSelect">
+//             <div class="searchable-select-dropdown" id="xProductSelect_dropdown"></div>
+//           </div></div>
+//   JS: initSearchableSelect('xProductSelect');  // مرة واحدة عند تحميل الصفحة
+//       setSearchableSelectItems('xProductSelect', boProducts.map(p => ({ id: p.id, name: p.name })));
+// القيمة والحدث: نفس تعامل <select> عادي تمامًا —
+//   document.getElementById('xProductSelect').value
+//   document.getElementById('xProductSelect').addEventListener('change', ...)
+// عشان أي كود موجود شغال بالطريقة دي يفضل شغال من غير تعديل.
+// ============================================================
+const searchableSelectRegistry = {};
+
+function initSearchableSelect(baseId) {
+  const hidden = document.getElementById(baseId);
+  const search = document.getElementById(baseId + '_search');
+  const dropdown = document.getElementById(baseId + '_dropdown');
+  if (!hidden || !search || !dropdown) return;
+
+  const state = { items: [], filtered: [], activeIndex: -1 };
+  searchableSelectRegistry[baseId] = state;
+
+  function render() {
+    if (state.filtered.length === 0) {
+      dropdown.innerHTML = `<div class="searchable-select-empty">لا توجد أصناف مطابقة</div>`;
+      return;
+    }
+    dropdown.innerHTML = state.filtered.map((p, i) => `
+      <div class="searchable-select-option ${p.__clear ? 'clear-option' : ''} ${i === state.activeIndex ? 'active' : ''} ${(p.id === hidden.value && !p.__clear) ? 'selected' : ''}" data-idx="${i}">${escapeHtml(p.name)}</div>
+    `).join('');
+  }
+
+  function open() {
+    dropdown.classList.add('show');
+  }
+  function close() {
+    dropdown.classList.remove('show');
+    state.activeIndex = -1;
+  }
+  function filter(term) {
+    const q = term.trim().toLowerCase();
+    state.filtered = q ? state.items.filter(p => p.name.toLowerCase().includes(q)) : state.items.slice();
+    if (!q && hidden.value) state.filtered.unshift({ id: '', name: '✕ إلغاء الاختيار', __clear: true });
+    state.activeIndex = -1;
+    render();
+  }
+  function selectItem(p) {
+    hidden.value = p ? p.id : '';
+    search.value = (p && !p.__clear) ? p.name : '';
+    close();
+    hidden.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  search.addEventListener('focus', () => { filter(''); open(); search.select(); });
+  search.addEventListener('input', () => {
+    if (hidden.value) hidden.value = '';
+    filter(search.value);
+    open();
+  });
+  search.addEventListener('keydown', (e) => {
+    if (!dropdown.classList.contains('show')) {
+      if (e.key === 'ArrowDown' || e.key === 'Enter') { open(); filter(search.value); }
+      return;
+    }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      state.activeIndex = Math.min(state.activeIndex + 1, state.filtered.length - 1);
+      render();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      state.activeIndex = Math.max(state.activeIndex - 1, 0);
+      render();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (state.activeIndex >= 0 && state.filtered[state.activeIndex]) selectItem(state.filtered[state.activeIndex]);
+    } else if (e.key === 'Escape') {
+      close();
+    }
+  });
+  search.addEventListener('blur', () => {
+    // بتأخير بسيط عشان لو المستخدم بيدوس على عنصر بالقائمة (mousedown) يتنفذ قبل الإغلاق
+    setTimeout(() => {
+      close();
+      if (!hidden.value) search.value = '';
+    }, 150);
+  });
+  dropdown.addEventListener('mousedown', (e) => {
+    const opt = e.target.closest('.searchable-select-option');
+    if (!opt) return;
+    e.preventDefault();
+    const idx = Number(opt.dataset.idx);
+    selectItem(state.filtered[idx]);
+  });
+}
+
+// بتملأ/تحدّث قائمة الأصناف لعنصر searchable-select، وبتحافظ على القيمة
+// المختارة حاليًا لو لسه موجودة في القائمة الجديدة (زي سلوك <select> العادي)
+function setSearchableSelectItems(baseId, items) {
+  const state = searchableSelectRegistry[baseId];
+  const hidden = document.getElementById(baseId);
+  const search = document.getElementById(baseId + '_search');
+  if (!state || !hidden || !search) return;
+  state.items = items || [];
+  state.filtered = state.items;
+  const current = hidden.value;
+  if (current && state.items.some(p => p.id === current)) {
+    search.value = state.items.find(p => p.id === current).name;
+  } else {
+    hidden.value = '';
+    search.value = '';
+  }
 }
 
 // ============================================================
@@ -5144,7 +5925,7 @@ setInterval(async () => { setOnlineState(await checkRealConnectivity()); }, 2500
 // من غير ما نبهدل المستخدم برسالة خطأ مالهاش لازمة)
 function isNetworkError(err) {
   if (!err) return false;
-  if (!navigator.onLine || !appIsOnline) return true;
+  if (!navigator.onLine || !sessionUsable()) return true;
   const msg = ((err && err.message) || String(err) || '').toLowerCase();
   return msg.includes('fetch') || msg.includes('network') || msg.includes('failed to fetch') || msg.includes('load failed');
 }
@@ -5565,7 +6346,7 @@ function createSmartSearch(opts) {
 
 async function getUserProfile(userId) {
   try {
-    if (!appIsOnline) throw new Error('offline');
+    if (!sessionUsable()) throw new Error('offline');
     const { data, error } = await supabaseClient
       .from('users_profile')
       .select('*, roles(name, permissions), branches(id, name, logo)')
@@ -5678,6 +6459,9 @@ function showPinLogin() {
   document.getElementById('pinLoginError').classList.remove('show');
   pinValue = '';
   renderPinDots();
+  // نركّز على حقل الإدخال المخفي عشان لوحة مفاتيح الموبايل الرقمية تظهر تلقائيًا
+  const hiddenInput = document.getElementById('pinHiddenInput');
+  if (hiddenInput) setTimeout(() => hiddenInput.focus(), 50);
 }
 
 function showPasswordLogin() {
@@ -5688,6 +6472,8 @@ function showPasswordLogin() {
 function renderPinDots() {
   const dots = document.querySelectorAll('#pinDots .pin-dot');
   dots.forEach((dot, i) => dot.classList.toggle('filled', i < pinValue.length));
+  const hiddenInput = document.getElementById('pinHiddenInput');
+  if (hiddenInput && hiddenInput.value !== pinValue) hiddenInput.value = pinValue;
 }
 
 function pinKeyPress(digit) {
@@ -5708,6 +6494,36 @@ function pinClear() {
   document.getElementById('pinLoginError').classList.remove('show');
   renderPinDots();
 }
+
+// إدخال الـ PIN من خلال لوحة مفاتيح الموبايل الرقمية (عبر الحقل المخفي فوق النقاط)
+(function initPinKeyboardInput() {
+  const hiddenInput = document.getElementById('pinHiddenInput');
+  if (!hiddenInput) return;
+  hiddenInput.addEventListener('input', function () {
+    const digitsOnly = this.value.replace(/[^0-9]/g, '').slice(0, 4);
+    this.value = digitsOnly;
+    pinValue = digitsOnly;
+    document.getElementById('pinLoginError').classList.remove('show');
+    renderPinDots();
+    if (pinValue.length === 4) submitPinLogin();
+  });
+})();
+
+// إدخال الـ PIN من خلال الكيبورد الفعلي (حتى لو التركيز مش على الحقل المخفي)
+document.addEventListener('keydown', function (e) {
+  const pinCard = document.getElementById('pinLoginCard');
+  if (!pinCard || pinCard.style.display === 'none') return;
+  if (document.activeElement && document.activeElement.id === 'pinHiddenInput') return;
+  if (e.key >= '0' && e.key <= '9') {
+    e.preventDefault();
+    pinKeyPress(e.key);
+  } else if (e.key === 'Backspace' || e.key === 'Delete') {
+    e.preventDefault();
+    pinBackspace();
+  } else if (e.key === 'Escape') {
+    pinClear();
+  }
+});
 
 async function submitPinLogin() {
   const errEl = document.getElementById('pinLoginError');
@@ -5736,16 +6552,35 @@ async function submitPinLogin() {
   // بتوقيع نفس المستخدم — وليس مجرد محاكاة محلية لبياناته
   if (match.access_token && match.refresh_token) {
     try {
-      await supabaseClient.auth.setSession({
+      const { data: restoredData, error: restoreErr } = await supabaseClient.auth.setSession({
         access_token: match.access_token, refresh_token: match.refresh_token,
       });
+      // لازم نتأكد فعليًا إن الجلسة رجعت لنفس المستخدم — الـ refresh token فى Supabase
+      // "دوّار" (يُستهلك مرة واحدة فقط)، فلو حصل تجديد تلقائي للتوكن فى الخلفية من وقت آخر
+      // دخول حقيقي، يبقى الرمز المخزَّن محليًا قديم ومرفوض، وSetSession هيرجّع error
+      // بدل ما يرمي Exception — فمينفعش نعتمد على catch وحده هنا
+      if (restoreErr || !restoredData?.session || restoredData.session.user.id !== match.id) {
+        console.warn('pin session restore rejected (stale/rotated token)', restoreErr);
+        needsReloginToSync = true;
+        try { await supabaseClient.auth.signOut({ scope: 'local' }); } catch (e2) { /* تجاهل */ }
+      } else {
+        needsReloginToSync = false;
+        // نحدّث الكاش فورًا بأحدث زوج توكنات (قد يكون Supabase رجّع زوجًا جديدًا مُجدَّدًا
+        // أثناء setSession نفسها) حتى لا نعتمد لاحقًا على نسخة قديمة
+        cachePinProfile(currentProfile, restoredData.session);
+      }
     } catch (e) {
       console.error('pin setSession error', e);
+      needsReloginToSync = true;
     }
   } else {
     // لا يوجد رمز مخزَّن (نسخة قديمة من الكاش قبل هذا التحديث) — العمليات
     // هتفضل محفوظة محليًا لحد ما يسجّل دخول حقيقي بكلمة المرور مرة
     needsReloginToSync = true;
+  }
+
+  if (needsReloginToSync) {
+    showToast('تعذّرت استعادة جلسة الدخول المحفوظة — هيتم تسجيل العمليات محليًا وتتزامن تلقائيًا بعد تسجيل دخول حقيقي باسم المستخدم وكلمة المرور مرة واحدة', true);
   }
 
   updateOfflineBanner();
@@ -5913,7 +6748,7 @@ function closeMobileCart() {
 // ------------------------------------------------------------
 async function loadActiveShift() {
   try {
-    if (!appIsOnline) throw new Error('offline');
+    if (!sessionUsable()) throw new Error('offline');
     const { data, error } = await supabaseClient
       .from('shifts')
       .select('*')
@@ -6000,7 +6835,7 @@ async function submitOpenShift(e) {
   const submitBtn = document.getElementById('openShiftSubmitBtn');
   submitBtn.disabled = true; submitBtn.textContent = 'جاري الفتح...';
   try {
-    if (!appIsOnline) {
+    if (!sessionUsable()) {
       queueOfflineShiftOpen(amount, notes);
     } else {
       try {
@@ -6085,6 +6920,10 @@ async function openCloseShiftModal() {
   }
   if (!appIsOnline) {
     showToast('يتطلب إغلاق الوردية اتصالاً بالإنترنت لحساب أرقام التسوية بدقة من الخادم', true);
+    return;
+  }
+  if (needsReloginToSync) {
+    showToast('انتهت صلاحية جلسة الدخول السريع — يرجى تسجيل الخروج والدخول مرة أخرى باسم المستخدم وكلمة المرور قبل إغلاق الوردية', true);
     return;
   }
   try {
@@ -6475,7 +7314,7 @@ function bindPosEvents() {
 
 async function loadCategories() {
   try {
-    if (!appIsOnline) throw new Error('offline');
+    if (!sessionUsable()) throw new Error('offline');
     const { data, error } = await supabaseClient.from('categories').select('id, name').eq('is_active', true).order('name');
     if (error) throw error;
     allCategories = data || [];
@@ -6488,7 +7327,7 @@ async function loadCategories() {
 
 async function loadProducts() {
   try {
-    if (!appIsOnline) throw new Error('offline');
+    if (!sessionUsable()) throw new Error('offline');
     const { data, error } = await supabaseClient
       .from('products')
       .select('id, name, category_id, sale_price, unit_type, image_url, tax_rate_id, tax_rates(rate), product_barcodes(barcode), product_units(id, unit_type_id, factor_to_base, sale_price, is_active, unit_types(name))')
@@ -6508,7 +7347,7 @@ async function loadProducts() {
 let allCustomers = [];
 async function loadCustomers() {
   try {
-    if (!appIsOnline) throw new Error('offline');
+    if (!sessionUsable()) throw new Error('offline');
     const { data, error } = await supabaseClient.from('customers').select('id, name, balance').order('name').limit(200);
     if (error) throw error;
     allCustomers = data || [];
@@ -6597,7 +7436,7 @@ async function getMainWarehouseId(branchId) {
   if (!branchId) return null;
   if (branchWarehouseCache[branchId]) return branchWarehouseCache[branchId];
   try {
-    if (!appIsOnline) throw new Error('offline');
+    if (!sessionUsable()) throw new Error('offline');
     const { data, error } = await supabaseClient
       .from('warehouses')
       .select('id')
@@ -6626,7 +7465,7 @@ let posWarehouses = []; // مخازن الفرع الحالي المتاحة ل�
 async function loadPosWarehouses() {
   if (!posEls.warehouseSelect || !currentProfile?.branch_id) return;
   try {
-    if (!appIsOnline) throw new Error('offline');
+    if (!sessionUsable()) throw new Error('offline');
     const { data, error } = await supabaseClient
       .from('warehouses')
       .select('id, name, is_main')
@@ -6665,7 +7504,7 @@ async function loadStockBalances() {
   const warehouseId = posSelectedWarehouseId() || await getMainWarehouseId(currentProfile.branch_id);
   if (!warehouseId) { stockMap = {}; return; }
   try {
-    if (!appIsOnline) throw new Error('offline');
+    if (!sessionUsable()) throw new Error('offline');
     const { data, error } = await supabaseClient
       .from('stock_balances')
       .select('product_id, quantity')
@@ -6841,7 +7680,7 @@ function calcTotal() {
 let companyInfo = { name: '', logo: null };
 async function loadCompanyInfoGlobal() {
   try {
-    if (!appIsOnline) throw new Error('offline');
+    if (!sessionUsable()) throw new Error('offline');
     const { data, error } = await supabaseClient.from('settings').select('value').eq('key', 'company_info').maybeSingle();
     if (error) throw error;
     companyInfo = (data && data.value) ? data.value : { name: '', logo: null };
@@ -7009,7 +7848,7 @@ function setImageUploadFieldValue(hiddenInputId, dataUrlOrUrl, previewImgId, pla
 let taxInclusive = false;
 async function loadTaxInclusiveSetting() {
   try {
-    if (!appIsOnline) throw new Error('offline');
+    if (!sessionUsable()) throw new Error('offline');
     const { data, error } = await supabaseClient.from('settings').select('value').eq('key', 'tax_inclusive').maybeSingle();
     if (error) throw error;
     taxInclusive = data ? (data.value === true || data.value === 'true') : false;
@@ -7053,7 +7892,7 @@ function printSettingsKey() { return `print_settings:${currentProfile?.branch_id
 async function loadBranchSettings() {
   if (!currentProfile?.branch_id) { branchSettings = { ...defaultBranchSettings }; return; }
   try {
-    if (!appIsOnline) throw new Error('offline');
+    if (!sessionUsable()) throw new Error('offline');
     const { data, error } = await supabaseClient.from('settings').select('value').eq('key', branchSettingsKey()).maybeSingle();
     if (error) throw error;
     branchSettings = { ...defaultBranchSettings, ...(data && data.value ? data.value : {}) };
@@ -7067,7 +7906,7 @@ async function loadBranchSettings() {
 async function loadPrintSettings() {
   if (!currentProfile?.branch_id) { printSettings = { ...defaultPrintSettings }; return; }
   try {
-    if (!appIsOnline) throw new Error('offline');
+    if (!sessionUsable()) throw new Error('offline');
     const { data, error } = await supabaseClient.from('settings').select('value').eq('key', printSettingsKey()).maybeSingle();
     if (error) throw error;
     printSettings = { ...defaultPrintSettings, ...(data && data.value ? data.value : {}) };
@@ -7172,7 +8011,7 @@ let activeQuickDiscounts = [];
 let selectedQuickDiscount = null;
 async function loadQuickDiscounts() {
   try {
-    if (!appIsOnline) throw new Error('offline');
+    if (!sessionUsable()) throw new Error('offline');
     const { data, error } = await supabaseClient.from('quick_discounts').select('*').eq('is_active', true).order('value');
     if (error) throw error;
     activeQuickDiscounts = data || [];
@@ -7645,7 +8484,7 @@ async function doCheckout() {
     let receiptData;
     // إذا كانت الوردية نفسها لا تزال بانتظار المزامنة، يجب أن يُسجَّل البيع دون اتصال أيضًا (حتى لو كان الإنترنت متاحًا)
     // للحفاظ على الترتيب الصحيح والارتباط بالوردية بشكل سليم لحظة المزامنة
-    if (!appIsOnline || (currentShift && currentShift.pending)) {
+    if (!sessionUsable() || (currentShift && currentShift.pending)) {
       receiptData = await queueOfflineSale(ctx);
     } else {
       try {
@@ -8097,7 +8936,7 @@ async function saveSaleReturn(e) {
     const reason = document.getElementById('saleReturnReasonInput').value.trim() || null;
     const ctx = { total, reason, refundMethod, refundPaymentLines, validLines };
 
-    if (!appIsOnline) {
+    if (!sessionUsable()) {
       queueOfflineSaleReturn(ctx);
     } else {
       try {
@@ -8976,6 +9815,10 @@ function bindBackofficeEvents() {
       if (key === 'income-statement') { populateIncomeStatementBranchFilter(); refreshIncomeStatement(); }
       if (key === 'statement') { initStatementReport(); }
       if (key === 'tax') { populateTaxReportBranchFilter(); refreshTaxReport(); }
+      if (key === 'fixed-assets') { populateFixedAssetsReportBranchFilter(); refreshFixedAssetsReport(); }
+      if (key === 'cash-movements') { populateCashMovementsReportFilters().then(() => refreshCashMovementsReport()); }
+      if (key === 'capital-movements') { populateCapitalMovementsReportFilters(); refreshCapitalMovementsReport(); }
+      if (key === 'expenses-analysis') { populateExpensesAnalysisBranchFilter(); refreshExpensesAnalysisReport(); }
     });
   });
   document.getElementById('refreshDebtRemindersBtn').addEventListener('click', () => refreshDebtReminders());
@@ -9008,9 +9851,12 @@ function bindBackofficeEvents() {
       if (target) target.style.display = 'block';
       document.getElementById('inventoryReportsCrumbCurrent').textContent = card.querySelector('.report-type-label').textContent;
       if (key === 'levels') refreshInventoryLevelsReport();
+      if (key === 'stocktake-items') refreshStocktakeItemsReport();
       if (key === 'low-stock') refreshInventoryLowStockReport();
       if (key === 'valuation') refreshInventoryValuationReport();
       if (key === 'movement') refreshInventoryMovementReport();
+      if (key === 'product-ledger') populateProductLedgerFilters();
+      if (key === 'movement-analysis') { populateMovementAnalysisFilters(); setInventoryDateRange('30days', 'maFromDate', 'maToDate'); }
       if (key === 'transfers') refreshInventoryTransfersReport();
       if (key === 'adjustments') refreshInventoryAdjustmentsReport();
       if (key === 'top-movers') refreshInventoryTopMoversReport();
@@ -9056,6 +9902,7 @@ function bindBackofficeEvents() {
       if (key === 'cashier-performance') { setInventoryDateRange('today', 'otherCashierPerfFromDate', 'otherCashierPerfToDate'); runCashierPerfReport(); }
       if (key === 'discounts') { populateDiscountsBranchFilter(); setInventoryDateRange('today', 'otherDiscountsFromDate', 'otherDiscountsToDate'); runDiscountsReport(); }
       if (key === 'activity-log') { populateActivityLogFilters(); setInventoryDateRange('today', 'activityLogFromDate', 'activityLogToDate'); refreshActivityLogReport(); }
+      if (key === 'returns-analysis') { populateReturnsAnalysisBranchFilter(); refreshReturnsAnalysisReport(); }
     });
   });
   document.getElementById('otherReportBackBtn').addEventListener('click', () => {
@@ -9487,7 +10334,21 @@ function bindBackofficeEvents() {
   document.getElementById('runTaxReportBtn').addEventListener('click', () => refreshTaxReport());
   document.getElementById('taxBranchFilter').addEventListener('change', () => refreshTaxReport());
   document.getElementById('refreshTaxReportBtn').addEventListener('click', () => refreshTaxReport());
+  document.getElementById('runExpensesAnalysisBtn').addEventListener('click', () => refreshExpensesAnalysisReport());
+  document.getElementById('refreshExpensesAnalysisBtn').addEventListener('click', () => refreshExpensesAnalysisReport());
+  document.getElementById('expensesAnalysisBranchFilter').addEventListener('change', () => refreshExpensesAnalysisReport());
+  document.getElementById('exportExpensesAnalysisBtn').addEventListener('click', () => exportExpensesAnalysisToExcel());
   document.getElementById('exportTaxReportBtn').addEventListener('click', () => exportTaxReportToExcel());
+  document.getElementById('refreshFixedAssetsReportBtn').addEventListener('click', () => refreshFixedAssetsReport());
+  document.getElementById('runFixedAssetsReportBtn').addEventListener('click', () => refreshFixedAssetsReport());
+  document.getElementById('exportFixedAssetsReportBtn').addEventListener('click', () => exportFixedAssetsReportToExcel());
+  document.getElementById('exportCashMovementsReportBtn').addEventListener('click', () => exportCashMovementsReportToExcel());
+  document.getElementById('runCashMovementsReportBtn').addEventListener('click', () => refreshCashMovementsReport());
+  document.getElementById('cmBranchFilter').addEventListener('change', () => refreshCashMovementsReport());
+  document.getElementById('cmAccountFilter').addEventListener('change', () => refreshCashMovementsReport());
+  document.getElementById('exportCapitalMovementsReportBtn').addEventListener('click', () => exportCapitalMovementsReportToExcel());
+  document.getElementById('runCapitalMovementsReportBtn').addEventListener('click', () => refreshCapitalMovementsReport());
+  document.getElementById('cmpBranchFilter').addEventListener('change', () => refreshCapitalMovementsReport());
   document.querySelectorAll('[data-tax-range]').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('[data-tax-range]').forEach(b => b.classList.remove('active'));
@@ -9509,6 +10370,10 @@ function bindBackofficeEvents() {
   document.getElementById('invLevelsSearchInput').addEventListener('input', () => refreshInventoryLevelsReport());
   document.getElementById('exportInvLevelsBtn').addEventListener('click', () => exportInvLevelsToExcel());
 
+  document.getElementById('stItemsWarehouseFilter').addEventListener('change', () => refreshStocktakeItemsReport());
+  document.getElementById('stItemsSearchInput').addEventListener('input', () => refreshStocktakeItemsReport());
+  document.getElementById('exportStItemsBtn').addEventListener('click', () => exportStItemsToExcel());
+
   document.getElementById('invLowStockWarehouseFilter').addEventListener('change', () => refreshInventoryLowStockReport());
   document.getElementById('exportInvLowStockBtn').addEventListener('click', () => exportInvLowStockToExcel());
 
@@ -9520,10 +10385,23 @@ function bindBackofficeEvents() {
   document.getElementById('invMovementTypeFilter').addEventListener('change', () => refreshInventoryMovementReport());
   document.getElementById('exportInvMovementBtn').addEventListener('click', () => exportInvMovementToExcel());
 
+  initSearchableSelect('plProductSelect');
+  document.getElementById('runProductLedgerBtn').addEventListener('click', () => refreshProductLedgerReport());
+  document.getElementById('plProductSelect').addEventListener('change', () => refreshProductLedgerReport());
+  document.getElementById('plWarehouseFilter').addEventListener('change', () => refreshProductLedgerReport());
+  document.getElementById('exportProductLedgerBtn').addEventListener('click', () => exportProductLedgerToExcel());
+
+  initSearchableSelect('maProductSelect');
+  document.getElementById('runMoveAnalysisBtn').addEventListener('click', () => refreshMovementAnalysisReport());
+  document.getElementById('maProductSelect').addEventListener('change', () => refreshMovementAnalysisReport());
+  document.getElementById('maWarehouseFilter').addEventListener('change', () => refreshMovementAnalysisReport());
+  document.getElementById('exportMoveAnalysisBtn').addEventListener('click', () => exportMovementAnalysisToExcel());
+
   document.getElementById('runInvTransfersBtn').addEventListener('click', () => refreshInventoryTransfersReport());
   document.getElementById('exportInvTransfersBtn').addEventListener('click', () => exportInvTransfersToExcel());
 
   document.getElementById('runInvAdjustBtn').addEventListener('click', () => refreshInventoryAdjustmentsReport());
+  document.getElementById('invAdjustWarehouseFilter').addEventListener('change', () => refreshInventoryAdjustmentsReport());
   document.getElementById('exportInvAdjustBtn').addEventListener('click', () => exportInvAdjustToExcel());
 
   document.getElementById('runInvTopMoversBtn').addEventListener('click', () => refreshInventoryTopMoversReport());
@@ -9541,6 +10419,7 @@ function bindBackofficeEvents() {
   document.getElementById('exportPurchasesSupplierBtn').addEventListener('click', () => exportPurchasesSupplierToExcel());
   document.getElementById('exportPurchasesTrendBtn').addEventListener('click', () => exportPurchasesTrendToExcel());
   document.getElementById('exportPurchasesTopItemsBtn').addEventListener('click', () => exportPurchasesTopItemsToExcel());
+  initSearchableSelect('ppcProductSelect');
   document.getElementById('ppcProductSelect').addEventListener('change', () => runPurchasePriceCompareReport());
   document.getElementById('exportPurchasePriceCompareBtn').addEventListener('click', () => exportPurchasePriceCompareToExcel());
 
@@ -9556,6 +10435,11 @@ function bindBackofficeEvents() {
   document.getElementById('activityLogUserFilter').addEventListener('change', () => refreshActivityLogReport());
   document.getElementById('activityLogTableFilter').addEventListener('change', () => refreshActivityLogReport());
   document.getElementById('activityLogActionFilter').addEventListener('change', () => refreshActivityLogReport());
+  document.getElementById('runReturnsAnalysisBtn').addEventListener('click', () => refreshReturnsAnalysisReport());
+  document.getElementById('refreshReturnsAnalysisBtn').addEventListener('click', () => refreshReturnsAnalysisReport());
+  document.getElementById('exportReturnsAnalysisBtn').addEventListener('click', () => exportReturnsAnalysisToExcel());
+  document.getElementById('otherReturnsTypeFilter').addEventListener('change', () => refreshReturnsAnalysisReport());
+  document.getElementById('otherReturnsBranchFilter').addEventListener('change', () => refreshReturnsAnalysisReport());
 
   document.getElementById('backupExcelBtn').addEventListener('click', () => runBackup('excel'));
   document.getElementById('backupJsonBtn').addEventListener('click', () => runBackup('json'));
@@ -15182,11 +16066,7 @@ async function runPurchasesReport() {
 
 // ---- مقارنة سعر الشراء عبر الوقت ----
 function populatePurchasePriceCompareProductSelect() {
-  const sel = document.getElementById('ppcProductSelect');
-  const current = sel.value;
-  sel.innerHTML = '<option value="">اختر صنفًا...</option>' +
-    boProducts.filter(p => p.is_active).map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
-  if (current) sel.value = current;
+  setSearchableSelectItems('ppcProductSelect', boProducts.filter(p => p.is_active).map(p => ({ id: p.id, name: p.name })));
 }
 
 function renderPurchasePriceChart(rows) {
@@ -16873,6 +17753,856 @@ function exportTaxReportToExcel() {
 }
 
 // ============================================================
+// تقرير تحليل المصروفات (حسب البند وحسب الفرع)
+// ============================================================
+
+const EXPENSES_CHART_COLORS = ['#0F6B5C', '#C97A1A', '#2E6F9E', '#8A8F98', '#7A5FB0', '#C13B3B', '#1F8A70', '#B0862E', '#4E5D94', '#A34A7A'];
+function expensesChartColor(index) {
+  return EXPENSES_CHART_COLORS[index % EXPENSES_CHART_COLORS.length];
+}
+
+function populateExpensesAnalysisBranchFilter() {
+  const field = document.getElementById('expensesAnalysisBranchField');
+  const sel = document.getElementById('expensesAnalysisBranchFilter');
+  if (boBranchesList.length <= 1) {
+    field.style.display = 'none';
+    sel.innerHTML = '<option value="">كل الفروع</option>';
+    return;
+  }
+  sel.innerHTML = '<option value="">كل الفروع</option>' +
+    boBranchesList.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+  field.style.display = 'block';
+}
+
+function renderExpensesDonutChart(containerId, rows) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const total = (rows || []).reduce((sum, r) => sum + r.total, 0);
+  if (!rows || rows.length === 0 || total <= 0) {
+    container.innerHTML = `<div class="payment-chart-empty">لا توجد بيانات لعرضها</div>`;
+    return;
+  }
+  const r = 52, cx = 60, cy = 60, strokeWidth = 20;
+  const circumference = 2 * Math.PI * r;
+  let cumulative = 0;
+  const segments = rows.map((row, i) => {
+    const fraction = row.total / total;
+    const dash = Math.max(fraction * circumference, 0);
+    const gap = Math.max(circumference - dash, 0);
+    const seg = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${expensesChartColor(i)}" stroke-width="${strokeWidth}" stroke-dasharray="${dash} ${gap}" stroke-dashoffset="${-cumulative}"><title>${escapeHtml(row.name)} — ${row.total.toFixed(2)} (${(fraction * 100).toFixed(1)}%)</title></circle>`;
+    cumulative += dash;
+    return seg;
+  }).join('');
+  const legend = rows.map((row, i) => `
+    <div class="payment-chart-legend-item">
+      <span class="payment-chart-legend-name"><span class="payment-chart-legend-dot" style="background:${expensesChartColor(i)};"></span>${escapeHtml(row.name)}</span>
+      <span class="payment-chart-legend-value">${row.total.toFixed(2)} (${(total > 0 ? row.total / total * 100 : 0).toFixed(1)}%)</span>
+    </div>`).join('');
+  container.innerHTML = `
+    <div class="payment-chart-wrap">
+      <div class="payment-donut">
+        <svg viewBox="0 0 120 120" width="150" height="150" style="transform:rotate(-90deg);">${segments}</svg>
+      </div>
+      <div class="payment-chart-legend">${legend}</div>
+    </div>`;
+}
+
+let lastExpensesAnalysisRows = [];
+let lastExpensesByItemRows = [];
+let lastExpensesByBranchRows = [];
+
+async function refreshExpensesAnalysisReport() {
+  const fromDate = document.getElementById('expensesAnalysisFromDate').value;
+  const toDate = document.getElementById('expensesAnalysisToDate').value;
+  if (!fromDate || !toDate) return;
+  const branchId = document.getElementById('expensesAnalysisBranchFilter').value || null;
+
+  const itemTbody = document.getElementById('expensesByItemTableBody');
+  const branchTbody = document.getElementById('expensesByBranchTableBody');
+  itemTbody.innerHTML = `<tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>`;
+  branchTbody.innerHTML = `<tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>`;
+
+  try {
+    let query = supabaseClient
+      .from('expenses')
+      .select('amount, expense_date, branch_id, expense_items(name), branches(name)')
+      .gte('expense_date', fromDate)
+      .lte('expense_date', toDate);
+    if (branchId) query = query.eq('branch_id', branchId);
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const rows = data || [];
+    lastExpensesAnalysisRows = rows;
+    const total = rows.reduce((sum, x) => sum + Number(x.amount), 0);
+    const count = rows.length;
+
+    document.getElementById('expensesAnalysisTotal').textContent = total.toFixed(2);
+    document.getElementById('expensesAnalysisCount').textContent = count;
+    document.getElementById('expensesAnalysisAvg').textContent = (count > 0 ? total / count : 0).toFixed(2);
+
+    // التوزيع حسب البند
+    const byItem = {};
+    rows.forEach(x => {
+      const name = x.expense_items?.name || 'بند محذوف';
+      if (!byItem[name]) byItem[name] = { name, count: 0, total: 0 };
+      byItem[name].count += 1;
+      byItem[name].total += Number(x.amount);
+    });
+    const itemRows = Object.values(byItem).sort((a, b) => b.total - a.total);
+    lastExpensesByItemRows = itemRows;
+    document.getElementById('expensesAnalysisTopItem').textContent = itemRows.length
+      ? `${itemRows[0].name} (${itemRows[0].total.toFixed(2)})`
+      : '—';
+    renderBreakdownTable('expensesByItemTableBody', itemRows, 4, row =>
+      `<td>${escapeHtml(row.name)}</td>
+       <td class="num">${row.count}</td>
+       <td class="num">${row.total.toFixed(2)}</td>
+       <td class="num">${(total > 0 ? row.total / total * 100 : 0).toFixed(1)}%</td>`);
+    renderExpensesDonutChart('expensesByItemChart', itemRows);
+
+    // التوزيع حسب الفرع (فقط لو أكتر من فرع واحد)
+    const branchSection = document.getElementById('expensesByBranchTitleRow');
+    const branchTableWrap = document.getElementById('expensesByBranchTableWrap');
+    const branchChart = document.getElementById('expensesByBranchChart');
+    if (boBranchesList.length > 1) {
+      branchSection.style.display = 'flex';
+      branchTableWrap.style.display = 'block';
+      const byBranch = {};
+      rows.forEach(x => {
+        const name = x.branches?.name || 'فرع محذوف';
+        if (!byBranch[name]) byBranch[name] = { name, count: 0, total: 0 };
+        byBranch[name].count += 1;
+        byBranch[name].total += Number(x.amount);
+      });
+      const branchRows = Object.values(byBranch).sort((a, b) => b.total - a.total);
+      lastExpensesByBranchRows = branchRows;
+      renderBreakdownTable('expensesByBranchTableBody', branchRows, 4, row =>
+        `<td>${escapeHtml(row.name)}</td>
+         <td class="num">${row.count}</td>
+         <td class="num">${row.total.toFixed(2)}</td>
+         <td class="num">${(total > 0 ? row.total / total * 100 : 0).toFixed(1)}%</td>`);
+      renderExpensesDonutChart('expensesByBranchChart', branchRows);
+    } else {
+      branchSection.style.display = 'none';
+      branchTableWrap.style.display = 'none';
+      branchChart.innerHTML = '';
+      lastExpensesByBranchRows = [];
+    }
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحميل تقرير تحليل المصروفات', true);
+    itemTbody.innerHTML = `<tr><td colspan="4" class="bo-empty">حدث خطأ أثناء التحميل</td></tr>`;
+    branchTbody.innerHTML = `<tr><td colspan="4" class="bo-empty">حدث خطأ أثناء التحميل</td></tr>`;
+  }
+}
+
+function exportExpensesAnalysisToExcel() {
+  const total = lastExpensesAnalysisRows.reduce((sum, x) => sum + Number(x.amount), 0);
+  const summaryRows = [{
+    'إجمالي المصروفات': Number(total.toFixed(2)),
+    'عدد المصروفات': lastExpensesAnalysisRows.length,
+    'متوسط المصروف': Number((lastExpensesAnalysisRows.length ? total / lastExpensesAnalysisRows.length : 0).toFixed(2)),
+  }];
+  const byItemSheet = lastExpensesByItemRows.map(r => ({
+    'البند': r.name,
+    'عدد المصروفات': r.count,
+    'الإجمالي': Number(r.total.toFixed(2)),
+    'النسبة%': Number((total > 0 ? r.total / total * 100 : 0).toFixed(1)),
+  }));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows), 'الملخص');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(byItemSheet), 'حسب البند');
+  if (lastExpensesByBranchRows.length) {
+    const byBranchSheet = lastExpensesByBranchRows.map(r => ({
+      'الفرع': r.name,
+      'عدد المصروفات': r.count,
+      'الإجمالي': Number(r.total.toFixed(2)),
+      'النسبة%': Number((total > 0 ? r.total / total * 100 : 0).toFixed(1)),
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(byBranchSheet), 'حسب الفرع');
+  }
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `تحليل-المصروفات-${dateStr}.xlsx`);
+}
+
+// ============================================================
+// تقرير تحليل المرتجعات (مبيعات + مشتريات)
+// ============================================================
+
+function populateReturnsAnalysisBranchFilter() {
+  const field = document.getElementById('otherReturnsBranchField');
+  const sel = document.getElementById('otherReturnsBranchFilter');
+  if (boBranchesList.length <= 1) {
+    field.style.display = 'none';
+    sel.innerHTML = '<option value="">كل الفروع</option>';
+    return;
+  }
+  sel.innerHTML = '<option value="">كل الفروع</option>' +
+    boBranchesList.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+  field.style.display = 'block';
+}
+
+function renderReturnsTrendChart(rows) {
+  const container = document.getElementById('returnsTrendChart');
+  if (!rows || rows.length === 0) {
+    container.innerHTML = `<div class="daily-trend-empty">لا توجد بيانات لعرضها</div>`;
+    return;
+  }
+  const barWidth = 22;
+  const gap = 12;
+  const chartHeight = 150;
+  const topPadding = 12;
+  const bottomPadding = 34;
+  const leftPadding = 8;
+  const width = leftPadding + rows.length * (barWidth + gap);
+  const svgHeight = topPadding + chartHeight + bottomPadding;
+  const maxTotal = Math.max(...rows.map(r => r.total), 0);
+  const labelStep = Math.max(1, Math.ceil(rows.length / 15));
+
+  const bars = rows.map((row, i) => {
+    const x = leftPadding + i * (barWidth + gap);
+    const barHeight = maxTotal > 0 ? (row.total / maxTotal) * chartHeight : 0;
+    const y = topPadding + chartHeight - barHeight;
+    const showLabel = i % labelStep === 0 || i === rows.length - 1;
+    const labelX = x + barWidth / 2;
+    return `
+      <rect class="daily-trend-bar" x="${x}" y="${y}" width="${barWidth}" height="${Math.max(barHeight, 1)}" rx="3">
+        <title>${row.date} — ${row.count} عملية إرجاع — ${row.total.toFixed(2)}</title>
+      </rect>
+      ${showLabel ? `<text class="daily-trend-label" x="${labelX}" y="${topPadding + chartHeight + 16}" text-anchor="middle">${formatDayLabel(row.date)}</text>` : ''}`;
+  }).join('');
+
+  container.innerHTML = `
+    <svg viewBox="0 0 ${width} ${svgHeight}" width="${width}" height="${svgHeight}">
+      <line class="daily-trend-axis-line" x1="0" y1="${topPadding + chartHeight}" x2="${width}" y2="${topPadding + chartHeight}"></line>
+      ${bars}
+    </svg>`;
+}
+
+let lastReturnsTopProductsRows = [];
+let lastReturnsReasonsRows = [];
+let lastReturnsTrendRows = [];
+let lastReturnsAnalysisTotals = { salesTotal: 0, purchaseTotal: 0, grandTotal: 0, count: 0 };
+
+async function refreshReturnsAnalysisReport() {
+  const fromDate = document.getElementById('otherReturnsFromDate').value;
+  const toDate = document.getElementById('otherReturnsToDate').value;
+  if (!fromDate || !toDate) return;
+  const fromISO = `${fromDate}T00:00:00`;
+  const toISO = `${toDate}T23:59:59`;
+  const branchId = document.getElementById('otherReturnsBranchFilter').value || null;
+  const typeFilter = document.getElementById('otherReturnsTypeFilter').value; // '', 'sale', 'purchase'
+  const includeSales = typeFilter !== 'purchase';
+  const includePurchases = typeFilter !== 'sale';
+
+  const productsTbody = document.getElementById('returnsTopProductsTableBody');
+  const reasonsTbody = document.getElementById('returnsReasonsTableBody');
+  productsTbody.innerHTML = `<tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>`;
+  reasonsTbody.innerHTML = `<tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>`;
+
+  try {
+    let saleHeaders = [], purchaseHeaders = [], saleItems = [], purchaseItems = [];
+
+    if (includeSales) {
+      let srHeadQuery = supabaseClient
+        .from('sale_returns')
+        .select('id, total, reason, created_at, branch_id')
+        .gte('created_at', fromISO).lte('created_at', toISO);
+      if (branchId) srHeadQuery = srHeadQuery.eq('branch_id', branchId);
+      const { data: srHead, error: srHeadErr } = await srHeadQuery;
+      if (srHeadErr) throw srHeadErr;
+      saleHeaders = srHead || [];
+
+      let srItemsQuery = supabaseClient
+        .from('sale_return_items')
+        .select('quantity, total, product_id, products(name), sale_returns!inner(created_at, branch_id)')
+        .gte('sale_returns.created_at', fromISO).lte('sale_returns.created_at', toISO);
+      if (branchId) srItemsQuery = srItemsQuery.eq('sale_returns.branch_id', branchId);
+      const { data: srItems, error: srItemsErr } = await srItemsQuery;
+      if (srItemsErr) throw srItemsErr;
+      saleItems = srItems || [];
+    }
+
+    if (includePurchases) {
+      let prHeadQuery = supabaseClient
+        .from('purchase_returns')
+        .select('id, total, reason, created_at, branch_id')
+        .gte('created_at', fromISO).lte('created_at', toISO);
+      if (branchId) prHeadQuery = prHeadQuery.eq('branch_id', branchId);
+      const { data: prHead, error: prHeadErr } = await prHeadQuery;
+      if (prHeadErr) throw prHeadErr;
+      purchaseHeaders = prHead || [];
+
+      let prItemsQuery = supabaseClient
+        .from('purchase_return_items')
+        .select('quantity, total, product_id, products(name), purchase_returns!inner(created_at, branch_id)')
+        .gte('purchase_returns.created_at', fromISO).lte('purchase_returns.created_at', toISO);
+      if (branchId) prItemsQuery = prItemsQuery.eq('purchase_returns.branch_id', branchId);
+      const { data: prItems, error: prItemsErr } = await prItemsQuery;
+      if (prItemsErr) throw prItemsErr;
+      purchaseItems = prItems || [];
+    }
+
+    const salesTotal = saleHeaders.reduce((sum, x) => sum + Number(x.total), 0);
+    const purchaseTotal = purchaseHeaders.reduce((sum, x) => sum + Number(x.total), 0);
+    const grandTotal = salesTotal + purchaseTotal;
+    const count = saleHeaders.length + purchaseHeaders.length;
+    lastReturnsAnalysisTotals = { salesTotal, purchaseTotal, grandTotal, count };
+
+    document.getElementById('returnsAnalysisSalesTotal').textContent = salesTotal.toFixed(2);
+    document.getElementById('returnsAnalysisPurchaseTotal').textContent = purchaseTotal.toFixed(2);
+    document.getElementById('returnsAnalysisGrandTotal').textContent = grandTotal.toFixed(2);
+    document.getElementById('returnsAnalysisCount').textContent = count;
+
+    // الاتجاه بمرور الوقت
+    const dailyMap = {};
+    buildDateRangeDays(fromDate, toDate).forEach(d => { dailyMap[d] = { count: 0, total: 0 }; });
+    saleHeaders.forEach(x => {
+      const day = new Date(x.created_at).toISOString().split('T')[0];
+      if (!dailyMap[day]) dailyMap[day] = { count: 0, total: 0 };
+      dailyMap[day].count += 1;
+      dailyMap[day].total += Number(x.total);
+    });
+    purchaseHeaders.forEach(x => {
+      const day = new Date(x.created_at).toISOString().split('T')[0];
+      if (!dailyMap[day]) dailyMap[day] = { count: 0, total: 0 };
+      dailyMap[day].count += 1;
+      dailyMap[day].total += Number(x.total);
+    });
+    const trendRows = Object.keys(dailyMap).sort().map(d => ({ date: d, count: dailyMap[d].count, total: dailyMap[d].total }));
+    lastReturnsTrendRows = trendRows;
+    renderReturnsTrendChart(trendRows);
+
+    // الأصناف الأكثر إرجاعًا
+    const byProduct = {};
+    saleItems.forEach(it => {
+      const key = 'sale:' + (it.product_id || it.products?.name);
+      if (!byProduct[key]) byProduct[key] = { name: it.products?.name || 'صنف محذوف', type: 'مرتجع مبيعات', count: 0, quantity: 0, total: 0 };
+      byProduct[key].count += 1;
+      byProduct[key].quantity += Number(it.quantity);
+      byProduct[key].total += Number(it.total);
+    });
+    purchaseItems.forEach(it => {
+      const key = 'purchase:' + (it.product_id || it.products?.name);
+      if (!byProduct[key]) byProduct[key] = { name: it.products?.name || 'صنف محذوف', type: 'مرتجع مشتريات', count: 0, quantity: 0, total: 0 };
+      byProduct[key].count += 1;
+      byProduct[key].quantity += Number(it.quantity);
+      byProduct[key].total += Number(it.total);
+    });
+    const topProductsRows = Object.values(byProduct).sort((a, b) => b.total - a.total).slice(0, 30);
+    lastReturnsTopProductsRows = topProductsRows;
+    renderBreakdownTable('returnsTopProductsTableBody', topProductsRows, 5, row =>
+      `<td>${escapeHtml(row.name)}</td>
+       <td>${escapeHtml(row.type)}</td>
+       <td class="num">${row.count}</td>
+       <td class="num">${row.quantity}</td>
+       <td class="num">${row.total.toFixed(2)}</td>`);
+
+    // أسباب الإرجاع
+    const byReason = {};
+    saleHeaders.forEach(x => {
+      const reasonText = (x.reason || '').trim() || 'بدون سبب محدد';
+      const key = 'sale:' + reasonText;
+      if (!byReason[key]) byReason[key] = { name: reasonText, type: 'مرتجعات مبيعات', count: 0, total: 0 };
+      byReason[key].count += 1;
+      byReason[key].total += Number(x.total);
+    });
+    purchaseHeaders.forEach(x => {
+      const reasonText = (x.reason || '').trim() || 'بدون سبب محدد';
+      const key = 'purchase:' + reasonText;
+      if (!byReason[key]) byReason[key] = { name: reasonText, type: 'مرتجعات مشتريات', count: 0, total: 0 };
+      byReason[key].count += 1;
+      byReason[key].total += Number(x.total);
+    });
+    const reasonsRows = Object.values(byReason).sort((a, b) => b.total - a.total);
+    lastReturnsReasonsRows = reasonsRows;
+    renderBreakdownTable('returnsReasonsTableBody', reasonsRows, 5, row =>
+      `<td>${escapeHtml(row.name)}</td>
+       <td>${escapeHtml(row.type)}</td>
+       <td class="num">${row.count}</td>
+       <td class="num">${row.total.toFixed(2)}</td>
+       <td class="num">${(grandTotal > 0 ? row.total / grandTotal * 100 : 0).toFixed(1)}%</td>`);
+    renderExpensesDonutChart('returnsReasonsChart', reasonsRows.map(r => ({ name: `${r.name} (${r.type})`, total: r.total })));
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحميل تقرير تحليل المرتجعات', true);
+    productsTbody.innerHTML = `<tr><td colspan="5" class="bo-empty">حدث خطأ أثناء التحميل</td></tr>`;
+    reasonsTbody.innerHTML = `<tr><td colspan="5" class="bo-empty">حدث خطأ أثناء التحميل</td></tr>`;
+  }
+}
+
+function exportReturnsAnalysisToExcel() {
+  const t = lastReturnsAnalysisTotals;
+  const summaryRows = [{
+    'إجمالي مرتجعات المبيعات': Number(t.salesTotal.toFixed(2)),
+    'إجمالي مرتجعات المشتريات': Number(t.purchaseTotal.toFixed(2)),
+    'إجمالي المرتجعات (الكل)': Number(t.grandTotal.toFixed(2)),
+    'عدد عمليات الإرجاع': t.count,
+  }];
+  const topProductsSheet = lastReturnsTopProductsRows.map(r => ({
+    'الصنف': r.name,
+    'النوع': r.type,
+    'عدد مرات الإرجاع': r.count,
+    'الكمية المرتجعة': r.quantity,
+    'القيمة': Number(r.total.toFixed(2)),
+  }));
+  const reasonsSheet = lastReturnsReasonsRows.map(r => ({
+    'السبب': r.name,
+    'النوع': r.type,
+    'عدد العمليات': r.count,
+    'القيمة': Number(r.total.toFixed(2)),
+    'النسبة%': Number((t.grandTotal > 0 ? r.total / t.grandTotal * 100 : 0).toFixed(1)),
+  }));
+  const trendSheet = lastReturnsTrendRows.map(r => ({
+    'التاريخ': r.date,
+    'عدد عمليات الإرجاع': r.count,
+    'القيمة': Number(r.total.toFixed(2)),
+  }));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows), 'الملخص');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(trendSheet), 'الاتجاه اليومي');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(topProductsSheet), 'الأصناف الأكثر إرجاعًا');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reasonsSheet), 'أسباب الإرجاع');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `تحليل-المرتجعات-${dateStr}.xlsx`);
+}
+
+// ============================================================
+// تقرير الأصول الثابتة والإهلاك (fixed_assets_valuation / fixed_assets_summary)
+// بيعتمد على الـ views الجاهزة في قاعدة البيانات بدل إعادة حساب الإهلاك في الواجهة،
+// عشان الأرقام تفضل مطابقة تمامًا لتقرير المركز المالي.
+// ============================================================
+function populateFixedAssetsReportBranchFilter() {
+  const field = document.getElementById('faReportBranchField');
+  const sel = document.getElementById('faReportBranchFilter');
+  if (boBranchesList.length <= 1) {
+    field.style.display = 'none';
+    sel.innerHTML = '<option value="">كل الفروع</option>';
+    return;
+  }
+  sel.innerHTML = '<option value="">كل الفروع</option>' +
+    boBranchesList.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+  field.style.display = 'block';
+}
+
+let lastFixedAssetsReportRows = [];
+let lastFixedAssetsReportByBranch = [];
+let lastFixedAssetsReportTotals = { count: 0, purchase: 0, depreciation: 0, bookValue: 0 };
+
+async function refreshFixedAssetsReport() {
+  const branchId = document.getElementById('faReportBranchFilter').value || null;
+  const status = document.getElementById('faReportStatusFilter').value;
+
+  const tbody = document.getElementById('faReportTableBody');
+  tbody.innerHTML = `<tr><td colspan="10" class="bo-empty">جاري التحميل...</td></tr>`;
+
+  try {
+    let query = supabaseClient
+      .from('fixed_assets_valuation')
+      .select('*, branches(name)')
+      .order('purchase_date', { ascending: false });
+    if (branchId) query = query.eq('branch_id', branchId);
+    if (status === 'active') query = query.eq('is_active', true);
+    if (status === 'disposed') query = query.eq('is_active', false);
+    const { data: rows, error } = await query;
+    if (error) throw error;
+
+    lastFixedAssetsReportRows = rows || [];
+
+    const totalPurchase = lastFixedAssetsReportRows.reduce((s, r) => s + Number(r.purchase_value || 0), 0);
+    const totalDepreciation = lastFixedAssetsReportRows.reduce((s, r) => s + Number(r.accumulated_depreciation || 0), 0);
+    const totalBookValue = lastFixedAssetsReportRows.reduce((s, r) => s + Number(r.book_value || 0), 0);
+    lastFixedAssetsReportTotals = { count: lastFixedAssetsReportRows.length, purchase: totalPurchase, depreciation: totalDepreciation, bookValue: totalBookValue };
+
+    document.getElementById('faReportCount').textContent = lastFixedAssetsReportRows.length;
+    document.getElementById('faReportTotalPurchase').textContent = totalPurchase.toFixed(2);
+    document.getElementById('faReportTotalDepreciation').textContent = totalDepreciation.toFixed(2);
+    document.getElementById('faReportTotalBookValue').textContent = totalBookValue.toFixed(2);
+
+    if (lastFixedAssetsReportRows.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="10" class="bo-empty">لا توجد أصول مطابقة لهذه الفلاتر</td></tr>`;
+    } else {
+      tbody.innerHTML = '';
+      lastFixedAssetsReportRows.forEach(a => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${escapeHtml(a.branches?.name || '—')}</td>
+          <td>${escapeHtml(a.asset_code || '—')}</td>
+          <td>${escapeHtml(a.name)}</td>
+          <td>${fixedAssetCategoryLabels[a.category] || a.category}</td>
+          <td>${a.purchase_date}</td>
+          <td class="num">${Number(a.purchase_value).toFixed(2)}</td>
+          <td class="num">${Number(a.depreciation_rate).toFixed(2)}%</td>
+          <td class="num">${Number(a.accumulated_depreciation).toFixed(2)}</td>
+          <td class="num">${Number(a.book_value).toFixed(2)}</td>
+          <td>${a.is_active ? 'نشط' : `مُستبعد${a.disposed_at ? ' في ' + a.disposed_at : ''}`}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ملخص حسب الفرع (يظهر بس لو عندنا أكتر من فرع ومفيش فلتر فرع محدد)
+    const byBranchWrap = document.getElementById('faReportByBranchWrap');
+    if (boBranchesList.length > 1 && !branchId) {
+      byBranchWrap.style.display = 'block';
+      let summaryQuery = supabaseClient.from('fixed_assets_summary').select('*, branches(name)');
+      const { data: summaryRows, error: summaryError } = await summaryQuery;
+      if (summaryError) throw summaryError;
+      lastFixedAssetsReportByBranch = summaryRows || [];
+      const byBranchBody = document.getElementById('faReportByBranchTableBody');
+      if (lastFixedAssetsReportByBranch.length === 0) {
+        byBranchBody.innerHTML = `<tr><td colspan="5" class="bo-empty">لا توجد بيانات</td></tr>`;
+      } else {
+        byBranchBody.innerHTML = '';
+        lastFixedAssetsReportByBranch.forEach(b => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${escapeHtml(b.branches?.name || '—')}</td>
+            <td class="num">${b.assets_count}</td>
+            <td class="num">${Number(b.total_purchase_value).toFixed(2)}</td>
+            <td class="num">${Number(b.total_accumulated_depreciation).toFixed(2)}</td>
+            <td class="num">${Number(b.total_book_value).toFixed(2)}</td>`;
+          byBranchBody.appendChild(tr);
+        });
+      }
+    } else {
+      byBranchWrap.style.display = 'none';
+      lastFixedAssetsReportByBranch = [];
+    }
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحميل تقرير الأصول الثابتة', true);
+  }
+}
+
+function exportFixedAssetsReportToExcel() {
+  const t = lastFixedAssetsReportTotals;
+  const summaryRows = [{
+    'عدد الأصول': t.count,
+    'إجمالي قيمة الشراء': Number(t.purchase.toFixed(2)),
+    'إجمالي مجمع الإهلاك': Number(t.depreciation.toFixed(2)),
+    'إجمالي القيمة الدفترية': Number(t.bookValue.toFixed(2)),
+  }];
+  const detailRows = lastFixedAssetsReportRows.map(a => ({
+    'الفرع': a.branches?.name || '—',
+    'الكود': a.asset_code || '—',
+    'الاسم': a.name,
+    'الفئة': fixedAssetCategoryLabels[a.category] || a.category,
+    'تاريخ الشراء': a.purchase_date,
+    'قيمة الشراء': Number(a.purchase_value),
+    'نسبة الإهلاك السنوية %': Number(a.depreciation_rate),
+    'مجمع الإهلاك': Number(a.accumulated_depreciation),
+    'القيمة الدفترية': Number(a.book_value),
+    'الحالة': a.is_active ? 'نشط' : `مُستبعد${a.disposed_at ? ' في ' + a.disposed_at : ''}`,
+  }));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows), 'الملخص');
+  if (lastFixedAssetsReportByBranch.length > 0) {
+    const byBranchRows = lastFixedAssetsReportByBranch.map(b => ({
+      'الفرع': b.branches?.name || '—',
+      'عدد الأصول': b.assets_count,
+      'قيمة الشراء': Number(b.total_purchase_value),
+      'مجمع الإهلاك': Number(b.total_accumulated_depreciation),
+      'القيمة الدفترية': Number(b.total_book_value),
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(byBranchRows), 'حسب الفرع');
+  }
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(detailRows), 'تفصيل الأصول');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `تقرير-الأصول-الثابتة-${dateStr}.xlsx`);
+}
+
+// ============================================================
+// تقرير حركة الخزائن والحسابات البنكية (cash_account_transactions + cash_transfers)
+// بيدمج نوعين من المصادر في سجل حركة واحد: حركات الإيداع/السحب المباشرة، وحركات
+// الترحيل التلقائي من قفل الورديات (النوع بيتحدد من عمود type)، بالإضافة لحركات
+// التحويل بين الخزائن (كل تحويل بيتحول لسطرين: صادر من الخزينة المصدر ووارد
+// للخزينة الهدف) عشان يبقى كشف حركة واضح لكل خزينة على حدة.
+// ============================================================
+const cashAccountTxTypeLabels = {
+  deposit: 'إيداع',
+  withdrawal: 'سحب',
+  shift_close_in: 'ترحيل نقدية وردية',
+  reversal: 'عكس ترحيل',
+  capital_injection: 'ضخ رأس مال',
+  capital_drawing: 'مسحوبات رأس مال',
+  initial_capital: 'رأس مال مبدئي',
+};
+
+async function populateCashMovementsReportFilters() {
+  if (!treasuriesLoadedOnce) { await loadBoTreasuries(); treasuriesLoadedOnce = true; }
+  const branchField = document.getElementById('cmBranchField');
+  const branchSel = document.getElementById('cmBranchFilter');
+  if (boBranchesList.length <= 1) {
+    branchField.style.display = 'none';
+    branchSel.innerHTML = '<option value="">كل الفروع</option>';
+  } else {
+    branchSel.innerHTML = '<option value="">كل الفروع</option>' +
+      boBranchesList.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+    branchField.style.display = 'block';
+  }
+  const accSel = document.getElementById('cmAccountFilter');
+  accSel.innerHTML = '<option value="">كل الخزائن والحسابات</option>' +
+    boTreasuries.map(t => `<option value="${t.id}">${escapeHtml(t.branches?.name || '')} — ${escapeHtml(t.name)}</option>`).join('');
+}
+
+let lastCashMovementsRows = [];
+let lastCashMovementsTotals = { deposits: 0, withdrawals: 0, transfers: 0, count: 0 };
+
+async function refreshCashMovementsReport() {
+  const fromDate = document.getElementById('cmFromDate').value;
+  const toDate = document.getElementById('cmToDate').value;
+  if (!fromDate || !toDate) return;
+  const fromISO = `${fromDate}T00:00:00`;
+  const toISO = `${toDate}T23:59:59`;
+  const branchId = document.getElementById('cmBranchFilter').value || null;
+  const accountId = document.getElementById('cmAccountFilter').value || null;
+
+  const tbody = document.getElementById('cmReportTableBody');
+  tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>`;
+
+  try {
+    let txQuery = supabaseClient
+      .from('cash_account_transactions')
+      .select('id, type, amount, note, created_at, cash_accounts!inner(name, branch_id, branches(name)), users_profile(full_name)')
+      .gte('created_at', fromISO)
+      .lte('created_at', toISO);
+    if (accountId) txQuery = txQuery.eq('cash_account_id', accountId);
+    if (branchId) txQuery = txQuery.eq('cash_accounts.branch_id', branchId);
+    const { data: txRows, error: txError } = await txQuery;
+    if (txError) throw txError;
+
+    const trQuery = supabaseClient
+      .from('cash_transfers')
+      .select('id, amount, note, created_at, from_cash_account_id, to_cash_account_id, from_account:cash_accounts!cash_transfers_from_cash_account_id_fkey(name, branch_id, branches(name)), to_account:cash_accounts!cash_transfers_to_cash_account_id_fkey(name, branch_id, branches(name)), users_profile(full_name)')
+      .gte('created_at', fromISO)
+      .lte('created_at', toISO);
+    const { data: trRows, error: trError } = await trQuery;
+    if (trError) throw trError;
+
+    const rows = [];
+    let totalDeposits = 0, totalWithdrawals = 0;
+
+    (txRows || []).forEach(t => {
+      const amt = Number(t.amount) || 0;
+      if (t.type === 'deposit') totalDeposits += amt;
+      else if (t.type === 'withdrawal') totalWithdrawals += Math.abs(amt);
+      rows.push({
+        date: t.created_at,
+        branchName: t.cash_accounts?.branches?.name || '—',
+        accountName: t.cash_accounts?.name || '—',
+        typeLabel: cashAccountTxTypeLabels[t.type] || t.type,
+        note: t.note || '—',
+        amount: amt,
+        byName: t.users_profile?.full_name || '—',
+      });
+    });
+
+    const seenTransferIds = new Set();
+    let totalTransfers = 0;
+    (trRows || []).forEach(tr => {
+      const amt = Number(tr.amount) || 0;
+      const fromBranchOk = !branchId || tr.from_account?.branch_id === branchId;
+      const fromAccountOk = !accountId || tr.from_cash_account_id === accountId;
+      const toBranchOk = !branchId || tr.to_account?.branch_id === branchId;
+      const toAccountOk = !accountId || tr.to_cash_account_id === accountId;
+      if (fromBranchOk && fromAccountOk) {
+        rows.push({
+          date: tr.created_at,
+          branchName: tr.from_account?.branches?.name || '—',
+          accountName: tr.from_account?.name || '—',
+          typeLabel: `تحويل إلى ${tr.to_account?.name || '—'}`,
+          note: tr.note || '—',
+          amount: -amt,
+          byName: tr.users_profile?.full_name || '—',
+        });
+        if (!seenTransferIds.has(tr.id)) { seenTransferIds.add(tr.id); totalTransfers += amt; }
+      }
+      if (toBranchOk && toAccountOk) {
+        rows.push({
+          date: tr.created_at,
+          branchName: tr.to_account?.branches?.name || '—',
+          accountName: tr.to_account?.name || '—',
+          typeLabel: `تحويل من ${tr.from_account?.name || '—'}`,
+          note: tr.note || '—',
+          amount: amt,
+          byName: tr.users_profile?.full_name || '—',
+        });
+        if (!seenTransferIds.has(tr.id)) { seenTransferIds.add(tr.id); totalTransfers += amt; }
+      }
+    });
+
+    rows.sort((a, b) => new Date(b.date) - new Date(a.date));
+    lastCashMovementsRows = rows;
+    lastCashMovementsTotals = { deposits: totalDeposits, withdrawals: totalWithdrawals, transfers: totalTransfers, count: (txRows || []).length + seenTransferIds.size };
+
+    document.getElementById('cmTotalDeposits').textContent = totalDeposits.toFixed(2);
+    document.getElementById('cmTotalWithdrawals').textContent = totalWithdrawals.toFixed(2);
+    document.getElementById('cmTotalTransfers').textContent = totalTransfers.toFixed(2);
+    document.getElementById('cmMovementsCount').textContent = lastCashMovementsTotals.count;
+
+    if (rows.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لا توجد حركات في هذه الفترة</td></tr>`;
+    } else {
+      tbody.innerHTML = '';
+      rows.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${new Date(r.date).toLocaleString('ar-EG')}</td>
+          <td>${escapeHtml(r.branchName)}</td>
+          <td>${escapeHtml(r.accountName)}</td>
+          <td>${escapeHtml(r.typeLabel)}</td>
+          <td class="wrap-cell">${escapeHtml(r.note)}</td>
+          <td class="num ${r.amount >= 0 ? 'positive' : 'negative'}">${r.amount.toFixed(2)}</td>
+          <td>${escapeHtml(r.byName)}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحميل تقرير حركة الخزائن', true);
+  }
+}
+
+function exportCashMovementsReportToExcel() {
+  const t = lastCashMovementsTotals;
+  const summaryRows = [{
+    'إجمالي الإيداعات': Number(t.deposits.toFixed(2)),
+    'إجمالي المسحوبات': Number(t.withdrawals.toFixed(2)),
+    'إجمالي التحويلات': Number(t.transfers.toFixed(2)),
+    'عدد الحركات': t.count,
+  }];
+  const detailRows = lastCashMovementsRows.map(r => ({
+    'التاريخ': new Date(r.date).toLocaleString('ar-EG'),
+    'الفرع': r.branchName,
+    'الخزينة / الحساب': r.accountName,
+    'نوع الحركة': r.typeLabel,
+    'البيان': r.note,
+    'المبلغ': Number(r.amount.toFixed(2)),
+    'بواسطة': r.byName,
+  }));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows), 'الملخص');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(detailRows), 'الحركات');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `تقرير-حركة-الخزائن-${dateStr}.xlsx`);
+}
+
+// ============================================================
+// تقرير حركة رأس المال (capital_transactions) — نسخة مُصدَّرة وقابلة للفلترة
+// بالتاريخ والفرع من نفس بيانات شاشة "رأس المال وحقوق الملكية"، عشان تتابع
+// حركة رأس المال كتقرير محاسبي بدل ما تكون قايمة إدارية بس.
+// ============================================================
+async function populateCapitalMovementsReportFilters() {
+  const branchField = document.getElementById('cmpBranchField');
+  const branchSel = document.getElementById('cmpBranchFilter');
+  if (boBranchesList.length <= 1) {
+    branchField.style.display = 'none';
+    branchSel.innerHTML = '<option value="">كل الفروع</option>';
+  } else {
+    branchSel.innerHTML = '<option value="">كل الفروع</option>' +
+      boBranchesList.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+    branchField.style.display = 'block';
+  }
+}
+
+let lastCapitalMovementsRows = [];
+let lastCapitalMovementsTotals = { initial: 0, injection: 0, drawing: 0, net: 0 };
+
+async function refreshCapitalMovementsReport() {
+  const fromDate = document.getElementById('cmpFromDate').value;
+  const toDate = document.getElementById('cmpToDate').value;
+  if (!fromDate || !toDate) return;
+  const branchId = document.getElementById('cmpBranchFilter').value || null;
+
+  const tbody = document.getElementById('cmpReportTableBody');
+  tbody.innerHTML = `<tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr>`;
+
+  try {
+    let query = supabaseClient
+      .from('capital_transactions')
+      .select('id, type, amount, transaction_date, affects_balance, note, cash_accounts!inner(name, branch_id, branches(name)), users_profile(full_name)')
+      .gte('transaction_date', fromDate)
+      .lte('transaction_date', toDate)
+      .order('transaction_date', { ascending: false });
+    if (branchId) query = query.eq('cash_accounts.branch_id', branchId);
+    const { data: rows, error } = await query;
+    if (error) throw error;
+
+    lastCapitalMovementsRows = rows || [];
+
+    let initialTotal = 0, injectionTotal = 0, drawingTotal = 0;
+    lastCapitalMovementsRows.forEach(t => {
+      const amt = Number(t.amount) || 0;
+      if (t.type === 'initial_capital') initialTotal += amt;
+      else if (t.type === 'injection') injectionTotal += amt;
+      else if (t.type === 'drawing') drawingTotal += amt;
+    });
+    const netTotal = initialTotal + injectionTotal - drawingTotal;
+    lastCapitalMovementsTotals = { initial: initialTotal, injection: injectionTotal, drawing: drawingTotal, net: netTotal };
+
+    document.getElementById('cmpInitialTotal').textContent = initialTotal.toFixed(2);
+    document.getElementById('cmpInjectionTotal').textContent = injectionTotal.toFixed(2);
+    document.getElementById('cmpDrawingTotal').textContent = drawingTotal.toFixed(2);
+    document.getElementById('cmpNetTotal').textContent = netTotal.toFixed(2);
+
+    if (lastCapitalMovementsRows.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" class="bo-empty">لا توجد حركات رأس مال في هذه الفترة</td></tr>`;
+    } else {
+      tbody.innerHTML = '';
+      lastCapitalMovementsRows.forEach(t => {
+        const accountLabel = t.cash_accounts?.name || '—';
+        const branchLabel = t.cash_accounts?.branches?.name || '—';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${new Date(t.transaction_date).toLocaleDateString('ar-EG')}</td>
+          <td>${escapeHtml(branchLabel)}</td>
+          <td>${capitalTypeLabels[t.type] || t.type}</td>
+          <td class="num">${Number(t.amount).toFixed(2)}</td>
+          <td>${escapeHtml(accountLabel)}</td>
+          <td>${t.affects_balance ? 'نعم' : 'لا (قيد إقراري)'}</td>
+          <td class="wrap-cell">${escapeHtml(t.note || '—')}</td>
+          <td>${escapeHtml(t.users_profile?.full_name || '—')}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحميل تقرير حركة رأس المال', true);
+  }
+}
+
+function exportCapitalMovementsReportToExcel() {
+  const t = lastCapitalMovementsTotals;
+  const summaryRows = [{
+    'رأس المال المبدئي': Number(t.initial.toFixed(2)),
+    'إجمالي الضخ الإضافي': Number(t.injection.toFixed(2)),
+    'إجمالي المسحوبات الشخصية': Number(t.drawing.toFixed(2)),
+    'صافي مساهمات المالك': Number(t.net.toFixed(2)),
+  }];
+  const detailRows = lastCapitalMovementsRows.map(r => ({
+    'التاريخ': r.transaction_date,
+    'الفرع': r.cash_accounts?.branches?.name || '—',
+    'النوع': capitalTypeLabels[r.type] || r.type,
+    'المبلغ': Number(r.amount),
+    'الخزينة / الحساب': r.cash_accounts?.name || '—',
+    'أثّرت على الرصيد؟': r.affects_balance ? 'نعم' : 'لا (قيد إقراري)',
+    'ملاحظة': r.note || '—',
+    'بواسطة': r.users_profile?.full_name || '—',
+  }));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows), 'الملخص');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(detailRows), 'الحركات');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `تقرير-حركة-رأس-المال-${dateStr}.xlsx`);
+}
+
+// ============================================================
 // تذكير سداد الديون: تنبيه للعملاء الذين لديهم رصيد مستحق مضت عليه فترة معينة دون نشاط (بيع أو دفعة)
 // ============================================================
 let debtReminderDays = 30;
@@ -17132,11 +18862,16 @@ const INVENTORY_QUICK_RANGE_CONFIGS = [
   { rowId: 'invAdjustQuickRange', fromId: 'invAdjustFromDate', toId: 'invAdjustToDate', refresh: () => refreshInventoryAdjustmentsReport() },
   { rowId: 'invTopMoversQuickRange', fromId: 'invTopMoversFromDate', toId: 'invTopMoversToDate', refresh: () => refreshInventoryTopMoversReport() },
   { rowId: 'invSlowMoversQuickRange', fromId: 'invSlowMoversFromDate', toId: 'invSlowMoversToDate', refresh: () => refreshInventorySlowMoversReport() },
+  { rowId: 'invMoveAnalysisQuickRange', fromId: 'maFromDate', toId: 'maToDate', refresh: () => refreshMovementAnalysisReport() },
   { rowId: 'purchasesQuickRangeRow', fromId: 'purchasesReportFromDate', toId: 'purchasesReportToDate', refresh: () => runPurchasesReport() },
   { rowId: 'otherBranchProfitQuickRange', fromId: 'otherBranchProfitFromDate', toId: 'otherBranchProfitToDate', refresh: () => runBranchProfitReport() },
   { rowId: 'otherCashierPerfQuickRange', fromId: 'otherCashierPerfFromDate', toId: 'otherCashierPerfToDate', refresh: () => runCashierPerfReport() },
   { rowId: 'otherDiscountsQuickRange', fromId: 'otherDiscountsFromDate', toId: 'otherDiscountsToDate', refresh: () => runDiscountsReport() },
   { rowId: 'activityLogQuickRange', fromId: 'activityLogFromDate', toId: 'activityLogToDate', refresh: () => refreshActivityLogReport() },
+  { rowId: 'cmQuickRange', fromId: 'cmFromDate', toId: 'cmToDate', refresh: () => refreshCashMovementsReport() },
+  { rowId: 'cmpQuickRange', fromId: 'cmpFromDate', toId: 'cmpToDate', refresh: () => refreshCapitalMovementsReport() },
+  { rowId: 'expensesAnalysisQuickRange', fromId: 'expensesAnalysisFromDate', toId: 'expensesAnalysisToDate', refresh: () => refreshExpensesAnalysisReport() },
+  { rowId: 'otherReturnsQuickRange', fromId: 'otherReturnsFromDate', toId: 'otherReturnsToDate', refresh: () => refreshReturnsAnalysisReport() },
 ];
 
 function initInventoryQuickRanges() {
@@ -17159,7 +18894,7 @@ function initInventoryQuickRanges() {
 function populateInventoryReportFilters() {
   const opts = '<option value="">كل المخازن</option>' +
     boWarehouses.filter(w => w.is_active).map(w => `<option value="${w.id}">${escapeHtml(warehouseLabel(w))}</option>`).join('');
-  ['invLevelsWarehouseFilter', 'invLowStockWarehouseFilter', 'invValuationWarehouseFilter', 'invMovementWarehouseFilter', 'invTopMoversWarehouseFilter', 'invSlowMoversWarehouseFilter']
+  ['invLevelsWarehouseFilter', 'invLowStockWarehouseFilter', 'invValuationWarehouseFilter', 'invMovementWarehouseFilter', 'invAdjustWarehouseFilter', 'stItemsWarehouseFilter', 'invTopMoversWarehouseFilter', 'invSlowMoversWarehouseFilter']
     .forEach(id => {
       const el = document.getElementById(id);
       if (el) el.innerHTML = opts;
@@ -17228,6 +18963,84 @@ function exportInvLevelsToExcel() {
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'مستوى المخزون');
   const dateStr = new Date().toISOString().split('T')[0];
   XLSX.writeFile(wb, `تقرير-مستوى-المخزون-${dateStr}.xlsx`);
+}
+
+// ---- تقرير جرد الأصناف (الأصناف التي عليها حركة فقط) ----
+let lastStItemsRows = [];
+
+async function refreshStocktakeItemsReport() {
+  const warehouseId = document.getElementById('stItemsWarehouseFilter').value || null;
+  const tbody = document.getElementById('stItemsTableBody');
+  tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>`;
+  try {
+    // بنجيب كل حركات المخزون (product_id + created_at) عشان نحدد مين الأصناف اللي عليها حركة
+    // فعلاً، ونحسب عدد الحركات وتاريخ آخر حركة لكل صنف
+    let txQuery = supabaseClient
+      .from('stock_transactions')
+      .select('product_id, created_at')
+      .order('created_at', { ascending: true })
+      .limit(50000);
+    if (warehouseId) txQuery = txQuery.eq('warehouse_id', warehouseId);
+    const { data: txData, error: txError } = await txQuery;
+    if (txError) throw txError;
+
+    const movementMap = {};
+    (txData || []).forEach(t => {
+      if (!movementMap[t.product_id]) movementMap[t.product_id] = { count: 0, last: t.created_at };
+      movementMap[t.product_id].count += 1;
+      movementMap[t.product_id].last = t.created_at; // آخر قيمة لأننا رتبنا تصاعديًا
+    });
+
+    const stockByProduct = await fetchStockByProduct(warehouseId);
+    const q = (document.getElementById('stItemsSearchInput').value || '').trim().toLowerCase();
+
+    const rows = boProducts
+      .filter(p => movementMap[p.id] && (!q || p.name.toLowerCase().includes(q)))
+      .map(p => {
+        const qty = stockByProduct[p.id] || 0;
+        const cost = Number(p.cost_price) || 0;
+        return {
+          name: p.name,
+          category: p.categories?.name || 'بدون فئة',
+          unit: p.unit_type,
+          qty,
+          value: qty * cost,
+          count: movementMap[p.id].count,
+          last: movementMap[p.id].last,
+        };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name, 'ar'));
+
+    document.getElementById('stItemsCount').textContent = rows.length;
+    document.getElementById('stItemsTotalQty').textContent = formatQty(rows.reduce((s, r) => s + r.qty, 0));
+    document.getElementById('stItemsTotalValue').textContent = rows.reduce((s, r) => s + r.value, 0).toFixed(2);
+
+    renderBreakdownTable('stItemsTableBody', rows, 7, row => `
+      <td>${escapeHtml(row.name)}</td>
+      <td>${escapeHtml(row.category)}</td>
+      <td>${escapeHtml(row.unit)}</td>
+      <td class="num">${formatQty(row.qty)}</td>
+      <td class="num">${row.value.toFixed(2)}</td>
+      <td class="num">${row.count}</td>
+      <td class="num">${new Date(row.last).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' })}</td>`);
+    lastStItemsRows = rows;
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحميل تقرير جرد الأصناف', true);
+  }
+}
+
+function exportStItemsToExcel() {
+  if (lastStItemsRows.length === 0) { showToast('لا توجد بيانات لتصديرها', true); return; }
+  const rows = lastStItemsRows.map(r => ({
+    'الصنف': r.name, 'الفئة': r.category, 'الوحدة': r.unit,
+    'الرصيد الحالي': r.qty, 'قيمة الرصيد': Number(r.value.toFixed(2)),
+    'عدد الحركات': r.count, 'آخر حركة': new Date(r.last).toLocaleString('ar-EG'),
+  }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'جرد الأصناف');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `تقرير-جرد-الأصناف-${dateStr}.xlsx`);
 }
 
 // ---- تنبيهات نقص المخزون ----
@@ -17386,6 +19199,292 @@ function exportInvMovementToExcel() {
   XLSX.writeFile(wb, `تقرير-حركة-المخزون-${dateStr}.xlsx`);
 }
 
+// ============================================================
+// كشف حركة صنف: كل حركات المخزون لصنف واحد (شراء/بيع/مرتجعات/تحويلات/تسويات)
+// مرتبة بالتاريخ مع رصيد تراكمي بعد كل حركة، من أول يوم حتى الآن
+// ============================================================
+let lastProductLedgerRows = [];
+let lastProductLedgerSummary = { opening: 0, totalIn: 0, totalOut: 0, closing: 0 };
+
+function populateProductLedgerFilters() {
+  setSearchableSelectItems('plProductSelect', boProducts.filter(p => p.is_active).map(p => ({ id: p.id, name: p.name })));
+
+  const whSel = document.getElementById('plWarehouseFilter');
+  const currentWh = whSel.value;
+  whSel.innerHTML = '<option value="">كل المخازن</option>' +
+    boWarehouses.filter(w => w.is_active).map(w => `<option value="${w.id}">${escapeHtml(warehouseLabel(w))}</option>`).join('');
+  if (currentWh) whSel.value = currentWh;
+}
+
+async function refreshProductLedgerReport() {
+  const productId = document.getElementById('plProductSelect').value;
+  const tbody = document.getElementById('productLedgerTableBody');
+  if (!productId) { showToast('يرجى اختيار الصنف أولاً', true); return; }
+
+  const warehouseId = document.getElementById('plWarehouseFilter').value || null;
+  const fromDate = document.getElementById('plFromDate').value || null;
+  const toDate = document.getElementById('plToDate').value || null;
+  const fromISO = fromDate ? `${fromDate}T00:00:00` : null;
+  const toISO = toDate ? `${toDate}T23:59:59` : null;
+
+  tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>`;
+  document.getElementById('plCardsRow').style.display = 'none';
+
+  try {
+    // بنجيب كل حركات الصنف من أول يوم (بدون حد أقصى على التاريخ) عشان الرصيد التراكمي يكون صحيح
+    let query = supabaseClient
+      .from('stock_transactions')
+      .select('created_at, quantity, type, note, warehouses(name, is_main, branches(name))')
+      .eq('product_id', productId)
+      .order('created_at', { ascending: true })
+      .limit(10000);
+    if (warehouseId) query = query.eq('warehouse_id', warehouseId);
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const entries = (data || []).map(t => ({
+      date: t.created_at,
+      typeKey: t.type,
+      type: STOCK_TX_TYPE_LABELS[t.type] || t.type,
+      warehouse: t.warehouses ? warehouseLabel(t.warehouses) : '—',
+      qty: Number(t.quantity),
+      note: t.note || '',
+    }));
+
+    // الرصيد الافتتاحي = صافي كل الحركات قبل تاريخ "من" (لو محدد)
+    let opening = 0;
+    let visible = entries;
+    if (fromISO) {
+      entries.forEach(e => { if (new Date(e.date) < new Date(fromISO)) opening += e.qty; });
+      visible = entries.filter(e => new Date(e.date) >= new Date(fromISO));
+    }
+    if (toISO) {
+      visible = visible.filter(e => new Date(e.date) <= new Date(toISO));
+    }
+
+    let running = opening;
+    const rows = visible.map(e => {
+      running += e.qty;
+      return { ...e, in: e.qty > 0 ? e.qty : 0, out: e.qty < 0 ? Math.abs(e.qty) : 0, balance: running };
+    });
+
+    const totalIn = rows.reduce((sum, r) => sum + r.in, 0);
+    const totalOut = rows.reduce((sum, r) => sum + r.out, 0);
+    const closing = opening + totalIn - totalOut;
+
+    lastProductLedgerRows = rows;
+    lastProductLedgerSummary = { opening, totalIn, totalOut, closing };
+
+    document.getElementById('plCardsRow').style.display = 'grid';
+    document.getElementById('plOpeningBalance').textContent = formatQty(opening);
+    document.getElementById('plTotalIn').textContent = formatQty(totalIn);
+    document.getElementById('plTotalOut').textContent = formatQty(totalOut);
+    document.getElementById('plClosingBalance').textContent = formatQty(closing);
+    document.getElementById('plMovementCount').textContent = rows.length;
+
+    if (rows.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لا توجد حركات لهذا الصنف في هذه الفترة</td></tr>`;
+    } else {
+      tbody.innerHTML = '';
+      if (fromISO) {
+        const trOpen = document.createElement('tr');
+        trOpen.innerHTML = `<td colspan="5" style="font-weight:600;">رصيد افتتاحي</td><td class="num" style="font-weight:600;">${formatQty(opening)}</td><td></td>`;
+        tbody.appendChild(trOpen);
+      }
+      rows.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="num">${new Date(r.date).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' })}</td>
+          <td>${escapeHtml(r.type)}</td>
+          <td>${escapeHtml(r.warehouse)}</td>
+          <td class="num positive">${r.in > 0 ? formatQty(r.in) : '—'}</td>
+          <td class="num negative">${r.out > 0 ? formatQty(r.out) : '—'}</td>
+          <td class="num">${formatQty(r.balance)}</td>
+          <td>${escapeHtml(r.note)}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحميل كشف حركة الصنف', true);
+  }
+}
+
+function exportProductLedgerToExcel() {
+  if (lastProductLedgerRows.length === 0) { showToast('لا توجد بيانات للتصدير', true); return; }
+  const productName = document.getElementById('plProductSelect_search').value || 'كشف حركة صنف';
+
+  const rows = lastProductLedgerRows.map(r => ({
+    'التاريخ': new Date(r.date).toLocaleString('ar-EG'),
+    'نوع الحركة': r.type,
+    'المخزن': r.warehouse,
+    'وارد': r.in || '',
+    'صادر': r.out || '',
+    'الرصيد بعد الحركة': Number(r.balance.toFixed(3)),
+    'ملاحظة': r.note,
+  }));
+  const s = lastProductLedgerSummary;
+  const summaryRows = [{
+    'الصنف': productName,
+    'الرصيد الافتتاحي': Number(s.opening.toFixed(3)),
+    'إجمالي الوارد': Number(s.totalIn.toFixed(3)),
+    'إجمالي الصادر': Number(s.totalOut.toFixed(3)),
+    'الرصيد الختامي': Number(s.closing.toFixed(3)),
+  }];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows), 'الملخص');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'الحركات');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `كشف-حركة-صنف-${productName}-${dateStr}.xlsx`);
+}
+
+// ---- تحليل حركة الصنف ----
+let lastMoveAnalysisBreakdownRows = [];
+let lastMoveAnalysisSummary = null;
+
+function populateMovementAnalysisFilters() {
+  setSearchableSelectItems('maProductSelect', boProducts.filter(p => p.is_active).map(p => ({ id: p.id, name: p.name })));
+
+  const whSel = document.getElementById('maWarehouseFilter');
+  const currentWh = whSel.value;
+  whSel.innerHTML = '<option value="">كل المخازن</option>' +
+    boWarehouses.filter(w => w.is_active).map(w => `<option value="${w.id}">${escapeHtml(warehouseLabel(w))}</option>`).join('');
+  if (currentWh) whSel.value = currentWh;
+}
+
+async function refreshMovementAnalysisReport() {
+  const productId = document.getElementById('maProductSelect').value;
+  const tbody = document.getElementById('maBreakdownTableBody');
+  if (!productId) {
+    tbody.innerHTML = `<tr><td colspan="4" class="bo-empty">اختر صنفًا ثم اضغط "تحليل"</td></tr>`;
+    document.getElementById('maCardsRow').style.display = 'none';
+    return;
+  }
+
+  const warehouseId = document.getElementById('maWarehouseFilter').value || null;
+  const fromDate = document.getElementById('maFromDate').value;
+  const toDate = document.getElementById('maToDate').value;
+  if (!fromDate || !toDate) { showToast('يرجى تحديد الفترة', true); return; }
+  const fromISO = `${fromDate}T00:00:00`;
+  const toISO = `${toDate}T23:59:59`;
+
+  tbody.innerHTML = `<tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>`;
+  document.getElementById('maCardsRow').style.display = 'none';
+
+  try {
+    // بنجيب كل حركات الصنف من أول يوم لحد نهاية الفترة عشان نحسب الرصيد الافتتاحي بدقة
+    let query = supabaseClient
+      .from('stock_transactions')
+      .select('created_at, quantity, type')
+      .eq('product_id', productId)
+      .lte('created_at', toISO)
+      .order('created_at', { ascending: true })
+      .limit(10000);
+    if (warehouseId) query = query.eq('warehouse_id', warehouseId);
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const entries = (data || []).map(t => ({ date: t.created_at, typeKey: t.type, qty: Number(t.quantity) }));
+    let opening = 0;
+    entries.forEach(e => { if (new Date(e.date) < new Date(fromISO)) opening += e.qty; });
+    const visible = entries.filter(e => new Date(e.date) >= new Date(fromISO));
+
+    const grouped = {};
+    let netMovement = 0;
+    visible.forEach(e => {
+      netMovement += e.qty;
+      if (!grouped[e.typeKey]) grouped[e.typeKey] = { in: 0, out: 0, count: 0 };
+      grouped[e.typeKey].count += 1;
+      if (e.qty >= 0) grouped[e.typeKey].in += e.qty;
+      else grouped[e.typeKey].out += Math.abs(e.qty);
+    });
+    const periodClosing = opening + netMovement;
+
+    const stockByProduct = await fetchStockByProduct(warehouseId);
+    const currentStock = stockByProduct[productId] || 0;
+
+    const soldQty = grouped['sale']?.out || 0;
+    const purchasedQty = grouped['purchase']?.in || 0;
+    const saleReturnQty = grouped['sale_return']?.in || 0;
+    const purchaseReturnQty = grouped['purchase_return']?.out || 0;
+    const transferIn = grouped['transfer_in']?.in || 0;
+    const transferOut = grouped['transfer_out']?.out || 0;
+
+    const daysInRange = Math.max(1, buildDateRangeDays(fromDate, toDate).length);
+    const avgDailySales = soldQty / daysInRange;
+    const avgStock = (Math.max(opening, 0) + Math.max(periodClosing, 0)) / 2;
+    const turnoverRate = avgStock > 0 ? (soldQty / avgStock) : null;
+    const daysCoverage = avgDailySales > 0 ? (currentStock / avgDailySales) : null;
+
+    lastMoveAnalysisSummary = {
+      currentStock, soldQty, purchasedQty, saleReturnQty, purchaseReturnQty, transferIn, transferOut,
+      netMovement, avgDailySales, turnoverRate, daysCoverage, fromDate, toDate,
+    };
+
+    document.getElementById('maCardsRow').style.display = 'grid';
+    document.getElementById('maCurrentStock').textContent = formatQty(currentStock);
+    document.getElementById('maSoldQty').textContent = formatQty(soldQty);
+    document.getElementById('maPurchasedQty').textContent = formatQty(purchasedQty);
+    document.getElementById('maSaleReturnQty').textContent = formatQty(saleReturnQty);
+    document.getElementById('maPurchaseReturnQty').textContent = formatQty(purchaseReturnQty);
+    document.getElementById('maTransfers').textContent = `${formatQty(transferIn)} / ${formatQty(transferOut)}`;
+    const netEl = document.getElementById('maNetMovement');
+    netEl.textContent = (netMovement > 0 ? '+' : '') + formatQty(netMovement);
+    netEl.classList.toggle('positive', netMovement >= 0);
+    netEl.classList.toggle('negative', netMovement < 0);
+    document.getElementById('maAvgDailySales').textContent = formatQty(avgDailySales);
+    document.getElementById('maTurnoverRate').textContent = turnoverRate !== null ? `${formatQty(turnoverRate)} مرة` : '—';
+    document.getElementById('maDaysCoverage').textContent = daysCoverage !== null ? `${formatQty(daysCoverage)} يوم` : (soldQty === 0 ? 'لا توجد مبيعات في الفترة' : '—');
+
+    const rows = Object.entries(grouped).map(([typeKey, v]) => ({
+      type: STOCK_TX_TYPE_LABELS[typeKey] || typeKey, in: v.in, out: v.out, count: v.count,
+    })).sort((a, b) => (b.in + b.out) - (a.in + a.out));
+
+    lastMoveAnalysisBreakdownRows = rows;
+    renderBreakdownTable('maBreakdownTableBody', rows, 4, row => `
+      <td>${escapeHtml(row.type)}</td>
+      <td class="num positive">${row.in > 0 ? formatQty(row.in) : '—'}</td>
+      <td class="num negative">${row.out > 0 ? formatQty(row.out) : '—'}</td>
+      <td class="num">${row.count}</td>`);
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحميل تحليل حركة الصنف', true);
+  }
+}
+
+function exportMovementAnalysisToExcel() {
+  if (!lastMoveAnalysisSummary) { showToast('لا توجد بيانات للتصدير', true); return; }
+  const productName = document.getElementById('maProductSelect_search').value || 'تحليل حركة صنف';
+  const s = lastMoveAnalysisSummary;
+
+  const summaryRows = [{
+    'الصنف': productName,
+    'من تاريخ': s.fromDate,
+    'إلى تاريخ': s.toDate,
+    'الرصيد الحالي': Number(s.currentStock.toFixed(3)),
+    'إجمالي المبيعات': Number(s.soldQty.toFixed(3)),
+    'إجمالي المشتريات': Number(s.purchasedQty.toFixed(3)),
+    'مرتجعات المبيعات': Number(s.saleReturnQty.toFixed(3)),
+    'مرتجعات المشتريات': Number(s.purchaseReturnQty.toFixed(3)),
+    'تحويل وارد': Number(s.transferIn.toFixed(3)),
+    'تحويل صادر': Number(s.transferOut.toFixed(3)),
+    'صافي الحركة': Number(s.netMovement.toFixed(3)),
+    'متوسط المبيعات اليومية': Number(s.avgDailySales.toFixed(3)),
+    'معدل دوران المخزون': s.turnoverRate !== null ? Number(s.turnoverRate.toFixed(3)) : '',
+    'أيام التغطية المتبقية': s.daysCoverage !== null ? Number(s.daysCoverage.toFixed(1)) : '',
+  }];
+  const breakdownRows = lastMoveAnalysisBreakdownRows.map(r => ({
+    'نوع الحركة': r.type, 'وارد': r.in || '', 'صادر': r.out || '', 'عدد الحركات': r.count,
+  }));
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows), 'الملخص');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(breakdownRows), 'تفصيل الحركة');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `تحليل-حركة-صنف-${productName}-${dateStr}.xlsx`);
+}
+
 // ---- التحويلات بين المخازن ----
 async function refreshInventoryTransfersReport() {
   const fromDate = document.getElementById('invTransfersFromDate').value;
@@ -17451,43 +19550,65 @@ async function refreshInventoryAdjustmentsReport() {
   if (!fromDate || !toDate) return;
   const fromISO = `${fromDate}T00:00:00`;
   const toISO = `${toDate}T23:59:59`;
+  const warehouseId = document.getElementById('invAdjustWarehouseFilter').value || null;
   const tbody = document.getElementById('invAdjustmentsTableBody');
-  tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="9" class="bo-empty">جاري التحميل...</td></tr>`;
   try {
-    const { data: adjustments, error } = await supabaseClient
+    let query = supabaseClient
       .from('stock_adjustments')
-      .select('created_at, warehouses(name, is_main, branches(name)), stock_adjustment_items(quantity_before, quantity_after, difference, products(name))')
+      .select('created_at, note, warehouses(name, is_main, branches(name)), users_profile(full_name), stock_adjustment_items(quantity_before, quantity_after, difference, products(name, cost_price))')
       .gte('created_at', fromISO)
       .lte('created_at', toISO)
       .order('created_at', { ascending: false });
+    if (warehouseId) query = query.eq('warehouse_id', warehouseId);
+    const { data: adjustments, error } = await query;
     if (error) throw error;
 
     let totalIncrease = 0, totalDecrease = 0;
+    let totalIncreaseValue = 0, totalDecreaseValue = 0;
+    let itemsCount = 0;
     const rows = [];
     (adjustments || []).forEach(a => {
       (a.stock_adjustment_items || []).forEach(it => {
         const diff = Number(it.difference);
-        if (diff > 0) totalIncrease += diff; else totalDecrease += Math.abs(diff);
+        const cost = Number(it.products?.cost_price || 0);
+        const value = diff * cost;
+        itemsCount += 1;
+        if (diff > 0) { totalIncrease += diff; totalIncreaseValue += value; }
+        else { totalDecrease += Math.abs(diff); totalDecreaseValue += Math.abs(value); }
         rows.push({
           date: a.created_at,
           warehouse: a.warehouses ? warehouseLabel(a.warehouses) : '—',
           product: it.products?.name || 'صنف محذوف',
-          before: Number(it.quantity_before), after: Number(it.quantity_after), diff,
+          before: Number(it.quantity_before), after: Number(it.quantity_after), diff, value,
+          by: a.users_profile?.full_name || '—',
+          note: a.note || '',
         });
       });
     });
 
     document.getElementById('invAdjustCount').textContent = (adjustments || []).length;
+    document.getElementById('invAdjustItemsCount').textContent = itemsCount;
     document.getElementById('invAdjustIncrease').textContent = formatQty(totalIncrease);
     document.getElementById('invAdjustDecrease').textContent = formatQty(totalDecrease);
+    document.getElementById('invAdjustIncreaseValue').textContent = totalIncreaseValue.toFixed(2);
+    document.getElementById('invAdjustDecreaseValue').textContent = totalDecreaseValue.toFixed(2);
+    const netValue = totalIncreaseValue - totalDecreaseValue;
+    const netValueEl = document.getElementById('invAdjustNetValue');
+    netValueEl.textContent = netValue.toFixed(2);
+    netValueEl.classList.toggle('positive', netValue >= 0);
+    netValueEl.classList.toggle('negative', netValue < 0);
 
-    renderBreakdownTable('invAdjustmentsTableBody', rows, 6, row => `
+    renderBreakdownTable('invAdjustmentsTableBody', rows, 9, row => `
       <td class="num">${new Date(row.date).toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' })}</td>
       <td>${escapeHtml(row.warehouse)}</td>
       <td>${escapeHtml(row.product)}</td>
       <td class="num">${formatQty(row.before)}</td>
       <td class="num">${formatQty(row.after)}</td>
-      <td class="num ${row.diff >= 0 ? 'positive' : 'negative'}">${row.diff > 0 ? '+' : ''}${formatQty(row.diff)}</td>`);
+      <td class="num ${row.diff >= 0 ? 'positive' : 'negative'}">${row.diff > 0 ? '+' : ''}${formatQty(row.diff)}</td>
+      <td class="num ${row.value >= 0 ? 'positive' : 'negative'}">${row.value > 0 ? '+' : ''}${row.value.toFixed(2)}</td>
+      <td>${escapeHtml(row.by)}</td>
+      <td>${escapeHtml(row.note)}</td>`);
     lastInvAdjustmentsRows = rows;
   } catch (err) {
     console.error(err);
@@ -17500,11 +19621,12 @@ function exportInvAdjustToExcel() {
   const rows = lastInvAdjustmentsRows.map(r => ({
     'التاريخ': new Date(r.date).toLocaleString('ar-EG'), 'المخزن': r.warehouse, 'الصنف': r.product,
     'الرصيد قبل': r.before, 'الرصيد بعد': r.after, 'الفرق': r.diff,
+    'قيمة الفرق': Number(r.value.toFixed(2)), 'بواسطة': r.by, 'السبب / الملاحظة': r.note,
   }));
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'تسويات الجرد');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'تقرير الجرد');
   const dateStr = new Date().toISOString().split('T')[0];
-  XLSX.writeFile(wb, `تقرير-تسويات-الجرد-${dateStr}.xlsx`);
+  XLSX.writeFile(wb, `تقرير-الجرد-${dateStr}.xlsx`);
 }
 
 // ---- الأصناف الأكثر حركة ----
