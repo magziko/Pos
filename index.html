@@ -978,9 +978,12 @@ a { color: inherit; }
             <span class="bo-nav-chevron">‹</span>
           </button>
           <div class="bo-nav-sub" id="financeNavSub">
+            <button class="bo-nav-sub-item" data-section="treasuries">الخزائن والحسابات البنكية</button>
             <button class="bo-nav-sub-item" data-section="payments">سجل المدفوعات</button>
             <button class="bo-nav-sub-item" data-section="expense-items">بنود المصروفات</button>
             <button class="bo-nav-sub-item" data-section="expenses">المصروفات</button>
+            <button class="bo-nav-sub-item" data-section="capital">رأس المال وحقوق الملكية</button>
+            <button class="bo-nav-sub-item" data-section="fixed-assets">الأصول الثابتة</button>
           </div>
         </div>
 
@@ -1365,6 +1368,157 @@ a { color: inherit; }
               <tbody id="paymentsTableBody">
                 <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم الخزائن والحسابات البنكية -->
+        <div id="bo-section-treasuries" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">الخزائن والحسابات البنكية</div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="btn-secondary" id="openCashMovementBtn">حركة إيداع / سحب / تحويل</button>
+              <button class="bo-add-btn" id="addTreasuryBtn">+ حساب بنكي جديد</button>
+            </div>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>الفرع</th>
+                  <th>الاسم</th>
+                  <th>النوع</th>
+                  <th>رقم الحساب / البنك</th>
+                  <th>الرصيد الحالي</th>
+                  <th>الحالة</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="treasuriesTableBody">
+                <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+              <tfoot>
+                <tr style="font-weight:700;">
+                  <td colspan="4">إجمالي أرصدة الخزائن والحسابات</td>
+                  <td class="num" id="treasuriesTotalBalance">0.00</td>
+                  <td colspan="2"></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم رأس المال وحقوق الملكية -->
+        <div id="bo-section-capital" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">رأس المال وحقوق الملكية</div>
+            <button class="bo-add-btn" id="addCapitalBtn">+ حركة رأس مال جديدة</button>
+          </div>
+          <div style="font-size:12.5px; color:var(--ink-soft); margin:-6px 0 16px;">
+            سجل تاريخي لرأس المال المبدئي وأي ضخ إضافي من المالك والمسحوبات الشخصية.
+            الأرقام دي بتمثل "صافي مساهمات المالك" فقط — مش صافي حقوق الملكية الكامل
+            (لسه محتاجة تُضاف لها الأرباح المحتجزة المتراكمة).
+          </div>
+
+          <div class="report-cards">
+            <div class="report-card">
+              <div class="report-card-label">رأس المال المبدئي</div>
+              <div class="report-card-value num" id="capitalInitialTotal">0.00</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">إجمالي الضخ الإضافي</div>
+              <div class="report-card-value num positive" id="capitalInjectionTotal">0.00</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">إجمالي المسحوبات الشخصية</div>
+              <div class="report-card-value num negative" id="capitalDrawingTotal">0.00</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">صافي مساهمات المالك</div>
+              <div class="report-card-value num" id="capitalNetTotal">0.00</div>
+            </div>
+          </div>
+
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>التاريخ</th>
+                  <th>النوع</th>
+                  <th>المبلغ</th>
+                  <th>الخزينة / الحساب</th>
+                  <th>أثّرت على الرصيد؟</th>
+                  <th>ملاحظة</th>
+                  <th>بواسطة</th>
+                </tr>
+              </thead>
+              <tbody id="capitalTableBody">
+                <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم الأصول الثابتة -->
+        <div id="bo-section-fixed-assets" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">الأصول الثابتة</div>
+            <button class="bo-add-btn" id="addFixedAssetBtn">+ أصل جديد</button>
+          </div>
+          <div style="font-size:12.5px; color:var(--ink-soft); margin:-6px 0 16px;">
+            سجل العربيات والأجهزة والأثاث والمعدات المملوكة للشركة. الإهلاك بيتحسب
+            تلقائيًا (قسط ثابت سنوي) من تاريخ الشراء لحد النهاردة، والفرق بين
+            "القيمة الأصلية" و"القيمة الدفترية" هو مجمع الإهلاك.
+          </div>
+
+          <div class="report-cards">
+            <div class="report-card">
+              <div class="report-card-label">عدد الأصول</div>
+              <div class="report-card-value num" id="fixedAssetsCount">0</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">إجمالي قيمة الشراء</div>
+              <div class="report-card-value num" id="fixedAssetsTotalPurchase">0.00</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">إجمالي مجمع الإهلاك</div>
+              <div class="report-card-value num negative" id="fixedAssetsTotalDepreciation">0.00</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">إجمالي القيمة الدفترية</div>
+              <div class="report-card-value num positive" id="fixedAssetsTotalBookValue">0.00</div>
+            </div>
+          </div>
+
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>الفرع</th>
+                  <th>الاسم</th>
+                  <th>النوع</th>
+                  <th>تاريخ الشراء</th>
+                  <th>قيمة الشراء</th>
+                  <th>نسبة الإهلاك السنوية</th>
+                  <th>مجمع الإهلاك</th>
+                  <th>القيمة الدفترية</th>
+                  <th>الحالة</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="fixedAssetsTableBody">
+                <tr><td colspan="10" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+              <tfoot>
+                <tr style="font-weight:700;">
+                  <td colspan="4">الإجمالي</td>
+                  <td class="num" id="fixedAssetsFooterPurchase">0.00</td>
+                  <td></td>
+                  <td class="num" id="fixedAssetsFooterDepreciation">0.00</td>
+                  <td class="num" id="fixedAssetsFooterBookValue">0.00</td>
+                  <td colspan="2"></td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         </div>
@@ -2225,6 +2379,10 @@ a { color: inherit; }
               <div class="report-type-icon">📋</div>
               <div class="report-type-label">قائمة الدخل المبسطة</div>
             </button>
+            <button type="button" class="report-type-card" data-report="financial-position">
+              <div class="report-type-icon">🏛️</div>
+              <div class="report-type-label">ملخص المركز المالي</div>
+            </button>
             <button type="button" class="report-type-card" data-report="gross-profit">
               <div class="report-type-icon">📈</div>
               <div class="report-type-label">تقرير الربح الإجمالي</div>
@@ -2253,6 +2411,82 @@ a { color: inherit; }
 
           <div id="accountingReportDetailWrap" style="display:none;">
             <button type="button" class="report-back-btn" id="accountingReportBackBtn">‹ رجوع لكل تقارير المحاسبة</button>
+
+            <div id="accountingReportDetail-financial-position" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">ملخص المركز المالي</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-icon-btn" id="refreshFinancialPositionBtn">تحديث</button>
+                  <button class="bo-icon-btn" id="exportFinancialPositionBtn">تصدير إكسل</button>
+                </div>
+              </div>
+              <div style="font-size:12.5px; color:var(--ink-soft); margin:-10px 0 16px;">
+                ملخص تقديري لحظي مبني على الأرصدة الحالية (بدون قيود محاسبية مزدوجة) — النقدية = أرصدة الخزائن/الحسابات البنكية + النقدية بالورديات المفتوحة غير المرحّلة بعد، والمخزون بسعر التكلفة، والأصول الثابتة بصافي القيمة الدفترية بعد الإهلاك.
+              </div>
+
+              <div class="report-cards">
+                <div class="report-card">
+                  <div class="report-card-label">أرصدة الخزائن والحسابات البنكية</div>
+                  <div class="report-card-value num" id="fpTreasuryBalance">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">النقدية بالورديات المفتوحة (غير مرحّلة)</div>
+                  <div class="report-card-value num" id="fpCashOnHand">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">مستحق من العملاء</div>
+                  <div class="report-card-value num positive" id="fpReceivables">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">قيمة المخزون (بسعر التكلفة)</div>
+                  <div class="report-card-value num" id="fpInventoryValue">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">صافي القيمة الدفترية للأصول الثابتة</div>
+                  <div class="report-card-value num" id="fpFixedAssetsValue">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">مستحق للموردين</div>
+                  <div class="report-card-value num negative" id="fpPayables">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">صافي المركز المالي التقديري</div>
+                  <div class="report-card-value num" id="fpNetPosition">0.00</div>
+                </div>
+              </div>
+
+              <div class="report-subtitle-row">
+                <div class="report-subtitle" style="font-size:14px;">التفصيل</div>
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table stmt-table">
+                  <thead><tr><th>البند</th><th>القيمة</th></tr></thead>
+                  <tbody id="financialPositionTableBody">
+                    <tr><td colspan="2" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="report-subtitle-row">
+                <div class="report-subtitle" style="font-size:14px;">النقدية حسب الوردية المفتوحة حاليًا</div>
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead>
+                    <tr>
+                      <th>الفرع</th>
+                      <th>الكاشير</th>
+                      <th>وقت الفتح</th>
+                      <th>العهدة الافتتاحية</th>
+                      <th>النقدية المتوقعة الآن</th>
+                    </tr>
+                  </thead>
+                  <tbody id="fpOpenShiftsTableBody">
+                    <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
             <div id="accountingReportDetail-debts" class="report-detail" style="display:none;">
               <div class="report-subtitle-row">
@@ -3709,6 +3943,187 @@ a { color: inherit; }
 </div>
 
 <!-- Modal: إضافة / تعديل مخزن فرعي -->
+<div class="modal-overlay" id="treasuryModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="treasuryModalTitle">حساب بنكي جديد</div>
+    <form id="treasuryForm">
+      <input type="hidden" id="treasuryId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>الفرع</label><select id="treasuryBranch" required></select></div>
+        <div class="field field-full" id="treasuryTypeField">
+          <label>النوع</label>
+          <select id="treasuryType">
+            <option value="cash">نقدية</option>
+            <option value="bank">حساب بنكي</option>
+          </select>
+        </div>
+        <div class="field field-full"><label id="treasuryNameLabel">اسم الحساب البنكي</label><input type="text" id="treasuryName" required placeholder="مثال: حساب البنك الأهلي..."></div>
+        <div class="field" id="treasuryBankNameField"><label>اسم البنك</label><input type="text" id="treasuryBankName" placeholder="مثال: البنك الأهلي المصري"></div>
+        <div class="field" id="treasuryAccountNumberField"><label>رقم الحساب / الآيبان</label><input type="text" id="treasuryAccountNumber"></div>
+        <div class="field field-full">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="treasuryActive" checked style="width:auto;"> الحساب مفعّل
+          </label>
+        </div>
+      </div>
+      <div class="error-msg" id="treasuryModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelTreasuryBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveTreasuryBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: حركة خزينة (إيداع / سحب / تحويل بين الخزائن) -->
+<div class="modal-overlay" id="cashMovementModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="cashMovementModalTitle">حركة خزينة</div>
+    <form id="cashMovementForm">
+      <div class="modal-grid">
+        <div class="field field-full">
+          <label>نوع الحركة</label>
+          <select id="cashMovementType">
+            <option value="deposit">إيداع في خزينة</option>
+            <option value="withdrawal">سحب من خزينة</option>
+            <option value="transfer">تحويل بين خزينتين</option>
+          </select>
+        </div>
+        <div class="field field-full" id="cashMovementAccountField">
+          <label id="cashMovementAccountLabel">الخزينة / الحساب</label>
+          <select id="cashMovementAccount" required></select>
+        </div>
+        <div class="field" id="cashMovementFromField" style="display:none;">
+          <label>من خزينة</label>
+          <select id="cashMovementFromAccount"></select>
+        </div>
+        <div class="field" id="cashMovementToField" style="display:none;">
+          <label>إلى خزينة</label>
+          <select id="cashMovementToAccount"></select>
+        </div>
+        <div class="field field-full"><label>المبلغ</label><input type="number" step="0.01" min="0.01" id="cashMovementAmount" required></div>
+        <div class="field field-full"><label>ملاحظة (اختياري)</label><input type="text" id="cashMovementNote"></div>
+      </div>
+      <div class="error-msg" id="cashMovementModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelCashMovementBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveCashMovementBtn">تنفيذ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: حركة رأس مال (رأس مال مبدئي / ضخ إضافي / مسحوبات شخصية) -->
+<div class="modal-overlay" id="capitalModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">حركة رأس مال جديدة</div>
+    <form id="capitalForm">
+      <div class="modal-grid">
+        <div class="field field-full">
+          <label>نوع الحركة</label>
+          <select id="capitalType">
+            <option value="initial_capital">رأس المال المبدئي</option>
+            <option value="injection">ضخ رأس مال إضافي من المالك</option>
+            <option value="drawing">مسحوبات شخصية للمالك</option>
+          </select>
+        </div>
+        <div class="field field-full">
+          <label>الخزينة / الحساب</label>
+          <select id="capitalAccount" required></select>
+        </div>
+        <div class="field"><label>المبلغ</label><input type="number" step="0.01" min="0.01" id="capitalAmount" required></div>
+        <div class="field"><label>التاريخ</label><input type="date" id="capitalDate" required></div>
+        <div class="field field-full" id="capitalAffectsBalanceField">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="capitalAffectsBalance" checked>
+            <span>سجّل الأثر فعليًا على رصيد الخزينة الآن</span>
+          </label>
+          <div style="font-size:12px; color:var(--ink-soft); margin-top:4px;" id="capitalAffectsBalanceHint"></div>
+        </div>
+        <div class="field field-full"><label>ملاحظة (اختياري)</label><input type="text" id="capitalNote"></div>
+      </div>
+      <div class="error-msg" id="capitalModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelCapitalBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveCapitalBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: أصل ثابت (إضافة / تعديل) -->
+<div class="modal-overlay" id="fixedAssetModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="fixedAssetModalTitle">أصل جديد</div>
+    <form id="fixedAssetForm">
+      <input type="hidden" id="fixedAssetId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>الفرع</label><select id="fixedAssetBranch" required></select></div>
+        <div class="field field-full"><label>اسم الأصل</label><input type="text" id="fixedAssetName" required placeholder="مثال: سيارة توصيل تويوتا..."></div>
+        <div class="field">
+          <label>النوع</label>
+          <select id="fixedAssetCategory">
+            <option value="vehicle">عربية</option>
+            <option value="device">جهاز</option>
+            <option value="furniture">أثاث</option>
+            <option value="equipment">معدات</option>
+            <option value="other">أخرى</option>
+          </select>
+        </div>
+        <div class="field"><label>كود الأصل (اختياري)</label><input type="text" id="fixedAssetCode"></div>
+        <div class="field"><label>تاريخ الشراء</label><input type="date" id="fixedAssetPurchaseDate" required></div>
+        <div class="field"><label>قيمة الشراء</label><input type="number" step="0.01" min="0" id="fixedAssetPurchaseValue" required></div>
+        <div class="field"><label>نسبة الإهلاك السنوية %</label><input type="number" step="0.01" min="0" max="100" id="fixedAssetDepreciationRate" required></div>
+        <div class="field"><label>القيمة المتبقية المتوقعة (اختياري)</label><input type="number" step="0.01" min="0" id="fixedAssetSalvageValue" value="0"></div>
+        <div class="field field-full" id="fixedAssetCashAccountField">
+          <label>اتخصم من أنهي خزينة؟ (اختياري)</label>
+          <select id="fixedAssetCashAccount"><option value="">بدون خصم من خزينة</option></select>
+          <div style="font-size:12px; color:var(--ink-soft); margin-top:4px;" id="fixedAssetCashAccountHint">
+            لو اخترت خزينة، قيمة الشراء هتتسحب منها تلقائيًا مرة واحدة وقت الإضافة.
+          </div>
+        </div>
+        <div class="field field-full"><label>ملاحظات (اختياري)</label><input type="text" id="fixedAssetNotes"></div>
+        <div class="field field-full">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="fixedAssetActive" checked style="width:auto;"> الأصل نشط (لسه بالشركة)
+          </label>
+        </div>
+      </div>
+      <div class="error-msg" id="fixedAssetModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelFixedAssetBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveFixedAssetBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: استبعاد / بيع أصل ثابت -->
+<div class="modal-overlay" id="fixedAssetDisposeModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">استبعاد أصل</div>
+    <form id="fixedAssetDisposeForm">
+      <input type="hidden" id="fixedAssetDisposeId">
+      <div class="modal-grid">
+        <div class="field"><label>تاريخ الاستبعاد / البيع</label><input type="date" id="fixedAssetDisposeDate" required></div>
+        <div class="field"><label>قيمة البيع (إن وُجدت)</label><input type="number" step="0.01" min="0" id="fixedAssetDisposeValue" value="0"></div>
+        <div class="field field-full">
+          <label>هتتحط في أنهي خزينة؟ (اختياري)</label>
+          <select id="fixedAssetDisposeCashAccount"><option value="">بدون إيداع في خزينة</option></select>
+        </div>
+      </div>
+      <div style="font-size:12.5px; color:var(--ink-soft); margin:4px 0 0;">
+        استبعاد الأصل بيوقفه من قائمة الأصول النشطة وإجمالياتها، من غير ما يتحذف من السجل التاريخي.
+      </div>
+      <div class="error-msg" id="fixedAssetDisposeModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelFixedAssetDisposeBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveFixedAssetDisposeBtn">تأكيد الاستبعاد</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="modal-overlay" id="warehouseModalOverlay">
   <div class="modal-box">
     <div class="modal-title" id="warehouseModalTitle">مخزن جديد</div>
@@ -7711,14 +8126,14 @@ async function enterBackoffice() {
 const boAllSections = ['dashboard','products','categories','unit-types','tax-rates','quick-discounts','customer-types',
   'sales-list','customers','suppliers','payments','purchases','purchase-returns','sale-returns',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
-  'soon','company-info','permissions','users','branches','branch-settings','print-settings','stock','backup','reset-data','employees','expense-items','expenses','salaries'];
+  'soon','company-info','permissions','users','branches','branch-settings','print-settings','stock','backup','reset-data','employees','expense-items','expenses','salaries','treasuries','capital','fixed-assets'];
 
 const boNavGroups = [
   { toggle: 'stockNavToggle', group: 'stockNavGroup', sections: ['products','categories','unit-types','tax-rates','quick-discounts','stock'] },
   { toggle: 'salesNavToggle', group: 'salesNavGroup', sections: ['sales-list','customers','customer-types','sale-returns'] },
   { toggle: 'purchasesNavToggle', group: 'purchasesNavGroup', sections: ['suppliers','purchases','purchase-returns'] },
   { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
-  { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['payments','expense-items','expenses'] },
+  { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['treasuries','payments','expense-items','expenses','capital','fixed-assets'] },
   { toggle: 'hrNavToggle', group: 'hrNavGroup', sections: ['employees','salaries'] },
   { toggle: 'adminNavToggle', group: 'adminNavGroup', sections: ['company-info','permissions','users','branches','branch-settings','print-settings','backup','reset-data'] }
 ];
@@ -7731,7 +8146,7 @@ const SECTION_PERMISSION_MAP = {
   'sales-list': 'sales_management', 'customers': 'sales_management', 'customer-types': 'sales_management', 'sale-returns': 'sales_management',
   'suppliers': 'purchases_management', 'purchases': 'purchases_management', 'purchase-returns': 'purchases_management',
   'reports-sales': 'reports', 'reports-purchases': 'reports', 'reports-inventory': 'reports', 'reports-accounting': 'reports', 'reports-other': 'reports',
-  'payments': 'finance', 'expense-items': 'finance', 'expenses': 'finance',
+  'treasuries': 'finance', 'payments': 'finance', 'expense-items': 'finance', 'expenses': 'finance', 'capital': 'admin', 'fixed-assets': 'finance',
   'employees': 'hr', 'salaries': 'hr',
   'company-info': 'admin', 'permissions': 'admin', 'users': 'admin', 'branches': 'admin',
   'branch-settings': 'admin', 'print-settings': 'admin', 'backup': 'admin', 'reset-data': 'admin',
@@ -7780,6 +8195,9 @@ function activateBoSection(section, btn) {
   });
 
   if (section === 'dashboard') { initDashboardSection(); startDashboardAutoRefresh(); } else { stopDashboardAutoRefresh(); }
+  if (section === 'treasuries' && !treasuriesLoadedOnce) { loadBoTreasuries().then(renderTreasuriesTable); treasuriesLoadedOnce = true; }
+  if (section === 'capital' && !capitalSectionLoadedOnce) { loadBoCapital().then(renderCapitalSection); capitalSectionLoadedOnce = true; }
+  if (section === 'fixed-assets' && !fixedAssetsLoadedOnce) { loadBoFixedAssets().then(renderFixedAssetsTable); fixedAssetsLoadedOnce = true; }
   if (section === 'payments' && !boPaymentsLoadedOnce) { loadBoPayments().then(renderPaymentsTable); boPaymentsLoadedOnce = true; }
   if (section === 'sales-list' && !boSalesListLoadedOnce) { loadBoSalesList().then(renderSalesListTable); boSalesListLoadedOnce = true; }
   if (section === 'purchase-returns') { loadBoPurchaseReturns().then(renderPurchaseReturnsTable); }
@@ -8478,6 +8896,7 @@ function bindBackofficeEvents() {
       if (target) target.style.display = 'block';
       document.getElementById('accountingReportsCrumbCurrent').textContent = card.querySelector('.report-type-label').textContent;
       if (key === 'debt-reminders') refreshDebtReminders();
+      if (key === 'financial-position') refreshFinancialPositionReport();
       if (key === 'gross-profit') { populateGrossProfitBranchFilter(); refreshGrossProfitReport(); }
       if (key === 'branch-profit') { setInventoryDateRange('today', 'otherBranchProfitFromDate', 'otherBranchProfitToDate'); runBranchProfitReport(); }
       if (key === 'income-statement') { populateIncomeStatementBranchFilter(); refreshIncomeStatement(); }
@@ -8713,6 +9132,46 @@ function bindBackofficeEvents() {
     document.getElementById('adjustmentDetailModalOverlay').classList.remove('show');
   });
 
+  // ---- Treasury modal (cash_accounts) ----
+  document.getElementById('addTreasuryBtn').addEventListener('click', () => openTreasuryModal(null));
+  document.getElementById('cancelTreasuryBtn').addEventListener('click', closeTreasuryModal);
+  document.getElementById('treasuryModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'treasuryModalOverlay') closeTreasuryModal();
+  });
+  document.getElementById('treasuryForm').addEventListener('submit', saveTreasury);
+  document.getElementById('treasuryType').addEventListener('change', applyTreasuryTypeFieldsVisibility);
+
+  // ---- Cash movement modal (إيداع / سحب / تحويل) ----
+  document.getElementById('openCashMovementBtn').addEventListener('click', () => openCashMovementModal(null));
+  document.getElementById('cancelCashMovementBtn').addEventListener('click', closeCashMovementModal);
+  document.getElementById('cashMovementModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'cashMovementModalOverlay') closeCashMovementModal();
+  });
+  document.getElementById('cashMovementForm').addEventListener('submit', saveCashMovement);
+  document.getElementById('cashMovementType').addEventListener('change', applyCashMovementTypeVisibility);
+  document.getElementById('addCapitalBtn').addEventListener('click', openCapitalModal);
+  document.getElementById('cancelCapitalBtn').addEventListener('click', closeCapitalModal);
+
+  // ---- Fixed asset modal (fixed_assets) ----
+  document.getElementById('addFixedAssetBtn').addEventListener('click', () => openFixedAssetModal(null));
+  document.getElementById('cancelFixedAssetBtn').addEventListener('click', closeFixedAssetModal);
+  document.getElementById('fixedAssetModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'fixedAssetModalOverlay') closeFixedAssetModal();
+  });
+  document.getElementById('fixedAssetForm').addEventListener('submit', saveFixedAsset);
+
+  // ---- Fixed asset dispose modal ----
+  document.getElementById('cancelFixedAssetDisposeBtn').addEventListener('click', closeFixedAssetDisposeModal);
+  document.getElementById('fixedAssetDisposeModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'fixedAssetDisposeModalOverlay') closeFixedAssetDisposeModal();
+  });
+  document.getElementById('fixedAssetDisposeForm').addEventListener('submit', saveFixedAssetDispose);
+  document.getElementById('capitalModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'capitalModalOverlay') closeCapitalModal();
+  });
+  document.getElementById('capitalForm').addEventListener('submit', saveCapitalTransaction);
+  document.getElementById('capitalType').addEventListener('change', applyCapitalTypeHint);
+
   // ---- Warehouse modal ----
   document.getElementById('addWarehouseBtn').addEventListener('click', () => openWarehouseModal(null));
   document.getElementById('cancelWarehouseBtn').addEventListener('click', closeWarehouseModal);
@@ -8911,6 +9370,8 @@ function bindBackofficeEvents() {
   document.getElementById('reportBranchFilter').addEventListener('change', () => runReport());
   document.getElementById('refreshDebtsBtn').addEventListener('click', () => refreshDebtsReport());
   document.getElementById('exportDebtsBtn').addEventListener('click', () => exportDebtsToExcel());
+  document.getElementById('refreshFinancialPositionBtn').addEventListener('click', () => refreshFinancialPositionReport());
+  document.getElementById('exportFinancialPositionBtn').addEventListener('click', () => exportFinancialPositionToExcel());
   setGpQuickRange('today');
   document.getElementById('runGrossProfitBtn').addEventListener('click', () => refreshGrossProfitReport());
   document.getElementById('gpBranchFilter').addEventListener('change', () => refreshGrossProfitReport());
@@ -11253,6 +11714,631 @@ async function deleteWarehouse(warehouse) {
   populateStockWarehouseSelects();
 }
 
+// ============================================================
+// الخزائن والحسابات البنكية (cash_accounts)
+// الخزينة الرئيسية لكل فرع بتتعمل تلقائيًا (trigger fn_create_main_cash_account)
+// ولا يمكن حذفها أو تغيير فرعها/نوعها. الشاشة دي بتضيف حسابات بنكية
+// (أو خزائن فرعية إضافية) وتعرض كل الأرصدة اللي بتتحدّث تلقائيًا
+// من سجل cash_account_transactions عند قفل الورديات أو التحويلات.
+// ============================================================
+let boTreasuries = [];
+let treasuriesLoadedOnce = false;
+
+async function loadBoTreasuries() {
+  const { data, error } = await supabaseClient
+    .from('cash_accounts')
+    .select('*, branches(name)')
+    .order('name');
+  if (error) { console.error(error); return; }
+  boTreasuries = (data || []).sort((a, b) => {
+    const branchCompare = (a.branches?.name || '').localeCompare(b.branches?.name || '', 'ar');
+    if (branchCompare !== 0) return branchCompare;
+    if (a.is_main !== b.is_main) return a.is_main ? -1 : 1;
+    return a.name.localeCompare(b.name, 'ar');
+  });
+}
+
+const treasuryTypeLabels = { cash: 'نقدية', bank: 'بنك' };
+
+function renderTreasuriesTable() {
+  const tbody = document.getElementById('treasuriesTableBody');
+  if (boTreasuries.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لا توجد خزائن أو حسابات مسجلة حتى الآن</td></tr>`;
+    document.getElementById('treasuriesTotalBalance').textContent = '0.00';
+    return;
+  }
+  tbody.innerHTML = '';
+  let total = 0;
+  boTreasuries.forEach(t => {
+    total += Number(t.current_balance) || 0;
+    const accountInfo = t.type === 'bank'
+      ? [t.bank_name, t.account_number].filter(Boolean).map(escapeHtml).join(' — ') || '—'
+      : '—';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(t.branches?.name || '—')}</td>
+      <td>${escapeHtml(t.name)}${t.is_main ? ' <span style="color:var(--ink-soft); font-size:12px;">(رئيسية)</span>' : ''}</td>
+      <td>${treasuryTypeLabels[t.type] || t.type}</td>
+      <td>${accountInfo}</td>
+      <td class="num">${Number(t.current_balance).toFixed(2)}</td>
+      <td>${t.is_active ? 'مفعّل' : 'متوقف'}</td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="movement">حركة</button>
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          ${t.is_main ? '' : '<button class="bo-icon-btn danger" data-action="delete">حذف</button>'}
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="movement"]').addEventListener('click', () => openCashMovementModal(t.id));
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openTreasuryModal(t));
+    const delBtn = tr.querySelector('[data-action="delete"]');
+    if (delBtn) delBtn.addEventListener('click', () => deleteTreasury(t));
+    tbody.appendChild(tr);
+  });
+  document.getElementById('treasuriesTotalBalance').textContent = total.toFixed(2);
+}
+
+function applyTreasuryTypeFieldsVisibility() {
+  const isBank = document.getElementById('treasuryType').value === 'bank';
+  document.getElementById('treasuryBankNameField').style.display = isBank ? '' : 'none';
+  document.getElementById('treasuryAccountNumberField').style.display = isBank ? '' : 'none';
+  document.getElementById('treasuryNameLabel').textContent = isBank ? 'اسم الحساب البنكي' : 'اسم الخزينة';
+}
+
+function openTreasuryModal(treasury) {
+  document.getElementById('treasuryModalTitle').textContent = treasury ? 'تعديل حساب' : 'حساب بنكي جديد';
+  document.getElementById('treasuryId').value = treasury ? treasury.id : '';
+  const branchSel = document.getElementById('treasuryBranch');
+  branchSel.innerHTML = boBranchesList.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+  branchSel.value = treasury ? treasury.branch_id : (currentProfile?.branch_id || boBranchesList[0]?.id || '');
+  // الخزينة الرئيسية مرتبطة تلقائيًا بفرعها ونوعها ثابت (نقدية)، زي المخزن الرئيسي بالظبط
+  branchSel.disabled = !!(treasury && treasury.is_main);
+  document.getElementById('treasuryType').value = treasury ? treasury.type : 'bank';
+  document.getElementById('treasuryType').disabled = !!(treasury && treasury.is_main);
+  document.getElementById('treasuryName').value = treasury ? treasury.name : '';
+  document.getElementById('treasuryBankName').value = treasury ? (treasury.bank_name || '') : '';
+  document.getElementById('treasuryAccountNumber').value = treasury ? (treasury.account_number || '') : '';
+  document.getElementById('treasuryActive').checked = treasury ? treasury.is_active : true;
+  applyTreasuryTypeFieldsVisibility();
+  document.getElementById('treasuryModalError').classList.remove('show');
+  document.getElementById('treasuryModalOverlay').classList.add('show');
+}
+
+function closeTreasuryModal() {
+  document.getElementById('treasuryModalOverlay').classList.remove('show');
+}
+
+async function saveTreasury(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('treasuryModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveTreasuryBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('treasuryId').value || null;
+  const type = document.getElementById('treasuryType').value;
+  const payload = {
+    branch_id: document.getElementById('treasuryBranch').value,
+    name: document.getElementById('treasuryName').value.trim(),
+    type,
+    bank_name: type === 'bank' ? (document.getElementById('treasuryBankName').value.trim() || null) : null,
+    account_number: type === 'bank' ? (document.getElementById('treasuryAccountNumber').value.trim() || null) : null,
+    is_active: document.getElementById('treasuryActive').checked,
+  };
+
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('cash_accounts').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('cash_accounts').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث بيانات الحساب' : 'تمت إضافة الحساب بنجاح');
+    closeTreasuryModal();
+    await loadBoTreasuries();
+    renderTreasuriesTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function deleteTreasury(treasury) {
+  if (treasury.is_main) {
+    showToast('لا يمكن حذف الخزينة الرئيسية للفرع', true);
+    return;
+  }
+  if (Number(treasury.current_balance) !== 0) {
+    showToast('لا يمكن حذف حساب برصيد غير صفري — رحّل الرصيد أولًا عن طريق تحويل', true);
+    return;
+  }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف "${treasury.name}"؟`)) return;
+  const { error } = await supabaseClient.from('cash_accounts').delete().eq('id', treasury.id);
+  if (error) {
+    console.error(error);
+    showToast('تعذر حذف الحساب — على الأرجح فيه حركات مسجلة عليه', true);
+    return;
+  }
+  showToast('تم حذف الحساب');
+  await loadBoTreasuries();
+  renderTreasuriesTable();
+}
+
+// ---- حركة خزينة: إيداع / سحب / تحويل بين الخزائن ----
+// إيداع وسحب: بتتسجل في cash_account_transactions (النوع deposit/withdrawal)
+// وبيحدّث الرصيد تلقائيًا trigger fn_apply_cash_transaction.
+// تحويل: بيتسجل سطر واحد في cash_transfers وبيحدّث رصيد الحسابين تلقائيًا
+// trigger fn_apply_cash_transfer. رصيد الحساب (current_balance) محمي من
+// التعديل المباشر (trigger fn_protect_cash_balance)، فمينفعش نعدّله إحنا يدويًا.
+function cashMovementAccountOptions(excludeId) {
+  return boTreasuries
+    .filter(t => t.is_active && t.id !== excludeId)
+    .map(t => `<option value="${t.id}">${escapeHtml(t.branches?.name || '')} — ${escapeHtml(t.name)}</option>`)
+    .join('');
+}
+
+function openCashMovementModal(presetAccountId) {
+  document.getElementById('cashMovementForm').reset();
+  document.getElementById('cashMovementType').value = 'deposit';
+  document.getElementById('cashMovementAccount').innerHTML = cashMovementAccountOptions();
+  document.getElementById('cashMovementFromAccount').innerHTML = cashMovementAccountOptions();
+  document.getElementById('cashMovementToAccount').innerHTML = cashMovementAccountOptions();
+  if (presetAccountId) {
+    document.getElementById('cashMovementAccount').value = presetAccountId;
+    document.getElementById('cashMovementFromAccount').value = presetAccountId;
+  }
+  applyCashMovementTypeVisibility();
+  document.getElementById('cashMovementModalError').classList.remove('show');
+  document.getElementById('cashMovementModalOverlay').classList.add('show');
+}
+
+function applyCashMovementTypeVisibility() {
+  const type = document.getElementById('cashMovementType').value;
+  const isTransfer = type === 'transfer';
+  document.getElementById('cashMovementAccountField').style.display = isTransfer ? 'none' : '';
+  document.getElementById('cashMovementFromField').style.display = isTransfer ? '' : 'none';
+  document.getElementById('cashMovementToField').style.display = isTransfer ? '' : 'none';
+  document.getElementById('cashMovementAccountLabel').textContent = type === 'withdrawal' ? 'السحب من خزينة' : 'الإيداع في خزينة';
+  document.getElementById('cashMovementAccount').required = !isTransfer;
+  document.getElementById('cashMovementFromAccount').required = isTransfer;
+  document.getElementById('cashMovementToAccount').required = isTransfer;
+  const titles = { deposit: 'إيداع في خزينة', withdrawal: 'سحب من خزينة', transfer: 'تحويل بين خزينتين' };
+  document.getElementById('cashMovementModalTitle').textContent = titles[type];
+  document.getElementById('saveCashMovementBtn').textContent = type === 'transfer' ? 'تنفيذ التحويل' : (type === 'withdrawal' ? 'تنفيذ السحب' : 'تنفيذ الإيداع');
+}
+
+function closeCashMovementModal() {
+  document.getElementById('cashMovementModalOverlay').classList.remove('show');
+}
+
+async function saveCashMovement(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('cashMovementModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveCashMovementBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري التنفيذ...';
+
+  const type = document.getElementById('cashMovementType').value;
+  const amount = Number(document.getElementById('cashMovementAmount').value) || 0;
+  const note = document.getElementById('cashMovementNote').value.trim() || null;
+
+  try {
+    if (amount <= 0) throw new Error('المبلغ يجب أن يكون أكبر من صفر');
+
+    if (type === 'transfer') {
+      const fromId = document.getElementById('cashMovementFromAccount').value;
+      const toId = document.getElementById('cashMovementToAccount').value;
+      if (!fromId || !toId) throw new Error('يرجى اختيار الخزينتين');
+      if (fromId === toId) throw new Error('لا يمكن التحويل من ولإلى نفس الخزينة');
+      const fromAccount = boTreasuries.find(t => t.id === fromId);
+      if (fromAccount && Number(fromAccount.current_balance) < amount) {
+        if (!confirm('المبلغ أكبر من رصيد الخزينة المحوَّل منها، هل تريد المتابعة؟')) {
+          saveBtn.disabled = false; saveBtn.textContent = 'تنفيذ التحويل'; return;
+        }
+      }
+      const { error } = await supabaseClient.from('cash_transfers').insert({
+        from_cash_account_id: fromId, to_cash_account_id: toId, amount, note, created_by: currentProfile.id,
+      });
+      if (error) throw error;
+      showToast('تم تنفيذ التحويل بنجاح');
+    } else {
+      const accountId = document.getElementById('cashMovementAccount').value;
+      if (!accountId) throw new Error('يرجى اختيار الخزينة');
+      if (type === 'withdrawal') {
+        const account = boTreasuries.find(t => t.id === accountId);
+        if (account && Number(account.current_balance) < amount) {
+          if (!confirm('المبلغ أكبر من رصيد الخزينة الحالي، هل تريد المتابعة؟')) {
+            saveBtn.disabled = false; saveBtn.textContent = 'تنفيذ السحب'; return;
+          }
+        }
+      }
+      // السحب بيتسجل بمبلغ سالب لأن trigger fn_apply_cash_transaction بيجمع
+      // قيمة amount زي ما هي على الرصيد (مش بيعكس اتجاهها حسب النوع)
+      const signedAmount = type === 'withdrawal' ? -Math.abs(amount) : Math.abs(amount);
+      const { error } = await supabaseClient.from('cash_account_transactions').insert({
+        cash_account_id: accountId, type, amount: signedAmount, note, user_id: currentProfile.id,
+      });
+      if (error) throw error;
+      showToast(type === 'withdrawal' ? 'تم تسجيل السحب بنجاح' : 'تم تسجيل الإيداع بنجاح');
+    }
+
+    closeCashMovementModal();
+    await loadBoTreasuries();
+    renderTreasuriesTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء تنفيذ الحركة';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    applyCashMovementTypeVisibility();
+  }
+}
+
+// ---- رأس المال وحقوق الملكية (أدمن فقط) ----
+let boCapitalTransactions = [];
+let capitalSectionLoadedOnce = false;
+
+const capitalTypeLabels = { initial_capital: 'رأس مال مبدئي', injection: 'ضخ إضافي', drawing: 'مسحوبات شخصية' };
+
+async function loadBoCapital() {
+  const { data, error } = await supabaseClient
+    .from('capital_transactions')
+    .select('*, cash_accounts(name, branches(name)), users_profile(full_name)')
+    .order('transaction_date', { ascending: false })
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل حركات رأس المال', true); return; }
+  boCapitalTransactions = data || [];
+}
+
+function renderCapitalSection() {
+  const tbody = document.getElementById('capitalTableBody');
+  let initialTotal = 0, injectionTotal = 0, drawingTotal = 0;
+  boCapitalTransactions.forEach(t => {
+    const amt = Number(t.amount) || 0;
+    if (t.type === 'initial_capital') initialTotal += amt;
+    else if (t.type === 'injection') injectionTotal += amt;
+    else if (t.type === 'drawing') drawingTotal += amt;
+  });
+  const netTotal = initialTotal + injectionTotal - drawingTotal;
+  document.getElementById('capitalInitialTotal').textContent = initialTotal.toFixed(2);
+  document.getElementById('capitalInjectionTotal').textContent = injectionTotal.toFixed(2);
+  document.getElementById('capitalDrawingTotal').textContent = drawingTotal.toFixed(2);
+  document.getElementById('capitalNetTotal').textContent = netTotal.toFixed(2);
+
+  if (boCapitalTransactions.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لا توجد حركات رأس مال مسجّلة حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boCapitalTransactions.forEach(t => {
+    const tr = document.createElement('tr');
+    const accountLabel = t.cash_accounts
+      ? `${escapeHtml(t.cash_accounts.branches?.name || '')} — ${escapeHtml(t.cash_accounts.name)}`
+      : '—';
+    tr.innerHTML = `
+      <td>${new Date(t.transaction_date).toLocaleDateString('ar-EG')}</td>
+      <td>${capitalTypeLabels[t.type] || t.type}</td>
+      <td class="num">${Number(t.amount).toFixed(2)}</td>
+      <td>${accountLabel}</td>
+      <td>${t.affects_balance ? 'نعم' : 'لا (قيد إقراري)'}</td>
+      <td class="wrap-cell">${escapeHtml(t.note || '—')}</td>
+      <td>${escapeHtml(t.users_profile?.full_name || '—')}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function openCapitalModal() {
+  document.getElementById('capitalForm').reset();
+  document.getElementById('capitalType').value = 'initial_capital';
+  document.getElementById('capitalAccount').innerHTML = cashMovementAccountOptions();
+  document.getElementById('capitalDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('capitalAffectsBalance').checked = true;
+  applyCapitalTypeHint();
+  document.getElementById('capitalModalError').classList.remove('show');
+  document.getElementById('capitalModalOverlay').classList.add('show');
+}
+
+function applyCapitalTypeHint() {
+  const type = document.getElementById('capitalType').value;
+  const hint = document.getElementById('capitalAffectsBalanceHint');
+  if (type === 'initial_capital') {
+    hint.textContent = 'لو الفلوس دي أصلًا داخلة في رصيد الخزينة الحالي (متسجلتش قبل كده)، شيل العلامة عشان ميتكررش المبلغ.';
+  } else {
+    hint.textContent = 'اسيبها مفعّلة عادةً — لغير كده الرصيد المعروض للخزينة مش هيعكس الفلوس اللي دخلت/خرجت فعليًا.';
+  }
+}
+
+function closeCapitalModal() {
+  document.getElementById('capitalModalOverlay').classList.remove('show');
+}
+
+async function saveCapitalTransaction(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('capitalModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveCapitalBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const payload = {
+    type: document.getElementById('capitalType').value,
+    amount: Number(document.getElementById('capitalAmount').value) || 0,
+    cash_account_id: document.getElementById('capitalAccount').value,
+    transaction_date: document.getElementById('capitalDate').value,
+    affects_balance: document.getElementById('capitalAffectsBalance').checked,
+    note: document.getElementById('capitalNote').value.trim() || null,
+    created_by: currentProfile.id,
+  };
+
+  try {
+    if (payload.amount <= 0) throw new Error('المبلغ يجب أن يكون أكبر من صفر');
+    if (!payload.cash_account_id) throw new Error('يرجى اختيار الخزينة');
+    const { error } = await supabaseClient.from('capital_transactions').insert(payload);
+    if (error) throw error;
+    showToast('تم تسجيل الحركة بنجاح');
+    closeCapitalModal();
+    await loadBoCapital();
+    renderCapitalSection();
+    if (treasuriesLoadedOnce) { await loadBoTreasuries(); renderTreasuriesTable(); }
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+// ============================================================
+// الأصول الثابتة (fixed_assets)
+// عربيات/أجهزة/أثاث/معدات مملوكة للشركة. الإهلاك بيتحسب هنا
+// بنفس منطق fn_fixed_asset_book_value في قاعدة البيانات
+// (قسط ثابت سنوي، متناسب مع عدد الأيام من تاريخ الشراء)، فأي
+// رقم ظاهر في الواجهة لازم يطابق اللي هيرجع من الـ view
+// fixed_assets_valuation لو استخدمناها في تقرير مستقبلًا.
+// ============================================================
+let boFixedAssets = [];
+let fixedAssetsLoadedOnce = false;
+
+const fixedAssetCategoryLabels = {
+  vehicle: 'عربية', device: 'جهاز', furniture: 'أثاث', equipment: 'معدات', other: 'أخرى'
+};
+
+async function loadBoFixedAssets() {
+  const { data, error } = await supabaseClient
+    .from('fixed_assets')
+    .select('*, branches(name)')
+    .order('purchase_date', { ascending: false });
+  if (error) { console.error(error); return; }
+  boFixedAssets = data || [];
+}
+
+// نفس معادلة fn_fixed_asset_book_value: القيمة الدفترية ما تنزلش عن القيمة
+// المتبقية المتوقعة، وبتتحسب بالتناسب مع عدد الأيام الفعلي من تاريخ الشراء
+function computeAssetBookValue(asset) {
+  const purchaseValue = Number(asset.purchase_value) || 0;
+  const salvageValue = Number(asset.salvage_value) || 0;
+  const rate = Number(asset.depreciation_rate) || 0;
+  const purchaseDate = new Date(asset.purchase_date + 'T00:00:00');
+  const today = new Date();
+  const daysElapsed = Math.max(0, (today - purchaseDate) / (1000 * 60 * 60 * 24));
+  const yearsElapsed = daysElapsed / 365.25;
+  const bookValue = purchaseValue - (purchaseValue * (rate / 100) * yearsElapsed);
+  return Math.max(salvageValue, bookValue);
+}
+
+function renderFixedAssetsTable() {
+  const tbody = document.getElementById('fixedAssetsTableBody');
+  if (boFixedAssets.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="10" class="bo-empty">لا توجد أصول ثابتة مسجلة حتى الآن</td></tr>`;
+    ['fixedAssetsCount','fixedAssetsTotalPurchase','fixedAssetsTotalDepreciation','fixedAssetsTotalBookValue',
+     'fixedAssetsFooterPurchase','fixedAssetsFooterDepreciation','fixedAssetsFooterBookValue'
+    ].forEach(id => document.getElementById(id).textContent = '0.00');
+    document.getElementById('fixedAssetsCount').textContent = '0';
+    return;
+  }
+
+  tbody.innerHTML = '';
+  let totalPurchase = 0, totalBookValue = 0, activeCount = 0;
+  boFixedAssets.forEach(a => {
+    const purchaseValue = Number(a.purchase_value) || 0;
+    const bookValue = a.is_active ? computeAssetBookValue(a) : Number(a.disposal_value || 0);
+    const accumulatedDepreciation = a.is_active ? Math.max(0, purchaseValue - bookValue) : purchaseValue;
+    if (a.is_active) { totalPurchase += purchaseValue; totalBookValue += bookValue; activeCount++; }
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(a.branches?.name || '—')}</td>
+      <td>${escapeHtml(a.name)}${a.asset_code ? ` <span style="color:var(--ink-soft); font-size:12px;">(${escapeHtml(a.asset_code)})</span>` : ''}</td>
+      <td>${fixedAssetCategoryLabels[a.category] || a.category}</td>
+      <td>${a.purchase_date}</td>
+      <td class="num">${purchaseValue.toFixed(2)}</td>
+      <td class="num">${Number(a.depreciation_rate).toFixed(2)}%</td>
+      <td class="num">${a.is_active ? accumulatedDepreciation.toFixed(2) : '—'}</td>
+      <td class="num">${a.is_active ? bookValue.toFixed(2) : '—'}</td>
+      <td>${a.is_active ? 'نشط' : `مُستبعد${a.disposed_at ? ' في ' + a.disposed_at : ''}`}</td>
+      <td>
+        <div class="bo-row-actions">
+          ${a.is_active ? '<button class="bo-icon-btn" data-action="edit">تعديل</button>' : ''}
+          ${a.is_active ? '<button class="bo-icon-btn" data-action="dispose">استبعاد</button>' : ''}
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>
+      </td>`;
+    const editBtn = tr.querySelector('[data-action="edit"]');
+    if (editBtn) editBtn.addEventListener('click', () => openFixedAssetModal(a));
+    const disposeBtn = tr.querySelector('[data-action="dispose"]');
+    if (disposeBtn) disposeBtn.addEventListener('click', () => openFixedAssetDisposeModal(a));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteFixedAsset(a));
+    tbody.appendChild(tr);
+  });
+
+  const totalDepreciation = Math.max(0, totalPurchase - totalBookValue);
+  document.getElementById('fixedAssetsCount').textContent = activeCount;
+  document.getElementById('fixedAssetsTotalPurchase').textContent = totalPurchase.toFixed(2);
+  document.getElementById('fixedAssetsTotalDepreciation').textContent = totalDepreciation.toFixed(2);
+  document.getElementById('fixedAssetsTotalBookValue').textContent = totalBookValue.toFixed(2);
+  document.getElementById('fixedAssetsFooterPurchase').textContent = totalPurchase.toFixed(2);
+  document.getElementById('fixedAssetsFooterDepreciation').textContent = totalDepreciation.toFixed(2);
+  document.getElementById('fixedAssetsFooterBookValue').textContent = totalBookValue.toFixed(2);
+}
+
+async function openFixedAssetModal(asset) {
+  if (!treasuriesLoadedOnce) { await loadBoTreasuries(); treasuriesLoadedOnce = true; }
+  document.getElementById('fixedAssetModalTitle').textContent = asset ? 'تعديل أصل' : 'أصل جديد';
+  document.getElementById('fixedAssetId').value = asset ? asset.id : '';
+  const branchSel = document.getElementById('fixedAssetBranch');
+  branchSel.innerHTML = boBranchesList.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+  branchSel.value = asset ? asset.branch_id : (currentProfile?.branch_id || boBranchesList[0]?.id || '');
+  document.getElementById('fixedAssetName').value = asset ? asset.name : '';
+  document.getElementById('fixedAssetCategory').value = asset ? asset.category : 'equipment';
+  document.getElementById('fixedAssetCode').value = asset ? (asset.asset_code || '') : '';
+  document.getElementById('fixedAssetPurchaseDate').value = asset ? asset.purchase_date : new Date().toISOString().slice(0, 10);
+  document.getElementById('fixedAssetPurchaseValue').value = asset ? asset.purchase_value : '';
+  document.getElementById('fixedAssetDepreciationRate').value = asset ? asset.depreciation_rate : '';
+  document.getElementById('fixedAssetSalvageValue').value = asset ? (asset.salvage_value || 0) : 0;
+  document.getElementById('fixedAssetNotes').value = asset ? (asset.notes || '') : '';
+  document.getElementById('fixedAssetActive').checked = asset ? asset.is_active : true;
+
+  // الخصم من الخزينة بيتسجل مرة واحدة بس وقت الإضافة، فمينفعش نغيّره بعد كده
+  const cashSel = document.getElementById('fixedAssetCashAccount');
+  cashSel.innerHTML = '<option value="">بدون خصم من خزينة</option>' + cashMovementAccountOptions();
+  cashSel.value = asset ? (asset.cash_account_id || '') : '';
+  cashSel.disabled = !!asset;
+  document.getElementById('fixedAssetCashAccountField').style.display = asset ? 'none' : '';
+
+  document.getElementById('fixedAssetModalError').classList.remove('show');
+  document.getElementById('fixedAssetModalOverlay').classList.add('show');
+}
+
+function closeFixedAssetModal() {
+  document.getElementById('fixedAssetModalOverlay').classList.remove('show');
+}
+
+async function saveFixedAsset(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('fixedAssetModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveFixedAssetBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('fixedAssetId').value || null;
+  const purchaseValue = Number(document.getElementById('fixedAssetPurchaseValue').value) || 0;
+  const salvageValue = Number(document.getElementById('fixedAssetSalvageValue').value) || 0;
+  const payload = {
+    branch_id: document.getElementById('fixedAssetBranch').value,
+    name: document.getElementById('fixedAssetName').value.trim(),
+    category: document.getElementById('fixedAssetCategory').value,
+    asset_code: document.getElementById('fixedAssetCode').value.trim() || null,
+    purchase_date: document.getElementById('fixedAssetPurchaseDate').value,
+    purchase_value: purchaseValue,
+    salvage_value: salvageValue,
+    depreciation_rate: Number(document.getElementById('fixedAssetDepreciationRate').value) || 0,
+    notes: document.getElementById('fixedAssetNotes').value.trim() || null,
+    is_active: document.getElementById('fixedAssetActive').checked,
+  };
+  if (!id) {
+    payload.created_by = currentProfile.id;
+    payload.cash_account_id = document.getElementById('fixedAssetCashAccount').value || null;
+  }
+
+  try {
+    if (salvageValue > purchaseValue) throw new Error('القيمة المتبقية المتوقعة لا يمكن أن تكون أكبر من قيمة الشراء');
+    if (id) {
+      const { error } = await supabaseClient.from('fixed_assets').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('fixed_assets').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث بيانات الأصل' : 'تمت إضافة الأصل بنجاح');
+    closeFixedAssetModal();
+    await loadBoFixedAssets();
+    renderFixedAssetsTable();
+    if (!id && payload.cash_account_id && treasuriesLoadedOnce) { await loadBoTreasuries(); renderTreasuriesTable(); }
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function openFixedAssetDisposeModal(asset) {
+  if (!treasuriesLoadedOnce) { await loadBoTreasuries(); treasuriesLoadedOnce = true; }
+  document.getElementById('fixedAssetDisposeId').value = asset.id;
+  document.getElementById('fixedAssetDisposeDate').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('fixedAssetDisposeValue').value = 0;
+  const cashSel = document.getElementById('fixedAssetDisposeCashAccount');
+  cashSel.innerHTML = '<option value="">بدون إيداع في خزينة</option>' + cashMovementAccountOptions();
+  cashSel.value = '';
+  document.getElementById('fixedAssetDisposeModalError').classList.remove('show');
+  document.getElementById('fixedAssetDisposeModalOverlay').classList.add('show');
+}
+
+function closeFixedAssetDisposeModal() {
+  document.getElementById('fixedAssetDisposeModalOverlay').classList.remove('show');
+}
+
+async function saveFixedAssetDispose(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('fixedAssetDisposeModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveFixedAssetDisposeBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري التنفيذ...';
+
+  const id = document.getElementById('fixedAssetDisposeId').value;
+  const payload = {
+    is_active: false,
+    disposed_at: document.getElementById('fixedAssetDisposeDate').value,
+    disposal_value: Number(document.getElementById('fixedAssetDisposeValue').value) || 0,
+    disposal_cash_account_id: document.getElementById('fixedAssetDisposeCashAccount').value || null,
+    disposed_by: currentProfile.id,
+  };
+
+  try {
+    const { error } = await supabaseClient.from('fixed_assets').update(payload).eq('id', id);
+    if (error) throw error;
+    showToast('تم استبعاد الأصل');
+    closeFixedAssetDisposeModal();
+    await loadBoFixedAssets();
+    renderFixedAssetsTable();
+    if (payload.disposal_cash_account_id && treasuriesLoadedOnce) { await loadBoTreasuries(); renderTreasuriesTable(); }
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء التنفيذ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'تأكيد الاستبعاد';
+  }
+}
+
+async function deleteFixedAsset(asset) {
+  if (!confirm(`هل أنت متأكد أنك تريد حذف "${asset.name}" نهائيًا من السجل؟ لو الأصل مستبعد بس، ممكن تسيبه في السجل للتاريخ.`)) return;
+  const { error } = await supabaseClient.from('fixed_assets').delete().eq('id', asset.id);
+  if (error) {
+    console.error(error);
+    showToast('تعذر حذف الأصل', true);
+    return;
+  }
+  showToast('تم حذف الأصل');
+  await loadBoFixedAssets();
+  renderFixedAssetsTable();
+}
+
 async function renderStockBalancesTable() {
   const warehouseId = document.getElementById('stockBalanceWarehouseSelect').value;
   const tbody = document.getElementById('stockBalancesTableBody');
@@ -13145,6 +14231,9 @@ function renderSaleReturnsTable() {
 
 // ---- الورديات وإغلاق الخزينة (لوحة التحكم) ----
 let boShifts = [];
+// أي وردية اتعكس ترحيلها في الجلسة الحالية — الفانكشن fn_admin_reverse_shift_cash_transfer
+// مفيهاش حماية ضد التكرار (لو اتنادت مرتين هتعمل عكس مرتين)، فبنمنع الزرار محليًا بعد أول نجاح
+let boReversedShiftIds = new Set();
 let shiftsSectionInitialized = false;
 
 function initShiftsSection() {
@@ -13194,6 +14283,10 @@ function renderShiftsTable() {
     const diff = s.difference !== null && s.difference !== undefined ? Number(s.difference) : null;
     const diffLabel = diff === null ? '—' : `${diff >= 0 ? '+' : ''}${diff.toFixed(2)}`;
     const diffColor = diff === null ? 'var(--ink)' : (diff === 0 ? 'var(--ink)' : (diff > 0 ? 'var(--teal-700)' : 'var(--danger)'));
+    // بنظهر الزرار لأي وردية مقفولة طالما اليوزر أدمن، والـ RPC نفسه (fn_admin_reverse_shift_cash_transfer)
+    // هو اللي بيتحقق سيرفر-سايد إن كان فيه ترحيل مسجل أصلًا لهذه الوردية، ويرجع رسالة خطأ واضحة لو لأ.
+    // ملحوظة: الفانكشن نفسها مفيهاش حماية ضد تكرار العكس، فبنخفي الزرار محليًا بعد أول نجاح في نفس الجلسة
+    const canReverse = hasBoPermission('admin') && s.status === 'closed' && !boReversedShiftIds.has(s.id);
     tr.innerHTML = `
       <td>${escapeHtml(s.opener?.full_name || '—')}</td>
       <td>${escapeHtml(s.branches?.name || '—')}</td>
@@ -13204,12 +14297,47 @@ function renderShiftsTable() {
       <td class="num">${s.counted_cash !== null && s.counted_cash !== undefined ? Number(s.counted_cash).toFixed(2) : '—'}</td>
       <td class="num" style="color:${diffColor}; font-weight:700;">${diffLabel}</td>
       <td>${s.status === 'open' ? '<span class="role-count-badge">مفتوحة</span>' : 'مغلقة'}</td>
-      <td>${s.status === 'closed' ? '<button class="bo-icon-btn" data-action="view">عرض التقرير</button>' : ''}</td>`;
+      <td>
+        <div class="bo-row-actions">
+          ${s.status === 'closed' ? '<button class="bo-icon-btn" data-action="view">عرض التقرير</button>' : ''}
+          ${canReverse ? '<button class="bo-icon-btn danger" data-action="reverse">عكس ترحيل</button>' : ''}
+          ${boReversedShiftIds.has(s.id) ? '<span style="color:var(--ink-soft); font-size:12px;">تم عكس الترحيل</span>' : ''}
+        </div>
+      </td>`;
     if (s.status === 'closed') {
       tr.querySelector('[data-action="view"]').addEventListener('click', () => viewPastZReport(s));
     }
+    if (canReverse) {
+      tr.querySelector('[data-action="reverse"]').addEventListener('click', () => reverseShiftCashTransfer(s));
+    }
     tbody.appendChild(tr);
   });
+}
+
+// عكس ترحيل الوردية (أدمن فقط): بيلغي أثر تحويل النقدية اللي حصل تلقائيًا للخزينة
+// الرئيسية عند إغلاق الوردية (fn_close_shift_transfer_cash)، عن طريق RPC أمن
+// fn_admin_reverse_shift_cash_transfer اللي بيسجل حركة عكسية (reversal) بمبلغ
+// مضاد للحركة الأصلية (shift_close_in). الفانكشن مفيهاش حماية من التكرار،
+// فمهم جدًا ما تتنادوش مرتين على نفس الوردية.
+async function reverseShiftCashTransfer(shift) {
+  const note = prompt('ملاحظة عكس الترحيل (اختياري):', '');
+  if (note === null) return; // اتلغى
+  if (!confirm('هل أنت متأكد من عكس ترحيل هذه الوردية؟ سيتم إلغاء أثر تحويل النقدية للخزينة الرئيسية. تنبيه: لا تضغط الزرار مرتين على نفس الوردية.')) return;
+  try {
+    const { error } = await supabaseClient.rpc('fn_admin_reverse_shift_cash_transfer', {
+      p_shift_id: shift.id,
+      p_note: note.trim() || null,
+    });
+    if (error) throw error;
+    boReversedShiftIds.add(shift.id);
+    showToast('تم عكس الترحيل بنجاح');
+    await loadBoShifts();
+    renderShiftsTable();
+    if (treasuriesLoadedOnce) { await loadBoTreasuries(); renderTreasuriesTable(); }
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || 'تعذر عكس الترحيل', true);
+  }
 }
 
 async function viewPastZReport(shift) {
@@ -14815,6 +15943,8 @@ function populateIncomeStatementBranchFilter() {
 }
 
 let lastIncomeStatementRows = [];
+let lastFinancialPositionRows = [];
+let lastFpOpenShifts = [];
 
 async function refreshIncomeStatement() {
   const fromDate = document.getElementById('isFromDate').value;
@@ -14908,6 +16038,136 @@ function exportIncomeStatementToExcel() {
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'قائمة الدخل');
   const dateStr = new Date().toISOString().split('T')[0];
   XLSX.writeFile(wb, `قائمة-الدخل-المبسطة-${dateStr}.xlsx`);
+}
+
+// ============================================================
+// ملخص المركز المالي (تقديري مبسط بدون قيود محاسبية مزدوجة)
+// الأصول = النقدية بالخزائن (ورديات مفتوحة) + مستحق من العملاء + قيمة المخزون بالتكلفة
+// الالتزامات = مستحق للموردين
+// صافي المركز = الأصول − الالتزامات
+// ============================================================
+async function refreshFinancialPositionReport() {
+  const tbody = document.getElementById('financialPositionTableBody');
+  const shiftsBody = document.getElementById('fpOpenShiftsTableBody');
+  tbody.innerHTML = `<tr><td colspan="2" class="bo-empty">جاري التحميل...</td></tr>`;
+  shiftsBody.innerHTML = `<tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>`;
+  try {
+    await Promise.all([loadBoCustomers(), loadBoSuppliers()]);
+
+    // النقدية بالخزائن: بتتحسب من الورديات المفتوحة حاليًا فقط (نفس منطق تقرير الشيفت)
+    const { data: openShifts, error: shiftsErr } = await supabaseClient
+      .from('shifts')
+      .select('id, opening_amount, opening_at, branches(name), opener:users_profile!shifts_user_id_fkey(full_name)')
+      .eq('status', 'open');
+    if (shiftsErr) throw shiftsErr;
+
+    const shiftRows = await Promise.all((openShifts || []).map(async s => {
+      const summary = await computeShiftCashSummary(s.id, s.opening_amount);
+      return {
+        branch: s.branches?.name || '—',
+        cashier: s.opener?.full_name || '—',
+        openedAt: s.opening_at,
+        opening: Number(s.opening_amount) || 0,
+        expected: summary.expectedCash,
+      };
+    }));
+    const cashOnHand = shiftRows.reduce((sum, r) => sum + r.expected, 0);
+    lastFpOpenShifts = shiftRows;
+
+    // أرصدة الخزائن والحسابات البنكية (مش داخلة في cashOnHand، لأن دي بترحّل
+    // تلقائيًا عند قفل الوردية عن طريق trg_close_shift_transfer_cash — يعني
+    // مفيش تكرار: cashOnHand = ورديات لسه مفتوحة، treasuryBalance = كل حاجة
+    // اترحّلت + الحسابات البنكية + حركات رأس المال اللي أثّرت على الرصيد)
+    const { data: treasuryAccounts, error: treasuryErr } = await supabaseClient
+      .from('cash_accounts')
+      .select('current_balance');
+    if (treasuryErr) throw treasuryErr;
+    const treasuryBalance = (treasuryAccounts || []).reduce((sum, a) => sum + (Number(a.current_balance) || 0), 0);
+
+    // مستحق من العملاء (ذمم مدينة) ومستحق للموردين (ذمم دائنة) — أرصدة موجبة فقط
+    const receivables = boCustomers.reduce((sum, c) => sum + Math.max(Number(c.balance) || 0, 0), 0);
+    const payables = boSuppliers.reduce((sum, s) => sum + Math.max(Number(s.balance) || 0, 0), 0);
+
+    // قيمة المخزون بسعر التكلفة (كل الفروع/المخازن)
+    const stockByProduct = await fetchStockByProduct(null);
+    const inventoryValue = boProducts.reduce((sum, p) => sum + (stockByProduct[p.id] || 0) * (Number(p.cost_price) || 0), 0);
+
+    // صافي القيمة الدفترية للأصول الثابتة النشطة فقط (نفس معادلة computeAssetBookValue
+    // ومطابقة لدالة fn_fixed_asset_book_value في قاعدة البيانات — قسط ثابت سنوي
+    // متناسب مع عدد الأيام من تاريخ الشراء). الأصول المُستبعدة ما بتتحسبش هنا لأنها
+    // خرجت فعليًا من ملكية الشركة (والأثر النقدي بتاعها لو كان فيه إيداع خزينة
+    // بيظهر أصلًا جوه treasuryBalance فوق).
+    if (!fixedAssetsLoadedOnce) { await loadBoFixedAssets(); fixedAssetsLoadedOnce = true; }
+    const fixedAssetsValue = boFixedAssets
+      .filter(a => a.is_active)
+      .reduce((sum, a) => sum + computeAssetBookValue(a), 0);
+
+    const totalAssets = treasuryBalance + cashOnHand + receivables + inventoryValue + fixedAssetsValue;
+    const totalLiabilities = payables;
+    const netPosition = totalAssets - totalLiabilities;
+
+    document.getElementById('fpTreasuryBalance').textContent = treasuryBalance.toFixed(2);
+    document.getElementById('fpCashOnHand').textContent = cashOnHand.toFixed(2);
+    document.getElementById('fpReceivables').textContent = receivables.toFixed(2);
+    document.getElementById('fpInventoryValue').textContent = inventoryValue.toFixed(2);
+    document.getElementById('fpFixedAssetsValue').textContent = fixedAssetsValue.toFixed(2);
+    document.getElementById('fpPayables').textContent = payables.toFixed(2);
+    const netEl = document.getElementById('fpNetPosition');
+    netEl.textContent = netPosition.toFixed(2);
+    netEl.classList.toggle('positive', netPosition >= 0);
+    netEl.classList.toggle('negative', netPosition < 0);
+
+    const rows = [
+      { label: 'أرصدة الخزائن والحسابات البنكية', value: treasuryBalance, type: 'normal' },
+      { label: 'النقدية بالورديات المفتوحة (غير مرحّلة بعد)', value: cashOnHand, type: 'normal' },
+      { label: 'مستحق من العملاء (ذمم مدينة)', value: receivables, type: 'normal' },
+      { label: 'قيمة المخزون (بسعر التكلفة)', value: inventoryValue, type: 'normal' },
+      { label: 'صافي القيمة الدفترية للأصول الثابتة', value: fixedAssetsValue, type: 'normal' },
+      { label: 'إجمالي الأصول التقديرية', value: totalAssets, type: 'subtotal' },
+      { label: 'مستحق للموردين (ذمم دائنة)', value: payables, type: 'deduct' },
+      { label: 'صافي المركز المالي التقديري', value: netPosition, type: 'total' },
+    ];
+    lastFinancialPositionRows = rows;
+
+    tbody.innerHTML = '';
+    rows.forEach(r => {
+      const tr = document.createElement('tr');
+      if (r.type === 'deduct') tr.classList.add('stmt-deduct');
+      if (r.type === 'total') tr.classList.add('stmt-total');
+      const valueClass = r.type === 'total' ? (r.value >= 0 ? 'positive' : 'negative') : '';
+      tr.innerHTML = `<td class="stmt-label">${escapeHtml(r.label)}</td><td class="num ${valueClass}">${r.value.toFixed(2)}</td>`;
+      tbody.appendChild(tr);
+    });
+
+    renderBreakdownTable('fpOpenShiftsTableBody', shiftRows, 5, row => `
+      <td>${escapeHtml(row.branch)}</td>
+      <td>${escapeHtml(row.cashier)}</td>
+      <td class="num">${new Date(row.openedAt).toLocaleString('ar-EG')}</td>
+      <td class="num">${row.opening.toFixed(2)}</td>
+      <td class="num">${row.expected.toFixed(2)}</td>`);
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحميل ملخص المركز المالي', true);
+  }
+}
+
+function exportFinancialPositionToExcel() {
+  if (lastFinancialPositionRows.length === 0) { showToast('لا توجد بيانات لتصديرها', true); return; }
+  const summaryRows = lastFinancialPositionRows.map(r => ({ 'البند': r.label, 'القيمة': Number(r.value.toFixed(2)) }));
+  const shiftsRows = lastFpOpenShifts.map(r => ({
+    'الفرع': r.branch,
+    'الكاشير': r.cashier,
+    'وقت الفتح': new Date(r.openedAt).toLocaleString('ar-EG'),
+    'العهدة الافتتاحية': Number(r.opening.toFixed(2)),
+    'النقدية المتوقعة': Number(r.expected.toFixed(2)),
+  }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows), 'ملخص المركز المالي');
+  if (shiftsRows.length > 0) {
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(shiftsRows), 'النقدية بالورديات المفتوحة');
+  }
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `ملخص-المركز-المالي-${dateStr}.xlsx`);
 }
 
 // ============================================================
