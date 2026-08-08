@@ -578,6 +578,15 @@ a { color: inherit; }
 .daily-trend-axis-line { stroke: var(--border); stroke-width: 1; }
 .daily-trend-label { fill: var(--ink-soft); font-family: var(--font-num); font-size: 10px; }
 .daily-trend-empty { padding: 24px; text-align: center; color: var(--ink-soft); font-size: 13px; }
+.fp-trend-line { fill: none; stroke: var(--teal-500); stroke-width: 2; }
+.fp-trend-area { fill: var(--teal-500); opacity: 0.08; }
+.fp-trend-dot { fill: var(--teal-700); }
+.fp-trend-dot:hover { fill: var(--teal-900, #0d4a3c); }
+.fp-compare-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; margin-bottom: 14px; }
+.fp-compare-field { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; color: var(--ink-soft); }
+.fp-compare-delta { font-size: 12.5px; }
+.fp-compare-delta.positive { color: var(--teal-700); }
+.fp-compare-delta.negative { color: #C0392B; }
 
 /* -------- Purchases -------- */
 .modal-box.wide { max-width: 680px; }
@@ -2417,11 +2426,12 @@ a { color: inherit; }
                 <div class="report-subtitle">ملخص المركز المالي</div>
                 <div class="report-subtitle-actions">
                   <button class="bo-icon-btn" id="refreshFinancialPositionBtn">تحديث</button>
+                  <button class="bo-icon-btn" id="saveFinancialSnapshotBtn">📸 حفظ لقطة اليوم</button>
                   <button class="bo-icon-btn" id="exportFinancialPositionBtn">تصدير إكسل</button>
                 </div>
               </div>
               <div style="font-size:12.5px; color:var(--ink-soft); margin:-10px 0 16px;">
-                ملخص تقديري لحظي مبني على الأرصدة الحالية (بدون قيود محاسبية مزدوجة) — النقدية = أرصدة الخزائن/الحسابات البنكية + النقدية بالورديات المفتوحة غير المرحّلة بعد، والمخزون بسعر التكلفة، والأصول الثابتة بصافي القيمة الدفترية بعد الإهلاك.
+                ملخص تقديري لحظي مبني على الأرصدة الحالية (بدون قيود محاسبية مزدوجة) — النقدية = أرصدة الخزائن/الحسابات البنكية + النقدية بالورديات المفتوحة غير المرحّلة بعد، والمخزون بسعر التكلفة، والأصول الثابتة بصافي القيمة الدفترية بعد الإهلاك. حقوق الملكية = رأس المال المستثمر (من شاشة "رأس المال وحقوق الملكية") + الأرباح المحتجزة التقديرية (وهي القيمة المتبقية لمطابقة صافي الأصول، لغياب دفاتر أرباح وخسائر رسمية).
               </div>
 
               <div class="report-cards">
@@ -2448,6 +2458,14 @@ a { color: inherit; }
                 <div class="report-card">
                   <div class="report-card-label">مستحق للموردين</div>
                   <div class="report-card-value num negative" id="fpPayables">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">رأس المال المستثمر (صافي مساهمات المالك)</div>
+                  <div class="report-card-value num" id="fpCapitalNet">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">الأرباح المحتجزة التقديرية</div>
+                  <div class="report-card-value num" id="fpRetainedEarnings">0.00</div>
                 </div>
                 <div class="report-card">
                   <div class="report-card-label">صافي المركز المالي التقديري</div>
@@ -2482,6 +2500,62 @@ a { color: inherit; }
                     </tr>
                   </thead>
                   <tbody id="fpOpenShiftsTableBody">
+                    <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="report-subtitle-row">
+                <div class="report-subtitle" style="font-size:14px;">لقطات تاريخية للمركز المالي</div>
+                <div class="report-subtitle-actions">
+                  <select id="fpSnapshotRangeSelect" class="report-inline-select">
+                    <option value="30">آخر 30 يوم</option>
+                    <option value="90" selected>آخر 90 يوم</option>
+                    <option value="365">آخر سنة</option>
+                    <option value="0">كل اللقطات</option>
+                  </select>
+                  <button class="bo-icon-btn" id="exportFinancialSnapshotsBtn">تصدير إكسل</button>
+                </div>
+              </div>
+              <div style="font-size:12px; color:var(--ink-soft); margin:-10px 0 12px;">
+                كل لقطة بتسجّل قيمة المركز المالي (الأصول/الالتزامات/الصافي) في تاريخها — بدل ما يكون التقرير لحظي بس، تقدر تتابع اتجاه نمو الشركة بمرور الوقت. اضغط "حفظ لقطة اليوم" فوق لتسجيل رقم اليوم (لو كررت الحفظ في نفس اليوم، هيتم تحديث اللقطة مش تكرارها).
+              </div>
+              <div class="daily-trend-chart-wrap">
+                <div class="daily-trend-chart" id="fpSnapshotsChart"></div>
+              </div>
+
+              <div class="fp-compare-row">
+                <div class="fp-compare-field">
+                  <label for="fpCompareFrom">قارن من تاريخ</label>
+                  <select id="fpCompareFrom" class="report-inline-select"></select>
+                </div>
+                <div class="fp-compare-field">
+                  <label for="fpCompareTo">إلى تاريخ</label>
+                  <select id="fpCompareTo" class="report-inline-select"></select>
+                </div>
+                <button class="bo-icon-btn" id="fpCompareBtn" type="button">قارن</button>
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table stmt-table">
+                  <thead><tr><th>البند</th><th>التاريخ الأول</th><th>التاريخ الثاني</th><th>الفرق</th></tr></thead>
+                  <tbody id="fpCompareTableBody">
+                    <tr><td colspan="4" class="bo-empty">اختر تاريخين للمقارنة</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead>
+                    <tr>
+                      <th>التاريخ</th>
+                      <th>إجمالي الأصول</th>
+                      <th>إجمالي الالتزامات</th>
+                      <th>صافي المركز المالي</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="fpSnapshotsTableBody">
                     <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
                   </tbody>
                 </table>
@@ -9372,6 +9446,14 @@ function bindBackofficeEvents() {
   document.getElementById('exportDebtsBtn').addEventListener('click', () => exportDebtsToExcel());
   document.getElementById('refreshFinancialPositionBtn').addEventListener('click', () => refreshFinancialPositionReport());
   document.getElementById('exportFinancialPositionBtn').addEventListener('click', () => exportFinancialPositionToExcel());
+  document.getElementById('saveFinancialSnapshotBtn').addEventListener('click', () => saveFinancialPositionSnapshot());
+  document.getElementById('exportFinancialSnapshotsBtn').addEventListener('click', () => exportFinancialSnapshotsToExcel());
+  document.getElementById('fpSnapshotRangeSelect').addEventListener('change', () => loadFinancialSnapshotsHistory());
+  document.getElementById('fpCompareBtn').addEventListener('click', () => compareFinancialSnapshots());
+  document.getElementById('fpSnapshotsTableBody').addEventListener('click', (e) => {
+    const btn = e.target.closest('.fp-delete-snapshot-btn');
+    if (btn) deleteFinancialSnapshot(btn.dataset.id);
+  });
   setGpQuickRange('today');
   document.getElementById('runGrossProfitBtn').addEventListener('click', () => refreshGrossProfitReport());
   document.getElementById('gpBranchFilter').addEventListener('change', () => refreshGrossProfitReport());
@@ -15945,6 +16027,8 @@ function populateIncomeStatementBranchFilter() {
 let lastIncomeStatementRows = [];
 let lastFinancialPositionRows = [];
 let lastFpOpenShifts = [];
+let lastFinancialPositionValues = null;
+let lastFinancialSnapshots = [];
 
 async function refreshIncomeStatement() {
   const fromDate = document.getElementById('isFromDate').value;
@@ -16106,12 +16190,42 @@ async function refreshFinancialPositionReport() {
     const totalLiabilities = payables;
     const netPosition = totalAssets - totalLiabilities;
 
+    // رأس المال وحقوق الملكية: صافي مساهمات المالك (رأس مال مبدئي + ضخ إضافي − مسحوبات
+    // شخصية) من شاشة "رأس المال وحقوق الملكية". الفرق بين صافي المركز المالي وده بيمثل
+    // الأرباح المحتجزة التقديرية (مفيش دفاتر أرباح وخسائر رسمية، فهي قيمة استنتاجية
+    // بتقفل معادلة: الأصول − الالتزامات = رأس المال + الأرباح المحتجزة).
+    // ملحوظة: جدول capital_transactions محمي بصلاحية admin فقط، فلو المستخدم عنده
+    // صلاحية finance بس، الاستعلام هيرجع فاضي بسبب الـ RLS مش بخطأ.
+    let capitalNet = 0;
+    try {
+      const { data: capitalRows, error: capitalErr } = await supabaseClient
+        .from('capital_transactions')
+        .select('type, amount');
+      if (capitalErr) throw capitalErr;
+      (capitalRows || []).forEach(t => {
+        const amt = Number(t.amount) || 0;
+        if (t.type === 'initial_capital' || t.type === 'injection') capitalNet += amt;
+        else if (t.type === 'drawing') capitalNet -= amt;
+      });
+    } catch (err) {
+      console.error(err);
+    }
+    const retainedEarnings = netPosition - capitalNet;
+
     document.getElementById('fpTreasuryBalance').textContent = treasuryBalance.toFixed(2);
     document.getElementById('fpCashOnHand').textContent = cashOnHand.toFixed(2);
     document.getElementById('fpReceivables').textContent = receivables.toFixed(2);
     document.getElementById('fpInventoryValue').textContent = inventoryValue.toFixed(2);
     document.getElementById('fpFixedAssetsValue').textContent = fixedAssetsValue.toFixed(2);
     document.getElementById('fpPayables').textContent = payables.toFixed(2);
+    const capitalEl = document.getElementById('fpCapitalNet');
+    capitalEl.textContent = capitalNet.toFixed(2);
+    capitalEl.classList.toggle('positive', capitalNet >= 0);
+    capitalEl.classList.toggle('negative', capitalNet < 0);
+    const retainedEl = document.getElementById('fpRetainedEarnings');
+    retainedEl.textContent = retainedEarnings.toFixed(2);
+    retainedEl.classList.toggle('positive', retainedEarnings >= 0);
+    retainedEl.classList.toggle('negative', retainedEarnings < 0);
     const netEl = document.getElementById('fpNetPosition');
     netEl.textContent = netPosition.toFixed(2);
     netEl.classList.toggle('positive', netPosition >= 0);
@@ -16125,9 +16239,24 @@ async function refreshFinancialPositionReport() {
       { label: 'صافي القيمة الدفترية للأصول الثابتة', value: fixedAssetsValue, type: 'normal' },
       { label: 'إجمالي الأصول التقديرية', value: totalAssets, type: 'subtotal' },
       { label: 'مستحق للموردين (ذمم دائنة)', value: payables, type: 'deduct' },
+      { label: 'رأس المال المستثمر (صافي مساهمات المالك)', value: capitalNet, type: 'normal' },
+      { label: 'الأرباح المحتجزة التقديرية', value: retainedEarnings, type: 'normal' },
       { label: 'صافي المركز المالي التقديري', value: netPosition, type: 'total' },
     ];
     lastFinancialPositionRows = rows;
+    lastFinancialPositionValues = {
+      treasury_balance: treasuryBalance,
+      cash_on_hand: cashOnHand,
+      receivables,
+      inventory_value: inventoryValue,
+      fixed_assets_value: fixedAssetsValue,
+      payables,
+      total_assets: totalAssets,
+      total_liabilities: totalLiabilities,
+      capital_net: capitalNet,
+      retained_earnings: retainedEarnings,
+      net_position: netPosition,
+    };
 
     tbody.innerHTML = '';
     rows.forEach(r => {
@@ -16145,10 +16274,233 @@ async function refreshFinancialPositionReport() {
       <td class="num">${new Date(row.openedAt).toLocaleString('ar-EG')}</td>
       <td class="num">${row.opening.toFixed(2)}</td>
       <td class="num">${row.expected.toFixed(2)}</td>`);
+
+    loadFinancialSnapshotsHistory();
   } catch (err) {
     console.error(err);
     showToast('تعذر تحميل ملخص المركز المالي', true);
   }
+}
+
+// ============================================================
+// لقطات تاريخية للمركز المالي (Snapshots) — تخزين المركز المالي
+// المحسوب في تاريخه، عشان نقدر نعمل رسم بياني لاتجاه نمو الشركة
+// ونقارن بين فترتين بدل ما يكون التقرير لحظي بس.
+// ============================================================
+async function saveFinancialPositionSnapshot() {
+  if (!lastFinancialPositionValues) {
+    showToast('حدّث تقرير المركز المالي الأول', true);
+    return;
+  }
+  const btn = document.getElementById('saveFinancialSnapshotBtn');
+  const today = toDateInputValue(new Date());
+  try {
+    if (btn) btn.disabled = true;
+    const payload = {
+      snapshot_date: today,
+      ...lastFinancialPositionValues,
+      created_by: currentProfile?.id || null,
+    };
+    const { error } = await supabaseClient
+      .from('financial_position_snapshots')
+      .upsert(payload, { onConflict: 'snapshot_date' });
+    if (error) throw error;
+    showToast('تم حفظ لقطة المركز المالي لليوم');
+    await loadFinancialSnapshotsHistory();
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر حفظ اللقطة', true);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function loadFinancialSnapshotsHistory() {
+  const chartWrap = document.getElementById('fpSnapshotsChart');
+  const tbody = document.getElementById('fpSnapshotsTableBody');
+  if (!chartWrap || !tbody) return;
+  const rangeSel = document.getElementById('fpSnapshotRangeSelect');
+  const rangeDays = rangeSel ? Number(rangeSel.value) : 90;
+  try {
+    let query = supabaseClient
+      .from('financial_position_snapshots')
+      .select('*')
+      .order('snapshot_date', { ascending: true });
+    if (rangeDays > 0) {
+      const from = new Date();
+      from.setDate(from.getDate() - rangeDays);
+      query = query.gte('snapshot_date', toDateInputValue(from));
+    }
+    const { data, error } = await query;
+    if (error) throw error;
+    lastFinancialSnapshots = data || [];
+    renderFinancialSnapshotsChart(lastFinancialSnapshots);
+    renderFinancialSnapshotsTable(lastFinancialSnapshots);
+    populateFinancialSnapshotsCompareSelects(lastFinancialSnapshots);
+  } catch (err) {
+    console.error(err);
+    tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">تعذر تحميل اللقطات التاريخية</td></tr>`;
+  }
+}
+
+function renderFinancialSnapshotsChart(rows) {
+  const container = document.getElementById('fpSnapshotsChart');
+  if (!container) return;
+  if (!rows || rows.length === 0) {
+    container.innerHTML = `<div class="daily-trend-empty">لا توجد لقطات محفوظة بعد — اضغط "حفظ لقطة اليوم" فوق</div>`;
+    return;
+  }
+  const stepX = 60, chartHeight = 150, topPadding = 14, bottomPadding = 34, leftPadding = 10;
+  const width = leftPadding + Math.max(rows.length - 1, 1) * stepX + 20;
+  const svgHeight = topPadding + chartHeight + bottomPadding;
+  const values = rows.map(r => Number(r.net_position) || 0);
+  const maxVal = Math.max(...values, 0);
+  const minVal = Math.min(...values, 0);
+  const span = (maxVal - minVal) || 1;
+  const labelStep = Math.max(1, Math.ceil(rows.length / 12));
+
+  const points = rows.map((row, i) => {
+    const x = leftPadding + (rows.length > 1 ? i * stepX : 0);
+    const val = Number(row.net_position) || 0;
+    const y = topPadding + chartHeight - ((val - minVal) / span) * chartHeight;
+    return { x, y, row };
+  });
+
+  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
+  const areaPath = `M${points[0].x},${topPadding + chartHeight} ` +
+    points.map(p => `L${p.x},${p.y}`).join(' ') +
+    ` L${points[points.length - 1].x},${topPadding + chartHeight} Z`;
+
+  const dots = points.map((p, i) => `
+    <circle class="fp-trend-dot" cx="${p.x}" cy="${p.y}" r="3.5">
+      <title>${p.row.snapshot_date} — صافي المركز المالي: ${(Number(p.row.net_position) || 0).toFixed(2)}</title>
+    </circle>
+    ${i % labelStep === 0 || i === points.length - 1 ? `<text class="daily-trend-label" x="${p.x}" y="${topPadding + chartHeight + 16}" text-anchor="middle">${formatDayLabel(p.row.snapshot_date)}</text>` : ''}`).join('');
+
+  container.innerHTML = `
+    <svg viewBox="0 0 ${width} ${svgHeight}" width="${width}" height="${svgHeight}">
+      <line class="daily-trend-axis-line" x1="0" y1="${topPadding + chartHeight}" x2="${width}" y2="${topPadding + chartHeight}"></line>
+      <path class="fp-trend-area" d="${areaPath}"></path>
+      <path class="fp-trend-line" d="${linePath}"></path>
+      ${dots}
+    </svg>`;
+}
+
+function renderFinancialSnapshotsTable(rows) {
+  const tbody = document.getElementById('fpSnapshotsTableBody');
+  if (!tbody) return;
+  if (!rows || rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">لا توجد لقطات محفوظة بعد</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  [...rows].reverse().forEach(r => {
+    const tr = document.createElement('tr');
+    const netVal = Number(r.net_position) || 0;
+    tr.innerHTML = `
+      <td>${new Date(r.snapshot_date).toLocaleDateString('ar-EG')}</td>
+      <td class="num">${(Number(r.total_assets) || 0).toFixed(2)}</td>
+      <td class="num">${(Number(r.total_liabilities) || 0).toFixed(2)}</td>
+      <td class="num ${netVal >= 0 ? 'positive' : 'negative'}">${netVal.toFixed(2)}</td>
+      <td><button type="button" class="bo-icon-btn danger fp-delete-snapshot-btn" data-id="${r.id}">حذف</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+async function deleteFinancialSnapshot(id) {
+  if (!confirm('حذف هذه اللقطة نهائيًا؟')) return;
+  try {
+    const { error } = await supabaseClient.from('financial_position_snapshots').delete().eq('id', id);
+    if (error) throw error;
+    showToast('تم حذف اللقطة');
+    await loadFinancialSnapshotsHistory();
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر حذف اللقطة', true);
+  }
+}
+
+function populateFinancialSnapshotsCompareSelects(rows) {
+  const fromSel = document.getElementById('fpCompareFrom');
+  const toSel = document.getElementById('fpCompareTo');
+  if (!fromSel || !toSel) return;
+  const prevFrom = fromSel.value, prevTo = toSel.value;
+  const options = (rows || []).map(r =>
+    `<option value="${r.snapshot_date}">${new Date(r.snapshot_date).toLocaleDateString('ar-EG')}</option>`).join('');
+  fromSel.innerHTML = `<option value="">—</option>${options}`;
+  toSel.innerHTML = `<option value="">—</option>${options}`;
+  if (rows && rows.length >= 2) {
+    fromSel.value = prevFrom || rows[0].snapshot_date;
+    toSel.value = prevTo || rows[rows.length - 1].snapshot_date;
+  } else {
+    fromSel.value = prevFrom || '';
+    toSel.value = prevTo || '';
+  }
+}
+
+function compareFinancialSnapshots() {
+  const fromDate = document.getElementById('fpCompareFrom').value;
+  const toDate = document.getElementById('fpCompareTo').value;
+  const tbody = document.getElementById('fpCompareTableBody');
+  if (!fromDate || !toDate) {
+    tbody.innerHTML = `<tr><td colspan="4" class="bo-empty">اختر تاريخين للمقارنة</td></tr>`;
+    return;
+  }
+  const snapA = lastFinancialSnapshots.find(r => r.snapshot_date === fromDate);
+  const snapB = lastFinancialSnapshots.find(r => r.snapshot_date === toDate);
+  if (!snapA || !snapB) {
+    tbody.innerHTML = `<tr><td colspan="4" class="bo-empty">تعذر إيجاد لقطة لأحد التاريخين</td></tr>`;
+    return;
+  }
+  const fields = [
+    { key: 'treasury_balance', label: 'أرصدة الخزائن والحسابات البنكية' },
+    { key: 'cash_on_hand', label: 'النقدية بالورديات المفتوحة' },
+    { key: 'receivables', label: 'مستحق من العملاء' },
+    { key: 'inventory_value', label: 'قيمة المخزون' },
+    { key: 'fixed_assets_value', label: 'صافي القيمة الدفترية للأصول الثابتة' },
+    { key: 'total_assets', label: 'إجمالي الأصول' },
+    { key: 'payables', label: 'مستحق للموردين' },
+    { key: 'total_liabilities', label: 'إجمالي الالتزامات' },
+    { key: 'capital_net', label: 'رأس المال المستثمر (صافي مساهمات المالك)' },
+    { key: 'retained_earnings', label: 'الأرباح المحتجزة التقديرية' },
+    { key: 'net_position', label: 'صافي المركز المالي' },
+  ];
+  tbody.innerHTML = '';
+  fields.forEach(f => {
+    const valA = Number(snapA[f.key]) || 0;
+    const valB = Number(snapB[f.key]) || 0;
+    const delta = valB - valA;
+    const tr = document.createElement('tr');
+    if (f.key === 'net_position') tr.classList.add('stmt-total');
+    tr.innerHTML = `
+      <td class="stmt-label">${escapeHtml(f.label)}</td>
+      <td class="num">${valA.toFixed(2)}</td>
+      <td class="num">${valB.toFixed(2)}</td>
+      <td class="num fp-compare-delta ${delta >= 0 ? 'positive' : 'negative'}">${delta >= 0 ? '+' : ''}${delta.toFixed(2)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function exportFinancialSnapshotsToExcel() {
+  if (lastFinancialSnapshots.length === 0) { showToast('لا توجد لقطات لتصديرها', true); return; }
+  const rows = lastFinancialSnapshots.map(r => ({
+    'التاريخ': r.snapshot_date,
+    'أرصدة الخزائن والحسابات البنكية': Number(r.treasury_balance) || 0,
+    'النقدية بالورديات المفتوحة': Number(r.cash_on_hand) || 0,
+    'مستحق من العملاء': Number(r.receivables) || 0,
+    'قيمة المخزون': Number(r.inventory_value) || 0,
+    'صافي القيمة الدفترية للأصول الثابتة': Number(r.fixed_assets_value) || 0,
+    'إجمالي الأصول': Number(r.total_assets) || 0,
+    'مستحق للموردين': Number(r.payables) || 0,
+    'إجمالي الالتزامات': Number(r.total_liabilities) || 0,
+    'رأس المال المستثمر (صافي مساهمات المالك)': Number(r.capital_net) || 0,
+    'الأرباح المحتجزة التقديرية': Number(r.retained_earnings) || 0,
+    'صافي المركز المالي': Number(r.net_position) || 0,
+  }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'لقطات المركز المالي');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `لقطات-المركز-المالي-${dateStr}.xlsx`);
 }
 
 function exportFinancialPositionToExcel() {
