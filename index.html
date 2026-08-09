@@ -140,8 +140,17 @@ a { color: inherit; }
 .main { display: grid; grid-template-columns: 1fr 380px; overflow: hidden; }
 .dash-updated-label { font-size: 12px; color: var(--ink-soft); direction: ltr; }
 .dash-chart-caption { font-size: 12.5px; color: var(--amber-600); font-weight: 600; }
-.dash-chart-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; direction: ltr; }
-.dash-chart-wrap canvas { display: block; width: 100%; height: 200px; }
+.dash-chart-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; direction: ltr; position: relative; }
+.dash-chart-wrap canvas { display: block; width: 100%; height: 200px; cursor: crosshair; }
+.dash-chart-tooltip {
+  position: absolute; display: none; pointer-events: none; z-index: 5;
+  background: var(--ink, #1F2E28); color: #fff; border-radius: 8px;
+  padding: 8px 10px; font-size: 12px; line-height: 1.7; white-space: nowrap;
+  box-shadow: 0 6px 18px rgba(16,30,25,0.25); direction: rtl; text-align: right;
+}
+.dash-chart-tooltip .tt-title { font-weight: 700; margin-bottom: 2px; display: block; }
+.dash-chart-tooltip .tt-row { display: flex; gap: 8px; justify-content: space-between; }
+.dash-chart-tooltip .tt-row .tt-val { font-weight: 700; font-variant-numeric: tabular-nums; }
 .product-side { display: flex; flex-direction: column; overflow: hidden; padding: 16px 18px; }
 .search-row { display: flex; gap: 10px; margin-bottom: 14px; }
 .search-row input { flex: 1; padding: 12px 16px; font-size: 15px; border-radius: var(--radius-md); }
@@ -1144,18 +1153,20 @@ a { color: inherit; }
           </div>
 
           <div class="report-subtitle-row" style="margin-top:22px;">
-            <div class="report-subtitle">حركة المبيعات خلال الفترة</div>
+            <div class="report-subtitle" id="dashSalesChartTitle">حركة المبيعات خلال الفترة</div>
           </div>
           <div class="dash-chart-wrap">
             <canvas id="dashSalesChart"></canvas>
+            <div class="dash-chart-tooltip" id="dashSalesChartTooltip"></div>
           </div>
 
           <div class="report-subtitle-row" style="margin-top:22px;">
-            <div class="report-subtitle">الازدحام حسب ساعة اليوم (لتنظيم الشيفتات)</div>
+            <div class="report-subtitle">أوقات الذروة خلال اليوم (لتنظيم الشيفتات)</div>
             <div class="dash-chart-caption" id="dashHourlyChartCaption"></div>
           </div>
           <div class="dash-chart-wrap">
             <canvas id="dashHourlyChart"></canvas>
+            <div class="dash-chart-tooltip" id="dashHourlyChartTooltip"></div>
           </div>
 
           <div class="report-subtitle-row" style="margin-top:8px;">
@@ -9740,6 +9751,10 @@ const DASH_CACHE_KEY = 'pos_dashboard_cache_v1';
 // آخر نسخة معروضة من الداشبورد — نستخدمها لأي تصدير (PDF/Excel)
 // من غير ما نعيد الاستعلام من قاعدة البيانات
 let lastDashboardPayload = null;
+// إحداثيات الأعمدة المرسومة حاليًا في كل رسم بياني (بتتحدّث في كل مرة نرسم فيها)،
+// بنستخدمها لمعرفة أي عمود الماوس واقف عليه عشان نظهر الـ tooltip
+const dashSalesChartBars = { current: [] };
+const dashHourlyChartBars = { current: [] };
 
 // ============================================================
 // تحديث تلقائي كل 5 دقائق — بيشتغل بس وإحنا فاتحين قسم الرئيسية
@@ -9930,17 +9945,23 @@ async function computeDashboardPayload(fromDate, toDate, quickRange) {
 
     // بيانات الرسم البياني: إجمالي المبيعات مجمّع حسب اليوم (من نفس بيانات periodSales، من غير أي استعلام إضافي)
     const chartByDay = {};
+    const chartByDayCount = {};
     (periodSales || []).forEach(s => {
       const day = s.created_at.slice(0, 10);
       chartByDay[day] = (chartByDay[day] || 0) + Number(s.total);
+      chartByDayCount[day] = (chartByDayCount[day] || 0) + 1;
     });
 
     // بيانات الازدحام حسب ساعة اليوم: عدد الفواتير في كل ساعة (0-23) مجمّعة
     // على كل أيام الفترة — مفيدة لتنظيم الشيفتات، ومن نفس بيانات periodSales برضو
     const chartByHour = Array(24).fill(0);
+    // نفس الفكرة بس بإجمالي المبيعات (مش عدد الفواتير) في كل ساعة — بنستخدمها
+    // في رسم "حركة المبيعات" لما الفترة المختارة تبقى يوم واحد بس، بدل عمود واحد عريض
+    const chartByHourRevenue = Array(24).fill(0);
     (periodSales || []).forEach(s => {
       const hour = new Date(s.created_at).getHours();
       chartByHour[hour] += 1;
+      chartByHourRevenue[hour] += Number(s.total);
     });
     const busiestHour = chartByHour.reduce((best, count, hour) => count > chartByHour[best] ? hour : best, 0);
 
@@ -9962,7 +9983,9 @@ async function computeDashboardPayload(fromDate, toDate, quickRange) {
       lowStockRows,
       outOfStockRows,
       chartByDay,
+      chartByDayCount,
       chartByHour,
+      chartByHourRevenue,
       busiestHour: chartByHour.some(c => c > 0) ? busiestHour : null
     };
 }
@@ -9971,7 +9994,7 @@ async function computeDashboardPayload(fromDate, toDate, quickRange) {
 // من غير أي استعلامات، عشان يشتغل فورًا في الحالتين
 function renderDashboardPayload(payload) {
     lastDashboardPayload = payload;
-    const { totals, recentRows, topRows, lowStockRows, outOfStockRows, chartByDay, chartByHour, busiestHour, meta } = payload;
+    const { totals, recentRows, topRows, lowStockRows, outOfStockRows, chartByDay, chartByDayCount, chartByHour, chartByHourRevenue, busiestHour, meta } = payload;
 
     document.getElementById('dashTodaySales').textContent = totals.periodTotal.toFixed(2);
     document.getElementById('dashTodayCount').textContent = totals.periodCount;
@@ -10049,8 +10072,15 @@ function renderDashboardPayload(payload) {
       });
     }
 
-    renderDashboardChart(chartByDay || {});
-    renderHourlyChart(chartByHour || [], busiestHour);
+    // لو الفترة المختارة يوم واحد بس، هيبان عمود واحد عريض في رسم "حركة المبيعات"
+    // (يوم واحد = نقطة بيانات واحدة)، فبنعرضه بالساعة بدل باليوم في الحالة دي
+    const isSingleDay = !!(meta && meta.fromDate && meta.toDate && meta.fromDate === meta.toDate);
+    const dashSalesChartTitleEl = document.getElementById('dashSalesChartTitle');
+    if (dashSalesChartTitleEl) {
+      dashSalesChartTitleEl.textContent = isSingleDay ? 'حركة المبيعات خلال اليوم (بالساعة)' : 'حركة المبيعات خلال الفترة (باليوم)';
+    }
+    renderDashboardChart(chartByDay || {}, chartByDayCount || {}, chartByHourRevenue || [], chartByHour || [], isSingleDay);
+    renderHourlyChart(chartByHour || [], busiestHour, chartByHourRevenue || []);
 }
 
 // رابط سريع من صف "نفدت من المخزون" لشاشة المخزون، مع تعبئة
@@ -10143,7 +10173,7 @@ function openDashboardPrintPreview() {
   html += row('أصناف منخفضة المخزون', totals.lowStockCount);
   html += row('أصناف نفدت من المخزون', totals.outOfStockCount);
   if (busiestHour != null) {
-    html += row('أكثر ساعة ازدحامًا', `${String(busiestHour).padStart(2, '0')}:00`);
+    html += row('ساعة الذروة', `${String(busiestHour).padStart(2, '0')}:00`);
   }
 
   if (topRows.length) {
@@ -10165,9 +10195,53 @@ function openDashboardPrintPreview() {
 
 // رسم بياني خفيف بدون أي مكتبة خارجية (Canvas عادي) — بيتبنى من
 // بيانات المبيعات المجمّعة اللي أصلاً وصلت مع باقي أرقام الداشبورد
-function renderDashboardChart(chartByDay) {
+// عام: بيربط حركة الماوس فوق كانفاس رسم بياني بالأعمدة المرسومة، وبيظهر
+// tooltip فيه بيانات إضافية للعمود اللي الماوس واقف عليه. barsRef كائن
+// بيتحدّث محتواه (current) في كل مرة نرسم فيها الرسم من تاني
+function setupBarChartTooltip(canvas, tooltipEl, barsRef) {
+  if (!canvas || !tooltipEl || canvas.dataset.tooltipBound) return;
+  canvas.dataset.tooltipBound = '1';
+  const wrap = canvas.parentElement;
+
+  function hideTooltip() { tooltipEl.style.display = 'none'; }
+
+  function showTooltipForEvent(clientX, clientY) {
+    const bars = barsRef.current || [];
+    if (!bars.length) { hideTooltip(); return; }
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = clientX - rect.left;
+    if (mouseX < 0 || mouseX > rect.width) { hideTooltip(); return; }
+    const bar = bars.find(b => mouseX >= b.x && mouseX <= b.x + b.w);
+    if (!bar) { hideTooltip(); return; }
+
+    tooltipEl.innerHTML = bar.html;
+    tooltipEl.style.display = 'block';
+
+    const wrapRect = wrap.getBoundingClientRect();
+    const canvasOffsetX = rect.left - wrapRect.left;
+    const canvasOffsetY = rect.top - wrapRect.top;
+    const ttWidth = tooltipEl.offsetWidth || 150;
+    const ttHeight = tooltipEl.offsetHeight || 50;
+    let left = canvasOffsetX + bar.x + bar.w / 2 - ttWidth / 2;
+    left = Math.min(Math.max(left, 4), wrap.clientWidth - ttWidth - 4);
+    let top = canvasOffsetY + bar.y - ttHeight - 10;
+    if (top < 4) top = canvasOffsetY + bar.y + 10;
+    tooltipEl.style.left = left + 'px';
+    tooltipEl.style.top = top + 'px';
+  }
+
+  canvas.addEventListener('mousemove', (e) => showTooltipForEvent(e.clientX, e.clientY));
+  canvas.addEventListener('mouseleave', hideTooltip);
+  // دعم اللمس على الموبايل/التابلت
+  canvas.addEventListener('touchstart', (e) => {
+    if (e.touches[0]) showTooltipForEvent(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+}
+
+function renderDashboardChart(chartByDay, chartByDayCount, chartByHourRevenue, chartByHourCount, isSingleDay) {
   const canvas = document.getElementById('dashSalesChart');
   if (!canvas) return;
+  const tooltipEl = document.getElementById('dashSalesChartTooltip');
   const wrap = canvas.parentElement;
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
@@ -10180,6 +10254,68 @@ function renderDashboardChart(chartByDay) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, cssWidth, cssHeight);
+  dashSalesChartBars.current = [];
+  if (tooltipEl) tooltipEl.style.display = 'none';
+
+  // الفترة المختارة يوم واحد بس (مثلاً فلتر "اليوم") = عمود واحد لو عرضناه باليوم،
+  // فبنعرضه بالساعة (0-23) بدل كده عشان يبقى الرسم مفيد وواضح
+  if (isSingleDay) {
+    const hours = chartByHourRevenue || [];
+    const counts = chartByHourCount || [];
+    const hasData = hours.some(v => v > 0);
+    if (!hasData) {
+      ctx.fillStyle = '#9AA6A0';
+      ctx.font = '13px Tajawal, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('لا توجد بيانات لعرضها في الرسم البياني', cssWidth / 2, cssHeight / 2);
+      setupBarChartTooltip(canvas, tooltipEl, dashSalesChartBars);
+      return;
+    }
+
+    const maxVal = Math.max(...hours, 1);
+    const padding = { top: 14, bottom: 26, left: 10, right: 10 };
+    const chartW = cssWidth - padding.left - padding.right;
+    const chartH = cssHeight - padding.top - padding.bottom;
+    const barGap = 3;
+    const barW = Math.max((chartW - barGap * 23) / 24, 3);
+
+    hours.forEach((val, hour) => {
+      const h = val > 0 ? Math.max((val / maxVal) * chartH, 1) : 0;
+      const x = padding.left + hour * (barW + barGap);
+      const y = padding.top + (chartH - h);
+      const r = Math.min(3, barW / 2);
+      ctx.fillStyle = '#16876F';
+      if (h > 0) {
+        ctx.beginPath();
+        ctx.moveTo(x, y + h);
+        ctx.lineTo(x, y + r);
+        ctx.arcTo(x, y, x + r, y, r);
+        ctx.lineTo(x + barW - r, y);
+        ctx.arcTo(x + barW, y, x + barW, y + r, r);
+        ctx.lineTo(x + barW, y + h);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      if (hour % 3 === 0) {
+        ctx.fillStyle = '#5B6B63';
+        ctx.font = '10px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(String(hour), x + barW / 2, cssHeight - 8);
+      }
+
+      const count = counts[hour] || 0;
+      const hourLabel = `${String(hour).padStart(2, '0')}:00 - ${String((hour + 1) % 24).padStart(2, '0')}:00`;
+      dashSalesChartBars.current.push({
+        x, y: h > 0 ? y : padding.top + chartH, w: barW,
+        html: `<span class="tt-title">الساعة ${hourLabel}</span>
+          <div class="tt-row"><span>عدد الفواتير</span><span class="tt-val">${count}</span></div>
+          <div class="tt-row"><span>إجمالي المبيعات</span><span class="tt-val">${val.toFixed(2)}</span></div>`
+      });
+    });
+    setupBarChartTooltip(canvas, tooltipEl, dashSalesChartBars);
+    return;
+  }
 
   const days = Object.keys(chartByDay).sort();
   if (days.length === 0) {
@@ -10187,6 +10323,7 @@ function renderDashboardChart(chartByDay) {
     ctx.font = '13px Tajawal, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('لا توجد بيانات لعرضها في الرسم البياني', cssWidth / 2, cssHeight / 2);
+    setupBarChartTooltip(canvas, tooltipEl, dashSalesChartBars);
     return;
   }
 
@@ -10220,15 +10357,25 @@ function renderDashboardChart(chartByDay) {
       ctx.textAlign = 'center';
       ctx.fillText(day.slice(5), x + barW / 2, cssHeight - 8);
     }
+
+    const count = (chartByDayCount && chartByDayCount[day]) || 0;
+    dashSalesChartBars.current.push({
+      x, y, w: barW,
+      html: `<span class="tt-title">${day}</span>
+        <div class="tt-row"><span>عدد الفواتير</span><span class="tt-val">${count}</span></div>
+        <div class="tt-row"><span>إجمالي المبيعات</span><span class="tt-val">${val.toFixed(2)}</span></div>`
+    });
   });
+  setupBarChartTooltip(canvas, tooltipEl, dashSalesChartBars);
 }
 
 // رسم بياني لعدد الفواتير حسب ساعة اليوم (0-23) — بيوضح الساعات
 // الأكثر ازدحامًا عشان تظبط شيفتات الكاشير عليها. بيتبنى من نفس
 // بيانات periodSales برضو، من غير أي استعلام إضافي
-function renderHourlyChart(chartByHour, busiestHour) {
+function renderHourlyChart(chartByHour, busiestHour, chartByHourRevenue) {
   const canvas = document.getElementById('dashHourlyChart');
   if (!canvas) return;
+  const tooltipEl = document.getElementById('dashHourlyChartTooltip');
   const wrap = canvas.parentElement;
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
@@ -10241,12 +10388,14 @@ function renderHourlyChart(chartByHour, busiestHour) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, cssWidth, cssHeight);
+  dashHourlyChartBars.current = [];
+  if (tooltipEl) tooltipEl.style.display = 'none';
 
   const captionEl = document.getElementById('dashHourlyChartCaption');
   const hasData = (chartByHour || []).some(c => c > 0);
   if (captionEl) {
     captionEl.textContent = hasData && busiestHour != null
-      ? `أكثر ساعة ازدحامًا: ${String(busiestHour).padStart(2, '0')}:00 - ${String((busiestHour + 1) % 24).padStart(2, '0')}:00`
+      ? `ساعة الذروة: ${String(busiestHour).padStart(2, '0')}:00 - ${String((busiestHour + 1) % 24).padStart(2, '0')}:00`
       : '';
   }
 
@@ -10255,6 +10404,7 @@ function renderHourlyChart(chartByHour, busiestHour) {
     ctx.font = '13px Tajawal, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('لا توجد بيانات لعرضها في الرسم البياني', cssWidth / 2, cssHeight / 2);
+    setupBarChartTooltip(canvas, tooltipEl, dashHourlyChartBars);
     return;
   }
 
@@ -10289,7 +10439,17 @@ function renderHourlyChart(chartByHour, busiestHour) {
       ctx.textAlign = 'center';
       ctx.fillText(String(hour), x + barW / 2, cssHeight - 8);
     }
+
+    const revenue = (chartByHourRevenue && chartByHourRevenue[hour]) || 0;
+    const hourLabel = `${String(hour).padStart(2, '0')}:00 - ${String((hour + 1) % 24).padStart(2, '0')}:00`;
+    dashHourlyChartBars.current.push({
+      x, y: h > 0 ? y : padding.top + chartH, w: barW,
+      html: `<span class="tt-title">الساعة ${hourLabel}</span>
+        <div class="tt-row"><span>عدد الفواتير</span><span class="tt-val">${val}</span></div>
+        <div class="tt-row"><span>إجمالي المبيعات</span><span class="tt-val">${revenue.toFixed(2)}</span></div>`
+    });
   });
+  setupBarChartTooltip(canvas, tooltipEl, dashHourlyChartBars);
 }
 
 function bindBackofficeEvents() {
@@ -10345,14 +10505,11 @@ function bindBackofficeEvents() {
     document.getElementById(navGroup.toggle).addEventListener('click', () => {
       const group = document.getElementById(navGroup.group);
       const willOpen = !group.classList.contains('open');
+      // زرار عنوان القسم بس بيفتح/يقفل القائمة الفرعية (accordion)،
+      // من غير ما يتنقل لأي شاشة أو يقفل الـ sidebar بالكامل على الموبايل.
+      document.querySelectorAll('.bo-nav-group').forEach(g => g.classList.remove('open'));
       if (willOpen) {
-        const activeSub = group.querySelector('.bo-nav-sub-item.active');
-        const targetSection = activeSub ? activeSub.dataset.section : navGroup.sections[0];
-        const targetBtn = document.querySelector(`.bo-nav-sub-item[data-section="${targetSection}"]`);
-        activateBoSection(targetSection, targetBtn);
-        closeBoSidebar();
-      } else {
-        group.classList.remove('open');
+        group.classList.add('open');
       }
     });
   });
