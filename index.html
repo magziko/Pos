@@ -466,6 +466,40 @@ a { color: inherit; }
 .role-count-badge { font-size: 11.5px; background: var(--teal-100); color: var(--teal-900); padding: 3px 10px; border-radius: 20px; font-weight: 600; }
 .role-locked-note { font-size: 11.5px; color: var(--ink-soft); }
 
+/* شبكة الصلاحيات المتداخلة (وحدة رئيسية + شاشات/تقارير فرعية) */
+.perm-grid.nested { grid-template-columns: 1fr; }
+.perm-category { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; background: var(--surface); }
+.perm-category.checked { border-color: var(--teal-700); }
+.perm-category-header { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; cursor: pointer; }
+.perm-category-header:hover { background: var(--bg); }
+.perm-category.checked .perm-category-header { background: var(--teal-100); }
+.perm-category-header input[type="checkbox"] { appearance: none; width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 5px; margin-top: 1px; flex-shrink: 0; cursor: pointer; position: relative; background: var(--surface); }
+.perm-category-header input[type="checkbox"]:checked { border-color: var(--teal-700); background: var(--teal-700); }
+.perm-category-header input[type="checkbox"]:checked::after { content: ""; position: absolute; right: 4px; top: 0px; width: 5px; height: 10px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(40deg); }
+.perm-category-info { flex: 1; min-width: 0; }
+.perm-category-count { font-size: 11px; background: var(--bg); color: var(--ink-soft); padding: 2px 9px; border-radius: 20px; font-weight: 600; white-space: nowrap; align-self: center; }
+.perm-category-toggle { background: none; border: none; cursor: pointer; font-size: 15px; color: var(--ink-soft); padding: 2px 4px; align-self: center; transition: transform 0.15s ease; }
+.perm-category-toggle.open { transform: rotate(180deg); }
+.perm-category-body { display: none; padding: 4px 14px 14px 42px; border-top: 1px dashed var(--border); }
+.perm-category-body.open { display: block; }
+.perm-subgroup-title { font-size: 11.5px; font-weight: 700; color: var(--ink-soft); margin: 10px 0 6px; }
+.perm-subgroup-title:first-child { margin-top: 4px; }
+.perm-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px 10px; }
+.perm-item { display: flex; align-items: center; gap: 8px; padding: 5px 2px; cursor: pointer; font-size: 12.5px; color: var(--ink); border-radius: 6px; }
+.perm-item:hover { background: var(--bg); }
+.perm-item input[type="checkbox"] { appearance: none; width: 16px; height: 16px; border: 2px solid var(--border); border-radius: 4px; flex-shrink: 0; cursor: pointer; position: relative; background: var(--surface); }
+.perm-item input[type="checkbox"]:checked { border-color: var(--teal-700); background: var(--teal-700); }
+.perm-item input[type="checkbox"]:checked::after { content: ""; position: absolute; right: 3.5px; top: -1px; width: 4px; height: 9px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(40deg); }
+.perm-item-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 5px 2px; border-radius: 6px; }
+.perm-item-row:hover { background: var(--bg); }
+.perm-item-row .perm-item { padding: 0; flex: 1 1 160px; }
+.perm-item-row:hover .perm-item { background: none; }
+.perm-item-actions { display: flex; gap: 10px; flex-shrink: 0; }
+.perm-action-chip { display: flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--ink-soft); cursor: pointer; }
+.perm-action-chip input[type="checkbox"] { appearance: none; width: 14px; height: 14px; border: 2px solid var(--border); border-radius: 4px; flex-shrink: 0; cursor: pointer; position: relative; background: var(--surface); }
+.perm-action-chip input[type="checkbox"]:checked { border-color: var(--teal-700); background: var(--teal-700); }
+.perm-action-chip input[type="checkbox"]:checked::after { content: ""; position: absolute; right: 3px; top: -1px; width: 3px; height: 7px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(40deg); }
+
 .barcode-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 .barcode-chip { display: flex; align-items: center; gap: 6px; background: var(--surface-sunken); padding: 5px 10px; border-radius: 16px; font-size: 12px; font-family: var(--font-num); direction: ltr; }
 .barcode-chip button { color: var(--danger); font-weight: 700; font-size: 13px; }
@@ -948,6 +982,7 @@ a { color: inherit; }
           <div class="totals-row"><span>الإجمالي الفرعي</span><span class="num" id="subtotalLabel">0.00</span></div>
           <div class="quick-discount-row" id="quickDiscountRow"></div>
           <div class="discount-row"><input type="number" id="discountInput" placeholder="خصم (قيمة)" min="0" value="0"></div>
+          <div class="discount-hint" id="discountMaxHint" style="display:none; font-size:11px; color:var(--danger); margin-top:-6px;"></div>
           <div class="discount-row" id="instantNoteRow" style="display:none;"><input type="text" id="instantNoteInput" placeholder="ملاحظة فورية (تُطبع مع الفاتورة)"></div>
           <div class="totals-row" id="taxRow" style="display:none;"><span id="taxRowLabel">الضريبة</span><span class="num" id="taxLabel">0.00</span></div>
           <div class="totals-row grand"><span>الإجمالي</span><span class="num" id="totalLabel">0.00</span></div>
@@ -1282,7 +1317,7 @@ a { color: inherit; }
                   <th>الصنف</th>
                   <th>المجموعة</th>
                   <th>سعر البيع</th>
-                  <th>سعر الشراء</th>
+                  <th class="cost-guard-cell">سعر الشراء</th>
                   <th>الباركود</th>
                   <th>الحالة</th>
                   <th></th>
@@ -4610,7 +4645,7 @@ a { color: inherit; }
         <div class="field"><label>الضريبة</label>
           <select id="productTaxRate"><option value="">بدون ضريبة</option></select>
         </div>
-        <div class="field"><label>سعر الشراء</label><input type="number" id="productCost" step="0.01" min="0" value="0"></div>
+        <div class="field cost-guard-field" id="productCostField"><label>سعر الشراء</label><input type="number" id="productCost" step="0.01" min="0" value="0"></div>
         <div class="field"><label>سعر البيع</label><input type="number" id="productPrice" step="0.01" min="0" required value="0"></div>
         <div class="field"><label>سعر بيع 2 (اختياري)</label><input type="number" id="productPrice2" step="0.01" min="0"></div>
         <div class="field"><label>حد إعادة الطلب</label><input type="number" id="productReorder" step="0.01" min="0" value="0"></div>
@@ -4734,17 +4769,35 @@ a { color: inherit; }
 <!-- Modal: إضافة / تعديل فرع -->
 <!-- Modal: إضافة / تعديل صلاحية أمنية -->
 <div class="modal-overlay" id="permissionModalOverlay">
-  <div class="modal-box" style="max-width:660px;">
+  <div class="modal-box" style="max-width:760px;">
     <div class="modal-title" id="permissionModalTitle">صلاحية أمنية جديدة</div>
     <form id="permissionForm">
       <input type="hidden" id="permissionId">
       <div class="field field-full"><label for="permissionName">الاسم *</label><input type="text" id="permissionName" required placeholder="مثال: مشرف فرع، أمين خزينة..."></div>
 
-      <label class="perm-select-all"><input type="checkbox" id="permSelectAll"> تحديد كل الصلاحيات</label>
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin:2px 0 14px;">
+        <label class="perm-select-all" style="margin:0;"><input type="checkbox" id="permSelectAll"> تحديد كل الصلاحيات</label>
+        <button type="button" class="bo-icon-btn" id="permExpandAllBtn" style="font-size:11.5px;">توسيع/طي كل الأقسام</button>
+      </div>
 
       <div class="field field-full" style="margin-bottom:6px;">
-        <label style="margin-bottom:10px;">الصلاحيات</label>
-        <div class="perm-grid" id="permGrid"></div>
+        <label style="margin-bottom:10px;">الصلاحيات — حدد الوحدة الرئيسية، ثم اختر الشاشات والتقارير التفصيلية المسموح بها داخلها</label>
+        <div class="perm-grid nested" id="permGrid"></div>
+      </div>
+
+      <div class="field field-full cost-guard-toggle-row">
+        <label class="perm-select-all" style="margin:0;">
+          <input type="checkbox" id="permViewCost" checked>
+          إظهار سعر التكلفة وهامش الربح لهذا الدور (في شاشة الأصناف وتقارير الربحية)
+        </label>
+      </div>
+
+      <div class="field field-full" style="margin-top:6px;">
+        <label style="margin-bottom:6px;">الحد الأقصى للخصم اليدوي في شاشة المبيعات (% من إجمالي الفاتورة)</label>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <input type="number" id="permMaxDiscount" min="0" max="100" step="1" placeholder="بدون حد" style="max-width:140px;">
+          <span style="font-size:11.5px; color:var(--ink-soft);">اتركه فارغًا لعدم وضع حد أقصى</span>
+        </div>
       </div>
 
       <div class="error-msg" id="permissionModalError"></div>
@@ -7542,7 +7595,7 @@ async function enterPos() {
   }
   posEls.branchLabel.textContent = currentProfile.branches?.name || 'بدون فرع';
   posEls.cashierLabel.textContent = currentProfile.full_name;
-  const canAccessBackoffice = boAllSections.some(s => hasBoPermission(SECTION_PERMISSION_MAP[s]));
+  const canAccessBackoffice = boAllSections.some(s => hasBoScreenPermission(s));
   document.getElementById('backofficeBtn').style.display = canAccessBackoffice ? 'inline-block' : 'none';
   startClock();
   updateHeldCount();
@@ -8180,6 +8233,24 @@ function calcTotal() {
   return Math.max(0, subtotal - d + calcTaxTotal());
 }
 
+// إظهار تنبيه فوري تحت حقل الخصم لو المستخدم كتب قيمة أعلى من الحد الأقصى
+// المسموح به لدوره — تنبيه بصري بس، والمنع الفعلي بيحصل عند إتمام البيع.
+function updateDiscountHint() {
+  const hintEl = document.getElementById('discountMaxHint');
+  if (!hintEl) return;
+  const maxPct = getMaxDiscountPercent();
+  if (maxPct === null) { hintEl.style.display = 'none'; return; }
+  const subtotal = calcSubtotal();
+  const discount = Number(posEls.discountInput.value) || 0;
+  const check = checkMaxDiscountAllowed(subtotal, discount);
+  if (!check.ok) {
+    hintEl.textContent = `⚠ تخطيت الحد الأقصى للخصم (${maxPct}% = ${(subtotal * maxPct / 100).toFixed(2)})`;
+    hintEl.style.display = 'block';
+  } else {
+    hintEl.style.display = 'none';
+  }
+}
+
 // ------------------------------------------------------------
 // بيانات الشركة (شعار + اسم) — تُحمّل مرة وتُستخدم فى طباعة الفواتير والإيصالات
 // ------------------------------------------------------------
@@ -8722,6 +8793,7 @@ function renderCart() {
   posEls.taxLabel.textContent = taxTotal.toFixed(2);
   const total = calcTotal();
   posEls.totalLabel.textContent = total.toFixed(2);
+  updateDiscountHint();
 
   // البيع بالأجل متاح فقط لعميل مسجل (وليس عميلًا نقديًا)
   const hasCustomer = !!posEls.customerSelect.value;
@@ -8942,6 +9014,10 @@ async function doCheckout() {
   try {
     const subtotal = calcSubtotal();
     const discount = Number(posEls.discountInput.value) || 0;
+    const maxDiscountCheck = checkMaxDiscountAllowed(subtotal, discount);
+    if (!maxDiscountCheck.ok) {
+      throw new Error(maxDiscountCheck.message);
+    }
     const tax = calcTaxTotal();
     const total = calcTotal();
     const customerId = posEls.customerSelect.value || null;
@@ -9592,6 +9668,11 @@ async function saveSaleReturn(e) {
 // ------------------------------------------------------------
 let boInitialized = false;
 let userNavigatedDuringBoLoad = false;
+// توكن يتغيّر مع كل استدعاء لـ enterBackoffice — بيحمينا من حالة إن المستخدم
+// يفتح لوحة التحكم مرتين بسرعة (double navigation) فيتشارك الاستدعاءان في
+// نفس متغير userNavigatedDuringBoLoad العالمي؛ بمقارنة التوكن نتأكد إن اللي
+// بيكمل فعلاً هو آخر استدعاء قبل ما يقرر يرجّع الشاشة للرئيسية
+let boLoadToken = 0;
 let boProducts = [];
 let productsListPage = 1;
 const PRODUCTS_PAGE_SIZE = 25;
@@ -9602,32 +9683,24 @@ let currentUnits = []; // وحدات البيع الإضافية المرتبط�
 async function enterBackoffice() {
   showView('backoffice');
   userNavigatedDuringBoLoad = false;
+  const myLoadToken = ++boLoadToken; // بصمة هذا الاستدعاء بالذات
   if (!boInitialized) {
     document.getElementById('boBranchLabel').textContent = currentProfile.branches?.name || 'بدون فرع';
     document.getElementById('boCashierLabel').textContent = currentProfile.full_name;
     bindBackofficeEvents();
     boInitialized = true;
   }
-  await loadBoCategories();
-  await loadBoProducts();
-  await loadBoCustomers();
-  await loadBoSuppliers();
-  await loadBoPurchases();
-  await loadBoWarehouses();
-  await loadBoRoles();
-  await loadBoBranches();
-  await loadBoUsers();
-  await loadBoEmployees();
-  await loadBoExpenseItems();
-  await loadBoUnitTypes();
-  await loadBoCustomerTypes();
-  await loadBoTaxRates();
-  await loadBoQuickDiscounts();
-  await loadTaxInclusiveSetting();
-  await loadCompanyInfoGlobal();
-  await loadBranchSettings();
-  await loadPrintSettings();
-  await loadDebtReminderSettings();
+  // كل هذه القوائم مستقلة عن بعضها (بيانات مختلفة من جداول مختلفة)، فتحميلها
+  // بالتوازي بدل التتابع بيقلل وقت الانتظار بشكل كبير، وبالتالي بيقلل فرصة
+  // إن المستخدم يضغط على شاشة تانية قبل ما التحميل يخلص
+  await Promise.all([
+    loadBoCategories(), loadBoProducts(), loadBoCustomers(), loadBoSuppliers(),
+    loadBoPurchases(), loadBoWarehouses(), loadBoRoles(), loadBoBranches(),
+    loadBoUsers(), loadBoEmployees(), loadBoExpenseItems(), loadBoUnitTypes(),
+    loadBoCustomerTypes(), loadBoTaxRates(), loadBoQuickDiscounts(),
+    loadTaxInclusiveSetting(), loadCompanyInfoGlobal(), loadBranchSettings(),
+    loadPrintSettings(), loadDebtReminderSettings()
+  ]);
   renderProductsTable();
   renderCategoriesTable();
   renderCustomersTable();
@@ -9651,7 +9724,10 @@ async function enterBackoffice() {
     showView('pos');
     return;
   }
-  if (userNavigatedDuringBoLoad) return; // المستخدم فتح شاشة بنفسه أثناء التحميل، ما نرجعوش للرئيسية
+  // لو المستخدم فتح شاشة بنفسه أثناء التحميل، أو لو فيه استدعاء أحدث لـ
+  // enterBackoffice بدأ بعد هذا الاستدعاء (مثلاً فتح لوحة التحكم مرتين بسرعة)،
+  // ما نرجعوش للرئيسية عشان منكسرش الشاشة اللي المستخدم واقف فيها فعلاً
+  if (userNavigatedDuringBoLoad || myLoadToken !== boLoadToken) return;
   const landingBtn = document.querySelector(`.bo-nav-item[data-section="${landingSection}"], .bo-nav-sub-item[data-section="${landingSection}"]`);
   activateBoSection(landingSection, landingBtn);
 }
@@ -9686,27 +9762,286 @@ const SECTION_PERMISSION_MAP = {
   'soon': null
 };
 
+// قائمة كل كروت التقارير الموجودة فعليًا داخل كل شاشة من شاشات التقارير
+// الخمسة، عشان نقدر نبني منها صلاحيات تفصيلية لكل تقرير على حدة.
+const REPORT_TABS = {
+  'reports-sales': { grid: 'salesReportTypeGrid', title: 'تقارير المبيعات', items: [
+    { key: 'summary', title: 'إجمالي المبيعات والأرباح' },
+    { key: 'trend', title: 'اتجاه المبيعات اليومي' },
+    { key: 'category', title: 'المبيعات حسب الفئة' },
+    { key: 'topproducts', title: 'الأصناف الأكثر مبيعًا' },
+    { key: 'branch', title: 'المبيعات حسب الفرع' },
+    { key: 'cashier', title: 'المبيعات حسب الكاشير' },
+    { key: 'payment', title: 'المبيعات حسب طرق الدفع' },
+    { key: 'mixedpayment', title: 'الفواتير متعددة طرق الدفع' }
+  ]},
+  'reports-purchases': { grid: 'purchasesReportTypeGrid', title: 'تقارير المشتريات', items: [
+    { key: 'trend', title: 'اتجاه الشراء اليومي' },
+    { key: 'supplier', title: 'المشتريات حسب المورد' },
+    { key: 'topitems', title: 'الأصناف الأكثر شراءً' },
+    { key: 'pricecompare', title: 'مقارنة سعر الشراء عبر الوقت' }
+  ]},
+  'reports-inventory': { grid: 'inventoryReportTypeGrid', title: 'تقارير المخزون', items: [
+    { key: 'levels', title: 'مستوى المخزون الحالي' },
+    { key: 'stocktake-items', title: 'تقرير جرد الأصناف (المتحركة فقط)' },
+    { key: 'low-stock', title: 'تنبيهات نقص المخزون' },
+    { key: 'valuation', title: 'تقييم قيمة المخزون' },
+    { key: 'top-movers', title: 'الأصناف الأكثر حركة' },
+    { key: 'slow-movers', title: 'الأصناف الراكدة' },
+    { key: 'movement', title: 'حركة المخزون التفصيلية' },
+    { key: 'product-ledger', title: 'كشف حركة صنف (تاريخ كامل)' },
+    { key: 'movement-analysis', title: 'تحليل حركة الصنف' },
+    { key: 'transfers', title: 'التحويلات بين المخازن' },
+    { key: 'adjustments', title: 'تقرير الجرد (تسويات وفروقات)' }
+  ]},
+  'reports-accounting': { grid: 'accountingReportTypeGrid', title: 'تقارير المحاسبة', items: [
+    { key: 'income-statement', title: 'قائمة الدخل المبسطة' },
+    { key: 'financial-position', title: 'ملخص المركز المالي' },
+    { key: 'gross-profit', title: 'تقرير الربح الإجمالي' },
+    { key: 'branch-profit', title: 'الأرباح حسب الفرع' },
+    { key: 'debts', title: 'تقرير الديون (أرصدة العملاء والموردين)' },
+    { key: 'debt-reminders', title: 'تذكير سداد الديون' },
+    { key: 'statement', title: 'كشف حساب عميل / مورد' },
+    { key: 'tax', title: 'تقرير الضريبة المحصلة' },
+    { key: 'fixed-assets', title: 'الأصول الثابتة والإهلاك' },
+    { key: 'cash-movements', title: 'حركة الخزائن والحسابات البنكية' },
+    { key: 'capital-movements', title: 'حركة رأس المال' },
+    { key: 'expenses-analysis', title: 'تحليل المصروفات' }
+  ]},
+  'reports-other': { grid: 'otherReportTypeGrid', title: 'تقارير أخرى', items: [
+    { key: 'shifts', title: 'الورديات وإغلاق الخزينة' },
+    { key: 'cashier-performance', title: 'أداء الكاشير الشامل' },
+    { key: 'discounts', title: 'الخصومات الممنوحة' },
+    { key: 'activity-log', title: 'سجل نشاط المستخدمين' },
+    { key: 'returns-analysis', title: 'تحليل المرتجعات' }
+  ]}
+};
+
+// عناوين الشاشات الفرعية (الموجودة أصلاً في القائمة الجانبية) عشان نعرضها
+// كصلاحيات تفصيلية تحت كل وحدة رئيسية. أي قسم من boAllSections مش موجود هنا
+// (زي dashboard أو أقسام reports-* أو "قريبًا") بيفضل متحكم فيه بصلاحية
+// الوحدة الرئيسية بس، من غير تفصيل إضافي.
+const SCREEN_LABELS = {
+  'products': 'الأصناف', 'categories': 'مجموعات الأصناف', 'unit-types': 'نوع الوحدة',
+  'tax-rates': 'الضريبة', 'quick-discounts': 'الخصومات', 'stock': 'المخازن ونقل البضاعة',
+  'sales-list': 'فواتير البيع', 'customers': 'العملاء', 'customer-types': 'أنواع العملاء', 'sale-returns': 'مرتجعات البيع',
+  'suppliers': 'الموردون', 'purchases': 'فواتير الشراء', 'purchase-returns': 'مرتجعات الشراء',
+  'treasuries': 'الخزائن والحسابات البنكية', 'payments': 'سجل المدفوعات', 'expense-items': 'بنود المصروفات',
+  'expenses': 'المصروفات', 'fixed-assets': 'الأصول الثابتة',
+  'employees': 'بيانات الموظفين', 'salaries': 'الرواتب',
+  'company-info': 'بيانات الشركة', 'permissions': 'الصلاحية الأمنية', 'users': 'إدارة المستخدمين',
+  'branches': 'الفروع', 'branch-settings': 'إعدادات الفرع', 'print-settings': 'إعدادات الطباعة',
+  'backup': 'نسخة احتياطية', 'reset-data': 'تهيئة البيانات', 'capital': 'رأس المال وحقوق الملكية'
+};
+
+// بناء قائمة الشاشات التفصيلية لكل وحدة رئيسية تلقائيًا من SECTION_PERMISSION_MAP
+// عشان نضمن إنها متطابقة دايمًا مع الأقسام الفعلية الموجودة بالكود.
+function buildModuleScreens(moduleKey) {
+  return Object.entries(SECTION_PERMISSION_MAP)
+    .filter(([section, mk]) => mk === moduleKey && SCREEN_LABELS[section])
+    .map(([section]) => ({ key: section, title: SCREEN_LABELS[section] }));
+}
+
+// ---- إخفاء سعر التكلفة وهامش الربح عن الأدوار غير المخوّلة ----
+// صلاحية عامة (مش مرتبطة بشاشة واحدة) لأنها بتغطي أكتر من مكان: عمود التكلفة
+// في شاشة الأصناف، حقل التكلفة في فورم الصنف، وكروت تقارير الربحية.
+// افتراضيًا true (ظاهر) عشان الأدوار الحالية متتأثرش لحد ما حد يقفلها عمدًا.
+function canViewCost() {
+  const perms = currentProfile.roles?.permissions || {};
+  if (perms.all === true) return true;
+  return perms.view_cost !== false;
+}
+
+// ---- حد أقصى للخصم اليدوي في شاشة المبيعات ----
+// perms.max_discount_percent (نسبة مئوية من إجمالي الفاتورة قبل الضريبة).
+// null/undefined = بدون حد أقصى (السلوك القديم). "all" (صلاحية كل شيء) بتتخطى الحد دايمًا.
+function getMaxDiscountPercent() {
+  const perms = currentProfile.roles?.permissions || {};
+  if (perms.all === true) return null;
+  const v = perms.max_discount_percent;
+  return (v === null || v === undefined || v === '') ? null : Number(v);
+}
+
+// بيتأكد إن قيمة الخصم المُدخلة يدويًا في شاشة البيع (أو عن طريق أزرار الخصم
+// السريع) مش متعدّية النسبة القصوى المسموح بيها لدور المستخدم الحالي.
+function checkMaxDiscountAllowed(subtotal, discountValue) {
+  const maxPct = getMaxDiscountPercent();
+  if (maxPct === null || maxPct === undefined || isNaN(maxPct)) return { ok: true };
+  if (subtotal <= 0) return { ok: true };
+  const maxAllowed = subtotal * (maxPct / 100);
+  if (discountValue - maxAllowed > 0.009) {
+    return {
+      ok: false,
+      message: `الخصم المدخل (${discountValue.toFixed(2)}) يتجاوز الحد الأقصى المسموح به لدورك (${maxPct}% = ${maxAllowed.toFixed(2)}) — يرجى تقليل الخصم أو مراجعة مسؤول النظام`
+    };
+  }
+  return { ok: true };
+}
+
+// كروت تقارير مرتبطة مباشرة بالربحية/التكلفة، بتتخفى تمامًا لو مفيش صلاحية
+// رؤية التكلفة، حتى لو صلاحية الوصول للتقرير نفسه (rep:) مفعّلة.
+const COST_GUARDED_REPORTS = ['gross-profit', 'branch-profit'];
+
+// تطبيق صلاحية رؤية التكلفة على كل عناصر الواجهة المعلّمة بكلاس
+// cost-guard-cell / cost-guard-field. كروت تقارير الربحية بتتحكم فيها
+// applyReportCardPermissions مباشرة (بتستخدم canViewCost() جوّاها).
+function applyCostGuard() {
+  const allowed = canViewCost();
+  document.querySelectorAll('.cost-guard-cell, .cost-guard-field').forEach(el => {
+    el.style.display = allowed ? '' : 'none';
+  });
+}
+
 function hasBoPermission(permKey) {
   if (!permKey) return true;
   const perms = currentProfile.roles?.permissions || {};
   return perms.all === true || perms[permKey] === true;
 }
 
+// صلاحية دقيقة على مستوى شاشة واحدة (تحت مظلة صلاحية الوحدة الرئيسية).
+// المفتاح التفصيلي "scr:<section>" لو متسجّل صراحة بـ false يخفي الشاشة حتى
+// لو صلاحية الوحدة الرئيسية مفعّلة؛ ولو مش متسجّل خالص (أدوار قديمة قبل
+// إضافة التفصيل ده) بيرجع للسلوك الافتراضي القديم (مسموح بمجرد تفعيل الوحدة).
+function hasBoScreenPermission(section) {
+  const moduleKey = SECTION_PERMISSION_MAP[section];
+  if (!moduleKey) return true;
+  const perms = currentProfile.roles?.permissions || {};
+  if (perms.all === true) return true;
+  if (perms[moduleKey] !== true) return false;
+  const fineKey = 'scr:' + section;
+  if (perms[fineKey] === false) return false;
+  return true;
+}
+
+// ---- صلاحيات دقيقة على مستوى العملية (إضافة / تعديل / حذف) داخل كل شاشة ----
+// كل شاشة مذكورة هنا بيبقى ليها Checkboxes تفصيلية في شاشة الصلاحيات الأمنية
+// تحدد أي العمليات مسموحة، بمعزل عن مجرد "عرض" الشاشة (اللي بيتحكم فيه scr:).
+// أي عملية مش مذكورة لشاشة معينة معناها إنها مش موجودة أصلاً في الشاشة دي.
+const ACTION_CAPABLE_SCREENS = {
+  'products': { add: true, edit: true },
+  'categories': { add: true, edit: true },
+  'unit-types': { add: true, edit: true },
+  'customer-types': { add: true, edit: true },
+  'tax-rates': { add: true, edit: true },
+  'quick-discounts': { add: true, edit: true },
+  'stock': { add: true, edit: true, delete: true },
+  'customers': { add: true, edit: true, delete: true },
+  'suppliers': { add: true, edit: true, delete: true },
+  'treasuries': { add: true, edit: true, delete: true },
+  'payments': { delete: true },
+  'expense-items': { add: true, edit: true },
+  'expenses': { add: true, edit: true, delete: true },
+  'fixed-assets': { add: true, edit: true, delete: true },
+  'employees': { add: true, edit: true, delete: true },
+  'salaries': { add: true, edit: true, delete: true },
+  'users': { add: true, edit: true },
+  'branches': { add: true, edit: true, delete: true },
+  'permissions': { add: true, edit: true, delete: true }
+};
+
+const ACTION_LABELS = { add: 'إضافة', edit: 'تعديل', delete: 'حذف' };
+
+// أزرار "+ إضافة" الرئيسية لكل شاشة، عشان نقدر نخفيها تلقائيًا لو المستخدم
+// مالوش صلاحية "إضافة" في الشاشة دي.
+const ADD_BUTTON_MAP = {
+  'products': 'addProductBtn', 'categories': 'addCategoryBtn', 'unit-types': 'addUnitTypeBtn',
+  'customer-types': 'addCustomerTypeBtn', 'tax-rates': 'addTaxRateBtn', 'quick-discounts': 'addQuickDiscountBtn',
+  'stock': 'addWarehouseBtn', 'customers': 'addCustomerBtn', 'suppliers': 'addSupplierBtn',
+  'treasuries': 'addTreasuryBtn', 'expense-items': 'addExpenseItemBtn', 'expenses': 'addExpenseBtn',
+  'fixed-assets': 'addFixedAssetBtn', 'employees': 'addEmployeeBtn', 'salaries': 'addSalaryBtn',
+  'users': 'addUserBtn', 'branches': 'addBranchBtn', 'permissions': 'addPermissionBtn'
+};
+
+// صلاحية دقيقة على مستوى عملية واحدة (إضافة/تعديل/حذف) جوه شاشة معينة.
+// بترجع true افتراضيًا (مسموح) طالما الشاشة نفسها مسموحة وملهاش تسجيل صريح
+// بـ false، عشان الأدوار القديمة تفضل شغالة زي ما هي من غير ما تنكسر.
+function hasBoActionPermission(section, action) {
+  if (!hasBoScreenPermission(section)) return false;
+  const perms = currentProfile.roles?.permissions || {};
+  if (perms.all === true) return true;
+  const fineKey = 'act:' + section + ':' + action;
+  if (perms[fineKey] === false) return false;
+  return true;
+}
+
+// إخفاء أزرار "+ إضافة" لأي شاشة مالوش المستخدم صلاحية إضافة فيها.
+function applyBoActionButtonPermissions() {
+  Object.entries(ADD_BUTTON_MAP).forEach(([section, btnId]) => {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.style.display = hasBoActionPermission(section, 'add') ? '' : 'none';
+  });
+}
+
+// تُستدعى بعد بناء كل صف جدول (tr) في شاشات الإدارة، عشان تخفي أزرار
+// [data-action="edit"] / [data-action="delete"] / [data-action="toggle"]
+// جوه الصف لو مفيش صلاحية "تعديل" أو "حذف" مسجّلة لصاحب الدور الحالي.
+// عملية "toggle" (تفعيل/إيقاف) بتتحكم فيها صلاحية "تعديل" لأنها عمليًا
+// تعديل لحالة السجل مش حذف فعلي له.
+function applyRowActionPerm(tr, section) {
+  if (!tr) return;
+  if (!hasBoActionPermission(section, 'edit')) {
+    tr.querySelectorAll('[data-action="edit"], [data-action="toggle"]').forEach(el => el.style.display = 'none');
+  }
+  if (!hasBoActionPermission(section, 'delete')) {
+    tr.querySelectorAll('[data-action="delete"]').forEach(el => el.style.display = 'none');
+  }
+}
+
+// نفس الفكرة لكن لكارت تقرير واحد جوه أحد أقسام التقارير الخمسة.
+function hasBoReportPermission(sectionId, reportKey) {
+  const moduleKey = SECTION_PERMISSION_MAP[sectionId];
+  const perms = currentProfile.roles?.permissions || {};
+  if (perms.all === true) return true;
+  if (perms[moduleKey] !== true) return false;
+  const fineKey = 'rep:' + sectionId + ':' + reportKey;
+  if (perms[fineKey] === false) return false;
+  return true;
+}
+
 function applyBoPermissions() {
   document.querySelectorAll('[data-section]').forEach(btn => {
     const section = btn.dataset.section;
-    btn.style.display = hasBoPermission(SECTION_PERMISSION_MAP[section]) ? '' : 'none';
+    btn.style.display = hasBoScreenPermission(section) ? '' : 'none';
   });
   boNavGroups.forEach(g => {
     const groupEl = document.getElementById(g.group);
     if (!groupEl) return;
-    const anyVisible = g.sections.some(s => hasBoPermission(SECTION_PERMISSION_MAP[s]));
+    const anyVisible = g.sections.some(s => hasBoScreenPermission(s));
     groupEl.style.display = anyVisible ? '' : 'none';
+  });
+  applyReportCardPermissions();
+  applyBoActionButtonPermissions();
+  applyCostGuard();
+}
+
+// إخفاء كروت التقارير الفردية (جوه شاشات التقارير الخمسة) اللي مش مسموح
+// بيها للدور الحالي على المستوى التفصيلي.
+function applyReportCardPermissions() {
+  Object.entries(REPORT_TABS).forEach(([sectionId, cfg]) => {
+    const grid = document.getElementById(cfg.grid);
+    if (!grid) return;
+    cfg.items.forEach(item => {
+      const card = grid.querySelector(`.report-type-card[data-report="${item.key}"]`);
+      if (!card) return;
+      // كارت "المبيعات حسب الفرع" أصلاً بيتحكم في ظهوره منطق تعدد الفروع؛
+      // هنا بس بنمنعه لو مفيش صلاحية، من غير ما نجبره يظهر لو المنطق التاني مخفيه.
+      // كروت الربحية (gross-profit / branch-profit) بتتقفل زيادة لو مفيش
+      // صلاحية رؤية التكلفة، حتى لو صلاحية التقرير نفسها مفعّلة.
+      const blockedByCost = COST_GUARDED_REPORTS.includes(item.key) && !canViewCost();
+      if (!hasBoReportPermission(sectionId, item.key) || blockedByCost) {
+        card.dataset.permHidden = '1';
+        card.style.display = 'none';
+      } else if (card.dataset.permHidden === '1') {
+        delete card.dataset.permHidden;
+        card.style.display = '';
+      }
+    });
   });
 }
 
 function firstAllowedSection() {
-  return boAllSections.find(s => hasBoPermission(SECTION_PERMISSION_MAP[s])) || null;
+  return boAllSections.find(s => hasBoScreenPermission(s)) || null;
 }
 
 function activateBoSection(section, btn) {
@@ -10775,10 +11110,8 @@ function bindBackofficeEvents() {
   document.getElementById('permissionForm').addEventListener('submit', savePermission);
   document.getElementById('permSelectAll').addEventListener('change', (e) => {
     const checked = e.target.checked;
-    document.querySelectorAll('#permGrid input[type="checkbox"]').forEach(cb => {
-      cb.checked = checked;
-      cb.closest('.perm-card').classList.toggle('checked', checked);
-    });
+    document.querySelectorAll('#permGrid input[type="checkbox"]').forEach(cb => { cb.checked = checked; cb.disabled = false; });
+    document.querySelectorAll('#permGrid .perm-category').forEach(c => c.classList.toggle('checked', checked));
   });
 
   // ---- Stock / warehouses ----
@@ -11367,7 +11700,7 @@ function exportProductsToExcel() {
     'اسم الصنف': p.name || '',
     'المجموعة': p.categories?.name || '',
     'نوع الوحدة': p.unit_type || '',
-    'سعر الشراء': Number(p.cost_price) || 0,
+    ...(canViewCost() ? { 'سعر الشراء': Number(p.cost_price) || 0 } : {}),
     'سعر البيع': Number(p.sale_price) || 0,
     'سعر بيع 2': p.sale_price_2 != null ? Number(p.sale_price_2) : '',
     'حد إعادة الطلب': Number(p.reorder_level) || 0,
@@ -11555,7 +11888,7 @@ function renderProductsTable() {
       <td>${escapeHtml(p.name)}</td>
       <td>${escapeHtml(p.categories?.name || '—')}</td>
       <td class="num">${Number(p.sale_price).toFixed(2)}</td>
-      <td class="num">${Number(p.cost_price).toFixed(2)}</td>
+      <td class="num cost-guard-cell">${Number(p.cost_price).toFixed(2)}</td>
       <td style="font-size:11.5px; color:var(--ink-soft);">${escapeHtml(barcodesText)}</td>
       <td><span class="bo-badge ${p.is_active ? 'active' : 'inactive'}">${p.is_active ? 'مفعّل' : 'موقّف'}</span></td>
       <td>
@@ -11568,8 +11901,10 @@ function renderProductsTable() {
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openProductModal(p));
     tr.querySelector('[data-action="barcode"]').addEventListener('click', () => openBarcodeLabelModal(p));
     tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleProductActive(p));
+    applyRowActionPerm(tr, 'products');
     tbody.appendChild(tr);
   });
+  applyCostGuard();
 }
 
 function filterProductsTableFromStart() {
@@ -11859,6 +12194,10 @@ async function saveProduct(e) {
     image_url: document.getElementById('productImage').value.trim() || null,
     is_active: document.getElementById('productActive').checked,
   };
+  // لو مفيش صلاحية رؤية التكلفة، الحقل أصلاً مخفي في الفورم؛ منشيلش cost_price
+  // من الـ payload إلا لو التعديل على صنف موجود بالفعل، عشان ميتصفرش سعر
+  // التكلفة الحالي بالغلط (في حالة الإضافة الجديدة بيفضل صفر زي أي صنف جديد).
+  if (!canViewCost() && id) delete payload.cost_price;
 
   try {
     let productId = id;
@@ -11961,6 +12300,7 @@ function renderCategoriesTable() {
       </td>`;
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openCategoryModal(c));
     tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleCategoryActive(c));
+    applyRowActionPerm(tr, 'categories');
     tbody.appendChild(tr);
   });
 }
@@ -12067,6 +12407,7 @@ function renderCustomersTable() {
     tr.querySelector('[data-action="pay"]').addEventListener('click', () => openPaymentModal('customer_receipt', c));
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openCustomerModal(c));
     tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteCustomer(c));
+    applyRowActionPerm(tr, 'customers');
     tbody.appendChild(tr);
   });
 }
@@ -12141,6 +12482,7 @@ async function saveCustomer(e) {
 }
 
 async function deleteCustomer(customer) {
+  if (!hasBoActionPermission('customers', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
   if (!confirm(`هل أنت متأكد أنك تريد حذف "${customer.name}"؟`)) return;
   const { error } = await supabaseClient.from('customers').delete().eq('id', customer.id);
   if (error) {
@@ -12375,6 +12717,7 @@ function renderSalariesTable() {
       </td>`;
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openSalaryModal(x));
     tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteSalaryPayment(x));
+    applyRowActionPerm(tr, 'salaries');
     tbody.appendChild(tr);
   });
 }
@@ -12457,6 +12800,7 @@ async function saveSalaryPayment(e) {
 }
 
 async function deleteSalaryPayment(payment) {
+  if (!hasBoActionPermission('salaries', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
   if (!confirm('هل أنت متأكد أنك تريد حذف دفعة الراتب هذه؟')) return;
   if (payment.cash_account_id) {
     try {
@@ -12560,6 +12904,7 @@ function renderExpensesTable() {
       </td>`;
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openExpenseModal(x));
     tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteExpense(x));
+    applyRowActionPerm(tr, 'expenses');
     tbody.appendChild(tr);
   });
 }
@@ -12665,6 +13010,7 @@ async function saveExpense(e) {
 }
 
 async function deleteExpense(expense) {
+  if (!hasBoActionPermission('expenses', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
   if (!confirm('هل أنت متأكد أنك تريد حذف هذا المصروف؟')) return;
   if (expense.cash_account_id) {
     try {
@@ -12710,6 +13056,7 @@ function renderExpenseItemsTable() {
       </td>`;
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openExpenseItemModal(x));
     tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleExpenseItemActive(x));
+    applyRowActionPerm(tr, 'expense-items');
     tbody.appendChild(tr);
   });
 }
@@ -12799,6 +13146,7 @@ function renderUnitTypesTable() {
       </td>`;
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openUnitTypeModal(x));
     tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleUnitTypeActive(x));
+    applyRowActionPerm(tr, 'unit-types');
     tbody.appendChild(tr);
   });
 }
@@ -12888,6 +13236,7 @@ function renderCustomerTypesTable() {
       </td>`;
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openCustomerTypeModal(x));
     tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleCustomerTypeActive(x));
+    applyRowActionPerm(tr, 'customer-types');
     tbody.appendChild(tr);
   });
 }
@@ -12978,6 +13327,7 @@ function renderTaxRatesTable() {
       </td>`;
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openTaxRateModal(x));
     tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleTaxRateActive(x));
+    applyRowActionPerm(tr, 'tax-rates');
     tbody.appendChild(tr);
   });
 }
@@ -13073,6 +13423,7 @@ function renderQuickDiscountsTable() {
       </td>`;
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openQuickDiscountModal(x));
     tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleQuickDiscountActive(x));
+    applyRowActionPerm(tr, 'quick-discounts');
     tbody.appendChild(tr);
   });
 }
@@ -13183,6 +13534,7 @@ function renderBranchesTable() {
       </td>`;
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openBranchModal(b));
     tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteBranch(b));
+    applyRowActionPerm(tr, 'branches');
     tbody.appendChild(tr);
   });
 }
@@ -13285,6 +13637,7 @@ async function saveBranch(e) {
 }
 
 async function deleteBranch(branch) {
+  if (!hasBoActionPermission('branches', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
   const userCount = boUsers.filter(u => u.branch_id === branch.id).length;
   if (userCount > 0) {
     showToast('لا يمكن حذف الفرع لوجود مستخدمين مرتبطين به — انقل المستخدمين لفرع آخر أولاً', true);
@@ -13303,17 +13656,21 @@ async function deleteBranch(branch) {
 }
 
 // ---- الصلاحية الأمنية (الأدوار والصلاحيات) ----
+// كل عنصر هنا "وحدة رئيسية" (نفس مفتاح صلاحية الوصول للبيانات في الخلفية،
+// ومنّه بيتحدد إمكانية الوصول الفعلي للبيانات مش بس ظهور الشاشة). تحت كل
+// وحدة ممكن يكون فيه children (شاشات فرعية) و/أو reportGroups (كروت تقارير
+// مقسّمة حسب شاشة التقارير) بتحدد بدقة أكتر إيه اللي يظهر للدور ده تحديدًا.
 const PERMISSION_GROUPS = [
   { key: 'pos', title: 'شاشة المبيعات (الكاشير)', desc: 'الدخول لشاشة البيع وإتمام الفواتير' },
   { key: 'dashboard', title: 'الرئيسية', desc: 'لوحة التحكم والنظرة العامة على المبيعات' },
-  { key: 'shifts', title: 'الورديات وإغلاق الخزينة', desc: 'استعراض كل الورديات المفتوحة والمغلقة وتقارير Z لكل الفروع' },
-  { key: 'stock_management', title: 'المخزون والأصناف', desc: 'الأصناف، المجموعات، الوحدات، الضريبة، الخصومات، المخازن ونقل البضاعة' },
-  { key: 'sales_management', title: 'المبيعات', desc: 'فواتير البيع، العملاء، أنواع العملاء، مرتجعات البيع' },
-  { key: 'purchases_management', title: 'المشتريات', desc: 'الموردون، فواتير الشراء، مرتجعات الشراء' },
-  { key: 'reports', title: 'التقارير', desc: 'تقارير المبيعات والمشتريات والمخزون والمحاسبة' },
-  { key: 'finance', title: 'المالية', desc: 'سجل المدفوعات، بنود المصروفات، المصروفات' },
-  { key: 'hr', title: 'الموارد البشرية', desc: 'بيانات الموظفين والرواتب' },
-  { key: 'admin', title: 'الإدارة والنظام', desc: 'المستخدمين، الفروع، بيانات الشركة، النسخ الاحتياطي، تهيئة البيانات' }
+  { key: 'shifts', title: 'الورديات وإغلاق الخزينة', desc: 'استعراض كل الورديات المفتوحة والمغلقة وتقارير Z لكل الفروع (صلاحية بيانات تُستخدم مع تقرير "الورديات" وشاشة عكس ترحيل الوردية)' },
+  { key: 'stock_management', title: 'المخزون والأصناف', desc: 'الأصناف، المجموعات، الوحدات، الضريبة، الخصومات، المخازن ونقل البضاعة', children: buildModuleScreens('stock_management') },
+  { key: 'sales_management', title: 'المبيعات', desc: 'فواتير البيع، العملاء، أنواع العملاء، مرتجعات البيع', children: buildModuleScreens('sales_management') },
+  { key: 'purchases_management', title: 'المشتريات', desc: 'الموردون، فواتير الشراء، مرتجعات الشراء', children: buildModuleScreens('purchases_management') },
+  { key: 'reports', title: 'التقارير', desc: 'تقارير المبيعات والمشتريات والمخزون والمحاسبة والتقارير الأخرى', reportGroups: REPORT_TABS },
+  { key: 'finance', title: 'المالية', desc: 'الخزائن والحسابات البنكية، سجل المدفوعات، بنود المصروفات، المصروفات، الأصول الثابتة', children: buildModuleScreens('finance') },
+  { key: 'hr', title: 'الموارد البشرية', desc: 'بيانات الموظفين والرواتب', children: buildModuleScreens('hr') },
+  { key: 'admin', title: 'الإدارة والنظام', desc: 'المستخدمين، الفروع، بيانات الشركة، النسخ الاحتياطي، تهيئة البيانات، الصلاحيات، رأس المال', children: buildModuleScreens('admin') }
 ];
 
 function renderPermissionsTable() {
@@ -13343,8 +13700,18 @@ function renderPermissionsTable() {
       </td>`;
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openPermissionModal(r));
     tr.querySelector('[data-action="delete"]').addEventListener('click', () => deletePermission(r));
+    applyRowActionPerm(tr, 'permissions');
     tbody.appendChild(tr);
   });
+}
+
+// هل مفتاح تفصيلي (شاشة أو تقرير) مفعّل فعليًا بناءً على القيم المحفوظة،
+// مع نفس منطق التوافق مع الأدوار القديمة المستخدم في hasBoScreenPermission/
+// hasBoReportPermission: لو مش متسجّل صراحة، بيتبع حالة الوحدة الرئيسية.
+function permFineChecked(selected, isAll, moduleChecked, fineKey) {
+  if (isAll) return true;
+  if (!selected || selected[fineKey] === undefined) return moduleChecked;
+  return selected[fineKey] === true;
 }
 
 function renderPermGrid(selected) {
@@ -13352,28 +13719,160 @@ function renderPermGrid(selected) {
   const isAll = !!(selected && selected.all === true);
   grid.innerHTML = '';
   PERMISSION_GROUPS.forEach(g => {
-    const checked = isAll || !!(selected && selected[g.key] === true);
-    const card = document.createElement('label');
-    card.className = 'perm-card' + (checked ? ' checked' : '');
-    card.innerHTML = `
-      <input type="checkbox" data-perm-key="${g.key}" ${checked ? 'checked' : ''}>
-      <div>
+    const moduleChecked = isAll || !!(selected && selected[g.key] === true);
+    const hasChildren = Array.isArray(g.children) && g.children.length > 0;
+    const hasReportGroups = !!g.reportGroups;
+    const category = document.createElement('div');
+    category.className = 'perm-category' + (moduleChecked ? ' checked' : '');
+
+    const header = document.createElement('label');
+    header.className = 'perm-category-header';
+    let countBadge = '';
+    if (hasChildren) {
+      const total = g.children.length;
+      const on = g.children.filter(c => permFineChecked(selected, isAll, moduleChecked, 'scr:' + c.key)).length;
+      countBadge = `<span class="perm-category-count">${on} من ${total} شاشة</span>`;
+    } else if (hasReportGroups) {
+      const allItems = Object.values(g.reportGroups).flatMap(rg => rg.items);
+      const total = allItems.length;
+      const on = Object.entries(g.reportGroups).reduce((acc, [sectionId, rg]) =>
+        acc + rg.items.filter(it => permFineChecked(selected, isAll, moduleChecked, 'rep:' + sectionId + ':' + it.key)).length, 0);
+      countBadge = `<span class="perm-category-count">${on} من ${total} تقرير</span>`;
+    }
+    header.innerHTML = `
+      <input type="checkbox" class="perm-cb-module" data-perm-key="${g.key}" data-module="${g.key}" ${moduleChecked ? 'checked' : ''}>
+      <div class="perm-category-info">
         <div class="perm-card-title">${escapeHtml(g.title)}</div>
         <div class="perm-card-desc">${escapeHtml(g.desc)}</div>
-      </div>`;
-    const cb = card.querySelector('input');
-    cb.addEventListener('change', () => {
-      card.classList.toggle('checked', cb.checked);
-      syncPermSelectAllState();
-    });
-    grid.appendChild(card);
+      </div>
+      ${countBadge}
+      ${(hasChildren || hasReportGroups) ? '<button type="button" class="perm-category-toggle" title="عرض التفاصيل">▾</button>' : ''}`;
+    category.appendChild(header);
+
+    if (hasChildren || hasReportGroups) {
+      const body = document.createElement('div');
+      body.className = 'perm-category-body';
+
+      if (hasChildren) {
+        const itemsWrap = document.createElement('div');
+        itemsWrap.className = 'perm-items';
+        g.children.forEach(child => {
+          const fineKey = 'scr:' + child.key;
+          const checked = permFineChecked(selected, isAll, moduleChecked, fineKey);
+          const actionCaps = ACTION_CAPABLE_SCREENS[child.key];
+          let actionsHtml = '';
+          if (actionCaps) {
+            actionsHtml = '<div class="perm-item-actions">' + Object.keys(ACTION_LABELS)
+              .filter(action => actionCaps[action])
+              .map(action => {
+                const actKey = 'act:' + child.key + ':' + action;
+                const actChecked = permFineChecked(selected, isAll, checked, actKey);
+                return `<label class="perm-action-chip">
+                  <input type="checkbox" class="perm-cb-action" data-perm-key="${actKey}" data-module="${g.key}" data-screen="${child.key}" ${actChecked ? 'checked' : ''} ${checked ? '' : 'disabled'}>
+                  ${ACTION_LABELS[action]}
+                </label>`;
+              }).join('') + '</div>';
+          }
+          itemsWrap.insertAdjacentHTML('beforeend', `
+            <div class="perm-item-row">
+              <label class="perm-item">
+                <input type="checkbox" class="perm-cb-child" data-perm-key="${fineKey}" data-module="${g.key}" ${checked ? 'checked' : ''}>
+                <span>${escapeHtml(child.title)}</span>
+              </label>
+              ${actionsHtml}
+            </div>`);
+        });
+        body.appendChild(itemsWrap);
+      }
+
+      if (hasReportGroups) {
+        Object.entries(g.reportGroups).forEach(([sectionId, rg]) => {
+          body.insertAdjacentHTML('beforeend', `<div class="perm-subgroup-title">${escapeHtml(rg.title)}</div>`);
+          const itemsWrap = document.createElement('div');
+          itemsWrap.className = 'perm-items';
+          rg.items.forEach(item => {
+            const fineKey = 'rep:' + sectionId + ':' + item.key;
+            const checked = permFineChecked(selected, isAll, moduleChecked, fineKey);
+            itemsWrap.insertAdjacentHTML('beforeend', `
+              <label class="perm-item">
+                <input type="checkbox" class="perm-cb-child" data-perm-key="${fineKey}" data-module="${g.key}" ${checked ? 'checked' : ''}>
+                <span>${escapeHtml(item.title)}</span>
+              </label>`);
+          });
+          body.appendChild(itemsWrap);
+        });
+      }
+
+      category.appendChild(body);
+      const toggleBtn = header.querySelector('.perm-category-toggle');
+      toggleBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const open = body.classList.toggle('open');
+        toggleBtn.classList.toggle('open', open);
+      });
+    }
+
+    grid.appendChild(category);
   });
   syncPermSelectAllState();
 }
 
+// تفويض حدث الـ change لكل الشيك بوكسات جوه الشبكة، سواء وحدة رئيسية أو
+// شاشة/تقرير فرعي، عشان نحافظ على تزامن منطقي بينهم بدل ما نربط كل واحد
+// بمستمع منفصل وقت البناء.
+document.addEventListener('DOMContentLoaded', () => {
+  const grid = document.getElementById('permGrid');
+  if (!grid) return;
+  grid.addEventListener('change', (e) => {
+    const cb = e.target;
+    if (!(cb instanceof HTMLInputElement) || cb.type !== 'checkbox') return;
+    const moduleKey = cb.dataset.module;
+    if (cb.classList.contains('perm-cb-module')) {
+      grid.querySelectorAll(`.perm-cb-child[data-module="${CSS.escape(moduleKey)}"]`).forEach(child => {
+        child.checked = cb.checked;
+      });
+      cb.closest('.perm-category').classList.toggle('checked', cb.checked);
+    } else if (cb.classList.contains('perm-cb-child')) {
+      const moduleCb = grid.querySelector(`.perm-cb-module[data-module="${CSS.escape(moduleKey)}"]`);
+      if (cb.checked) {
+        if (moduleCb && !moduleCb.checked) {
+          moduleCb.checked = true;
+          moduleCb.closest('.perm-category').classList.add('checked');
+        }
+      } else if (moduleCb) {
+        const anyChecked = [...grid.querySelectorAll(`.perm-cb-child[data-module="${CSS.escape(moduleKey)}"]`)].some(c => c.checked);
+        if (!anyChecked) {
+          moduleCb.checked = false;
+          moduleCb.closest('.perm-category').classList.remove('checked');
+        }
+      }
+      // لو الشاشة اتقفلت، مفيش معنى نسيب صلاحيات العمليات (إضافة/تعديل/حذف)
+      // مفعّلة جواها؛ نقفلها كمان لحد ما الشاشة ترجع تتفعّل تاني.
+      const screenKey = cb.dataset.permKey.replace(/^scr:/, '');
+      grid.querySelectorAll(`.perm-cb-action[data-screen="${CSS.escape(screenKey)}"]`).forEach(actionCb => {
+        actionCb.disabled = !cb.checked;
+        if (!cb.checked) actionCb.checked = false;
+      });
+    }
+    syncPermSelectAllState();
+  });
+
+  const expandBtn = document.getElementById('permExpandAllBtn');
+  if (expandBtn) {
+    expandBtn.addEventListener('click', () => {
+      const bodies = [...grid.querySelectorAll('.perm-category-body')];
+      const shouldOpen = bodies.some(b => !b.classList.contains('open'));
+      grid.querySelectorAll('.perm-category-body').forEach(b => b.classList.toggle('open', shouldOpen));
+      grid.querySelectorAll('.perm-category-toggle').forEach(t => t.classList.toggle('open', shouldOpen));
+    });
+  }
+});
+
 function syncPermSelectAllState() {
   const boxes = [...document.querySelectorAll('#permGrid input[type="checkbox"]')];
-  document.getElementById('permSelectAll').checked = boxes.length > 0 && boxes.every(cb => cb.checked);
+  const el = document.getElementById('permSelectAll');
+  if (el) el.checked = boxes.length > 0 && boxes.every(cb => cb.checked);
 }
 
 function openPermissionModal(role) {
@@ -13381,6 +13880,9 @@ function openPermissionModal(role) {
   document.getElementById('permissionId').value = role ? role.id : '';
   document.getElementById('permissionName').value = role ? role.name : '';
   renderPermGrid(role ? role.permissions : null);
+  document.getElementById('permViewCost').checked = !(role && role.permissions && role.permissions.view_cost === false);
+  const maxDiscVal = role && role.permissions && role.permissions.max_discount_percent;
+  document.getElementById('permMaxDiscount').value = (maxDiscVal === undefined || maxDiscVal === null) ? '' : maxDiscVal;
   document.getElementById('permissionModalError').classList.remove('show');
   document.getElementById('permissionModalOverlay').classList.add('show');
 }
@@ -13403,6 +13905,9 @@ async function savePermission(e) {
   document.querySelectorAll('#permGrid input[type="checkbox"]').forEach(cb => {
     permissions[cb.dataset.permKey] = cb.checked;
   });
+  permissions.view_cost = document.getElementById('permViewCost').checked;
+  const maxDiscInput = document.getElementById('permMaxDiscount').value.trim();
+  permissions.max_discount_percent = maxDiscInput === '' ? null : Math.max(0, Math.min(100, Number(maxDiscInput)));
 
   try {
     if (!name) throw new Error('من فضلك اكتب اسم الصلاحية');
@@ -13429,6 +13934,7 @@ async function savePermission(e) {
 }
 
 async function deletePermission(role) {
+  if (!hasBoActionPermission('permissions', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
   if (role.name === 'admin' || role.name === 'cashier') {
     showToast('لا يمكن حذف الصلاحيات الأساسية للنظام (أدمن / كاشير)', true);
     return;
@@ -13527,6 +14033,7 @@ function renderWarehousesTable() {
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openWarehouseModal(w));
     const delBtn = tr.querySelector('[data-action="delete"]');
     if (delBtn) delBtn.addEventListener('click', () => deleteWarehouse(w));
+    applyRowActionPerm(tr, 'stock');
     tbody.appendChild(tr);
   });
 }
@@ -13587,6 +14094,7 @@ async function saveWarehouse(e) {
 }
 
 async function deleteWarehouse(warehouse) {
+  if (!hasBoActionPermission('stock', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
   if (warehouse.is_main) {
     showToast('لا يمكن حذف المخزن الرئيسي للفرع', true);
     return;
@@ -13663,6 +14171,7 @@ function renderTreasuriesTable() {
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openTreasuryModal(t));
     const delBtn = tr.querySelector('[data-action="delete"]');
     if (delBtn) delBtn.addEventListener('click', () => deleteTreasury(t));
+    applyRowActionPerm(tr, 'treasuries');
     tbody.appendChild(tr);
   });
   document.getElementById('treasuriesTotalBalance').textContent = total.toFixed(2);
@@ -13740,6 +14249,7 @@ async function saveTreasury(e) {
 }
 
 async function deleteTreasury(treasury) {
+  if (!hasBoActionPermission('treasuries', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
   if (treasury.is_main) {
     showToast('لا يمكن حذف الخزينة الرئيسية للفرع', true);
     return;
@@ -14113,6 +14623,7 @@ function renderFixedAssetsTable() {
     const disposeBtn = tr.querySelector('[data-action="dispose"]');
     if (disposeBtn) disposeBtn.addEventListener('click', () => openFixedAssetDisposeModal(a));
     tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteFixedAsset(a));
+    applyRowActionPerm(tr, 'fixed-assets');
     tbody.appendChild(tr);
   });
 
@@ -14262,6 +14773,7 @@ async function saveFixedAssetDispose(e) {
 }
 
 async function deleteFixedAsset(asset) {
+  if (!hasBoActionPermission('fixed-assets', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
   if (!confirm(`هل أنت متأكد أنك تريد حذف "${asset.name}" نهائيًا من السجل؟ لو الأصل مستبعد بس، ممكن تسيبه في السجل للتاريخ.`)) return;
   const { error } = await supabaseClient.from('fixed_assets').delete().eq('id', asset.id);
   if (error) {
@@ -14898,6 +15410,7 @@ function renderUsersTable() {
       </td>`;
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openUserModal(u));
     tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleUserActive(u));
+    applyRowActionPerm(tr, 'users');
     tbody.appendChild(tr);
   });
 }
@@ -15162,6 +15675,7 @@ function renderEmployeesTable() {
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openEmployeeModal(e));
     tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleEmployeeActive(e));
     tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteEmployee(e));
+    applyRowActionPerm(tr, 'employees');
     tbody.appendChild(tr);
   });
 }
@@ -15287,6 +15801,7 @@ async function saveEmployee(e) {
 }
 
 async function deleteEmployee(employee) {
+  if (!hasBoActionPermission('employees', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
   if (!confirm(`هل أنت متأكد أنك تريد حذف الموظف "${employee.full_name}"؟`)) return;
   const { error } = await supabaseClient.from('employees').delete().eq('id', employee.id);
   if (error) { console.error(error); showToast('تعذر حذف الموظف', true); return; }
@@ -15343,6 +15858,7 @@ function renderSuppliersTable() {
     tr.querySelector('[data-action="pay"]').addEventListener('click', () => openPaymentModal('supplier_payment', s));
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openSupplierModal(s));
     tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteSupplier(s));
+    applyRowActionPerm(tr, 'suppliers');
     tbody.appendChild(tr);
   });
 }
@@ -15401,6 +15917,7 @@ async function saveSupplier(e) {
 }
 
 async function deleteSupplier(supplier) {
+  if (!hasBoActionPermission('suppliers', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
   if (!confirm(`هل أنت متأكد أنك تريد حذف "${supplier.name}"؟`)) return;
   const { error } = await supabaseClient.from('suppliers').delete().eq('id', supplier.id);
   if (error) {
@@ -15461,6 +15978,7 @@ function renderPaymentsTable() {
         </div>
       </td>`;
     tr.querySelector('[data-action="delete"]').addEventListener('click', () => deletePayment(p));
+    applyRowActionPerm(tr, 'payments');
     tbody.appendChild(tr);
   });
 }
@@ -15572,6 +16090,7 @@ async function savePayment(e) {
 }
 
 async function deletePayment(payment) {
+  if (!hasBoActionPermission('payments', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
   const partyLabel = payment.payment_type === 'customer_receipt' ? 'العميل' : 'المورد';
   if (!confirm(`هل أنت متأكد من حذف هذه الدفعة؟ سيتم عكس أثرها على رصيد ${partyLabel}.`)) return;
 
@@ -17157,7 +17676,7 @@ async function runReport() {
     document.getElementById('branchReportSection').style.display = showBranchBreakdown ? 'flex' : 'none';
     document.getElementById('branchReportTableWrap').style.display = showBranchBreakdown ? 'block' : 'none';
     const branchCardEl = document.getElementById('salesReportCard-branch');
-    if (branchCardEl) branchCardEl.style.display = showBranchBreakdown ? 'flex' : 'none';
+    if (branchCardEl) branchCardEl.style.display = (showBranchBreakdown && hasBoReportPermission('reports-sales', 'branch')) ? 'flex' : 'none';
     let branchRows = [];
     if (showBranchBreakdown) {
       const branchGrouped = {};
