@@ -14297,7 +14297,7 @@ async function saveStockAdjust() {
     for (const row of changed) {
       const { data: existing, error: fetchErr } = await supabaseClient
         .from('stock_balances')
-        .select('id')
+        .select('product_id')
         .eq('warehouse_id', warehouseId)
         .eq('product_id', row.product_id)
         .maybeSingle();
@@ -14475,7 +14475,7 @@ async function saveOpeningBalances() {
     for (const row of changed) {
       const { data: existing, error: fetchErr } = await supabaseClient
         .from('stock_balances')
-        .select('id')
+        .select('product_id')
         .eq('warehouse_id', warehouseId)
         .eq('product_id', row.product_id)
         .maybeSingle();
