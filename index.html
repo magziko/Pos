@@ -3090,6 +3090,9 @@ a { color: inherit; }
                   <button class="bo-icon-btn" id="exportIncomeStatementBtn">تصدير إكسل</button>
                 </div>
               </div>
+              <div style="font-size:12px;color:var(--muted,#888);margin:-6px 0 10px;">
+                تكلفة البضاعة المباعة محسوبة بسعر التكلفة الحالي لكل صنف، مش بالضرورة سعر وقت البيع لو اتغيّر بعد كده.
+              </div>
 
               <div class="quick-range-row" id="isQuickRangeRow" style="margin-bottom:12px;">
                 <button class="quick-range-btn active" data-is-range="today">اليوم</button>
@@ -3352,6 +3355,10 @@ a { color: inherit; }
                   <label>الخزينة / الحساب</label>
                   <select id="cmAccountFilter"><option value="">كل الخزائن والحسابات</option></select>
                 </div>
+                <div class="field">
+                  <label>نوع الحركة</label>
+                  <select id="cmTypeFilter"><option value="">كل الحركات</option></select>
+                </div>
                 <button class="bo-add-btn" id="runCashMovementsReportBtn">تحديث</button>
               </div>
 
@@ -3373,6 +3380,8 @@ a { color: inherit; }
                   <div class="report-card-value num" id="cmMovementsCount">0</div>
                 </div>
               </div>
+
+              <div class="report-cards" id="cmCategoryBreakdown" style="margin-top:8px;"></div>
 
               <div class="bo-table-wrap">
                 <table class="bo-table">
@@ -9286,6 +9295,7 @@ async function performOnlineSaleReturn(ctx) {
     .insert({
       sale_id: saleReturnSale.id, branch_id: currentProfile.branch_id, user_id: currentProfile.id,
       customer_id: saleReturnSale.customer_id, reason, refund_method: refundMethod, total,
+      shift_id: currentShift?.id ?? null,
     }).select().single();
   if (srError) throw srError;
 
@@ -9337,6 +9347,7 @@ function queueOfflineSaleReturn(ctx) {
       returnInsert: {
         sale_id: saleReturnSale.id, branch_id: currentProfile.branch_id, user_id: currentProfile.id,
         customer_id: saleReturnSale.customer_id, reason, refund_method: refundMethod, total,
+        shift_id: currentShift?.id ?? null,
       },
       items: validLines.map(l => ({
         sale_item_id: l.saleItemId, product_id: l.productId, quantity: l.returnQty,
@@ -10869,6 +10880,7 @@ function bindBackofficeEvents() {
   document.getElementById('runCashMovementsReportBtn').addEventListener('click', () => refreshCashMovementsReport());
   document.getElementById('cmBranchFilter').addEventListener('change', () => refreshCashMovementsReport());
   document.getElementById('cmAccountFilter').addEventListener('change', () => refreshCashMovementsReport());
+  document.getElementById('cmTypeFilter').addEventListener('change', () => refreshCashMovementsReport());
   document.getElementById('exportCapitalMovementsReportBtn').addEventListener('click', () => exportCapitalMovementsReportToExcel());
   document.getElementById('runCapitalMovementsReportBtn').addEventListener('click', () => refreshCapitalMovementsReport());
   document.getElementById('cmpBranchFilter').addEventListener('change', () => refreshCapitalMovementsReport());
@@ -17832,7 +17844,11 @@ function exportGrossProfitToExcel() {
 }
 
 // ============================================================
-// قائمة الدخل المبسطة: إجمالي المبيعات − مرتجعات المبيعات − المصروفات − الرواتب = صافي الربح
+// قائمة الدخل المبسطة: إجمالي المبيعات − مرتجعات المبيعات = صافي المبيعات
+// صافي المبيعات − تكلفة البضاعة المباعة = إجمالي الربح
+// إجمالي الربح − المصروفات − الرواتب = صافي الربح
+// ملحوظة: تكلفة البضاعة المباعة بتتحسب بسعر التكلفة الحالي للصنف (products.cost_price)
+// مش بسعر التكلفة وقت البيع فعليًا، لأن sale_items مفيهاش تخزين لسعر التكلفة وقتها.
 // ============================================================
 function setIsQuickRange(range) {
   const today = new Date();
@@ -17921,6 +17937,44 @@ async function refreshIncomeStatement() {
     if (expensesError) throw expensesError;
     const totalExpenses = (expenses || []).reduce((sum, x) => sum + Number(x.amount), 0);
 
+    // تكلفة البضاعة المباعة (COGS): بتتحسب من أصناف الفواتير المكتملة × سعر تكلفة
+    // الصنف الحالي (products.cost_price) — ملحوظة: مفيش تخزين لسعر التكلفة وقت
+    // البيع نفسه في sale_items، فالحساب بياخد آخر سعر تكلفة مسجّل للصنف دلوقتي،
+    // مش بالضرورة اللي كان وقت البيع الفعلي لو اتغيّر سعر الشراء بعد كده.
+    let saleItemsQuery = supabaseClient
+      .from('sale_items')
+      .select('quantity, product_unit_id, sales!inner(status, created_at, branch_id), products(cost_price), product_units(factor_to_base)')
+      .eq('sales.status', 'completed')
+      .gte('sales.created_at', fromISO)
+      .lte('sales.created_at', toISO);
+    if (branchId) saleItemsQuery = saleItemsQuery.eq('sales.branch_id', branchId);
+    const { data: soldItemsForCost, error: soldItemsCostError } = await saleItemsQuery;
+    if (soldItemsCostError) throw soldItemsCostError;
+    const costOfGoodsSold = (soldItemsForCost || []).reduce((sum, it) => {
+      const factor = it.product_unit_id ? (Number(it.product_units?.factor_to_base) || 1) : 1;
+      const baseQty = (Number(it.quantity) || 0) * factor;
+      const cost = Number(it.products?.cost_price) || 0;
+      return sum + baseQty * cost;
+    }, 0);
+
+    // تكلفة الأصناف المرتجعة (بترجع تخصم من الـ COGS لأن المخزون رجع فعليًا)
+    let returnItemsQuery = supabaseClient
+      .from('sale_return_items')
+      .select('quantity, sale_returns!inner(created_at, branch_id), products(cost_price), sale_items(product_unit_id, product_units(factor_to_base))')
+      .gte('sale_returns.created_at', fromISO)
+      .lte('sale_returns.created_at', toISO);
+    if (branchId) returnItemsQuery = returnItemsQuery.eq('sale_returns.branch_id', branchId);
+    const { data: returnedItemsForCost, error: returnedItemsCostError } = await returnItemsQuery;
+    if (returnedItemsCostError) throw returnedItemsCostError;
+    const returnedCOGS = (returnedItemsForCost || []).reduce((sum, it) => {
+      const productUnitId = it.sale_items?.product_unit_id;
+      const factor = productUnitId ? (Number(it.sale_items?.product_units?.factor_to_base) || 1) : 1;
+      const baseQty = (Number(it.quantity) || 0) * factor;
+      const cost = Number(it.products?.cost_price) || 0;
+      return sum + baseQty * cost;
+    }, 0);
+    const netCOGS = costOfGoodsSold - returnedCOGS;
+
     // الرواتب (مربوطة بالموظف، والموظف مربوط بفرع)
     let salariesQuery = supabaseClient
       .from('salary_payments')
@@ -17933,12 +17987,15 @@ async function refreshIncomeStatement() {
     const totalSalaries = (salaries || []).reduce((sum, x) => sum + Number(x.net_amount), 0);
 
     const netSales = totalSales - totalReturns;
-    const netProfit = netSales - totalExpenses - totalSalaries;
+    const grossProfit = netSales - netCOGS;
+    const netProfit = grossProfit - totalExpenses - totalSalaries;
 
     const rows = [
       { label: 'إجمالي المبيعات', value: totalSales, type: 'normal' },
       { label: 'مرتجعات المبيعات', value: totalReturns, type: 'deduct' },
       { label: 'صافي المبيعات', value: netSales, type: 'subtotal' },
+      { label: 'تكلفة البضاعة المباعة (صافي المرتجعات)', value: netCOGS, type: 'deduct' },
+      { label: 'إجمالي الربح (هامش الربح)', value: grossProfit, type: 'subtotal' },
       { label: 'المصروفات', value: totalExpenses, type: 'deduct' },
       { label: 'الرواتب', value: totalSalaries, type: 'deduct' },
       { label: 'صافي الربح', value: netProfit, type: 'total' },
@@ -19291,6 +19348,9 @@ const cashAccountTxTypeLabels = {
   withdrawal: 'سحب',
   shift_close_in: 'ترحيل نقدية وردية',
   reversal: 'عكس حركة',
+  adjustment: 'تسوية',
+  capital_in: 'ضخ رأس مال',
+  capital_out: 'مسحوبات رأس مال',
   capital_injection: 'ضخ رأس مال',
   capital_drawing: 'مسحوبات رأس مال',
   initial_capital: 'رأس مال مبدئي',
@@ -19300,7 +19360,50 @@ const cashAccountTxTypeLabels = {
   supplier_payment: 'سداد لمورد',
   customer_receipt: 'تحصيل من عميل',
   salary_payment: 'صرف راتب',
+  transfer_in: 'تحويل وارد',
+  transfer_out: 'تحويل صادر',
 };
+
+// تصنيف كل نوع حركة إلى مجموعة رئيسية — يُستخدم في فلتر التقرير وفي ملخص
+// الإجماليات، عشان الأنواع الجديدة (مصروفات/رواتب/موردين/عملاء...) متبقاش
+// مبعثرة تحت "غير مصنّف" وتتحسب صح في البطاقات.
+const cashAccountTxCategoryOf = {
+  deposit: 'general',
+  withdrawal: 'general',
+  adjustment: 'general',
+  reversal: 'general',
+  shift_close_in: 'shifts',
+  shift_cash_drop: 'shifts',
+  shift_cash_injection: 'shifts',
+  capital_in: 'capital',
+  capital_out: 'capital',
+  capital_injection: 'capital',
+  capital_drawing: 'capital',
+  initial_capital: 'capital',
+  expense_payment: 'operations',
+  salary_payment: 'operations',
+  supplier_payment: 'operations',
+  customer_receipt: 'operations',
+  transfer_in: 'internal_transfer',
+  transfer_out: 'internal_transfer',
+};
+
+const cashAccountTxCategoryLabels = {
+  general: 'حركات عامة (إيداع/سحب يدوي)',
+  shifts: 'ورديات',
+  capital: 'رأس المال',
+  operations: 'مصروفات ومدفوعات (تشغيلية)',
+  internal_transfer: 'تحويلات داخلية',
+};
+
+// نوع الحركة ← المجموعة اللي بتتفلتر بيها شاشة "حركة الخزائن"
+const cashMovementsCategoryOptions = [
+  { value: '', label: 'كل الحركات' },
+  { value: 'general', label: 'حركات عامة (إيداع/سحب يدوي)' },
+  { value: 'shifts', label: 'ورديات' },
+  { value: 'operations', label: 'مصروفات ومدفوعات' },
+  { value: 'capital', label: 'رأس المال' },
+];
 
 async function populateCashMovementsReportFilters() {
   if (!treasuriesLoadedOnce) { await loadBoTreasuries(); treasuriesLoadedOnce = true; }
@@ -19317,10 +19420,13 @@ async function populateCashMovementsReportFilters() {
   const accSel = document.getElementById('cmAccountFilter');
   accSel.innerHTML = '<option value="">كل الخزائن والحسابات</option>' +
     boTreasuries.map(t => `<option value="${t.id}">${escapeHtml(t.branches?.name || '')} — ${escapeHtml(t.name)}</option>`).join('');
+
+  const typeSel = document.getElementById('cmTypeFilter');
+  typeSel.innerHTML = cashMovementsCategoryOptions.map(o => `<option value="${o.value}">${o.label}</option>`).join('');
 }
 
 let lastCashMovementsRows = [];
-let lastCashMovementsTotals = { deposits: 0, withdrawals: 0, transfers: 0, count: 0 };
+let lastCashMovementsTotals = { deposits: 0, withdrawals: 0, transfers: 0, count: 0, categories: {} };
 
 async function refreshCashMovementsReport() {
   const fromDate = document.getElementById('cmFromDate').value;
@@ -19330,6 +19436,7 @@ async function refreshCashMovementsReport() {
   const toISO = `${toDate}T23:59:59`;
   const branchId = document.getElementById('cmBranchFilter').value || null;
   const accountId = document.getElementById('cmAccountFilter').value || null;
+  const categoryFilter = document.getElementById('cmTypeFilter').value || null;
 
   const tbody = document.getElementById('cmReportTableBody');
   tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>`;
@@ -19342,24 +19449,40 @@ async function refreshCashMovementsReport() {
       .lte('created_at', toISO);
     if (accountId) txQuery = txQuery.eq('cash_account_id', accountId);
     if (branchId) txQuery = txQuery.eq('cash_accounts.branch_id', branchId);
+    if (categoryFilter) {
+      const typesInCategory = Object.keys(cashAccountTxCategoryOf).filter(k => cashAccountTxCategoryOf[k] === categoryFilter);
+      txQuery = txQuery.in('type', typesInCategory);
+    }
     const { data: txRows, error: txError } = await txQuery;
     if (txError) throw txError;
 
-    const trQuery = supabaseClient
-      .from('cash_transfers')
-      .select('id, amount, note, created_at, from_cash_account_id, to_cash_account_id, from_account:cash_accounts!cash_transfers_from_cash_account_id_fkey(name, branch_id, branches(name)), to_account:cash_accounts!cash_transfers_to_cash_account_id_fkey(name, branch_id, branches(name)), users_profile(full_name)')
-      .gte('created_at', fromISO)
-      .lte('created_at', toISO);
-    const { data: trRows, error: trError } = await trQuery;
-    if (trError) throw trError;
+    // التحويلات الداخلية بين الخزائن ليها جدول منفصل (cash_transfers)، فبتتحمّل
+    // وتتحسب دايمًا إلا لو المستخدم فلتر على نوع/تصنيف حركة معيّن غيرها.
+    let trRows = [];
+    if (!categoryFilter) {
+      const trQuery = supabaseClient
+        .from('cash_transfers')
+        .select('id, amount, note, created_at, from_cash_account_id, to_cash_account_id, from_account:cash_accounts!cash_transfers_from_cash_account_id_fkey(name, branch_id, branches(name)), to_account:cash_accounts!cash_transfers_to_cash_account_id_fkey(name, branch_id, branches(name)), users_profile(full_name)')
+        .gte('created_at', fromISO)
+        .lte('created_at', toISO);
+      const { data, error: trError } = await trQuery;
+      if (trError) throw trError;
+      trRows = data;
+    }
 
     const rows = [];
     let totalDeposits = 0, totalWithdrawals = 0;
+    const categoryTotals = {}; // { general: 120, operations: -450, ... }
 
     (txRows || []).forEach(t => {
       const amt = Number(t.amount) || 0;
-      if (t.type === 'deposit') totalDeposits += amt;
-      else if (t.type === 'withdrawal') totalWithdrawals += Math.abs(amt);
+      const category = cashAccountTxCategoryOf[t.type] || 'general';
+      // التحويل الداخلي بين خزينتين ليه إجمالي مستقل (cmTotalTransfers)، فبيتستبعد
+      // من إجماليي الإيداعات/المسحوبات عشان محايد على مستوى الخزائن كلها.
+      if (category !== 'internal_transfer') {
+        if (amt >= 0) totalDeposits += amt; else totalWithdrawals += Math.abs(amt);
+        categoryTotals[category] = (categoryTotals[category] || 0) + amt;
+      }
       rows.push({
         date: t.created_at,
         branchName: t.cash_accounts?.branches?.name || '—',
@@ -19407,12 +19530,24 @@ async function refreshCashMovementsReport() {
 
     rows.sort((a, b) => new Date(b.date) - new Date(a.date));
     lastCashMovementsRows = rows;
-    lastCashMovementsTotals = { deposits: totalDeposits, withdrawals: totalWithdrawals, transfers: totalTransfers, count: (txRows || []).length + seenTransferIds.size };
+    lastCashMovementsTotals = { deposits: totalDeposits, withdrawals: totalWithdrawals, transfers: totalTransfers, count: (txRows || []).length + seenTransferIds.size, categories: categoryTotals };
 
     document.getElementById('cmTotalDeposits').textContent = totalDeposits.toFixed(2);
     document.getElementById('cmTotalWithdrawals').textContent = totalWithdrawals.toFixed(2);
     document.getElementById('cmTotalTransfers').textContent = totalTransfers.toFixed(2);
     document.getElementById('cmMovementsCount').textContent = lastCashMovementsTotals.count;
+
+    const breakdownEl = document.getElementById('cmCategoryBreakdown');
+    const breakdownEntries = Object.keys(cashAccountTxCategoryLabels)
+      .filter(cat => cat !== 'internal_transfer' && categoryTotals[cat] !== undefined && categoryTotals[cat] !== 0);
+    breakdownEl.innerHTML = breakdownEntries.map(cat => {
+      const val = categoryTotals[cat];
+      return `
+        <div class="report-card">
+          <div class="report-card-label">${escapeHtml(cashAccountTxCategoryLabels[cat])}</div>
+          <div class="report-card-value num ${val >= 0 ? 'positive' : 'negative'}">${val.toFixed(2)}</div>
+        </div>`;
+    }).join('');
 
     if (rows.length === 0) {
       tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لا توجد حركات في هذه الفترة</td></tr>`;
@@ -19445,6 +19580,9 @@ function exportCashMovementsReportToExcel() {
     'إجمالي التحويلات': Number(t.transfers.toFixed(2)),
     'عدد الحركات': t.count,
   }];
+  const categoryRows = Object.keys(cashAccountTxCategoryLabels)
+    .filter(cat => cat !== 'internal_transfer' && (t.categories || {})[cat] !== undefined && t.categories[cat] !== 0)
+    .map(cat => ({ 'التصنيف': cashAccountTxCategoryLabels[cat], 'الإجمالي': Number(t.categories[cat].toFixed(2)) }));
   const detailRows = lastCashMovementsRows.map(r => ({
     'التاريخ': new Date(r.date).toLocaleString('ar-EG'),
     'الفرع': r.branchName,
@@ -19457,6 +19595,9 @@ function exportCashMovementsReportToExcel() {
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows), 'الملخص');
+  if (categoryRows.length) {
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(categoryRows), 'حسب التصنيف');
+  }
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(detailRows), 'الحركات');
   const dateStr = new Date().toISOString().split('T')[0];
   XLSX.writeFile(wb, `تقرير-حركة-الخزائن-${dateStr}.xlsx`);
