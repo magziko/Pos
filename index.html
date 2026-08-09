@@ -108,6 +108,9 @@ a { color: inherit; }
 .shift-badge.closed .shift-badge-dot { background: #E0A94E; }
 .close-shift-btn { background: var(--amber-100); color: var(--amber-600); padding: 7px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; }
 .close-shift-btn:hover { background: #F5DCB0; }
+.return-topbar-btn { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.12); color: white; padding: 7px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; }
+.return-topbar-btn:hover { background: rgba(255,255,255,0.22); }
+.return-topbar-icon { font-size: 14px; line-height: 1; }
 .shift-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; margin: 6px 0 16px; }
 .shift-summary-box { background: var(--surface-sunken); border-radius: var(--radius-sm); padding: 10px 12px; }
 .shift-summary-box-label { font-size: 12px; color: var(--ink-soft); margin-bottom: 4px; }
@@ -302,7 +305,7 @@ a { color: inherit; }
   #cashierLabel { display: none; }
   .shift-badge { font-size: 11px; padding: 5px 9px; }
   .topbar-clock { font-size: 11.5px; }
-  .close-shift-btn, .logout-btn { padding: 6px 10px; font-size: 11.5px; }
+  .close-shift-btn, .logout-btn, .return-topbar-btn { padding: 6px 10px; font-size: 11.5px; }
 }
 
 @media (max-width: 480px) {
@@ -310,6 +313,9 @@ a { color: inherit; }
   .topbar-clock { display: none; }
   .close-shift-btn { padding: 6px 8px; }
   .logout-btn { padding: 6px 8px; }
+  .return-topbar-btn { padding: 6px 8px; }
+  .return-topbar-label { display: none; }
+  .return-topbar-icon { font-size: 16px; }
 }
 
 /* -------- Back office -------- */
@@ -624,6 +630,31 @@ a { color: inherit; }
 .smart-search-empty { padding: 10px 12px; font-size: 13px; color: var(--ink-soft); text-align: center; }
 .purchase-line-row .smart-search-dropdown { font-size: 12.5px; }
 
+/* -------- Return modals (sale / purchase): invoice card + item list UX -------- */
+.ret-invoice-search-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: flex-end; }
+.ret-invoice-search-row .field { margin-bottom: 0; }
+.ret-invoice-card { display: none; background: var(--surface-sunken); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px; margin: 12px 0 4px; }
+.ret-invoice-card.show { display: block; }
+.ret-invoice-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.ret-invoice-card-title { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+.ret-invoice-card-badge { font-size: 11px; font-weight: 600; color: var(--teal-700); background: var(--teal-100); padding: 3px 9px; border-radius: 20px; }
+.ret-invoice-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.ret-invoice-stat-label { font-size: 11px; color: var(--ink-soft); margin-bottom: 2px; }
+.ret-invoice-stat-value { font-size: 13.5px; font-weight: 700; font-family: var(--font-num); direction: ltr; text-align: right; }
+.ret-items-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 14px 0 6px; }
+.ret-items-toolbar label { font-size: 13px; font-weight: 500; color: var(--ink-soft); }
+.ret-item-filter { max-width: 220px; padding: 7px 10px; font-size: 12.5px; }
+.purchase-line-row.ret-row { grid-template-columns: 1fr 84px 92px 84px 46px; }
+.purchase-line-row.has-return-qty { background: var(--teal-100); }
+.purchase-line-row .pr-line-name-wrap { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.purchase-line-row .pr-line-name-wrap .pr-line-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pr-already-returned-note { font-size: 10.5px; color: var(--amber-600); }
+.pr-line-all-btn { background: var(--surface); border: 1px solid var(--teal-700); color: var(--teal-700); border-radius: var(--radius-sm); font-size: 11px; font-weight: 600; padding: 4px 8px; white-space: nowrap; }
+.pr-line-all-btn:hover { background: var(--teal-100); }
+.pr-line-all-btn:disabled { opacity: .4; cursor: not-allowed; border-color: var(--border); color: var(--ink-soft); }
+.ret-items-empty { padding: 22px 10px; text-align: center; font-size: 13px; color: var(--ink-soft); }
+.ret-selected-count { font-size: 11.5px; color: var(--ink-soft); }
+
 @media (max-width: 760px) {
   .bo-main { grid-template-columns: 1fr; grid-template-rows: auto 1fr; position: relative; overflow: hidden; }
   .bo-hamburger-btn { display: flex; }
@@ -840,6 +871,8 @@ a { color: inherit; }
         <span id="cashierLabel">—</span>
         <div class="shift-badge closed" id="shiftBadge"><span class="shift-badge-dot"></span><span id="shiftStatusLabel">لا توجد وردية مفتوحة</span></div>
         <span class="topbar-clock" id="clockLabel">--:--</span>
+        <button class="return-topbar-btn" id="saleReturnBtn" title="مرتجع بيع"><span class="return-topbar-icon">↩</span><span class="return-topbar-label">مرتجع بيع</span></button>
+        <button class="return-topbar-btn" id="cashDropBtn" style="display:none;" title="سحب نقدي من الدرج لخزنة الفرع"><span class="return-topbar-icon">💵</span><span class="return-topbar-label">سحب نقدي</span></button>
         <button class="close-shift-btn" id="closeShiftBtn" style="display:none;">إغلاق الوردية</button>
         <button class="logout-btn" id="backofficeBtn" style="display:none;">لوحة التحكم</button>
         <button class="logout-btn" id="logoutBtn">تسجيل الخروج</button>
@@ -899,7 +932,6 @@ a { color: inherit; }
           <div class="action-row">
             <button class="btn-secondary" id="holdBtn">تعليق</button>
             <button class="btn-secondary" id="recallBtn">استرجاع (<span id="heldCount">0</span>)</button>
-            <button class="btn-secondary" id="saleReturnBtn">مرتجع بيع</button>
           </div>
           <button class="checkout-btn" id="checkoutBtn" disabled>إتمام البيع</button>
         </div>
@@ -1607,6 +1639,16 @@ a { color: inherit; }
             <div class="bo-section-title">مرتجعات الشراء</div>
             <button class="bo-add-btn" id="addPurchaseReturnBtn">+ مرتجع شراء جديد</button>
           </div>
+          <div class="report-filters">
+            <div class="field"><label>من تاريخ</label><input type="date" id="purchaseReturnsFromDate"></div>
+            <div class="field"><label>إلى تاريخ</label><input type="date" id="purchaseReturnsToDate"></div>
+            <div class="field">
+              <label>المورد أو رقم الفاتورة</label>
+              <input type="text" id="purchaseReturnsTextFilter" placeholder="ابحث بالاسم أو رقم الفاتورة...">
+            </div>
+            <button class="bo-add-btn" id="runPurchaseReturnsFilterBtn">تحديث</button>
+            <button class="bo-outline-btn" id="resetPurchaseReturnsFilterBtn">إعادة تعيين</button>
+          </div>
           <div class="bo-table-wrap">
             <table class="bo-table">
               <thead>
@@ -1631,6 +1673,29 @@ a { color: inherit; }
           <div class="bo-section-header">
             <div class="bo-section-title">مرتجعات البيع</div>
             <button class="bo-add-btn" id="addSaleReturnFromBoBtn">+ مرتجع بيع جديد</button>
+          </div>
+          <div class="report-filters">
+            <div class="field"><label>من تاريخ</label><input type="date" id="saleReturnsFromDate"></div>
+            <div class="field"><label>إلى تاريخ</label><input type="date" id="saleReturnsToDate"></div>
+            <div class="field">
+              <label>طريقة الاسترداد</label>
+              <select id="saleReturnsMethodFilter">
+                <option value="">كل الطرق</option>
+                <option value="cash">استرداد نقدي</option>
+                <option value="card">استرداد على البطاقة</option>
+                <option value="transfer">استرداد بتحويل</option>
+                <option value="other">أخرى</option>
+                <option value="credit">رصيد على حساب العميل</option>
+                <option value="exchange">استبدال بصنف آخر</option>
+                <option value="mixed">أكثر من طريقة</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>العميل أو رقم الفاتورة</label>
+              <input type="text" id="saleReturnsTextFilter" placeholder="ابحث بالاسم أو رقم الفاتورة...">
+            </div>
+            <button class="bo-add-btn" id="runSaleReturnsFilterBtn">تحديث</button>
+            <button class="bo-outline-btn" id="resetSaleReturnsFilterBtn">إعادة تعيين</button>
           </div>
           <div class="bo-table-wrap">
             <table class="bo-table">
@@ -4030,6 +4095,10 @@ a { color: inherit; }
                 <input type="checkbox" id="bsRequireCustomer" style="width:auto;">
                 <label for="bsRequireCustomer" style="margin:0;">يجب تحديد العميل قبل إتمام البيع في شاشة الطلب</label>
               </div>
+              <div class="field field-full" style="flex-direction:row; align-items:center; gap:8px;">
+                <input type="checkbox" id="bsShowExpectedCash" style="width:auto;">
+                <label for="bsShowExpectedCash" style="margin:0;">إظهار النقدية المتوقعة في الدرج للكاشير عند إغلاق الوردية (إلغاؤها = عدّ أعمى: يدخل الكاشير المبلغ الفعلي بدون رؤية المتوقع)</label>
+              </div>
               <div class="field field-full">
                 <label>تأثير نفاذ الكمية (عندما يكون رصيد الصنف صفر أو أقل)</label>
                 <select id="bsOutOfStockBehavior">
@@ -4208,6 +4277,7 @@ a { color: inherit; }
             <button class="quick-range-btn active" data-stock-tab="balances">أرصدة المخزون</button>
             <button class="quick-range-btn" data-stock-tab="transfer">نقل البضاعة</button>
             <button class="quick-range-btn" data-stock-tab="adjust">الجرد</button>
+            <button class="quick-range-btn" data-stock-tab="opening">الأرصدة الافتتاحية</button>
             <button class="quick-range-btn" data-stock-tab="warehouses">إدارة المخازن</button>
           </div>
 
@@ -4303,6 +4373,36 @@ a { color: inherit; }
                 </tbody>
               </table>
             </div>
+          </div>
+
+          <div id="stockTab-opening" style="display:none;">
+            <div class="report-subtitle" style="margin-bottom:14px;">تسجيل رصيد أول المدة للأصناف التي لم يتم تسجيل أي حركة (شراء / بيع / تحويل / جرد) عليها بعد في النظام.</div>
+            <div class="search-row" style="margin-bottom:14px; align-items:center;">
+              <select id="openingBalanceWarehouseSelect" style="max-width:260px; padding:12px 14px;"></select>
+              <input type="text" id="openingBalanceSearchInput" placeholder="ابحث باسم الصنف...">
+            </div>
+            <div class="bo-table-wrap">
+              <table class="bo-table">
+                <thead>
+                  <tr>
+                    <th>الصنف</th>
+                    <th>الرصيد الحالي (بالنظام)</th>
+                    <th>الرصيد الافتتاحي</th>
+                  </tr>
+                </thead>
+                <tbody id="openingBalanceTableBody">
+                  <tr><td colspan="3" class="bo-empty">اختر مخزنًا</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="field" style="margin-top:14px;">
+              <label>ملاحظة</label>
+              <input type="text" id="openingBalanceNote" placeholder="مثال: جرد افتتاحي عند بدء العمل بالنظام">
+            </div>
+            <div class="action-row" style="max-width:280px;">
+              <button type="button" class="submit-btn" id="saveOpeningBalanceBtn">حفظ الأرصدة الافتتاحية</button>
+            </div>
+            <div class="error-msg" id="openingBalanceError" style="margin-top:10px;"></div>
           </div>
 
           <div id="stockTab-warehouses" style="display:none;">
@@ -4699,6 +4799,7 @@ a { color: inherit; }
             <option value="deposit">إيداع في خزينة</option>
             <option value="withdrawal">سحب من خزينة</option>
             <option value="transfer">تحويل بين خزينتين</option>
+            <option value="shift_injection">تحويل لوردية مفتوحة</option>
           </select>
         </div>
         <div class="field field-full" id="cashMovementAccountField">
@@ -4706,12 +4807,16 @@ a { color: inherit; }
           <select id="cashMovementAccount" required></select>
         </div>
         <div class="field" id="cashMovementFromField" style="display:none;">
-          <label>من خزينة</label>
+          <label id="cashMovementFromLabel">من خزينة</label>
           <select id="cashMovementFromAccount"></select>
         </div>
         <div class="field" id="cashMovementToField" style="display:none;">
           <label>إلى خزينة</label>
           <select id="cashMovementToAccount"></select>
+        </div>
+        <div class="field" id="cashMovementShiftField" style="display:none;">
+          <label>إلى وردية مفتوحة</label>
+          <select id="cashMovementShiftSelect"></select>
         </div>
         <div class="field field-full"><label>المبلغ</label><input type="number" step="0.01" min="0.01" id="cashMovementAmount" required></div>
         <div class="field field-full"><label>ملاحظة (اختياري)</label><input type="text" id="cashMovementNote"></div>
@@ -4938,6 +5043,13 @@ a { color: inherit; }
             <option value="other">أخرى</option>
           </select>
         </div>
+        <div class="field field-full" id="paymentCashAccountField" style="display:none;">
+          <label>الخزينة *</label>
+          <select id="paymentCashAccount"></select>
+        </div>
+        <div class="field field-full" id="paymentShiftNote" style="display:none;">
+          <div class="shift-forced-note">سيتم احتساب هذه الدفعة ضمن الوردية المفتوحة الحالية تلقائيًا عند إغلاقها.</div>
+        </div>
         <div class="field field-full"><label>ملاحظة (اختياري)</label><input type="text" id="paymentNote"></div>
       </div>
       <div class="error-msg" id="paymentModalError"></div>
@@ -5016,26 +5128,44 @@ a { color: inherit; }
   <div class="modal-box wide">
     <div class="modal-title">مرتجع بيع</div>
     <form id="saleReturnForm">
-      <div class="modal-grid">
-        <div class="field">
+      <div class="ret-invoice-search-row">
+        <div class="field smart-search">
           <label>رقم فاتورة البيع</label>
-          <input type="number" id="saleReturnInvoiceInput" placeholder="اكتب رقم الفاتورة...">
+          <input type="text" id="saleReturnInvoiceInput" placeholder="ابحث برقم الفاتورة..." autocomplete="off" inputmode="numeric">
+          <input type="hidden" id="saleReturnInvoiceValue">
+          <div class="smart-search-dropdown" id="saleReturnInvoiceDropdown"></div>
         </div>
-        <div class="field" style="align-self:flex-end;">
-          <button type="button" class="bo-outline-btn" id="saleReturnSearchBtn" style="width:100%;">بحث عن الفاتورة</button>
+        <div class="field">
+          <button type="button" class="bo-outline-btn" id="saleReturnSearchBtn" style="width:100%;">بحث</button>
         </div>
       </div>
 
-      <div id="saleReturnInvoiceInfo" style="display:none; font-size:13px; color:var(--ink-soft); margin:4px 0 10px;"></div>
+      <div class="error-msg" id="saleReturnModalError"></div>
 
-      <div id="saleReturnLinesSection" style="display:none; margin-top:10px;">
-        <label style="display:block; font-size:13px; font-weight:500; color:var(--ink-soft); margin-bottom:6px;">الأصناف التي سيتم إرجاعها</label>
-        <div class="purchase-line-row header-row">
-          <div>الصنف</div><div>الكمية المباعة</div><div>الكمية المرتجعة</div><div>الإجمالي</div><div></div>
+      <div class="ret-invoice-card" id="saleReturnInvoiceInfo">
+        <div class="ret-invoice-card-top">
+          <span class="ret-invoice-card-title" id="saleReturnInvoiceTitle">—</span>
+          <span class="ret-invoice-card-badge" id="saleReturnInvoiceBadge"></span>
+        </div>
+        <div class="ret-invoice-stats">
+          <div><div class="ret-invoice-stat-label">العميل</div><div class="ret-invoice-stat-value" id="saleReturnStatCustomer" style="direction:rtl; text-align:right;">—</div></div>
+          <div><div class="ret-invoice-stat-label">تاريخ الفاتورة</div><div class="ret-invoice-stat-value" id="saleReturnStatDate">—</div></div>
+          <div><div class="ret-invoice-stat-label">إجمالي الفاتورة</div><div class="ret-invoice-stat-value num" id="saleReturnStatTotal">0.00</div></div>
+        </div>
+      </div>
+
+      <div id="saleReturnLinesSection" style="display:none; margin-top:6px;">
+        <div class="ret-items-toolbar">
+          <label>الأصناف التي سيتم إرجاعها</label>
+          <input type="text" class="ret-item-filter" id="saleReturnItemFilter" placeholder="فلترة الأصناف...">
+        </div>
+        <div class="purchase-line-row header-row ret-row">
+          <div>الصنف</div><div>المتبقي للإرجاع</div><div>الكمية المرتجعة</div><div>الإجمالي</div><div></div>
         </div>
         <div class="purchase-lines-wrap" id="saleReturnLinesWrap"></div>
 
-        <div class="purchase-totals-row">
+        <div class="purchase-totals-row" style="justify-content:space-between; align-items:center;">
+          <div class="ret-selected-count" id="saleReturnSelectedCount"></div>
           <div>إجمالي المرتجع: <span class="num" id="saleReturnTotalLabel">0.00</span></div>
         </div>
 
@@ -5070,8 +5200,6 @@ a { color: inherit; }
         </div>
       </div>
 
-      <div class="error-msg" id="saleReturnModalError"></div>
-
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelSaleReturnBtn">إلغاء</button>
         <button type="submit" class="submit-btn" id="saveSaleReturnBtn" style="display:none;">حفظ المرتجع</button>
@@ -5085,26 +5213,44 @@ a { color: inherit; }
   <div class="modal-box wide">
     <div class="modal-title">مرتجع شراء</div>
     <form id="purchaseReturnForm">
-      <div class="modal-grid">
-        <div class="field">
-          <label>رقم فاتورة الشراء</label>
-          <input type="number" id="purchaseReturnInvoiceInput" placeholder="اكتب رقم الفاتورة...">
+      <div class="ret-invoice-search-row">
+        <div class="field smart-search">
+          <label>رقم الفاتورة أو اسم المورد</label>
+          <input type="text" id="purchaseReturnInvoiceInput" placeholder="ابحث برقم الفاتورة أو اسم المورد..." autocomplete="off">
+          <input type="hidden" id="purchaseReturnInvoiceValue">
+          <div class="smart-search-dropdown" id="purchaseReturnInvoiceDropdown"></div>
         </div>
-        <div class="field" style="align-self:flex-end;">
-          <button type="button" class="bo-outline-btn" id="purchaseReturnSearchBtn" style="width:100%;">بحث عن الفاتورة</button>
+        <div class="field">
+          <button type="button" class="bo-outline-btn" id="purchaseReturnSearchBtn" style="width:100%;">بحث</button>
         </div>
       </div>
 
-      <div id="purchaseReturnInvoiceInfo" style="display:none; font-size:13px; color:var(--ink-soft); margin:4px 0 10px;"></div>
+      <div class="error-msg" id="purchaseReturnModalError"></div>
 
-      <div id="purchaseReturnLinesSection" style="display:none; margin-top:10px;">
-        <label style="display:block; font-size:13px; font-weight:500; color:var(--ink-soft); margin-bottom:6px;">الأصناف التي سيتم إرجاعها إلى المورد</label>
-        <div class="purchase-line-row header-row">
-          <div>الصنف</div><div>الكمية المشتراة</div><div>الكمية المرتجعة</div><div>الإجمالي</div><div></div>
+      <div class="ret-invoice-card" id="purchaseReturnInvoiceInfo">
+        <div class="ret-invoice-card-top">
+          <span class="ret-invoice-card-title" id="purchaseReturnInvoiceTitle">—</span>
+          <span class="ret-invoice-card-badge" id="purchaseReturnInvoiceBadge"></span>
+        </div>
+        <div class="ret-invoice-stats">
+          <div><div class="ret-invoice-stat-label">المورد</div><div class="ret-invoice-stat-value" id="purchaseReturnStatSupplier" style="direction:rtl; text-align:right;">—</div></div>
+          <div><div class="ret-invoice-stat-label">تاريخ الفاتورة</div><div class="ret-invoice-stat-value" id="purchaseReturnStatDate">—</div></div>
+          <div><div class="ret-invoice-stat-label">إجمالي الفاتورة</div><div class="ret-invoice-stat-value num" id="purchaseReturnStatTotal">0.00</div></div>
+        </div>
+      </div>
+
+      <div id="purchaseReturnLinesSection" style="display:none; margin-top:6px;">
+        <div class="ret-items-toolbar">
+          <label>الأصناف التي سيتم إرجاعها إلى المورد</label>
+          <input type="text" class="ret-item-filter" id="purchaseReturnItemFilter" placeholder="فلترة الأصناف...">
+        </div>
+        <div class="purchase-line-row header-row ret-row">
+          <div>الصنف</div><div>متاح للإرجاع</div><div>الكمية المرتجعة</div><div>الإجمالي</div><div></div>
         </div>
         <div class="purchase-lines-wrap" id="purchaseReturnLinesWrap"></div>
 
-        <div class="purchase-totals-row">
+        <div class="purchase-totals-row" style="justify-content:space-between; align-items:center;">
+          <div class="ret-selected-count" id="purchaseReturnSelectedCount"></div>
           <div>إجمالي المرتجع: <span class="num" id="purchaseReturnTotalLabel">0.00</span></div>
         </div>
 
@@ -5113,8 +5259,6 @@ a { color: inherit; }
           <input type="text" id="purchaseReturnReasonInput" placeholder="مثال: بضاعة تالفة">
         </div>
       </div>
-
-      <div class="error-msg" id="purchaseReturnModalError"></div>
 
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelPurchaseReturnBtn">إلغاء</button>
@@ -5137,6 +5281,8 @@ a { color: inherit; }
         <div class="field"><label>مكافأة (اختياري)</label><input type="number" id="salaryBonus" step="0.01" min="0" value="0"></div>
         <div class="field"><label>خصم (اختياري)</label><input type="number" id="salaryDeduction" step="0.01" min="0" value="0"></div>
         <div class="field field-full"><label>الصافي المدفوع</label><input type="number" id="salaryNetAmount" step="0.01" min="0" required value="0"></div>
+        <div class="field"><label>الفرع *</label><select id="salaryBranchSelect" required></select></div>
+        <div class="field"><label>الخزينة المخصوم منها *</label><select id="salaryCashAccount" required></select></div>
         <div class="field field-full"><label>ملاحظات (اختياري)</label><input type="text" id="salaryNotes"></div>
       </div>
       <div class="error-msg" id="salaryModalError"></div>
@@ -5167,6 +5313,13 @@ a { color: inherit; }
           </select>
         </div>
         <div class="field"><label>التاريخ</label><input type="date" id="expenseDate" required></div>
+        <div class="field field-full" id="expenseCashAccountField" style="display:none;">
+          <label>الخزينة المخصوم منها *</label>
+          <select id="expenseCashAccount"></select>
+        </div>
+        <div class="field field-full" id="expenseShiftNote" style="display:none;">
+          <div class="shift-forced-note">سيُخصم هذا المصروف من الوردية المفتوحة الحالية تلقائيًا عند إغلاقها.</div>
+        </div>
         <div class="field field-full"><label>ملاحظات (اختياري)</label><input type="text" id="expenseNotes"></div>
       </div>
       <div class="error-msg" id="expenseModalError"></div>
@@ -5480,6 +5633,29 @@ a { color: inherit; }
   </div>
 </div>
 
+<!-- Modal: سحب نقدي أثناء الوردية (Cash Drop) -->
+<div class="modal-overlay" id="cashDropModalOverlay">
+  <div class="modal-box" style="max-width:420px;">
+    <div class="modal-title">سحب نقدي من الدرج</div>
+    <div class="shift-forced-note">بيتم ترحيل المبلغ فورًا لخزنة الفرع المختارة، وبيتخصم تلقائيًا من النقدية المتوقعة في الدرج عند إغلاق الوردية.</div>
+    <form id="cashDropForm">
+      <div class="field field-full"><label for="cashDropAccount">الخزنة المستلمة *</label><select id="cashDropAccount" required></select></div>
+      <div class="field field-full"><label for="cashDropAmount">المبلغ *</label><input type="number" id="cashDropAmount" min="0.01" step="0.01" placeholder="أدخل المبلغ المراد سحبه من الدرج" required></div>
+      <div class="field field-full"><label for="cashDropNote">ملاحظات (اختياري)</label><input type="text" id="cashDropNote" placeholder="سبب السحب..."></div>
+      <div class="error-msg" id="cashDropError"></div>
+      <div id="cashDropHistoryWrap" style="display:none; margin-top:10px;">
+        <div class="z-report-section-title">سحوبات هذه الوردية</div>
+        <div id="cashDropHistoryList"></div>
+        <div class="r-row" style="font-weight:700; margin-top:6px;"><span>إجمالي السحوبات</span><span class="num" id="cashDropHistoryTotal">0.00</span></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelCashDropBtn">إغلاق</button>
+        <button type="submit" class="submit-btn" style="margin-top:0;" id="submitCashDropBtn">تسجيل السحب</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Modal: فتح وردية -->
 <div class="modal-overlay" id="openShiftModalOverlay">
   <div class="modal-box" style="max-width:420px;">
@@ -5511,13 +5687,15 @@ a { color: inherit; }
       <div class="shift-summary-box"><div class="shift-summary-box-label">مقبوضات نقدية (تحصيل من عملاء)</div><div class="shift-summary-box-value num" id="csCashReceipts">0.00</div></div>
       <div class="shift-summary-box"><div class="shift-summary-box-label">مدفوعات نقدية (سداد لموردين)</div><div class="shift-summary-box-value num" id="csCashPayouts">0.00</div></div>
       <div class="shift-summary-box"><div class="shift-summary-box-label">مصروفات نقدية</div><div class="shift-summary-box-value num" id="csCashExpenses">0.00</div></div>
+      <div class="shift-summary-box"><div class="shift-summary-box-label">سحوبات نقدية أثناء الوردية</div><div class="shift-summary-box-value num" id="csCashDrops">0.00</div></div>
+      <div class="shift-summary-box"><div class="shift-summary-box-label">تحويلات مضافة من المكتب الخلفي</div><div class="shift-summary-box-value num" id="csCashInjections">0.00</div></div>
     </div>
-    <div class="shift-summary-box" style="margin-bottom:14px;">
-      <div class="shift-summary-box-label">صافي النقدية المتوقع في الدرج (عهدة + مبيعات نقدي + مقبوضات − مدفوعات − مصروفات)</div>
+    <div class="shift-summary-box" id="csExpectedCashBox" style="margin-bottom:14px;">
+      <div class="shift-summary-box-label">صافي النقدية المتوقع في الدرج (عهدة + مبيعات نقدي + مقبوضات + تحويلات واردة − مدفوعات − مصروفات − سحوبات)</div>
       <div class="shift-summary-box-value num" id="csExpectedCash" style="font-size:19px;">0.00</div>
     </div>
     <div class="field field-full"><label for="csCountedInput">النقدية الفعلية بعد الجرد *</label><input type="number" id="csCountedInput" min="0" step="0.01" placeholder="أدخل المبلغ الذي تم عدّه في الدرج"></div>
-    <div class="shift-diff-row">
+    <div class="shift-diff-row" id="csDiffRow">
       <span class="shift-diff-label">الفرق (عجز / زيادة)</span>
       <span class="shift-diff-value num" id="csDiffValue">—</span>
     </div>
@@ -6732,6 +6910,7 @@ function cachePosEls() {
   posEls.shiftBadge = document.getElementById('shiftBadge');
   posEls.shiftStatusLabel = document.getElementById('shiftStatusLabel');
   posEls.closeShiftBtn = document.getElementById('closeShiftBtn');
+  posEls.cashDropBtn = document.getElementById('cashDropBtn');
 }
 
 function openMobileCart() {
@@ -6769,14 +6948,16 @@ function updateShiftBadge() {
   if (!posEls.shiftBadge) return;
   if (currentShift) {
     const t = new Date(currentShift.opening_at);
-    posEls.shiftStatusLabel.textContent = `وردية مفتوحة منذ ${t.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}`
+    posEls.shiftStatusLabel.textContent = `وردية مفتوحة منذ ${t.toLocaleDateString('ar-EG')} ${t.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}`
       + (currentShift.pending ? ' (غير متزامنة)' : '');
     posEls.shiftBadge.classList.remove('closed');
     posEls.closeShiftBtn.style.display = 'inline-block';
+    if (posEls.cashDropBtn) posEls.cashDropBtn.style.display = 'inline-block';
   } else {
     posEls.shiftStatusLabel.textContent = 'لا توجد وردية مفتوحة';
     posEls.shiftBadge.classList.add('closed');
     posEls.closeShiftBtn.style.display = 'none';
+    if (posEls.cashDropBtn) posEls.cashDropBtn.style.display = 'none';
   }
   if (posEls.checkoutBtn) posEls.checkoutBtn.disabled = cart.length === 0 || !currentShift;
 }
@@ -6874,16 +7055,34 @@ async function submitOpenShift(e) {
 }
 
 async function computeShiftCashSummary(shiftId, openingAmount) {
-  const [{ data: sales, error: salesErr }, { data: salePayments, error: salePaymentsErr }, { data: payments, error: paymentsErr }, { data: expenses, error: expensesErr }] = await Promise.all([
+  const [{ data: sales, error: salesErr }, { data: salePayments, error: salePaymentsErr }, { data: payments, error: paymentsErr }, { data: expenses, error: expensesErr }, { data: soldItems, error: soldItemsErr }, { data: cashDrops, error: cashDropsErr }, { data: cashInjections, error: cashInjectionsErr }] = await Promise.all([
     supabaseClient.from('sales').select('id, total, paid_amount, payment_method').eq('shift_id', shiftId).eq('status', 'completed'),
     supabaseClient.from('sale_payments').select('amount, method, sales!inner(shift_id, status)').eq('sales.shift_id', shiftId).eq('sales.status', 'completed'),
     supabaseClient.from('payments').select('amount, method, payment_type').eq('shift_id', shiftId),
     supabaseClient.from('expenses').select('amount, payment_method').eq('shift_id', shiftId),
+    supabaseClient.from('sale_items').select('product_id, quantity, total, products(name), sales!inner(shift_id, status)').eq('sales.shift_id', shiftId).eq('sales.status', 'completed'),
+    supabaseClient.from('cash_account_transactions').select('amount').eq('reference_id', shiftId).eq('type', 'shift_cash_drop'),
+    supabaseClient.from('cash_account_transactions').select('amount').eq('reference_id', shiftId).eq('type', 'shift_cash_injection'),
   ]);
   if (salesErr) throw salesErr;
   if (salePaymentsErr) throw salePaymentsErr;
   if (paymentsErr) throw paymentsErr;
   if (expensesErr) throw expensesErr;
+  if (soldItemsErr) throw soldItemsErr;
+  if (cashDropsErr) throw cashDropsErr;
+  if (cashInjectionsErr) throw cashInjectionsErr;
+
+  // تجميع الأصناف المباعة بالوردية: الكمية والإجمالي لكل صنف (لعرضها وطباعتها في تقرير Z)
+  const itemsByProduct = new Map();
+  (soldItems || []).forEach(it => {
+    const key = it.product_id || it.products?.name || Math.random();
+    const name = it.products?.name || 'صنف محذوف';
+    const entry = itemsByProduct.get(key) || { name, quantity: 0, total: 0 };
+    entry.quantity += Number(it.quantity) || 0;
+    entry.total += Number(it.total) || 0;
+    itemsByProduct.set(key, entry);
+  });
+  const itemsSummary = Array.from(itemsByProduct.values()).sort((a, b) => b.total - a.total);
 
   // بنعتمد على sale_payments (تفصيل كل طريقة دفع فعليًا) بدل sales.payment_method
   // حتى تُحسَب الفواتير التي دُفعت بأكثر من طريقة (دفع مقسّم) بشكل صحيح لكل طريقة على حدة
@@ -6906,10 +7105,124 @@ async function computeShiftCashSummary(shiftId, openingAmount) {
   const cashExpenses = (expenses || [])
     .filter(e => e.payment_method === 'cash')
     .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+  const cashDropsTotal = (cashDrops || []).reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
+  const cashInjectionsTotal = (cashInjections || []).reduce((sum, d) => sum + Math.abs(Number(d.amount) || 0), 0);
 
-  const expectedCash = Number(openingAmount) + byMethod.cash + cashReceipts - cashPayouts - cashExpenses;
+  const expectedCash = Number(openingAmount) + byMethod.cash + cashReceipts - cashPayouts - cashExpenses - cashDropsTotal + cashInjectionsTotal;
 
-  return { byMethod, byMethodCount, cashReceipts, cashPayouts, cashExpenses, expectedCash, invoiceCount: (sales || []).length, totalSales };
+  return { byMethod, byMethodCount, cashReceipts, cashPayouts, cashExpenses, cashDropsTotal, cashInjectionsTotal, expectedCash, invoiceCount: (sales || []).length, totalSales, itemsSummary };
+}
+
+// ------------------------------------------------------------
+// سحب نقدي أثناء الوردية (Cash Drop): بيسجل حركة "shift_cash_drop" في
+// cash_account_transactions (نفس آلية ترحيل النقدية عند إغلاق الوردية)،
+// والتريجر fn_apply_cash_transaction بيحدّث رصيد الخزينة المختارة تلقائيًا.
+// ملحوظة: يتطلب تشغيل SQL الترحيل المرفق أولاً في Supabase (نوع الحركة
+// الجديد + صلاحيات RLS للكاشير) قبل استخدام هذه الميزة.
+// ------------------------------------------------------------
+// ------------------------------------------------------------
+// دالة عامة لتسجيل حركة خصم/إضافة على خزينة معينة (تُستخدم مع المصروفات
+// وسداد الموردين وتحصيل العملاء والرواتب لما تتسجل من غير سياق وردية
+// مفتوحة). amount لازم يكون موجّه بالإشارة الصحيحة مسبقًا (سالب = خصم).
+// ------------------------------------------------------------
+async function postCashAccountAdjustment(cashAccountId, amount, type, referenceId, note) {
+  if (!cashAccountId) return;
+  const { error } = await supabaseClient.from('cash_account_transactions').insert({
+    cash_account_id: cashAccountId, type, amount, reference_id: referenceId || null, note: note || null, user_id: currentProfile.id,
+  });
+  if (error) throw error;
+}
+
+let cashDropAccountsLoaded = false;
+
+async function loadCashDropAccounts() {
+  const sel = document.getElementById('cashDropAccount');
+  try {
+    const { data, error } = await supabaseClient.from('cash_accounts')
+      .select('id, name, is_main').eq('branch_id', currentProfile.branch_id).eq('type', 'cash').eq('is_active', true)
+      .order('is_main', { ascending: false });
+    if (error) throw error;
+    sel.innerHTML = (data || []).map(a => `<option value="${a.id}">${escapeHtml(a.name)}${a.is_main ? ' (الرئيسية)' : ''}</option>`).join('');
+    cashDropAccountsLoaded = true;
+  } catch (err) {
+    console.error(err);
+    sel.innerHTML = '';
+  }
+}
+
+async function loadCashDropHistory() {
+  const wrap = document.getElementById('cashDropHistoryWrap');
+  const list = document.getElementById('cashDropHistoryList');
+  if (!currentShift) { wrap.style.display = 'none'; return; }
+  try {
+    const { data, error } = await supabaseClient.from('cash_account_transactions')
+      .select('amount, note, created_at, cash_accounts(name)')
+      .eq('reference_id', currentShift.id).eq('type', 'shift_cash_drop')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    if (!data || data.length === 0) { wrap.style.display = 'none'; return; }
+    list.innerHTML = data.map(d => `
+      <div class="r-row"><span>${new Date(d.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })} — ${escapeHtml(d.cash_accounts?.name || '')}${d.note ? ' — ' + escapeHtml(d.note) : ''}</span><span class="num">${Number(d.amount).toFixed(2)}</span></div>`).join('');
+    document.getElementById('cashDropHistoryTotal').textContent = data.reduce((s, d) => s + Number(d.amount), 0).toFixed(2);
+    wrap.style.display = 'block';
+  } catch (err) {
+    console.error(err);
+    wrap.style.display = 'none';
+  }
+}
+
+async function openCashDropModal() {
+  if (!currentShift) return;
+  if (currentShift.pending) {
+    showToast('هذه الوردية لا تزال بانتظار المزامنة — يرجى الانتظار حتى تتم مزامنتها قبل تسجيل سحب نقدي', true);
+    return;
+  }
+  if (!appIsOnline) {
+    showToast('يتطلب تسجيل السحب النقدي اتصالاً بالإنترنت', true);
+    return;
+  }
+  const errEl = document.getElementById('cashDropError');
+  errEl.textContent = ''; errEl.classList.remove('show');
+  document.getElementById('cashDropAmount').value = '';
+  document.getElementById('cashDropNote').value = '';
+  await loadCashDropAccounts();
+  await loadCashDropHistory();
+  document.getElementById('cashDropModalOverlay').classList.add('show');
+}
+
+function closeCashDropModal() {
+  document.getElementById('cashDropModalOverlay').classList.remove('show');
+}
+
+async function submitCashDrop(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('cashDropError');
+  errEl.classList.remove('show');
+  const accountId = document.getElementById('cashDropAccount').value;
+  const amountRaw = document.getElementById('cashDropAmount').value;
+  const amount = Number(amountRaw);
+  const note = document.getElementById('cashDropNote').value.trim();
+  if (!accountId) { errEl.textContent = 'اختر الخزنة المستلمة'; errEl.classList.add('show'); return; }
+  if (amountRaw === '' || isNaN(amount) || amount <= 0) { errEl.textContent = 'أدخل مبلغًا صحيحًا أكبر من صفر'; errEl.classList.add('show'); return; }
+  const btn = document.getElementById('submitCashDropBtn');
+  btn.disabled = true; btn.textContent = 'جاري التسجيل...';
+  try {
+    const { error } = await supabaseClient.from('cash_account_transactions').insert({
+      cash_account_id: accountId, type: 'shift_cash_drop', amount,
+      reference_id: currentShift.id, note: note || null, user_id: currentProfile.id,
+    });
+    if (error) throw error;
+    showToast('تم تسجيل السحب النقدي وترحيله للخزنة بنجاح');
+    document.getElementById('cashDropAmount').value = '';
+    document.getElementById('cashDropNote').value = '';
+    await loadCashDropHistory();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'تعذر تسجيل السحب النقدي';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'تسجيل السحب';
+  }
 }
 
 async function openCloseShiftModal() {
@@ -6939,11 +7252,18 @@ async function openCloseShiftModal() {
     document.getElementById('csCashReceipts').textContent = summary.cashReceipts.toFixed(2);
     document.getElementById('csCashPayouts').textContent = summary.cashPayouts.toFixed(2);
     document.getElementById('csCashExpenses').textContent = summary.cashExpenses.toFixed(2);
+    document.getElementById('csCashDrops').textContent = summary.cashDropsTotal.toFixed(2);
+    document.getElementById('csCashInjections').textContent = summary.cashInjectionsTotal.toFixed(2);
     document.getElementById('csExpectedCash').textContent = summary.expectedCash.toFixed(2);
     document.getElementById('csCountedInput').value = '';
     document.getElementById('closeShiftNotes').value = '';
     document.getElementById('csDiffValue').textContent = '—';
     document.getElementById('csDiffValue').style.color = 'var(--ink)';
+    // لو الإعداد متوقف، نخفي مربع النقدية المتوقعة وصف الفرق الحي عن الكاشير
+    // ليدخل المبلغ الفعلي بعد العدّ الفعلي بدون أي تلميح مسبق (عدّ أعمى لمنع مطابقة الرقم بدل العدّ الحقيقي)
+    const showExpected = branchSettings.show_expected_cash_to_cashier;
+    document.getElementById('csExpectedCashBox').style.display = showExpected ? '' : 'none';
+    document.getElementById('csDiffRow').style.display = showExpected ? '' : 'none';
     const errEl = document.getElementById('closeShiftError');
     errEl.textContent = ''; errEl.classList.remove('show');
 
@@ -7010,6 +7330,20 @@ function zReportMethodRow(labelAr, key, summary) {
   return `<div class="r-row"><span>${labelAr} <span style="color:#888;">(${count} عملية)</span></span><span class="num">${amount.toFixed(2)} <span style="color:#888;">${pct.toFixed(0)}%</span></span></div>`;
 }
 
+function zReportItemsSection(itemsSummary) {
+  if (!itemsSummary || itemsSummary.length === 0) return '';
+  const totalQty = itemsSummary.reduce((s, it) => s + it.quantity, 0);
+  const rows = itemsSummary.map(it => `
+    <div class="r-item-row">
+      <div class="r-item-name">${escapeHtml(it.name)}</div>
+      <div class="r-item-meta"><span>الكمية: ${Number(it.quantity)}</span><span>${it.total.toFixed(2)}</span></div>
+    </div>`).join('');
+  return `
+    <div class="r-divider"></div>
+    <div class="z-report-section-title">الأصناف المباعة (${itemsSummary.length} صنف — إجمالي الكمية ${totalQty})</div>
+    ${rows}`;
+}
+
 function showZReport(shift, summary) {
   document.getElementById('zReportLogoutBtn').style.display = 'inline-block';
   document.getElementById('closeZReportBtn').style.display = 'none';
@@ -7034,6 +7368,7 @@ function showZReport(shift, summary) {
     ${zReportMethodRow('تحويل', 'transfer', summary)}
     ${zReportMethodRow('أخرى', 'other', summary)}
     <div class="r-row" style="font-weight:700;"><span>إجمالي المبيعات</span><span class="num">${summary.totalSales.toFixed(2)}</span></div>
+    ${zReportItemsSection(summary.itemsSummary)}
     <div class="r-divider"></div>
     <div class="z-report-section-title">جرد الخزينة</div>
     <div class="r-row"><span>العهدة الافتتاحية</span><span class="num">${Number(shift.opening_amount).toFixed(2)}</span></div>
@@ -7041,6 +7376,8 @@ function showZReport(shift, summary) {
     <div class="r-row"><span>مقبوضات نقدية (تحصيل من عملاء)</span><span class="num">${summary.cashReceipts.toFixed(2)}</span></div>
     <div class="r-row"><span>مدفوعات نقدية (سداد لموردين)</span><span class="num">−${summary.cashPayouts.toFixed(2)}</span></div>
     <div class="r-row"><span>مصروفات نقدية</span><span class="num">−${summary.cashExpenses.toFixed(2)}</span></div>
+    <div class="r-row"><span>سحوبات نقدية أثناء الوردية</span><span class="num">−${summary.cashDropsTotal.toFixed(2)}</span></div>
+    <div class="r-row"><span>تحويلات مضافة من المكتب الخلفي</span><span class="num">+${summary.cashInjectionsTotal.toFixed(2)}</span></div>
     <div class="r-row" style="font-weight:700;"><span>النقدية المتوقعة</span><span class="num">${Number(shift.expected_cash).toFixed(2)}</span></div>
     <div class="r-row"><span>النقدية الفعلية (بعد الجرد)</span><span class="num">${Number(shift.counted_cash).toFixed(2)}</span></div>
     <div class="r-total-row"><span>${diffLabel}</span><span class="num">${diff >= 0 ? '+' : ''}${diff.toFixed(2)}</span></div>
@@ -7268,6 +7605,9 @@ function bindPosEvents() {
   document.getElementById('openShiftForm').addEventListener('submit', submitOpenShift);
   document.getElementById('openShiftLogoutBtn').addEventListener('click', doLogout);
   document.getElementById('closeShiftBtn').addEventListener('click', openCloseShiftModal);
+  document.getElementById('cashDropBtn').addEventListener('click', openCashDropModal);
+  document.getElementById('cancelCashDropBtn').addEventListener('click', closeCashDropModal);
+  document.getElementById('cashDropForm').addEventListener('submit', submitCashDrop);
   document.getElementById('cancelCloseShiftBtn').addEventListener('click', () => {
     document.getElementById('closeShiftModalOverlay').classList.remove('show');
   });
@@ -7284,8 +7624,27 @@ function bindPosEvents() {
   document.getElementById('saleReturnModalOverlay').addEventListener('click', (e) => {
     if (e.target.id === 'saleReturnModalOverlay') closeSaleReturnModal();
   });
-  document.getElementById('saleReturnSearchBtn').addEventListener('click', searchSaleForReturn);
+  document.getElementById('saleReturnSearchBtn').addEventListener('click', () => searchSaleForReturn());
   document.getElementById('saleReturnForm').addEventListener('submit', saveSaleReturn);
+  document.getElementById('saleReturnItemFilter').addEventListener('input', (e) => {
+    saleReturnItemFilterText = e.target.value;
+    renderSaleReturnLines();
+  });
+  saleReturnInvoiceSearch = createSmartSearch({
+    input: document.getElementById('saleReturnInvoiceInput'),
+    hidden: document.getElementById('saleReturnInvoiceValue'),
+    dropdown: document.getElementById('saleReturnInvoiceDropdown'),
+    getItems: () => saleReturnRecentSales.map(s => ({
+      value: s.invoice_number,
+      label: `فاتورة #${s.invoice_number}`,
+      sublabel: `${s.customers?.name || 'عميل نقدي'} — ${Number(s.total).toFixed(2)} — ${new Date(s.created_at).toLocaleDateString('ar-EG')}`,
+    })),
+    onChange: (item) => searchSaleForReturn(item.value),
+  });
+  document.getElementById('saleReturnInvoiceInput').addEventListener('input', () => {
+    // بمجرد ما المستخدم يعدّل النص يدويًا، نلغي القيمة المختارة سابقًا من الاقتراحات
+    document.getElementById('saleReturnInvoiceValue').value = '';
+  });
 
   // الاسترداد بأكثر من طريقة دفع فى مرتجع البيع
   document.getElementById('saleReturnMethodSelect').addEventListener('change', (e) => {
@@ -7869,7 +8228,8 @@ const defaultBranchSettings = {
   continuous_invoice_numbering: true,
   show_available_qty_pos: true,
   require_customer_pos: false,
-  out_of_stock_behavior: 'warn' // 'warn' = يسمح مع تنبيه | 'block' = يرفض البيع | 'allow' = يسمح بدون أي تنبيه
+  out_of_stock_behavior: 'warn', // 'warn' = يسمح مع تنبيه | 'block' = يرفض البيع | 'allow' = يسمح بدون أي تنبيه
+  show_expected_cash_to_cashier: true // false = عدّ نقدي أعمى: الكاشير يدخل النقدية الفعلية بدون رؤية النقدية المتوقعة مسبقًا
 };
 const defaultPrintSettings = {
   print_logo: true,
@@ -7922,6 +8282,7 @@ function initBranchSettingsSection() {
   document.getElementById('bsShowAvailableQty').checked = branchSettings.show_available_qty_pos;
   document.getElementById('bsRequireCustomer').checked = branchSettings.require_customer_pos;
   document.getElementById('bsOutOfStockBehavior').value = branchSettings.out_of_stock_behavior;
+  document.getElementById('bsShowExpectedCash').checked = branchSettings.show_expected_cash_to_cashier;
   document.getElementById('branchSettingsForm').addEventListener('submit', saveBranchSettings);
 }
 
@@ -7936,6 +8297,7 @@ async function saveBranchSettings(e) {
     show_available_qty_pos: document.getElementById('bsShowAvailableQty').checked,
     require_customer_pos: document.getElementById('bsRequireCustomer').checked,
     out_of_stock_behavior: document.getElementById('bsOutOfStockBehavior').value,
+    show_expected_cash_to_cashier: document.getElementById('bsShowExpectedCash').checked,
     updated_at: new Date().toISOString()
   };
   btn.disabled = true; btn.textContent = 'جاري الحفظ...';
@@ -8595,15 +8957,37 @@ function showReceipt(sale) {
 // مرتجع بيع (من شاشة الكاشير)
 // ------------------------------------------------------------
 let saleReturnSale = null;
-let saleReturnLines = []; // [{ saleItemId, productId, name, soldQty, unitPrice, returnQty }]
+let saleReturnLines = []; // [{ saleItemId, productId, name, soldQty, alreadyReturnedQty, availableQty, unitPrice, returnQty }]
 let saleReturnSplitLines = []; // [{ method, amount }] — لاسترداد قيمة المرتجع بأكثر من طريقة فى نفس العملية
+let saleReturnItemFilterText = '';
+let saleReturnRecentSales = []; // آخر الفواتير — تُستخدم في اقتراحات البحث السريع
+let saleReturnInvoiceSearch = null;
+
+async function loadSaleReturnRecentSales() {
+  if (!appIsOnline) { saleReturnRecentSales = []; return; }
+  try {
+    const { data, error } = await supabaseClient
+      .from('sales')
+      .select('id, invoice_number, total, created_at, customers(name)')
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    saleReturnRecentSales = data || [];
+  } catch (err) {
+    console.error(err);
+    saleReturnRecentSales = [];
+  }
+}
 
 function openSaleReturnModal() {
   saleReturnSale = null;
   saleReturnLines = [];
   saleReturnSplitLines = [];
+  saleReturnItemFilterText = '';
   document.getElementById('saleReturnInvoiceInput').value = '';
-  document.getElementById('saleReturnInvoiceInfo').style.display = 'none';
+  document.getElementById('saleReturnInvoiceValue').value = '';
+  document.getElementById('saleReturnItemFilter').value = '';
+  document.getElementById('saleReturnInvoiceInfo').classList.remove('show');
   document.getElementById('saleReturnLinesSection').style.display = 'none';
   document.getElementById('saveSaleReturnBtn').style.display = 'none';
   document.getElementById('saleReturnReasonInput').value = '';
@@ -8615,6 +8999,8 @@ function openSaleReturnModal() {
   renderSaleReturnSplitRows();
   document.getElementById('saleReturnModalError').classList.remove('show');
   document.getElementById('saleReturnModalOverlay').classList.add('show');
+  loadSaleReturnRecentSales();
+  setTimeout(() => document.getElementById('saleReturnInvoiceInput').focus(), 50);
 }
 
 // ------------------------------------------------------------
@@ -8693,14 +9079,22 @@ function factorForSaleItem(productId, productUnitId) {
   return unit ? (Number(unit.factor_to_base) || 1) : 1;
 }
 
-async function searchSaleForReturn() {
+async function searchSaleForReturn(invoiceNumberOverride) {
   const errEl = document.getElementById('saleReturnModalError');
   errEl.classList.remove('show');
-  const invoiceNumber = Number(document.getElementById('saleReturnInvoiceInput').value);
-  if (!invoiceNumber) { errEl.textContent = 'اكتب رقم فاتورة صحيح'; errEl.classList.add('show'); return; }
+  const hiddenVal = document.getElementById('saleReturnInvoiceValue').value;
+  const rawValue = invoiceNumberOverride ?? (hiddenVal !== '' ? hiddenVal : document.getElementById('saleReturnInvoiceInput').value);
+  const invoiceNumber = Number(rawValue);
+  if (!invoiceNumber) { errEl.textContent = 'اكتب رقم فاتورة صحيح، أو اختر فاتورة من قائمة الاقتراحات'; errEl.classList.add('show'); return; }
+
+  const searchBtn = document.getElementById('saleReturnSearchBtn');
+  searchBtn.disabled = true;
+  const originalBtnText = searchBtn.textContent;
+  searchBtn.textContent = 'جارٍ البحث...';
 
   let sale = null;
   let fromCache = false;
+  let alreadyReturnedByItem = {};
 
   if (appIsOnline) {
     try {
@@ -8711,6 +9105,16 @@ async function searchSaleForReturn() {
         .maybeSingle();
       if (error) throw error;
       sale = data;
+      if (sale) {
+        // نجيب الكميات المرتجعة سابقًا لكل صنف في نفس الفاتورة، عشان نمنع تكرار إرجاع كمية أكبر من المتاح
+        const { data: priorReturnItems } = await supabaseClient
+          .from('sale_return_items')
+          .select('sale_item_id, quantity, sale_returns!inner(sale_id)')
+          .eq('sale_returns.sale_id', sale.id);
+        (priorReturnItems || []).forEach(ri => {
+          alreadyReturnedByItem[ri.sale_item_id] = (alreadyReturnedByItem[ri.sale_item_id] || 0) + Number(ri.quantity);
+        });
+      }
     } catch (err) {
       if (isNetworkError(err)) { appIsOnline = false; updateOfflineBanner(); }
       else console.error(err);
@@ -8722,9 +9126,11 @@ async function searchSaleForReturn() {
     const cached = findCachedSaleByInvoice(invoiceNumber);
     if (cached) {
       if (cached.pending) {
+        searchBtn.disabled = false;
+        searchBtn.textContent = originalBtnText;
         errEl.textContent = `الفاتورة (${cached.invoiceLabel}) لا تزال بانتظار المزامنة — يرجى الانتظار حتى تتم مزامنتها قبل تنفيذ مرتجع عليها`;
         errEl.classList.add('show');
-        document.getElementById('saleReturnInvoiceInfo').style.display = 'none';
+        document.getElementById('saleReturnInvoiceInfo').classList.remove('show');
         document.getElementById('saleReturnLinesSection').style.display = 'none';
         document.getElementById('saveSaleReturnBtn').style.display = 'none';
         return;
@@ -8742,12 +9148,15 @@ async function searchSaleForReturn() {
     }
   }
 
+  searchBtn.disabled = false;
+  searchBtn.textContent = originalBtnText;
+
   if (!sale) {
     errEl.textContent = appIsOnline
       ? 'لا توجد فاتورة بيع بهذا الرقم'
       : 'لا توجد فاتورة بهذا الرقم في النسخة المحفوظة محليًا — الفواتير الأقدم تتطلب اتصالاً بالإنترنت';
     errEl.classList.add('show');
-    document.getElementById('saleReturnInvoiceInfo').style.display = 'none';
+    document.getElementById('saleReturnInvoiceInfo').classList.remove('show');
     document.getElementById('saleReturnLinesSection').style.display = 'none';
     document.getElementById('saveSaleReturnBtn').style.display = 'none';
     return;
@@ -8755,18 +9164,27 @@ async function searchSaleForReturn() {
 
   saleReturnSale = sale;
   const date = new Date(sale.created_at).toLocaleDateString('ar-EG');
-  const infoEl = document.getElementById('saleReturnInvoiceInfo');
-  infoEl.textContent = `العميل: ${sale.customers?.name || 'عميل نقدي'} — الإجمالي: ${Number(sale.total).toFixed(2)} — التاريخ: ${date}`
-    + (fromCache ? ' (من النسخة المحلية)' : '');
-  infoEl.style.display = 'block';
+  document.getElementById('saleReturnInvoiceTitle').textContent = `فاتورة بيع #${sale.invoice_number ?? sale.id}`;
+  document.getElementById('saleReturnInvoiceBadge').textContent = fromCache ? 'من النسخة المحلية' : date;
+  document.getElementById('saleReturnStatCustomer').textContent = sale.customers?.name || 'عميل نقدي';
+  document.getElementById('saleReturnStatDate').textContent = date;
+  document.getElementById('saleReturnStatTotal').textContent = Number(sale.total).toFixed(2);
+  document.getElementById('saleReturnInvoiceInfo').classList.add('show');
 
-  saleReturnLines = (sale.sale_items || []).map(si => ({
-    saleItemId: si.id, productId: si.product_id, name: si.products?.name || '—',
-    soldQty: Number(si.quantity), unitPrice: Number(si.unit_price), returnQty: 0,
-    warehouseId: si.warehouse_id || null,
-    factor: si._cachedFactor != null ? si._cachedFactor : factorForSaleItem(si.product_id, si.product_unit_id),
-  }));
+  saleReturnLines = (sale.sale_items || []).map(si => {
+    const soldQty = Number(si.quantity);
+    const alreadyReturnedQty = alreadyReturnedByItem[si.id] || 0;
+    return {
+      saleItemId: si.id, productId: si.product_id, name: si.products?.name || '—',
+      soldQty, alreadyReturnedQty, availableQty: Math.max(0, soldQty - alreadyReturnedQty),
+      unitPrice: Number(si.unit_price), returnQty: 0,
+      warehouseId: si.warehouse_id || null,
+      factor: si._cachedFactor != null ? si._cachedFactor : factorForSaleItem(si.product_id, si.product_unit_id),
+    };
+  });
 
+  document.getElementById('saleReturnItemFilter').value = '';
+  saleReturnItemFilterText = '';
   renderSaleReturnLines();
   document.getElementById('saleReturnLinesSection').style.display = 'block';
   document.getElementById('saveSaleReturnBtn').style.display = 'inline-block';
@@ -8775,25 +9193,48 @@ async function searchSaleForReturn() {
 function renderSaleReturnLines() {
   const wrap = document.getElementById('saleReturnLinesWrap');
   wrap.innerHTML = '';
-  saleReturnLines.forEach((line) => {
+
+  const q = saleReturnItemFilterText.trim().toLowerCase();
+  const visibleLines = q ? saleReturnLines.filter(l => l.name.toLowerCase().includes(q)) : saleReturnLines;
+
+  if (visibleLines.length === 0) {
+    wrap.innerHTML = `<div class="ret-items-empty">${saleReturnLines.length === 0 ? 'لا توجد أصناف في هذه الفاتورة' : 'لا يوجد صنف مطابق للفلترة'}</div>`;
+    updateSaleReturnTotal();
+    return;
+  }
+
+  visibleLines.forEach((line) => {
     const row = document.createElement('div');
-    row.className = 'purchase-line-row';
+    row.className = 'purchase-line-row ret-row' + (line.returnQty > 0 ? ' has-return-qty' : '');
 
+    const nameWrap = document.createElement('div');
+    nameWrap.className = 'pr-line-name-wrap';
     const nameDiv = document.createElement('div');
+    nameDiv.className = 'pr-line-name';
+    nameDiv.title = line.name;
     nameDiv.textContent = line.name;
+    nameWrap.appendChild(nameDiv);
+    if (line.alreadyReturnedQty > 0) {
+      const noteDiv = document.createElement('div');
+      noteDiv.className = 'pr-already-returned-note';
+      noteDiv.textContent = `تم إرجاع ${line.alreadyReturnedQty} من قبل`;
+      nameWrap.appendChild(noteDiv);
+    }
 
-    const soldDiv = document.createElement('div');
-    soldDiv.className = 'num';
-    soldDiv.textContent = line.soldQty;
+    const availableDiv = document.createElement('div');
+    availableDiv.className = 'num';
+    availableDiv.textContent = line.availableQty;
 
     const qtyInput = document.createElement('input');
-    qtyInput.type = 'number'; qtyInput.min = '0'; qtyInput.max = String(line.soldQty); qtyInput.step = '0.001';
+    qtyInput.type = 'number'; qtyInput.min = '0'; qtyInput.max = String(line.availableQty); qtyInput.step = '0.001';
+    qtyInput.disabled = line.availableQty <= 0;
     qtyInput.value = line.returnQty;
     qtyInput.addEventListener('input', () => {
       let v = Number(qtyInput.value) || 0;
-      if (v > line.soldQty) { v = line.soldQty; qtyInput.value = v; }
+      if (v > line.availableQty) { v = line.availableQty; qtyInput.value = v; }
       if (v < 0) { v = 0; qtyInput.value = v; }
       line.returnQty = v;
+      row.classList.toggle('has-return-qty', v > 0);
       row.querySelector('.purchase-line-total').textContent = (line.returnQty * line.unitPrice).toFixed(2);
       updateSaleReturnTotal();
     });
@@ -8802,13 +9243,24 @@ function renderSaleReturnLines() {
     totalDiv.className = 'purchase-line-total num';
     totalDiv.textContent = (line.returnQty * line.unitPrice).toFixed(2);
 
-    const emptyDiv = document.createElement('div');
+    const allBtn = document.createElement('button');
+    allBtn.type = 'button';
+    allBtn.className = 'pr-line-all-btn';
+    allBtn.textContent = 'الكل';
+    allBtn.disabled = line.availableQty <= 0;
+    allBtn.addEventListener('click', () => {
+      line.returnQty = line.availableQty;
+      qtyInput.value = line.returnQty;
+      row.classList.toggle('has-return-qty', line.returnQty > 0);
+      row.querySelector('.purchase-line-total').textContent = (line.returnQty * line.unitPrice).toFixed(2);
+      updateSaleReturnTotal();
+    });
 
-    row.appendChild(nameDiv);
-    row.appendChild(soldDiv);
+    row.appendChild(nameWrap);
+    row.appendChild(availableDiv);
     row.appendChild(qtyInput);
     row.appendChild(totalDiv);
-    row.appendChild(emptyDiv);
+    row.appendChild(allBtn);
     wrap.appendChild(row);
   });
   updateSaleReturnTotal();
@@ -8820,10 +9272,12 @@ function calcSaleReturnTotal() {
 
 function updateSaleReturnTotal() {
   document.getElementById('saleReturnTotalLabel').textContent = calcSaleReturnTotal().toFixed(2);
+  const selectedCount = saleReturnLines.filter(l => l.returnQty > 0).length;
+  document.getElementById('saleReturnSelectedCount').textContent = selectedCount > 0 ? `تم تحديد ${selectedCount} صنف` : '';
   if (document.getElementById('saleReturnSplitToggle').checked) updateSaleReturnSplitDiffIndicator();
 }
 
-// مرتجع بيع أونلاين: يتبعت لسوباابيز على طول (بما فيه سطور الاسترداد المتعدد لو موجودة)
+// مرتجع بيع أونلاين: يتبعت لسوباابيز على طول (بما فيه سطور الاسترداد المتعدد لو موجودة)، وبيرجع سجل المرتجع المحفوظ عشان نطبع إيصاله
 async function performOnlineSaleReturn(ctx) {
   const { total, reason, refundMethod, refundPaymentLines, validLines } = ctx;
 
@@ -8858,6 +9312,7 @@ async function performOnlineSaleReturn(ctx) {
   }
 
   showToast('تم تسجيل مرتجع البيع وتحديث المخزون تلقائيًا');
+  return saleReturn;
 }
 
 // مرتجع بيع أوفلاين: بيتسجل في طابور الانتظار المحلي، والمخزون بيتزود متفائل
@@ -8935,12 +9390,14 @@ async function saveSaleReturn(e) {
   try {
     const reason = document.getElementById('saleReturnReasonInput').value.trim() || null;
     const ctx = { total, reason, refundMethod, refundPaymentLines, validLines };
+    const soldSale = saleReturnSale;
+    let savedReturn = null;
 
     if (!sessionUsable()) {
       queueOfflineSaleReturn(ctx);
     } else {
       try {
-        await performOnlineSaleReturn(ctx);
+        savedReturn = await performOnlineSaleReturn(ctx);
       } catch (err) {
         if (isNetworkError(err)) {
           appIsOnline = false; updateOfflineBanner();
@@ -8956,6 +9413,20 @@ async function saveSaleReturn(e) {
     renderProducts();
     if (document.getElementById('bo-section-sale-returns')?.style.display === 'block') {
       await loadBoSaleReturns(); renderSaleReturnsTable();
+    }
+
+    // لو المرتجع اتسجل أونلاين بنجاح، نعرض إيصاله جاهز للطباعة مباشرة
+    if (savedReturn) {
+      openSaleReturnDetailModal({
+        id: savedReturn.id,
+        sales: { invoice_number: soldSale.invoice_number },
+        customers: soldSale.customers,
+        branch_id: currentProfile.branch_id,
+        refund_method: refundMethod,
+        reason,
+        created_at: savedReturn.created_at || new Date().toISOString(),
+        total,
+      });
     }
   } catch (err) {
     console.error(err);
@@ -9981,6 +10452,7 @@ function bindBackofficeEvents() {
     if (e.target.id === 'paymentModalOverlay') closePaymentModal();
   });
   document.getElementById('paymentForm').addEventListener('submit', savePayment);
+  document.getElementById('paymentMethod').addEventListener('change', applyPaymentCashFieldVisibility);
   paymentPartySearch = createSmartSearch({
     input: document.getElementById('paymentPartySelect'),
     hidden: document.getElementById('paymentPartyValue'),
@@ -10023,8 +10495,10 @@ function bindBackofficeEvents() {
       document.getElementById('stockTab-balances').style.display = tab === 'balances' ? 'block' : 'none';
       document.getElementById('stockTab-transfer').style.display = tab === 'transfer' ? 'block' : 'none';
       document.getElementById('stockTab-adjust').style.display = tab === 'adjust' ? 'block' : 'none';
+      document.getElementById('stockTab-opening').style.display = tab === 'opening' ? 'block' : 'none';
       document.getElementById('stockTab-warehouses').style.display = tab === 'warehouses' ? 'block' : 'none';
       if (tab === 'adjust' && !stockAdjustLoadedOnce) { initStockAdjustTab(); stockAdjustLoadedOnce = true; }
+      if (tab === 'opening') { renderOpeningBalanceTable(); }
       if (tab === 'warehouses' && !stockWarehousesLoadedOnce) { renderWarehousesTable(); stockWarehousesLoadedOnce = true; }
     });
   });
@@ -10049,6 +10523,9 @@ function bindBackofficeEvents() {
   document.getElementById('stockAdjustWarehouseSelect').addEventListener('change', renderStockAdjustTable);
   document.getElementById('stockAdjustSearchInput').addEventListener('input', renderStockAdjustTable);
   document.getElementById('saveStockAdjustBtn').addEventListener('click', saveStockAdjust);
+  document.getElementById('openingBalanceWarehouseSelect').addEventListener('change', renderOpeningBalanceTable);
+  document.getElementById('openingBalanceSearchInput').addEventListener('input', renderOpeningBalanceTable);
+  document.getElementById('saveOpeningBalanceBtn').addEventListener('click', saveOpeningBalances);
   document.getElementById('closeAdjustmentDetailBtn').addEventListener('click', () => {
     document.getElementById('adjustmentDetailModalOverlay').classList.remove('show');
   });
@@ -10138,15 +10615,56 @@ function bindBackofficeEvents() {
 
   // ---- Purchase return modal ----
   document.getElementById('addPurchaseReturnBtn').addEventListener('click', openPurchaseReturnModal);
+  document.getElementById('runPurchaseReturnsFilterBtn').addEventListener('click', () => {
+    loadBoPurchaseReturns().then(renderPurchaseReturnsTable);
+  });
+  document.getElementById('resetPurchaseReturnsFilterBtn').addEventListener('click', () => {
+    document.getElementById('purchaseReturnsFromDate').value = '';
+    document.getElementById('purchaseReturnsToDate').value = '';
+    document.getElementById('purchaseReturnsTextFilter').value = '';
+    loadBoPurchaseReturns().then(renderPurchaseReturnsTable);
+  });
+  document.getElementById('purchaseReturnsTextFilter').addEventListener('input', renderPurchaseReturnsTable);
   document.getElementById('cancelPurchaseReturnBtn').addEventListener('click', closePurchaseReturnModal);
   document.getElementById('purchaseReturnModalOverlay').addEventListener('click', (e) => {
     if (e.target.id === 'purchaseReturnModalOverlay') closePurchaseReturnModal();
   });
-  document.getElementById('purchaseReturnSearchBtn').addEventListener('click', searchPurchaseForReturn);
+  document.getElementById('purchaseReturnSearchBtn').addEventListener('click', () => searchPurchaseForReturn());
   document.getElementById('purchaseReturnForm').addEventListener('submit', savePurchaseReturn);
+  document.getElementById('purchaseReturnItemFilter').addEventListener('input', (e) => {
+    purchaseReturnItemFilterText = e.target.value;
+    renderPurchaseReturnLines();
+  });
+  purchaseReturnInvoiceSearch = createSmartSearch({
+    input: document.getElementById('purchaseReturnInvoiceInput'),
+    hidden: document.getElementById('purchaseReturnInvoiceValue'),
+    dropdown: document.getElementById('purchaseReturnInvoiceDropdown'),
+    getItems: () => purchaseReturnRecentPurchases.map(p => ({
+      value: p.invoice_number,
+      label: `فاتورة #${p.invoice_number}`,
+      sublabel: `${p.suppliers?.name || 'بدون مورد'} — ${Number(p.total).toFixed(2)} — ${new Date(p.created_at).toLocaleDateString('ar-EG')}`,
+    })),
+    onChange: (item) => searchPurchaseForReturn(item.value),
+  });
+  document.getElementById('purchaseReturnInvoiceInput').addEventListener('input', () => {
+    // بمجرد ما المستخدم يعدّل النص يدويًا، نلغي القيمة المختارة سابقًا من الاقتراحات
+    document.getElementById('purchaseReturnInvoiceValue').value = '';
+  });
 
   // ---- Sale return (accessible from backoffice too) ----
   document.getElementById('addSaleReturnFromBoBtn').addEventListener('click', openSaleReturnModal);
+  document.getElementById('runSaleReturnsFilterBtn').addEventListener('click', () => {
+    loadBoSaleReturns().then(renderSaleReturnsTable);
+  });
+  document.getElementById('resetSaleReturnsFilterBtn').addEventListener('click', () => {
+    document.getElementById('saleReturnsFromDate').value = '';
+    document.getElementById('saleReturnsToDate').value = '';
+    document.getElementById('saleReturnsMethodFilter').value = '';
+    document.getElementById('saleReturnsTextFilter').value = '';
+    loadBoSaleReturns().then(renderSaleReturnsTable);
+  });
+  document.getElementById('saleReturnsMethodFilter').addEventListener('change', renderSaleReturnsTable);
+  document.getElementById('saleReturnsTextFilter').addEventListener('input', renderSaleReturnsTable);
 
   // ---- Invoice detail modal (read-only view) ----
   document.getElementById('closeInvoiceDetailBtn').addEventListener('click', closeInvoiceDetailModal);
@@ -10174,6 +10692,7 @@ function bindBackofficeEvents() {
   });
   document.getElementById('salaryForm').addEventListener('submit', saveSalaryPayment);
   document.getElementById('salaryEmployeeSelect').addEventListener('change', updateSalaryBaseDisplay);
+  document.getElementById('salaryBranchSelect').addEventListener('change', populateSalaryCashAccountOptions);
   document.getElementById('salaryBonus').addEventListener('input', updateSalaryBaseDisplay);
   document.getElementById('salaryDeduction').addEventListener('input', updateSalaryBaseDisplay);
   document.getElementById('salaryNetAmount').addEventListener('input', (e) => { e.target.dataset.touched = '1'; });
@@ -10194,6 +10713,10 @@ function bindBackofficeEvents() {
     if (e.target.id === 'expenseModalOverlay') closeExpenseModal();
   });
   document.getElementById('expenseForm').addEventListener('submit', saveExpense);
+  document.getElementById('expenseMethod').addEventListener('change', applyExpenseCashFieldVisibility);
+  document.getElementById('expenseBranchSelect').addEventListener('change', () => {
+    if (document.getElementById('expenseCashAccountField').style.display !== 'none') populateExpenseCashAccountOptions();
+  });
   document.getElementById('runExpenseFilterBtn').addEventListener('click', () => runExpenseFilter());
   document.querySelectorAll('[data-expense-range]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -11445,6 +11968,7 @@ function populateSalaryEmployeeSelect(selectedEmployeeId) {
     const opt = document.createElement('option');
     opt.value = emp.id; opt.textContent = emp.full_name;
     opt.dataset.baseSalary = emp.base_salary || 0;
+    opt.dataset.branchId = emp.branch_id || '';
     sel.appendChild(opt);
   });
   if (selectedEmployeeId) sel.value = selectedEmployeeId;
@@ -11463,6 +11987,27 @@ function updateSalaryBaseDisplay() {
     const deduction = Number(document.getElementById('salaryDeduction').value) || 0;
     netInput.value = Math.max(0, base + bonus - deduction).toFixed(2);
   }
+  // اقتراح فرع الموظف تلقائيًا عند اختياره (يمكن تغييره يدويًا)
+  const branchId = opt ? opt.dataset.branchId : '';
+  if (branchId) {
+    document.getElementById('salaryBranchSelect').value = branchId;
+    populateSalaryCashAccountOptions();
+  }
+}
+
+async function populateSalaryBranchSelect(selectedBranchId) {
+  const sel = document.getElementById('salaryBranchSelect');
+  sel.innerHTML = boBranchesList.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+  if (selectedBranchId) sel.value = selectedBranchId;
+  await populateSalaryCashAccountOptions();
+}
+
+async function populateSalaryCashAccountOptions() {
+  if (!treasuriesLoadedOnce) { await loadBoTreasuries(); treasuriesLoadedOnce = true; }
+  const branchId = document.getElementById('salaryBranchSelect').value;
+  const sel = document.getElementById('salaryCashAccount');
+  const options = boTreasuries.filter(t => t.is_active && (!branchId || t.branch_id === branchId));
+  sel.innerHTML = options.map(t => `<option value="${t.id}">${escapeHtml(t.name)}${t.is_main ? ' (الرئيسية)' : ''}</option>`).join('');
 }
 
 function setSalaryQuickRange(range) {
@@ -11546,6 +12091,10 @@ function openSalaryModal(payment) {
   netInput.value = payment ? payment.net_amount : 0;
   delete netInput.dataset.touched;
   populateSalaryEmployeeSelect(payment ? payment.user_id : boEmployees[0]?.id);
+  const employeeBranchId = boEmployees.find(e => e.id === (payment ? payment.user_id : boEmployees[0]?.id))?.branch_id;
+  populateSalaryBranchSelect(payment ? (payment.branch_id || employeeBranchId) : employeeBranchId).then(() => {
+    if (payment?.cash_account_id) document.getElementById('salaryCashAccount').value = payment.cash_account_id;
+  });
   document.getElementById('salaryModalError').classList.remove('show');
   document.getElementById('salaryModalOverlay').classList.add('show');
 }
@@ -11563,6 +12112,7 @@ async function saveSalaryPayment(e) {
   saveBtn.textContent = 'جاري الحفظ...';
 
   const id = document.getElementById('salaryId').value || null;
+  const cashAccountId = document.getElementById('salaryCashAccount').value || null;
   const payload = {
     user_id: document.getElementById('salaryEmployeeSelect').value,
     bonus: Number(document.getElementById('salaryBonus').value) || 0,
@@ -11570,16 +12120,29 @@ async function saveSalaryPayment(e) {
     net_amount: Number(document.getElementById('salaryNetAmount').value) || 0,
     payment_date: document.getElementById('salaryDate').value,
     notes: document.getElementById('salaryNotes').value.trim() || null,
+    branch_id: document.getElementById('salaryBranchSelect').value || null,
+    cash_account_id: cashAccountId,
   };
 
   try {
     if (!payload.user_id) throw new Error('يرجى اختيار الموظف');
+    if (!payload.branch_id) throw new Error('يرجى اختيار الفرع');
+    if (!cashAccountId) throw new Error('يرجى اختيار الخزينة المخصوم منها');
+
     if (id) {
+      // نعكس الحركة القديمة على الخزينة القديمة قبل تسجيل حركة جديدة
+      const old = boSalaryPayments.find(x => x.id === id);
+      if (old?.cash_account_id) {
+        await postCashAccountAdjustment(old.cash_account_id, Math.abs(Number(old.net_amount)), 'reversal', id, 'عكس تعديل راتب');
+      }
       const { error } = await supabaseClient.from('salary_payments').update(payload).eq('id', id);
       if (error) throw error;
+      await postCashAccountAdjustment(cashAccountId, -Math.abs(payload.net_amount), 'salary_payment', id, 'راتب (تعديل)');
     } else {
-      const { error } = await supabaseClient.from('salary_payments').insert({ ...payload, created_by: currentProfile?.id || null });
+      const { data: inserted, error } = await supabaseClient.from('salary_payments')
+        .insert({ ...payload, created_by: currentProfile?.id || null }).select().single();
       if (error) throw error;
+      await postCashAccountAdjustment(cashAccountId, -Math.abs(payload.net_amount), 'salary_payment', inserted.id, 'راتب');
     }
     showToast(id ? 'تم تحديث دفعة الراتب' : 'تمت إضافة دفعة الراتب بنجاح');
     closeSalaryModal();
@@ -11596,6 +12159,15 @@ async function saveSalaryPayment(e) {
 
 async function deleteSalaryPayment(payment) {
   if (!confirm('هل أنت متأكد أنك تريد حذف دفعة الراتب هذه؟')) return;
+  if (payment.cash_account_id) {
+    try {
+      await postCashAccountAdjustment(payment.cash_account_id, Math.abs(Number(payment.net_amount)), 'reversal', payment.id, 'عكس حذف راتب');
+    } catch (err) {
+      console.error(err);
+      showToast('تعذر عكس أثر الراتب على الخزينة — لم يتم الحذف', true);
+      return;
+    }
+  }
   const { error } = await supabaseClient.from('salary_payments').delete().eq('id', payment.id);
   if (error) { console.error(error); showToast('تعذر حذف دفعة الراتب', true); return; }
   showToast('تم حذف دفعة الراتب');
@@ -11704,8 +12276,30 @@ function openExpenseModal(expense) {
     expense ? expense.expense_item_id : (boExpenseItems[0]?.id || ''),
     expense ? expense.branch_id : (currentProfile?.branches?.id || boBranchesList[0]?.id || '')
   );
+  applyExpenseCashFieldVisibility().then(() => {
+    if (expense?.cash_account_id) document.getElementById('expenseCashAccount').value = expense.cash_account_id;
+  });
   document.getElementById('expenseModalError').classList.remove('show');
   document.getElementById('expenseModalOverlay').classList.add('show');
+}
+
+// بيبيّن حقل اختيار الخزينة لو المصروف مش هيتغطى تلقائيًا عن طريق ترحيل
+// إغلاق الوردية (يعني: أي حالة غير "نقدي + فيه وردية مفتوحة الآن")
+async function applyExpenseCashFieldVisibility() {
+  const method = document.getElementById('expenseMethod').value;
+  const coveredByShift = method === 'cash' && !!currentShift;
+  document.getElementById('expenseCashAccountField').style.display = coveredByShift ? 'none' : '';
+  document.getElementById('expenseCashAccount').required = !coveredByShift;
+  document.getElementById('expenseShiftNote').style.display = coveredByShift ? '' : 'none';
+  if (!coveredByShift) await populateExpenseCashAccountOptions();
+}
+
+async function populateExpenseCashAccountOptions() {
+  if (!treasuriesLoadedOnce) { await loadBoTreasuries(); treasuriesLoadedOnce = true; }
+  const branchId = document.getElementById('expenseBranchSelect').value;
+  const sel = document.getElementById('expenseCashAccount');
+  const options = boTreasuries.filter(t => t.is_active && (!branchId || t.branch_id === branchId));
+  sel.innerHTML = options.map(t => `<option value="${t.id}">${escapeHtml(t.name)}${t.is_main ? ' (الرئيسية)' : ''}</option>`).join('');
 }
 
 function closeExpenseModal() {
@@ -11722,6 +12316,8 @@ async function saveExpense(e) {
 
   const id = document.getElementById('expenseId').value || null;
   const method = document.getElementById('expenseMethod').value;
+  const coveredByShift = method === 'cash' && !!currentShift;
+  const cashAccountId = coveredByShift ? null : (document.getElementById('expenseCashAccount').value || null);
   const payload = {
     expense_item_id: document.getElementById('expenseItemSelect').value,
     branch_id: document.getElementById('expenseBranchSelect').value,
@@ -11729,16 +12325,32 @@ async function saveExpense(e) {
     payment_method: method,
     expense_date: document.getElementById('expenseDate').value,
     notes: document.getElementById('expenseNotes').value.trim() || null,
+    cash_account_id: cashAccountId,
   };
 
   try {
+    if (!coveredByShift && !cashAccountId) throw new Error('يرجى اختيار الخزينة المخصوم منها');
+
     if (id) {
+      // لو المصروف كان متسجل قبل كده بخصم من خزينة، نعكس الحركة القديمة الأول
+      // قبل ما نسجل الحركة الجديدة (بالمبلغ/الخزينة المعدّلين)
+      const old = boExpenses.find(x => x.id === id);
+      if (old?.cash_account_id) {
+        await postCashAccountAdjustment(old.cash_account_id, Math.abs(Number(old.amount)), 'reversal', id, 'عكس تعديل مصروف');
+      }
       const { error } = await supabaseClient.from('expenses').update(payload).eq('id', id);
       if (error) throw error;
+      if (cashAccountId) {
+        await postCashAccountAdjustment(cashAccountId, -Math.abs(payload.amount), 'expense_payment', id, 'مصروف (تعديل)');
+      }
     } else {
-      const shiftId = (method === 'cash' && currentShift) ? currentShift.id : null;
-      const { error } = await supabaseClient.from('expenses').insert({ ...payload, created_by: currentProfile?.id || null, shift_id: shiftId });
+      const shiftId = coveredByShift ? currentShift.id : null;
+      const { data: inserted, error } = await supabaseClient.from('expenses')
+        .insert({ ...payload, created_by: currentProfile?.id || null, shift_id: shiftId }).select().single();
       if (error) throw error;
+      if (cashAccountId) {
+        await postCashAccountAdjustment(cashAccountId, -Math.abs(payload.amount), 'expense_payment', inserted.id, 'مصروف');
+      }
     }
     showToast(id ? 'تم تحديث المصروف' : 'تمت إضافة المصروف بنجاح');
     closeExpenseModal();
@@ -11755,6 +12367,15 @@ async function saveExpense(e) {
 
 async function deleteExpense(expense) {
   if (!confirm('هل أنت متأكد أنك تريد حذف هذا المصروف؟')) return;
+  if (expense.cash_account_id) {
+    try {
+      await postCashAccountAdjustment(expense.cash_account_id, Math.abs(Number(expense.amount)), 'reversal', expense.id, 'عكس حذف مصروف');
+    } catch (err) {
+      console.error(err);
+      showToast('تعذر عكس أثر المصروف على الخزينة — لم يتم الحذف', true);
+      return;
+    }
+  }
   const { error } = await supabaseClient.from('expenses').delete().eq('id', expense.id);
   if (error) { console.error(error); showToast('تعذر حذف المصروف', true); return; }
   showToast('تم حذف المصروف');
@@ -12573,6 +13194,10 @@ function populateStockWarehouseSelects() {
   adjustSel.innerHTML = opts;
   if (myMainWarehouse) adjustSel.value = myMainWarehouse.id;
 
+  const openingSel = document.getElementById('openingBalanceWarehouseSelect');
+  openingSel.innerHTML = opts;
+  if (myMainWarehouse) openingSel.value = myMainWarehouse.id;
+
   const fromSel = document.getElementById('transferFromWarehouse');
   const toSel = document.getElementById('transferToWarehouse');
   fromSel.innerHTML = opts;
@@ -12864,19 +13489,44 @@ function openCashMovementModal(presetAccountId) {
   document.getElementById('cashMovementModalOverlay').classList.add('show');
 }
 
+async function loadOpenShiftsForMovement() {
+  const sel = document.getElementById('cashMovementShiftSelect');
+  sel.innerHTML = '<option value="">جاري التحميل...</option>';
+  try {
+    const { data, error } = await supabaseClient.from('shifts')
+      .select('id, opening_at, branches(name), opener:users_profile!shifts_user_id_fkey(full_name)')
+      .eq('status', 'open').order('opening_at', { ascending: false });
+    if (error) throw error;
+    if (!data || data.length === 0) { sel.innerHTML = '<option value="">لا توجد ورديات مفتوحة حاليًا</option>'; return; }
+    sel.innerHTML = data.map(s => {
+      const t = new Date(s.opening_at);
+      const label = `${escapeHtml(s.branches?.name || '')} — ${escapeHtml(s.opener?.full_name || '')} (منذ ${t.toLocaleDateString('ar-EG')} ${t.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })})`;
+      return `<option value="${s.id}">${label}</option>`;
+    }).join('');
+  } catch (err) {
+    console.error(err);
+    sel.innerHTML = '<option value="">تعذر تحميل الورديات المفتوحة</option>';
+  }
+}
+
 function applyCashMovementTypeVisibility() {
   const type = document.getElementById('cashMovementType').value;
   const isTransfer = type === 'transfer';
-  document.getElementById('cashMovementAccountField').style.display = isTransfer ? 'none' : '';
-  document.getElementById('cashMovementFromField').style.display = isTransfer ? '' : 'none';
+  const isShiftInjection = type === 'shift_injection';
+  document.getElementById('cashMovementAccountField').style.display = (isTransfer || isShiftInjection) ? 'none' : '';
+  document.getElementById('cashMovementFromField').style.display = (isTransfer || isShiftInjection) ? '' : 'none';
+  document.getElementById('cashMovementFromLabel').textContent = isShiftInjection ? 'من خزينة' : 'من خزينة';
   document.getElementById('cashMovementToField').style.display = isTransfer ? '' : 'none';
+  document.getElementById('cashMovementShiftField').style.display = isShiftInjection ? '' : 'none';
   document.getElementById('cashMovementAccountLabel').textContent = type === 'withdrawal' ? 'السحب من خزينة' : 'الإيداع في خزينة';
-  document.getElementById('cashMovementAccount').required = !isTransfer;
-  document.getElementById('cashMovementFromAccount').required = isTransfer;
+  document.getElementById('cashMovementAccount').required = !isTransfer && !isShiftInjection;
+  document.getElementById('cashMovementFromAccount').required = isTransfer || isShiftInjection;
   document.getElementById('cashMovementToAccount').required = isTransfer;
-  const titles = { deposit: 'إيداع في خزينة', withdrawal: 'سحب من خزينة', transfer: 'تحويل بين خزينتين' };
+  document.getElementById('cashMovementShiftSelect').required = isShiftInjection;
+  if (isShiftInjection) loadOpenShiftsForMovement();
+  const titles = { deposit: 'إيداع في خزينة', withdrawal: 'سحب من خزينة', transfer: 'تحويل بين خزينتين', shift_injection: 'تحويل لوردية مفتوحة' };
   document.getElementById('cashMovementModalTitle').textContent = titles[type];
-  document.getElementById('saveCashMovementBtn').textContent = type === 'transfer' ? 'تنفيذ التحويل' : (type === 'withdrawal' ? 'تنفيذ السحب' : 'تنفيذ الإيداع');
+  document.getElementById('saveCashMovementBtn').textContent = type === 'transfer' ? 'تنفيذ التحويل' : (type === 'withdrawal' ? 'تنفيذ السحب' : (type === 'shift_injection' ? 'تنفيذ التحويل للوردية' : 'تنفيذ الإيداع'));
 }
 
 function closeCashMovementModal() {
@@ -12914,6 +13564,26 @@ async function saveCashMovement(e) {
       });
       if (error) throw error;
       showToast('تم تنفيذ التحويل بنجاح');
+    } else if (type === 'shift_injection') {
+      const fromId = document.getElementById('cashMovementFromAccount').value;
+      const shiftId = document.getElementById('cashMovementShiftSelect').value;
+      if (!fromId) throw new Error('يرجى اختيار الخزينة المحوَّل منها');
+      if (!shiftId) throw new Error('يرجى اختيار الوردية المفتوحة المستلمة');
+      const fromAccount = boTreasuries.find(t => t.id === fromId);
+      if (fromAccount && Number(fromAccount.current_balance) < amount) {
+        if (!confirm('المبلغ أكبر من رصيد الخزينة المحوَّل منها، هل تريد المتابعة؟')) {
+          saveBtn.disabled = false; saveBtn.textContent = 'تنفيذ التحويل للوردية'; return;
+        }
+      }
+      // بيتسجل بمبلغ سالب على الخزينة (خصم) — نفس منطق السحب أعلاه — وبيتربط
+      // بالوردية عن طريق reference_id، فيتم جمعه تلقائيًا على النقدية المتوقعة
+      // في الدرج (computeShiftCashSummary) عند مراجعة/إغلاق هذه الوردية.
+      const { error } = await supabaseClient.from('cash_account_transactions').insert({
+        cash_account_id: fromId, type: 'shift_cash_injection', amount: -Math.abs(amount),
+        reference_id: shiftId, note, user_id: currentProfile.id,
+      });
+      if (error) throw error;
+      showToast('تم تحويل المبلغ للوردية المفتوحة بنجاح');
     } else {
       const accountId = document.getElementById('cashMovementAccount').value;
       if (!accountId) throw new Error('يرجى اختيار الخزينة');
@@ -13703,6 +14373,135 @@ async function viewAdjustmentDetail(adjustment) {
   document.getElementById('adjustmentDetailModalOverlay').classList.add('show');
 }
 
+// ---- الأرصدة الافتتاحية (Opening balances) — للأصناف التي ليس لها أي حركة مسجلة بعد ----
+let currentOpeningRows = [];
+
+async function getProductIdsWithMovement() {
+  const [purchaseRes, saleRes, transferRes, adjustRes] = await Promise.all([
+    supabaseClient.from('purchase_items').select('product_id'),
+    supabaseClient.from('sale_items').select('product_id'),
+    supabaseClient.from('stock_transfer_items').select('product_id'),
+    supabaseClient.from('stock_adjustment_items').select('product_id'),
+  ]);
+  const ids = new Set();
+  [purchaseRes, saleRes, transferRes, adjustRes].forEach(res => {
+    if (res.error) { console.error(res.error); return; }
+    (res.data || []).forEach(r => { if (r.product_id) ids.add(r.product_id); });
+  });
+  return ids;
+}
+
+async function renderOpeningBalanceTable() {
+  const warehouseId = document.getElementById('openingBalanceWarehouseSelect').value;
+  const tbody = document.getElementById('openingBalanceTableBody');
+  if (!warehouseId) { tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">اختر مخزنًا</td></tr>`; return; }
+  tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>`;
+
+  const [movedIds, balancesRes] = await Promise.all([
+    getProductIdsWithMovement(),
+    supabaseClient.from('stock_balances').select('product_id, quantity').eq('warehouse_id', warehouseId),
+  ]);
+  if (balancesRes.error) { console.error(balancesRes.error); showToast('تعذر تحميل أرصدة المخزون', true); return; }
+  const balanceMap = {};
+  (balancesRes.data || []).forEach(r => { balanceMap[r.product_id] = Number(r.quantity); });
+
+  const q = (document.getElementById('openingBalanceSearchInput').value || '').trim().toLowerCase();
+  const rows = boProducts
+    .filter(p => !movedIds.has(p.id))
+    .filter(p => !q || p.name.toLowerCase().includes(q))
+    .sort((a, b) => a.name.localeCompare(b.name, 'ar'))
+    .map(p => ({ product_id: p.id, name: p.name, before: balanceMap[p.id] ?? 0, after: balanceMap[p.id] ?? 0 }));
+
+  currentOpeningRows = rows;
+
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">لا توجد أصناف بدون حركة مطابقة</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  rows.forEach((row, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(row.name)}</td>
+      <td class="num">${row.before}</td>
+      <td><input type="number" step="0.001" min="0" class="num" style="width:120px; padding:6px 8px;" value="${row.after}" data-idx="${idx}"></td>`;
+    tr.querySelector('input').addEventListener('input', (e) => {
+      currentOpeningRows[idx].after = e.target.value === '' ? row.before : Number(e.target.value);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+async function saveOpeningBalances() {
+  const errEl = document.getElementById('openingBalanceError');
+  errEl.classList.remove('show');
+  const warehouseId = document.getElementById('openingBalanceWarehouseSelect').value;
+  if (!warehouseId) { errEl.textContent = 'اختر مخزنًا'; errEl.classList.add('show'); return; }
+
+  const changed = currentOpeningRows.filter(r => Number(r.after) !== Number(r.before));
+  if (changed.length === 0) { errEl.textContent = 'أدخل رصيدًا افتتاحيًا لصنف واحد على الأقل'; errEl.classList.add('show'); return; }
+
+  const userNote = document.getElementById('openingBalanceNote').value.trim();
+  const note = userNote ? `رصيد افتتاحي — ${userNote}` : 'رصيد افتتاحي';
+  const saveBtn = document.getElementById('saveOpeningBalanceBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  try {
+    for (const row of changed) {
+      const { data: existing, error: fetchErr } = await supabaseClient
+        .from('stock_balances')
+        .select('id')
+        .eq('warehouse_id', warehouseId)
+        .eq('product_id', row.product_id)
+        .maybeSingle();
+      if (fetchErr) throw fetchErr;
+      if (existing) {
+        const { error } = await supabaseClient
+          .from('stock_balances')
+          .update({ quantity: row.after })
+          .eq('warehouse_id', warehouseId)
+          .eq('product_id', row.product_id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabaseClient
+          .from('stock_balances')
+          .insert({ warehouse_id: warehouseId, product_id: row.product_id, quantity: row.after });
+        if (error) throw error;
+      }
+    }
+
+    const { data: adjustment, error: adjError } = await supabaseClient
+      .from('stock_adjustments')
+      .insert({ warehouse_id: warehouseId, note, created_by: currentProfile.id })
+      .select().single();
+    if (adjError) throw adjError;
+
+    const itemsPayload = changed.map(r => ({
+      adjustment_id: adjustment.id, product_id: r.product_id,
+      quantity_before: r.before, quantity_after: r.after, difference: r.after - r.before,
+    }));
+    const { error: itemsError } = await supabaseClient.from('stock_adjustment_items').insert(itemsPayload);
+    if (itemsError) throw itemsError;
+
+    showToast('تم حفظ الأرصدة الافتتاحية بنجاح');
+    document.getElementById('openingBalanceNote').value = '';
+    await renderOpeningBalanceTable();
+    await loadBoAdjustments();
+    renderAdjustmentsTable();
+    const myMainWarehouse = await getMainWarehouseId(currentProfile?.branch_id);
+    if (myMainWarehouse === warehouseId) await loadStockBalances();
+    renderStockBalancesTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء حفظ الأرصدة الافتتاحية';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ الأرصدة الافتتاحية';
+  }
+}
+
 function populateUserSelects(selectedRoleId, selectedBranchId) {
   const roleSel = document.getElementById('userRole');
   roleSel.innerHTML = '';
@@ -14379,8 +15178,25 @@ function openPaymentModal(type, party) {
   document.getElementById('paymentAmount').value = '';
   document.getElementById('paymentMethod').value = 'cash';
   document.getElementById('paymentNote').value = '';
+  applyPaymentCashFieldVisibility();
   document.getElementById('paymentModalError').classList.remove('show');
   document.getElementById('paymentModalOverlay').classList.add('show');
+}
+
+// بيبيّن حقل اختيار الخزينة لو الدفعة مش هتتغطى تلقائيًا عن طريق ترحيل
+// إغلاق الوردية (يعني: أي حالة غير "نقدي + فيه وردية مفتوحة الآن")
+async function applyPaymentCashFieldVisibility() {
+  const method = document.getElementById('paymentMethod').value;
+  const coveredByShift = method === 'cash' && !!currentShift;
+  document.getElementById('paymentCashAccountField').style.display = coveredByShift ? 'none' : '';
+  document.getElementById('paymentCashAccount').required = !coveredByShift;
+  document.getElementById('paymentShiftNote').style.display = coveredByShift ? '' : 'none';
+  if (!coveredByShift) {
+    if (!treasuriesLoadedOnce) { await loadBoTreasuries(); treasuriesLoadedOnce = true; }
+    const sel = document.getElementById('paymentCashAccount');
+    const options = boTreasuries.filter(t => t.is_active && t.branch_id === currentProfile.branch_id);
+    sel.innerHTML = options.map(t => `<option value="${t.id}">${escapeHtml(t.name)}${t.is_main ? ' (الرئيسية)' : ''}</option>`).join('');
+  }
 }
 
 function closePaymentModal() {
@@ -14400,10 +15216,13 @@ async function savePayment(e) {
   const amount = Number(document.getElementById('paymentAmount').value) || 0;
   const method = document.getElementById('paymentMethod').value;
   const note = document.getElementById('paymentNote').value.trim() || null;
+  const coveredByShift = method === 'cash' && !!currentShift;
+  const cashAccountId = coveredByShift ? null : (document.getElementById('paymentCashAccount').value || null);
 
   try {
     if (!partyId) throw new Error(type === 'customer_receipt' ? 'يرجى اختيار العميل' : 'يرجى اختيار المورد');
     if (amount <= 0) throw new Error('المبلغ يجب أن يكون أكبر من صفر');
+    if (!coveredByShift && !cashAccountId) throw new Error('يرجى اختيار الخزينة');
 
     const payload = {
       payment_type: type,
@@ -14411,10 +15230,18 @@ async function savePayment(e) {
       supplier_id: type === 'supplier_payment' ? partyId : null,
       amount, method,
       branch_id: currentProfile.branch_id, user_id: currentProfile.id, note,
-      shift_id: (method === 'cash' && currentShift) ? currentShift.id : null,
+      shift_id: coveredByShift ? currentShift.id : null,
+      cash_account_id: cashAccountId,
     };
-    const { error } = await supabaseClient.from('payments').insert(payload);
+    const { data: inserted, error } = await supabaseClient.from('payments').insert(payload).select().single();
     if (error) throw error;
+
+    if (cashAccountId) {
+      // تحصيل من عميل = إضافة للخزينة، سداد لمورد = خصم منها
+      const signedAmount = type === 'customer_receipt' ? Math.abs(amount) : -Math.abs(amount);
+      const txType = type === 'customer_receipt' ? 'customer_receipt' : 'supplier_payment';
+      await postCashAccountAdjustment(cashAccountId, signedAmount, txType, inserted.id, note);
+    }
 
     // تحديث رصيد الطرف: دفعة العميل تقلل مديونيته، ودفعتنا للمورد تقلل مديونيتنا له
     const table = type === 'customer_receipt' ? 'customers' : 'suppliers';
@@ -14444,6 +15271,17 @@ async function savePayment(e) {
 async function deletePayment(payment) {
   const partyLabel = payment.payment_type === 'customer_receipt' ? 'العميل' : 'المورد';
   if (!confirm(`هل أنت متأكد من حذف هذه الدفعة؟ سيتم عكس أثرها على رصيد ${partyLabel}.`)) return;
+
+  if (payment.cash_account_id) {
+    try {
+      const originalSigned = payment.payment_type === 'customer_receipt' ? Math.abs(Number(payment.amount)) : -Math.abs(Number(payment.amount));
+      await postCashAccountAdjustment(payment.cash_account_id, -originalSigned, 'reversal', payment.id, 'عكس حذف دفعة');
+    } catch (err) {
+      console.error(err);
+      showToast('تعذر عكس أثر الدفعة على الخزينة — لم يتم الحذف', true);
+      return;
+    }
+  }
 
   const { error } = await supabaseClient.from('payments').delete().eq('id', payment.id);
   if (error) { console.error(error); showToast('تعذر حذف الدفعة', true); return; }
@@ -14965,26 +15803,58 @@ async function savePurchase(e) {
 // ---- Purchase Returns ----
 let boPurchaseReturns = [];
 let purchaseReturnPurchase = null;
-let purchaseReturnLines = []; // [{ purchaseItemId, productId, name, boughtQty, unitCost, returnQty }]
+let purchaseReturnLines = []; // [{ purchaseItemId, productId, name, boughtQty, alreadyReturnedQty, availableQty, unitCost, returnQty }]
+let purchaseReturnItemFilterText = '';
+let purchaseReturnRecentPurchases = []; // آخر الفواتير — تُستخدم في اقتراحات البحث السريع
+let purchaseReturnInvoiceSearch = null;
+
+async function loadPurchaseReturnRecentPurchases() {
+  const { data, error } = await supabaseClient
+    .from('purchases')
+    .select('id, invoice_number, total, created_at, suppliers(name)')
+    .order('created_at', { ascending: false })
+    .limit(50);
+  if (error) { console.error(error); purchaseReturnRecentPurchases = []; return; }
+  purchaseReturnRecentPurchases = data || [];
+}
 
 async function loadBoPurchaseReturns() {
-  const { data, error } = await supabaseClient
+  const fromVal = document.getElementById('purchaseReturnsFromDate')?.value;
+  const toVal = document.getElementById('purchaseReturnsToDate')?.value;
+
+  let query = supabaseClient
     .from('purchase_returns')
     .select('*, purchases(invoice_number), suppliers(name)')
-    .order('created_at', { ascending: false })
-    .limit(100);
+    .order('created_at', { ascending: false });
+
+  if (fromVal) query = query.gte('created_at', `${fromVal}T00:00:00`);
+  if (toVal) query = query.lte('created_at', `${toVal}T23:59:59`);
+  query = query.limit(fromVal || toVal ? 500 : 100);
+
+  const { data, error } = await query;
   if (error) { console.error(error); showToast('تعذر تحميل مرتجعات الشراء', true); return; }
   boPurchaseReturns = data || [];
 }
 
 function renderPurchaseReturnsTable() {
   const tbody = document.getElementById('purchaseReturnsTableBody');
-  if (boPurchaseReturns.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">لا توجد مرتجعات شراء مسجّلة حتى الآن</td></tr>`;
+  const textFilter = (document.getElementById('purchaseReturnsTextFilter')?.value || '').trim().toLowerCase();
+
+  let rows = boPurchaseReturns;
+  if (textFilter) {
+    rows = rows.filter(r => {
+      const supplierName = (r.suppliers?.name || '').toLowerCase();
+      const invoiceNo = String(r.purchases?.invoice_number ?? '');
+      return supplierName.includes(textFilter) || invoiceNo.includes(textFilter);
+    });
+  }
+
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">${boPurchaseReturns.length === 0 ? 'لا توجد مرتجعات شراء مسجّلة حتى الآن' : 'لا توجد نتائج مطابقة للفلترة'}</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
-  boPurchaseReturns.forEach(r => {
+  rows.forEach(r => {
     const tr = document.createElement('tr');
     const date = new Date(r.created_at).toLocaleDateString('ar-EG');
     tr.innerHTML = `
@@ -15002,24 +15872,36 @@ function renderPurchaseReturnsTable() {
 function openPurchaseReturnModal() {
   purchaseReturnPurchase = null;
   purchaseReturnLines = [];
+  purchaseReturnItemFilterText = '';
   document.getElementById('purchaseReturnInvoiceInput').value = '';
-  document.getElementById('purchaseReturnInvoiceInfo').style.display = 'none';
+  document.getElementById('purchaseReturnInvoiceValue').value = '';
+  document.getElementById('purchaseReturnItemFilter').value = '';
+  document.getElementById('purchaseReturnInvoiceInfo').classList.remove('show');
   document.getElementById('purchaseReturnLinesSection').style.display = 'none';
   document.getElementById('savePurchaseReturnBtn').style.display = 'none';
   document.getElementById('purchaseReturnReasonInput').value = '';
   document.getElementById('purchaseReturnModalError').classList.remove('show');
   document.getElementById('purchaseReturnModalOverlay').classList.add('show');
+  loadPurchaseReturnRecentPurchases();
+  setTimeout(() => document.getElementById('purchaseReturnInvoiceInput').focus(), 50);
 }
 
 function closePurchaseReturnModal() {
   document.getElementById('purchaseReturnModalOverlay').classList.remove('show');
 }
 
-async function searchPurchaseForReturn() {
+async function searchPurchaseForReturn(invoiceNumberOverride) {
   const errEl = document.getElementById('purchaseReturnModalError');
   errEl.classList.remove('show');
-  const invoiceNumber = Number(document.getElementById('purchaseReturnInvoiceInput').value);
-  if (!invoiceNumber) { errEl.textContent = 'اكتب رقم فاتورة صحيح'; errEl.classList.add('show'); return; }
+  const hiddenVal = document.getElementById('purchaseReturnInvoiceValue').value;
+  const rawValue = invoiceNumberOverride ?? (hiddenVal !== '' ? hiddenVal : document.getElementById('purchaseReturnInvoiceInput').value);
+  const invoiceNumber = Number(rawValue);
+  if (!invoiceNumber) { errEl.textContent = 'اكتب رقم فاتورة صحيح، أو اختر فاتورة من قائمة الاقتراحات'; errEl.classList.add('show'); return; }
+
+  const searchBtn = document.getElementById('purchaseReturnSearchBtn');
+  searchBtn.disabled = true;
+  const originalBtnText = searchBtn.textContent;
+  searchBtn.textContent = 'جارٍ البحث...';
 
   const { data: purchase, error: purchaseError } = await supabaseClient
     .from('purchases')
@@ -15027,26 +15909,51 @@ async function searchPurchaseForReturn() {
     .eq('invoice_number', invoiceNumber)
     .maybeSingle();
 
+  searchBtn.disabled = false;
+  searchBtn.textContent = originalBtnText;
+
+  const infoEl = document.getElementById('purchaseReturnInvoiceInfo');
   if (purchaseError || !purchase) {
     errEl.textContent = 'لا توجد فاتورة شراء بهذا الرقم';
     errEl.classList.add('show');
-    document.getElementById('purchaseReturnInvoiceInfo').style.display = 'none';
+    infoEl.classList.remove('show');
     document.getElementById('purchaseReturnLinesSection').style.display = 'none';
     document.getElementById('savePurchaseReturnBtn').style.display = 'none';
     return;
   }
 
   purchaseReturnPurchase = purchase;
+
+  // نجيب الكميات المرتجعة سابقًا لكل صنف في نفس الفاتورة، عشان نمنع تكرار إرجاع كمية أكبر من المتاح
+  const { data: priorReturnItems } = await supabaseClient
+    .from('purchase_return_items')
+    .select('purchase_item_id, quantity, purchase_returns!inner(purchase_id)')
+    .eq('purchase_returns.purchase_id', purchase.id);
+  const alreadyReturnedByItem = {};
+  (priorReturnItems || []).forEach(ri => {
+    alreadyReturnedByItem[ri.purchase_item_id] = (alreadyReturnedByItem[ri.purchase_item_id] || 0) + Number(ri.quantity);
+  });
+
   const date = new Date(purchase.created_at).toLocaleDateString('ar-EG');
-  const infoEl = document.getElementById('purchaseReturnInvoiceInfo');
-  infoEl.textContent = `المورد: ${purchase.suppliers?.name || '—'} — الإجمالي: ${Number(purchase.total).toFixed(2)} — التاريخ: ${date}`;
-  infoEl.style.display = 'block';
+  document.getElementById('purchaseReturnInvoiceTitle').textContent = `فاتورة شراء #${purchase.invoice_number}`;
+  document.getElementById('purchaseReturnInvoiceBadge').textContent = date;
+  document.getElementById('purchaseReturnStatSupplier').textContent = purchase.suppliers?.name || '—';
+  document.getElementById('purchaseReturnStatDate').textContent = date;
+  document.getElementById('purchaseReturnStatTotal').textContent = Number(purchase.total).toFixed(2);
+  infoEl.classList.add('show');
 
-  purchaseReturnLines = (purchase.purchase_items || []).map(pi => ({
-    purchaseItemId: pi.id, productId: pi.product_id, name: pi.products?.name || '—',
-    boughtQty: Number(pi.quantity), unitCost: Number(pi.unit_cost), returnQty: 0,
-  }));
+  purchaseReturnLines = (purchase.purchase_items || []).map(pi => {
+    const boughtQty = Number(pi.quantity);
+    const alreadyReturnedQty = alreadyReturnedByItem[pi.id] || 0;
+    return {
+      purchaseItemId: pi.id, productId: pi.product_id, name: pi.products?.name || '—',
+      boughtQty, alreadyReturnedQty, availableQty: Math.max(0, boughtQty - alreadyReturnedQty),
+      unitCost: Number(pi.unit_cost), returnQty: 0,
+    };
+  });
 
+  document.getElementById('purchaseReturnItemFilter').value = '';
+  purchaseReturnItemFilterText = '';
   renderPurchaseReturnLines();
   document.getElementById('purchaseReturnLinesSection').style.display = 'block';
   document.getElementById('savePurchaseReturnBtn').style.display = 'inline-block';
@@ -15055,25 +15962,48 @@ async function searchPurchaseForReturn() {
 function renderPurchaseReturnLines() {
   const wrap = document.getElementById('purchaseReturnLinesWrap');
   wrap.innerHTML = '';
-  purchaseReturnLines.forEach((line) => {
+
+  const q = purchaseReturnItemFilterText.trim().toLowerCase();
+  const visibleLines = q ? purchaseReturnLines.filter(l => l.name.toLowerCase().includes(q)) : purchaseReturnLines;
+
+  if (visibleLines.length === 0) {
+    wrap.innerHTML = `<div class="ret-items-empty">${purchaseReturnLines.length === 0 ? 'لا توجد أصناف في هذه الفاتورة' : 'لا يوجد صنف مطابق للفلترة'}</div>`;
+    updatePurchaseReturnTotal();
+    return;
+  }
+
+  visibleLines.forEach((line) => {
     const row = document.createElement('div');
-    row.className = 'purchase-line-row';
+    row.className = 'purchase-line-row ret-row' + (line.returnQty > 0 ? ' has-return-qty' : '');
 
+    const nameWrap = document.createElement('div');
+    nameWrap.className = 'pr-line-name-wrap';
     const nameDiv = document.createElement('div');
+    nameDiv.className = 'pr-line-name';
+    nameDiv.title = line.name;
     nameDiv.textContent = line.name;
+    nameWrap.appendChild(nameDiv);
+    if (line.alreadyReturnedQty > 0) {
+      const noteDiv = document.createElement('div');
+      noteDiv.className = 'pr-already-returned-note';
+      noteDiv.textContent = `تم إرجاع ${line.alreadyReturnedQty} من قبل`;
+      nameWrap.appendChild(noteDiv);
+    }
 
-    const boughtDiv = document.createElement('div');
-    boughtDiv.className = 'num';
-    boughtDiv.textContent = line.boughtQty;
+    const availableDiv = document.createElement('div');
+    availableDiv.className = 'num';
+    availableDiv.textContent = line.availableQty;
 
     const qtyInput = document.createElement('input');
-    qtyInput.type = 'number'; qtyInput.min = '0'; qtyInput.max = String(line.boughtQty); qtyInput.step = '0.001';
+    qtyInput.type = 'number'; qtyInput.min = '0'; qtyInput.max = String(line.availableQty); qtyInput.step = '0.001';
+    qtyInput.disabled = line.availableQty <= 0;
     qtyInput.value = line.returnQty;
     qtyInput.addEventListener('input', () => {
       let v = Number(qtyInput.value) || 0;
-      if (v > line.boughtQty) { v = line.boughtQty; qtyInput.value = v; }
+      if (v > line.availableQty) { v = line.availableQty; qtyInput.value = v; }
       if (v < 0) { v = 0; qtyInput.value = v; }
       line.returnQty = v;
+      row.classList.toggle('has-return-qty', v > 0);
       row.querySelector('.purchase-line-total').textContent = (line.returnQty * line.unitCost).toFixed(2);
       updatePurchaseReturnTotal();
     });
@@ -15082,13 +16012,24 @@ function renderPurchaseReturnLines() {
     totalDiv.className = 'purchase-line-total num';
     totalDiv.textContent = (line.returnQty * line.unitCost).toFixed(2);
 
-    const emptyDiv = document.createElement('div');
+    const allBtn = document.createElement('button');
+    allBtn.type = 'button';
+    allBtn.className = 'pr-line-all-btn';
+    allBtn.textContent = 'الكل';
+    allBtn.disabled = line.availableQty <= 0;
+    allBtn.addEventListener('click', () => {
+      line.returnQty = line.availableQty;
+      qtyInput.value = line.returnQty;
+      row.classList.toggle('has-return-qty', line.returnQty > 0);
+      row.querySelector('.purchase-line-total').textContent = (line.returnQty * line.unitCost).toFixed(2);
+      updatePurchaseReturnTotal();
+    });
 
-    row.appendChild(nameDiv);
-    row.appendChild(boughtDiv);
+    row.appendChild(nameWrap);
+    row.appendChild(availableDiv);
     row.appendChild(qtyInput);
     row.appendChild(totalDiv);
-    row.appendChild(emptyDiv);
+    row.appendChild(allBtn);
     wrap.appendChild(row);
   });
   updatePurchaseReturnTotal();
@@ -15100,6 +16041,8 @@ function calcPurchaseReturnTotal() {
 
 function updatePurchaseReturnTotal() {
   document.getElementById('purchaseReturnTotalLabel').textContent = calcPurchaseReturnTotal().toFixed(2);
+  const selectedCount = purchaseReturnLines.filter(l => l.returnQty > 0).length;
+  document.getElementById('purchaseReturnSelectedCount').textContent = selectedCount > 0 ? `تم تحديد ${selectedCount} صنف` : '';
 }
 
 async function savePurchaseReturn(e) {
@@ -15160,33 +16103,54 @@ async function savePurchaseReturn(e) {
 
 // ---- Sale Returns (list view in backoffice) ----
 let boSaleReturns = [];
+const saleReturnsMethodLabels = { cash: 'استرداد نقدي', card: 'استرداد على البطاقة', transfer: 'استرداد بتحويل', other: 'أخرى', credit: 'رصيد على حساب العميل', exchange: 'استبدال بصنف آخر', mixed: 'أكثر من طريقة' };
 
 async function loadBoSaleReturns() {
-  const { data, error } = await supabaseClient
+  const fromVal = document.getElementById('saleReturnsFromDate')?.value;
+  const toVal = document.getElementById('saleReturnsToDate')?.value;
+
+  let query = supabaseClient
     .from('sale_returns')
     .select('*, sales(invoice_number), customers(name)')
-    .order('created_at', { ascending: false })
-    .limit(100);
+    .order('created_at', { ascending: false });
+
+  if (fromVal) query = query.gte('created_at', `${fromVal}T00:00:00`);
+  if (toVal) query = query.lte('created_at', `${toVal}T23:59:59`);
+  query = query.limit(fromVal || toVal ? 500 : 100);
+
+  const { data, error } = await query;
   if (error) { console.error(error); showToast('تعذر تحميل مرتجعات البيع', true); return; }
   boSaleReturns = data || [];
 }
 
 function renderSaleReturnsTable() {
   const tbody = document.getElementById('saleReturnsTableBody');
-  if (boSaleReturns.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لا توجد مرتجعات بيع مسجّلة حتى الآن</td></tr>`;
+  const methodFilter = document.getElementById('saleReturnsMethodFilter')?.value || '';
+  const textFilter = (document.getElementById('saleReturnsTextFilter')?.value || '').trim().toLowerCase();
+
+  let rows = boSaleReturns;
+  if (methodFilter) rows = rows.filter(r => r.refund_method === methodFilter);
+  if (textFilter) {
+    rows = rows.filter(r => {
+      const customerName = (r.customers?.name || 'عميل نقدي').toLowerCase();
+      const invoiceNo = String(r.sales?.invoice_number ?? '');
+      return customerName.includes(textFilter) || invoiceNo.includes(textFilter);
+    });
+  }
+
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">${boSaleReturns.length === 0 ? 'لا توجد مرتجعات بيع مسجّلة حتى الآن' : 'لا توجد نتائج مطابقة للفلترة'}</td></tr>`;
     return;
   }
-  const methodLabels = { ...paymentMethodLabels, credit: 'رصيد على حساب العميل', exchange: 'استبدال' };
   tbody.innerHTML = '';
-  boSaleReturns.forEach(r => {
+  rows.forEach(r => {
     const tr = document.createElement('tr');
     const date = new Date(r.created_at).toLocaleDateString('ar-EG');
     tr.innerHTML = `
       <td class="num">#${r.sales?.invoice_number ?? '—'}</td>
       <td>${escapeHtml(r.customers?.name || 'عميل نقدي')}</td>
       <td class="num">${Number(r.total).toFixed(2)}</td>
-      <td>${escapeHtml(methodLabels[r.refund_method] || r.refund_method || '—')}</td>
+      <td>${escapeHtml(saleReturnsMethodLabels[r.refund_method] || r.refund_method || '—')}</td>
       <td class="wrap-cell">${escapeHtml(r.reason || '—')}</td>
       <td class="num">${date}</td>
       <td><button class="bo-icon-btn" data-action="view">عرض</button></td>`;
@@ -18326,10 +19290,16 @@ const cashAccountTxTypeLabels = {
   deposit: 'إيداع',
   withdrawal: 'سحب',
   shift_close_in: 'ترحيل نقدية وردية',
-  reversal: 'عكس ترحيل',
+  reversal: 'عكس حركة',
   capital_injection: 'ضخ رأس مال',
   capital_drawing: 'مسحوبات رأس مال',
   initial_capital: 'رأس مال مبدئي',
+  shift_cash_drop: 'سحب نقدي من وردية',
+  shift_cash_injection: 'تحويل لوردية مفتوحة',
+  expense_payment: 'دفع مصروف',
+  supplier_payment: 'سداد لمورد',
+  customer_receipt: 'تحصيل من عميل',
+  salary_payment: 'صرف راتب',
 };
 
 async function populateCashMovementsReportFilters() {
