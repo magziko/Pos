@@ -5869,6 +5869,71 @@ function escapeHtml(str) {
 }
 
 // ============================================================
+// تصحيح عام لحقول الأرقام (type="number") في كل الشاشات
+// ------------------------------------------------------------
+// عند استخدام أسهم الزيادة/النقصان الافتراضية للمتصفح مع خطوة
+// عشرية (step="0.01" أو "0.001")، جافاسكريبت أحيانًا بينتج قيم
+// غير نظيفة بسبب أخطاء الفاصلة العائمة (مثل 0.30000000000000004).
+// الكود ده بيصحح القيمة تلقائيًا في الحقول اللي خطوتها عشرية فقط
+// (زي حقول السعر)، وبيسيب الحقول اللي خطوتها رقم صحيح (step="1")
+// من غير أي تقريب عشان تفضل الكتابة اليدوية للكسور شغالة عادي —
+// الأسهم في الحقول دي بتزود/تنقص برقم صحيح تلقائيًا لأن الخطوة
+// نفسها رقم صحيح. في الحالتين بيتم التقيد بالحد الأدنى والأقصى.
+document.addEventListener('change', function (e) {
+  const el = e.target;
+  if (!(el instanceof HTMLInputElement) || el.type !== 'number') return;
+  if (el.value === '') return;
+  const stepAttr = el.getAttribute('step');
+  if (stepAttr === 'any') return; // خطوة حرة: نسيبها زي ما هي
+
+  let val = Number(el.value);
+  if (Number.isNaN(val)) return;
+
+  let decimals = 0;
+  if (stepAttr && stepAttr.includes('.')) decimals = stepAttr.split('.')[1].length;
+  // لو الخطوة رقم صحيح (decimals = 0) منقربش القيمة، عشان نسيب
+  // الكسور المكتوبة يدويًا زي ما هي بدون تعديل.
+  let fixed = decimals > 0 ? Number(val.toFixed(decimals)) : val;
+
+  const minAttr = el.getAttribute('min');
+  const maxAttr = el.getAttribute('max');
+  if (minAttr !== null && minAttr !== '' && !Number.isNaN(Number(minAttr))) {
+    fixed = Math.max(fixed, Number(minAttr));
+  }
+  if (maxAttr !== null && maxAttr !== '' && !Number.isNaN(Number(maxAttr))) {
+    fixed = Math.min(fixed, Number(maxAttr));
+  }
+
+  if (String(fixed) !== el.value) {
+    el.value = fixed;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+}, true);
+
+// ============================================================
+// تظليل الرقم تلقائيًا عند الوقوف في أي خانة رقم في كل الموقع
+// ------------------------------------------------------------
+// لما المستخدم يدوس بالماوس أو التاب على أي حقل رقم، بيتم تحديد
+// (تظليل) الرقم الموجود بالكامل تلقائيًا، عشان يقدر يكتب فوقه
+// مباشرة من غير ما يضطر يمسحه أو يظلله يدويًا كل مرة.
+let numberFieldJustFocused = false;
+document.addEventListener('focus', function (e) {
+  const el = e.target;
+  if (el instanceof HTMLInputElement && el.type === 'number') {
+    numberFieldJustFocused = true;
+    el.select();
+  }
+}, true);
+document.addEventListener('mouseup', function (e) {
+  const el = e.target;
+  if (el instanceof HTMLInputElement && el.type === 'number' && numberFieldJustFocused) {
+    // منع الضغطة نفسها من إلغاء التظليل اللي حصل عند التركيز (focus)
+    e.preventDefault();
+  }
+  numberFieldJustFocused = false;
+}, true);
+
+// ============================================================
 // قائمة صنف قابلة للبحث (Searchable product select)
 // ------------------------------------------------------------
 // بديل لقائمة <select> عادية في اختيار الصنف بالتقارير: بتفضل
@@ -14271,7 +14336,7 @@ async function renderStockAdjustTable() {
     tr.innerHTML = `
       <td>${escapeHtml(row.name)}</td>
       <td class="num">${row.before}</td>
-      <td><input type="number" step="0.001" min="0" class="num" style="width:100px; padding:6px 8px;" value="${row.after}" data-idx="${idx}"></td>
+      <td><input type="number" step="1" min="0" class="num" style="width:100px; padding:6px 8px;" value="${row.after}" data-idx="${idx}"></td>
       <td class="num" id="${diffId}">0</td>`;
     tr.querySelector('input').addEventListener('input', (e) => {
       const val = e.target.value === '' ? row.before : Number(e.target.value);
@@ -14450,7 +14515,7 @@ async function renderOpeningBalanceTable() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${escapeHtml(row.name)}</td>
-      <td><input type="number" step="0.001" min="0" class="num" style="width:120px; padding:6px 8px;" value="${row.after}" data-idx="${idx}"></td>
+      <td><input type="number" step="1" min="0" class="num" style="width:120px; padding:6px 8px;" value="${row.after}" data-idx="${idx}"></td>
       <td class="num">${row.before}</td>`;
     tr.querySelector('input').addEventListener('input', (e) => {
       currentOpeningRows[idx].after = e.target.value === '' ? row.before : Number(e.target.value);
