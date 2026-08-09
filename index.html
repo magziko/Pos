@@ -4386,17 +4386,19 @@ a { color: inherit; }
 
           <div id="stockTab-opening" style="display:none;">
             <div class="report-subtitle" style="margin-bottom:14px;">تسجيل رصيد أول المدة للأصناف التي لم يتم تسجيل أي حركة (شراء / بيع / تحويل / جرد) عليها بعد في النظام.</div>
-            <div class="search-row" style="margin-bottom:14px; align-items:center;">
+            <div class="search-row" style="margin-bottom:14px; align-items:center; flex-wrap:wrap; gap:10px;">
               <select id="openingBalanceWarehouseSelect" style="max-width:260px; padding:12px 14px;"></select>
-              <input type="text" id="openingBalanceSearchInput" placeholder="ابحث باسم الصنف...">
+              <input type="text" id="openingBalanceSearchInput" placeholder="ابحث باسم الصنف..." style="flex:1; min-width:180px;">
+              <button type="button" class="submit-btn" id="saveOpeningBalanceBtnTop" style="white-space:nowrap;">حفظ الأرصدة الافتتاحية</button>
             </div>
+            <div class="error-msg" id="openingBalanceErrorTop" style="margin-bottom:10px;"></div>
             <div class="bo-table-wrap">
               <table class="bo-table">
                 <thead>
                   <tr>
                     <th>الصنف</th>
-                    <th>الرصيد الحالي (بالنظام)</th>
                     <th>الرصيد الافتتاحي</th>
+                    <th>الرصيد الحالي (بالنظام)</th>
                   </tr>
                 </thead>
                 <tbody id="openingBalanceTableBody">
@@ -10549,6 +10551,7 @@ function bindBackofficeEvents() {
   document.getElementById('openingBalanceWarehouseSelect').addEventListener('change', renderOpeningBalanceTable);
   document.getElementById('openingBalanceSearchInput').addEventListener('input', renderOpeningBalanceTable);
   document.getElementById('saveOpeningBalanceBtn').addEventListener('click', saveOpeningBalances);
+  document.getElementById('saveOpeningBalanceBtnTop').addEventListener('click', saveOpeningBalances);
   document.getElementById('closeAdjustmentDetailBtn').addEventListener('click', () => {
     document.getElementById('adjustmentDetailModalOverlay').classList.remove('show');
   });
@@ -14447,8 +14450,8 @@ async function renderOpeningBalanceTable() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${escapeHtml(row.name)}</td>
-      <td class="num">${row.before}</td>
-      <td><input type="number" step="0.001" min="0" class="num" style="width:120px; padding:6px 8px;" value="${row.after}" data-idx="${idx}"></td>`;
+      <td><input type="number" step="0.001" min="0" class="num" style="width:120px; padding:6px 8px;" value="${row.after}" data-idx="${idx}"></td>
+      <td class="num">${row.before}</td>`;
     tr.querySelector('input').addEventListener('input', (e) => {
       currentOpeningRows[idx].after = e.target.value === '' ? row.before : Number(e.target.value);
     });
@@ -14458,18 +14461,24 @@ async function renderOpeningBalanceTable() {
 
 async function saveOpeningBalances() {
   const errEl = document.getElementById('openingBalanceError');
-  errEl.classList.remove('show');
+  const errElTop = document.getElementById('openingBalanceErrorTop');
+  const setError = (msg) => {
+    errEl.textContent = msg; errElTop.textContent = msg;
+    if (msg) { errEl.classList.add('show'); errElTop.classList.add('show'); }
+    else { errEl.classList.remove('show'); errElTop.classList.remove('show'); }
+  };
+  setError('');
   const warehouseId = document.getElementById('openingBalanceWarehouseSelect').value;
-  if (!warehouseId) { errEl.textContent = 'اختر مخزنًا'; errEl.classList.add('show'); return; }
+  if (!warehouseId) { setError('اختر مخزنًا'); return; }
 
   const changed = currentOpeningRows.filter(r => Number(r.after) !== Number(r.before));
-  if (changed.length === 0) { errEl.textContent = 'أدخل رصيدًا افتتاحيًا لصنف واحد على الأقل'; errEl.classList.add('show'); return; }
+  if (changed.length === 0) { setError('أدخل رصيدًا افتتاحيًا لصنف واحد على الأقل'); return; }
 
   const userNote = document.getElementById('openingBalanceNote').value.trim();
   const note = userNote ? `رصيد افتتاحي — ${userNote}` : 'رصيد افتتاحي';
   const saveBtn = document.getElementById('saveOpeningBalanceBtn');
-  saveBtn.disabled = true;
-  saveBtn.textContent = 'جاري الحفظ...';
+  const saveBtnTop = document.getElementById('saveOpeningBalanceBtnTop');
+  [saveBtn, saveBtnTop].forEach(b => { b.disabled = true; b.textContent = 'جاري الحفظ...'; });
 
   try {
     for (const row of changed) {
@@ -14518,11 +14527,9 @@ async function saveOpeningBalances() {
     renderStockBalancesTable();
   } catch (err) {
     console.error(err);
-    errEl.textContent = err.message || 'حدث خطأ أثناء حفظ الأرصدة الافتتاحية';
-    errEl.classList.add('show');
+    setError(err.message || 'حدث خطأ أثناء حفظ الأرصدة الافتتاحية');
   } finally {
-    saveBtn.disabled = false;
-    saveBtn.textContent = 'حفظ الأرصدة الافتتاحية';
+    [saveBtn, saveBtnTop].forEach(b => { b.disabled = false; b.textContent = 'حفظ الأرصدة الافتتاحية'; });
   }
 }
 
