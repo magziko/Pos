@@ -1662,13 +1662,14 @@ a { color: inherit; }
                   <th>فاتورة الشراء</th>
                   <th>المورد</th>
                   <th>الإجمالي</th>
+                  <th>طريقة التسوية</th>
                   <th>السبب</th>
                   <th>التاريخ</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody id="purchaseReturnsTableBody">
-                <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+                <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
@@ -5295,6 +5296,20 @@ a { color: inherit; }
         <div class="field">
           <label>سبب المرتجع (اختياري)</label>
           <input type="text" id="purchaseReturnReasonInput" placeholder="مثال: بضاعة تالفة">
+        </div>
+
+        <div class="modal-grid">
+          <div class="field">
+            <label>طريقة تسوية المرتجع</label>
+            <select id="purchaseReturnMethod">
+              <option value="credit">خصم من مديونية المورد (على الحساب)</option>
+              <option value="cash">استرداد نقدي/فعلي إلى خزينة</option>
+            </select>
+          </div>
+          <div class="field" id="purchaseReturnCashAccountField" style="display:none;">
+            <label>الخزينة/الحساب المستلم فيه المبلغ</label>
+            <select id="purchaseReturnCashAccount"></select>
+          </div>
         </div>
       </div>
 
@@ -10722,6 +10737,7 @@ function bindBackofficeEvents() {
     if (e.target.id === 'purchaseReturnModalOverlay') closePurchaseReturnModal();
   });
   document.getElementById('purchaseReturnSearchBtn').addEventListener('click', () => searchPurchaseForReturn());
+  document.getElementById('purchaseReturnMethod').addEventListener('change', applyPurchaseReturnCashFieldVisibility);
   document.getElementById('purchaseReturnForm').addEventListener('submit', savePurchaseReturn);
   document.getElementById('purchaseReturnItemFilter').addEventListener('input', (e) => {
     purchaseReturnItemFilterText = e.target.value;
@@ -15982,6 +15998,7 @@ async function loadBoPurchaseReturns() {
 function renderPurchaseReturnsTable() {
   const tbody = document.getElementById('purchaseReturnsTableBody');
   const textFilter = (document.getElementById('purchaseReturnsTextFilter')?.value || '').trim().toLowerCase();
+  const purchaseReturnMethodLabels = { credit: 'خصم من مديونية المورد', cash: 'استرداد نقدي فعلي' };
 
   let rows = boPurchaseReturns;
   if (textFilter) {
@@ -15993,7 +16010,7 @@ function renderPurchaseReturnsTable() {
   }
 
   if (rows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">${boPurchaseReturns.length === 0 ? 'لا توجد مرتجعات شراء مسجّلة حتى الآن' : 'لا توجد نتائج مطابقة للفلترة'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">${boPurchaseReturns.length === 0 ? 'لا توجد مرتجعات شراء مسجّلة حتى الآن' : 'لا توجد نتائج مطابقة للفلترة'}</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
@@ -16004,6 +16021,7 @@ function renderPurchaseReturnsTable() {
       <td class="num">#${r.purchases?.invoice_number ?? '—'}</td>
       <td>${escapeHtml(r.suppliers?.name || '—')}</td>
       <td class="num">${Number(r.total).toFixed(2)}</td>
+      <td>${escapeHtml(purchaseReturnMethodLabels[r.refund_method] || 'خصم من مديونية المورد')}</td>
       <td class="wrap-cell">${escapeHtml(r.reason || '—')}</td>
       <td class="num">${date}</td>
       <td><button class="bo-icon-btn" data-action="view">عرض</button></td>`;
@@ -16023,10 +16041,29 @@ function openPurchaseReturnModal() {
   document.getElementById('purchaseReturnLinesSection').style.display = 'none';
   document.getElementById('savePurchaseReturnBtn').style.display = 'none';
   document.getElementById('purchaseReturnReasonInput').value = '';
+  document.getElementById('purchaseReturnMethod').value = 'credit';
+  applyPurchaseReturnCashFieldVisibility();
   document.getElementById('purchaseReturnModalError').classList.remove('show');
   document.getElementById('purchaseReturnModalOverlay').classList.add('show');
   loadPurchaseReturnRecentPurchases();
   setTimeout(() => document.getElementById('purchaseReturnInvoiceInput').focus(), 50);
+}
+
+// بيظهر حقل اختيار الخزينة بس لو طريقة التسوية "استرداد نقدي فعلي"،
+// وبيعبّي القائمة من نفس خزائن الفرع النشطة.
+async function applyPurchaseReturnCashFieldVisibility() {
+  const method = document.getElementById('purchaseReturnMethod').value;
+  const show = method === 'cash';
+  document.getElementById('purchaseReturnCashAccountField').style.display = show ? '' : 'none';
+  document.getElementById('purchaseReturnCashAccount').required = show;
+  if (show) {
+    if (!treasuriesLoadedOnce) { await loadBoTreasuries(); treasuriesLoadedOnce = true; }
+    const sel = document.getElementById('purchaseReturnCashAccount');
+    const options = boTreasuries.filter(t => t.is_active && t.branch_id === currentProfile.branch_id);
+    const prev = sel.value;
+    sel.innerHTML = options.map(t => `<option value="${t.id}">${escapeHtml(t.name)}${t.is_main ? ' (الرئيسية)' : ''}</option>`).join('');
+    if (options.some(t => t.id === prev)) sel.value = prev;
+  }
 }
 
 function closePurchaseReturnModal() {
@@ -16198,6 +16235,14 @@ async function savePurchaseReturn(e) {
   const validLines = purchaseReturnLines.filter(l => l.returnQty > 0);
   if (validLines.length === 0) { errEl.textContent = 'حدد كمية مرتجعة لصنف واحد على الأقل'; errEl.classList.add('show'); return; }
 
+  const refundMethod = document.getElementById('purchaseReturnMethod').value || 'credit';
+  const returnCashAccountId = refundMethod === 'cash' ? (document.getElementById('purchaseReturnCashAccount').value || null) : null;
+  if (refundMethod === 'cash' && !returnCashAccountId) {
+    errEl.textContent = 'يرجى اختيار الخزينة/الحساب المستلم فيه المبلغ';
+    errEl.classList.add('show');
+    return;
+  }
+
   const saveBtn = document.getElementById('savePurchaseReturnBtn');
   saveBtn.disabled = true;
   saveBtn.textContent = 'جاري الحفظ...';
@@ -16210,7 +16255,7 @@ async function savePurchaseReturn(e) {
       .from('purchase_returns')
       .insert({
         purchase_id: purchaseReturnPurchase.id, branch_id: currentProfile.branch_id, user_id: currentProfile.id,
-        supplier_id: purchaseReturnPurchase.supplier_id, reason, total,
+        supplier_id: purchaseReturnPurchase.supplier_id, reason, total, refund_method: refundMethod,
       }).select().single();
     if (prError) throw prError;
 
@@ -16221,8 +16266,16 @@ async function savePurchaseReturn(e) {
     const { error: itemsError } = await supabaseClient.from('purchase_return_items').insert(returnItems);
     if (itemsError) throw itemsError;
 
-    // تقليل مديونيتنا عند المورد بقيمة المرتجع
-    if (purchaseReturnPurchase.supplier_id) {
+    if (refundMethod === 'cash') {
+      // استرداد نقدي فعلي: المورد رجّعلنا الفلوس كاش/تحويل، فمديونيتنا عنده متتأثرش،
+      // لكن الخزينة المختارة بتزيد فعليًا بقيمة المرتجع عبر postCashAccountAdjustment
+      // (نفس آلية savePurchase)، والحركة بتترحّل بنوع supplier_refund.
+      await postCashAccountAdjustment(
+        returnCashAccountId, Math.abs(total), 'supplier_refund', purchaseReturn.id,
+        `استرداد نقدي من مورد - مرتجع شراء فاتورة ${purchaseReturnPurchase.invoice_number}`
+      );
+    } else if (purchaseReturnPurchase.supplier_id) {
+      // خصم من مديونية المورد (التسوية الافتراضية زي ما كانت)
       const supplier = boSuppliers.find(s => s.id === purchaseReturnPurchase.supplier_id);
       const newBalance = Math.max(0, (Number(supplier?.balance) || 0) - total);
       await supabaseClient.from('suppliers').update({ balance: newBalance }).eq('id', purchaseReturnPurchase.supplier_id);
@@ -16493,9 +16546,11 @@ async function openPurchaseReturnDetailModal(ret) {
   if (error) { console.error(error); body.innerHTML = `<div class="bo-empty">تعذر تحميل تفاصيل المرتجع</div>`; return; }
 
   const date = new Date(ret.created_at).toLocaleString('ar-EG');
+  const purchaseReturnMethodLabels = { credit: 'خصم من مديونية المورد', cash: 'استرداد نقدي فعلي' };
   body.innerHTML = `
     <div class="totals-row"><span>المورد</span><span>${escapeHtml(ret.suppliers?.name || '—')}</span></div>
     <div class="totals-row"><span>التاريخ</span><span class="num">${date}</span></div>
+    <div class="totals-row"><span>طريقة التسوية</span><span>${escapeHtml(purchaseReturnMethodLabels[ret.refund_method] || 'خصم من مديونية المورد')}</span></div>
     <div class="totals-row"><span>السبب</span><span>${escapeHtml(ret.reason || '—')}</span></div>
     ${renderInvoiceDetailItemsTable(items, 'سعر الوحدة')}
     <div class="totals-row grand"><span>إجمالي المرتجع</span><span class="num">${Number(ret.total).toFixed(2)}</span></div>`;
