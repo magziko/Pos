@@ -557,7 +557,7 @@ a { color: inherit; }
 .debts-col-title.owed-to-us { color: var(--teal-700); }
 .debts-col-title.we-owe { color: var(--danger); }
 
-.bo-nav-group { margin-bottom: 4px; }
+.bo-nav-group { margin-bottom: 4px; border-radius: var(--radius-md); transition: background 0.15s ease; }
 .bo-nav-parent { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
 .bo-nav-chevron { font-size: 11px; transition: transform 0.15s ease; color: var(--ink-soft); }
 .bo-nav-group.open .bo-nav-chevron { transform: rotate(-90deg); }
@@ -566,7 +566,39 @@ a { color: inherit; }
 .bo-nav-group.open .bo-nav-sub { display: flex; }
 .bo-nav-sub-item { width: 100%; text-align: right; padding: 8px 12px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; color: var(--ink-soft); background: none; margin-bottom: 2px; }
 .bo-nav-sub-item:hover { background: var(--surface-sunken); color: var(--ink); }
-.bo-nav-sub-item.active { background: var(--teal-100); color: var(--teal-900); font-weight: 700; }
+.bo-nav-sub-item.active { background: var(--teal-500); color: #fff; font-weight: 700; }
+
+/* تظليل كل شاشة وقائمتها المنسدلة عند اختيارها لتمييزها عن باقي القائمة */
+.bo-nav-group.open { background: var(--teal-100); padding: 2px 4px 6px; margin: 0 -4px 4px; }
+.bo-nav-group.open .bo-nav-sub { border-inline-end-color: var(--teal-500); }
+.bo-nav-group.open .bo-nav-parent.active { background: var(--teal-500); color: #fff; }
+
+/* فرز كل جداول النظام بالضغط على عنوان العمود */
+#bo-content .bo-table thead th,
+.bo-content .bo-table thead th { cursor: pointer; user-select: none; position: relative; white-space: nowrap; }
+.bo-table thead th:hover { background: var(--surface-sunken); color: var(--ink); }
+.bo-table thead th.sorted-asc,
+.bo-table thead th.sorted-desc { color: var(--teal-700); }
+.bo-table thead th.sorted-asc::after { content: ' ▲'; font-size: 9px; }
+.bo-table thead th.sorted-desc::after { content: ' ▼'; font-size: 9px; }
+
+/* فلترة أعمدة الجداول بقائمة قيم قابلة للتحديد (كل شاشات النظام) */
+.bo-table thead th.colf-th { padding-inline-end: 22px; }
+.colf-btn { position: absolute; inset-inline-end: 4px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; border-radius: 4px; color: var(--ink-soft); cursor: pointer; }
+.colf-btn:hover { background: var(--surface-sunken); color: var(--ink); }
+.colf-btn.active { color: var(--teal-700); font-weight: 900; }
+.col-filter-popup { position: absolute; z-index: 4000; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: 0 8px 24px rgba(0,0,0,0.16); padding: 10px; width: 220px; font-size: 13px; direction: rtl; }
+.col-filter-popup .colf-search { width: 100%; padding: 8px 10px; font-size: 12.5px; margin-bottom: 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.col-filter-popup .colf-list { max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; padding-inline-start: 2px; }
+.col-filter-popup .colf-item { display: flex; align-items: center; gap: 8px; padding: 6px 4px; border-radius: var(--radius-sm); cursor: pointer; color: var(--ink); }
+.col-filter-popup .colf-item:hover { background: var(--surface-sunken); }
+.col-filter-popup .colf-item input { flex-shrink: 0; }
+.col-filter-popup .colf-item.colf-all { font-weight: 700; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 4px; }
+.col-filter-popup .colf-empty { color: var(--ink-soft); padding: 8px 4px; text-align: center; font-size: 12.5px; }
+.col-filter-popup .colf-actions { display: flex; gap: 8px; }
+.col-filter-popup .colf-actions button { flex: 1; padding: 8px; font-size: 12.5px; border-radius: var(--radius-sm); font-weight: 600; }
+.col-filter-popup .colf-cancel { background: var(--surface-sunken); color: var(--ink); }
+.col-filter-popup .colf-ok { background: var(--teal-700); color: #fff; }
 
 .report-breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink-soft); margin-bottom: 12px; }
 .report-breadcrumb .crumb-sep { color: var(--border); }
@@ -1365,7 +1397,7 @@ a { color: inherit; }
             </div>
           </div>
           <div class="search-row" style="margin-bottom:14px;">
-            <input type="text" id="customerSearchInput" placeholder="ابحث بالاسم أو رقم التليفون...">
+            <input type="text" id="boCustomerSearchInput" placeholder="ابحث بالاسم أو رقم التليفون...">
           </div>
           <div class="bo-table-wrap">
             <table class="bo-table">
@@ -10705,7 +10737,7 @@ function bindBackofficeEvents() {
     if (e.target.id === 'customerModalOverlay') closeCustomerModal();
   });
   document.getElementById('customerForm').addEventListener('submit', saveCustomer);
-  document.getElementById('customerSearchInput').addEventListener('input', renderCustomersTable);
+  document.getElementById('boCustomerSearchInput').addEventListener('input', renderCustomersTable);
 
   // ---- Payments ----
   document.getElementById('addCustomerReceiptBtn').addEventListener('click', () => openPaymentModal('customer_receipt', null));
@@ -12005,7 +12037,7 @@ async function loadBoCustomers() {
 
 function renderCustomersTable() {
   const tbody = document.getElementById('customersTableBody');
-  const q = (document.getElementById('customerSearchInput').value || '').trim().toLowerCase();
+  const q = (document.getElementById('boCustomerSearchInput').value || '').trim().toLowerCase();
   const filtered = boCustomers.filter(c => {
     if (!q) return true;
     return c.name.toLowerCase().includes(q) || (c.phone || '').includes(q);
@@ -22080,6 +22112,306 @@ async function rdExecute() {
   mo.observe(document.body, { childList: true, subtree: true });
   document.addEventListener('DOMContentLoaded', scanAll);
   scanAll();
+})();
+</script>
+
+<!-- فرز كل جداول النظام: الضغط على عنوان أي عمود في أي جدول يفرزه تصاعديًا/تنازليًا -->
+<script>
+(function () {
+  const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
+
+  function normalizeText(raw) {
+    return String(raw || '')
+      .replace(/[\u200e\u200f\u061c]/g, '') // إزالة علامات الاتجاه الخفية
+      .replace(/[٠-٩]/g, d => String(ARABIC_DIGITS.indexOf(d)))
+      .trim();
+  }
+
+  function parseDateValue(s) {
+    // صيغة يوم/شهر/سنة [وقت] الناتجة عن toLocaleDateString('ar-EG')
+    const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[,\s]+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(ص|م|AM|PM)?)?$/i);
+    if (m) {
+      let [, d, mo, y, h, mi, se, ampm] = m;
+      d = +d; mo = +mo; y = +y; h = h ? +h : 0; mi = mi ? +mi : 0; se = se ? +se : 0;
+      if (ampm) {
+        const isPM = /^(م|PM)$/i.test(ampm);
+        if (isPM && h < 12) h += 12;
+        if (!isPM && h === 12) h = 0;
+      }
+      const dt = new Date(y, mo - 1, d, h, mi, se);
+      return isNaN(dt.getTime()) ? null : dt.getTime();
+    }
+    // صيغة ISO أو أي صيغة تاريخ مفهومة مباشرة (تشترط وجود سنة من 4 أرقام)
+    if (/\d{4}/.test(s)) {
+      const iso = Date.parse(s);
+      if (!isNaN(iso)) return iso;
+    }
+    return null;
+  }
+
+  function parseCellValue(rawText) {
+    const s = normalizeText(rawText);
+    if (s === '' || s === '-' || s === '—' || s === 'N/A') return { type: 'empty', value: '' };
+
+    // محاولة تفسير الرقم (مع دعم الفواصل والعملات والنسب المئوية)
+    let numCandidate = s.replace(/[,٬]/g, '').replace(/%$/, '').trim();
+    numCandidate = numCandidate.replace(/^(ج\.م|جنيه|ر\.س|ريال|EGP|SAR|USD|\$)\s*/i, '').replace(/\s*(ج\.م|جنيه|ر\.س|ريال|EGP|SAR|USD|\$)$/i, '').trim();
+    if (numCandidate !== '' && /^-?\d+(\.\d+)?$/.test(numCandidate)) {
+      return { type: 'number', value: parseFloat(numCandidate) };
+    }
+
+    const dateVal = parseDateValue(s);
+    if (dateVal !== null) return { type: 'date', value: dateVal };
+
+    return { type: 'text', value: s };
+  }
+
+  function sortReportTable(table, th) {
+    const thead = table.querySelector('thead');
+    const tbody = table.querySelector('tbody');
+    if (!thead || !tbody) return;
+    const headerRow = thead.querySelector('tr');
+    if (!headerRow) return;
+    const ths = Array.from(headerRow.children);
+    const colIndex = ths.indexOf(th);
+    if (colIndex === -1) return;
+
+    const allRows = Array.from(tbody.children).filter(r => r.tagName === 'TR');
+    const dataRows = allRows.filter(r => !(r.children.length === 1 && r.children[0].hasAttribute('colspan')));
+    if (dataRows.length < 2) return; // لا يوجد ما يكفي من البيانات للفرز
+
+    const newDir = th.getAttribute('data-sort-dir') === 'asc' ? 'desc' : 'asc';
+    ths.forEach(h => { h.removeAttribute('data-sort-dir'); h.classList.remove('sorted-asc', 'sorted-desc'); });
+    th.setAttribute('data-sort-dir', newDir);
+    th.classList.add(newDir === 'asc' ? 'sorted-asc' : 'sorted-desc');
+
+    const dir = newDir === 'asc' ? 1 : -1;
+    const getCellText = row => {
+      const cell = row.children[colIndex];
+      return cell ? cell.textContent : '';
+    };
+
+    dataRows.sort((rowA, rowB) => {
+      const a = parseCellValue(getCellText(rowA));
+      const b = parseCellValue(getCellText(rowB));
+      // القيم الفارغة تُدفع دائمًا لأسفل الترتيب أيًا كان اتجاه الفرز
+      if (a.type === 'empty' && b.type === 'empty') return 0;
+      if (a.type === 'empty') return 1;
+      if (b.type === 'empty') return -1;
+
+      if (a.type !== 'text' && b.type !== 'text') {
+        return (a.value - b.value) * dir;
+      }
+      return String(a.value).localeCompare(String(b.value), 'ar', { numeric: true, sensitivity: 'base' }) * dir;
+    });
+
+    const frag = document.createDocumentFragment();
+    dataRows.forEach(r => frag.appendChild(r));
+    tbody.appendChild(frag);
+  }
+
+  document.addEventListener('click', function (e) {
+    const th = e.target.closest('th');
+    if (!th) return;
+    if (e.target.closest('.colf-btn')) return; // النقر على أيقونة الفلترة لا يفعّل الفرز
+    const table = th.closest('table.bo-table');
+    if (!table) return;
+    if (!th.closest('thead')) return;
+    sortReportTable(table, th);
+  });
+})();
+</script>
+
+<!-- فلترة أعمدة الجداول: أيقونة فلتر على كل عمود تفتح قائمة بالقيم المتاحة للاختيار (كل شاشات النظام) -->
+<script>
+(function () {
+  const tableFilterState = new WeakMap(); // table -> Map(colIndex -> Set(قيم مسموح بها))
+  let openPopup = null;
+  let openPopupBtn = null;
+
+  function normalize(s) {
+    return String(s || '').replace(/[\u200e\u200f\u061c]/g, '').trim();
+  }
+
+  function isDataRow(tr) {
+    return tr.tagName === 'TR' && !(tr.children.length === 1 && tr.children[0].hasAttribute('colspan'));
+  }
+
+  function ensureFilterIcons() {
+    document.querySelectorAll('table.bo-table thead tr').forEach(headerRow => {
+      Array.from(headerRow.children).forEach(th => {
+        if (th.dataset.colfReady) return;
+        const label = normalize(th.textContent);
+        if (!label) { th.dataset.colfReady = '1'; return; } // تجاهل أعمدة بلا عنوان (زي عمود الإجراءات)
+        th.dataset.colfReady = '1';
+        th.classList.add('colf-th');
+        const btn = document.createElement('span');
+        btn.className = 'colf-btn';
+        btn.textContent = '▾';
+        btn.title = 'فلترة حسب ' + label;
+        th.appendChild(btn);
+      });
+    });
+  }
+
+  function closePopup() {
+    if (openPopup) { openPopup.remove(); openPopup = null; openPopupBtn = null; }
+  }
+
+  function getColumnValues(table, colIndex) {
+    const tbody = table.querySelector('tbody');
+    if (!tbody) return [];
+    const set = new Set();
+    Array.from(tbody.children).filter(isDataRow).forEach(tr => {
+      const cell = tr.children[colIndex];
+      set.add(normalize(cell ? cell.textContent : ''));
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'ar', { numeric: true, sensitivity: 'base' }));
+  }
+
+  function applyTableFilters(table) {
+    const filterMap = tableFilterState.get(table);
+    const tbody = table.querySelector('tbody');
+    if (!tbody) return;
+    const dataRows = Array.from(tbody.children).filter(isDataRow);
+    let visibleCount = 0;
+    dataRows.forEach(tr => {
+      let visible = true;
+      if (filterMap && filterMap.size) {
+        for (const [colIndex, allowedSet] of filterMap) {
+          const cell = tr.children[colIndex];
+          const val = normalize(cell ? cell.textContent : '');
+          if (!allowedSet.has(val)) { visible = false; break; }
+        }
+      }
+      tr.style.display = visible ? '' : 'none';
+      if (visible) visibleCount++;
+    });
+
+    // صف "لا توجد نتائج" يظهر فقط عند إخفاء كل الصفوف بسبب الفلاتر
+    let noResultsRow = tbody.querySelector('tr[data-colf-noresults]');
+    if (dataRows.length && visibleCount === 0) {
+      if (!noResultsRow) {
+        const colCount = table.querySelectorAll('thead th').length || 1;
+        noResultsRow = document.createElement('tr');
+        noResultsRow.setAttribute('data-colf-noresults', '1');
+        noResultsRow.innerHTML = `<td colspan="${colCount}" class="bo-empty">لا توجد نتائج مطابقة للفلتر</td>`;
+        tbody.appendChild(noResultsRow);
+      }
+    } else if (noResultsRow) {
+      noResultsRow.remove();
+    }
+
+    // تحديث شكل أيقونات الفلترة النشطة
+    const headerRow = table.querySelector('thead tr');
+    if (headerRow) {
+      Array.from(headerRow.children).forEach((th, idx) => {
+        const btn = th.querySelector('.colf-btn');
+        if (!btn) return;
+        btn.classList.toggle('active', !!(filterMap && filterMap.has(idx)));
+      });
+    }
+  }
+
+  function openColumnFilterPopup(btn) {
+    closePopup();
+    const th = btn.closest('th');
+    const table = th.closest('table.bo-table');
+    const headerRow = th.closest('tr');
+    const colIndex = Array.from(headerRow.children).indexOf(th);
+    const values = getColumnValues(table, colIndex);
+
+    let filterMap = tableFilterState.get(table);
+    const currentSelected = (filterMap && filterMap.get(colIndex)) || new Set(values);
+
+    const popup = document.createElement('div');
+    popup.className = 'col-filter-popup';
+    popup.innerHTML = `
+      <input type="text" class="colf-search" placeholder="بحث...">
+      <div class="colf-list">
+        <label class="colf-item colf-all"><input type="checkbox" class="colf-select-all"><span>تحديد الكل</span></label>
+        ${values.length ? values.map(v => `<label class="colf-item"><input type="checkbox" value="${v.replace(/"/g, '&quot;')}"><span>${v || '(فارغ)'}</span></label>`).join('') : '<div class="colf-empty">لا توجد قيم</div>'}
+      </div>
+      <div class="colf-actions">
+        <button type="button" class="colf-cancel">إلغاء</button>
+        <button type="button" class="colf-ok">حسنًا</button>
+      </div>`;
+
+    document.body.appendChild(popup);
+    const rect = btn.getBoundingClientRect();
+    const popupWidth = popup.offsetWidth;
+    let left = rect.left + window.scrollX - popupWidth + rect.width;
+    left = Math.max(8, Math.min(left, window.innerWidth - popupWidth - 8 + window.scrollX));
+    popup.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+    popup.style.left = left + 'px';
+
+    const itemChecks = Array.from(popup.querySelectorAll('.colf-list input[type="checkbox"]:not(.colf-select-all)'));
+    itemChecks.forEach(cb => { cb.checked = currentSelected.has(cb.value); });
+
+    const selectAllCb = popup.querySelector('.colf-select-all');
+    function syncSelectAll() {
+      const visibleChecks = itemChecks.filter(cb => cb.closest('.colf-item').style.display !== 'none');
+      selectAllCb.checked = visibleChecks.length > 0 && visibleChecks.every(cb => cb.checked);
+    }
+    syncSelectAll();
+
+    selectAllCb.addEventListener('change', () => {
+      const visibleChecks = itemChecks.filter(cb => cb.closest('.colf-item').style.display !== 'none');
+      visibleChecks.forEach(cb => { cb.checked = selectAllCb.checked; });
+    });
+    itemChecks.forEach(cb => cb.addEventListener('change', syncSelectAll));
+
+    popup.querySelector('.colf-search').addEventListener('input', (e) => {
+      const q = normalize(e.target.value).toLowerCase();
+      itemChecks.forEach(cb => {
+        const item = cb.closest('.colf-item');
+        const text = normalize(cb.value).toLowerCase();
+        item.style.display = !q || text.includes(q) ? '' : 'none';
+      });
+      syncSelectAll();
+    });
+
+    popup.querySelector('.colf-cancel').addEventListener('click', closePopup);
+    popup.querySelector('.colf-ok').addEventListener('click', () => {
+      const selected = new Set(itemChecks.filter(cb => cb.checked).map(cb => cb.value));
+      if (!filterMap) { filterMap = new Map(); tableFilterState.set(table, filterMap); }
+      if (selected.size === 0 || selected.size === values.length) {
+        filterMap.delete(colIndex); // بدون فلتر فعلي = عرض الكل
+      } else {
+        filterMap.set(colIndex, selected);
+      }
+      closePopup();
+      applyTableFilters(table);
+    });
+
+    openPopup = popup;
+    openPopupBtn = btn;
+  }
+
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.colf-btn');
+    if (btn) {
+      e.stopPropagation();
+      if (openPopupBtn === btn) { closePopup(); return; }
+      openColumnFilterPopup(btn);
+      return;
+    }
+    if (openPopup && !e.target.closest('.col-filter-popup')) closePopup();
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopup(); });
+  document.addEventListener('scroll', () => closePopup(), true);
+
+  document.addEventListener('DOMContentLoaded', ensureFilterIcons);
+  let colfScanQueued = false;
+  function queueColfScan() {
+    if (colfScanQueued) return;
+    colfScanQueued = true;
+    setTimeout(() => { colfScanQueued = false; ensureFilterIcons(); }, 250);
+  }
+  const colfContainer = document.querySelector('.bo-content') || document.body;
+  const colfObserver = new MutationObserver(queueColfScan);
+  colfObserver.observe(colfContainer, { childList: true, subtree: true });
+  ensureFilterIcons();
 })();
 </script>
 </body>
