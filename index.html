@@ -5697,10 +5697,11 @@ a { color: inherit; }
       <div class="shift-summary-box"><div class="shift-summary-box-label">مدفوعات نقدية (سداد لموردين)</div><div class="shift-summary-box-value num" id="csCashPayouts">0.00</div></div>
       <div class="shift-summary-box"><div class="shift-summary-box-label">مصروفات نقدية</div><div class="shift-summary-box-value num" id="csCashExpenses">0.00</div></div>
       <div class="shift-summary-box"><div class="shift-summary-box-label">سحوبات نقدية أثناء الوردية</div><div class="shift-summary-box-value num" id="csCashDrops">0.00</div></div>
+      <div class="shift-summary-box"><div class="shift-summary-box-label">مرتجعات بيع نقدية (مبلغ اتسلم للعميل)</div><div class="shift-summary-box-value num" id="csCashRefunds">0.00</div></div>
       <div class="shift-summary-box"><div class="shift-summary-box-label">تحويلات مضافة من المكتب الخلفي</div><div class="shift-summary-box-value num" id="csCashInjections">0.00</div></div>
     </div>
     <div class="shift-summary-box" id="csExpectedCashBox" style="margin-bottom:14px;">
-      <div class="shift-summary-box-label">صافي النقدية المتوقع في الدرج (عهدة + مبيعات نقدي + مقبوضات + تحويلات واردة − مدفوعات − مصروفات − سحوبات)</div>
+      <div class="shift-summary-box-label">صافي النقدية المتوقع في الدرج (عهدة + مبيعات نقدي + مقبوضات + تحويلات واردة − مدفوعات − مصروفات − مرتجعات − سحوبات)</div>
       <div class="shift-summary-box-value num" id="csExpectedCash" style="font-size:19px;">0.00</div>
     </div>
     <div class="field field-full"><label for="csCountedInput">النقدية الفعلية بعد الجرد *</label><input type="number" id="csCountedInput" min="0" step="0.01" placeholder="أدخل المبلغ الذي تم عدّه في الدرج"></div>
@@ -7064,7 +7065,7 @@ async function submitOpenShift(e) {
 }
 
 async function computeShiftCashSummary(shiftId, openingAmount) {
-  const [{ data: sales, error: salesErr }, { data: salePayments, error: salePaymentsErr }, { data: payments, error: paymentsErr }, { data: expenses, error: expensesErr }, { data: soldItems, error: soldItemsErr }, { data: cashDrops, error: cashDropsErr }, { data: cashInjections, error: cashInjectionsErr }] = await Promise.all([
+  const [{ data: sales, error: salesErr }, { data: salePayments, error: salePaymentsErr }, { data: payments, error: paymentsErr }, { data: expenses, error: expensesErr }, { data: soldItems, error: soldItemsErr }, { data: cashDrops, error: cashDropsErr }, { data: cashInjections, error: cashInjectionsErr }, { data: cashReturnsSingle, error: cashReturnsSingleErr }, { data: cashReturnsMixed, error: cashReturnsMixedErr }] = await Promise.all([
     supabaseClient.from('sales').select('id, total, paid_amount, payment_method').eq('shift_id', shiftId).eq('status', 'completed'),
     supabaseClient.from('sale_payments').select('amount, method, sales!inner(shift_id, status)').eq('sales.shift_id', shiftId).eq('sales.status', 'completed'),
     supabaseClient.from('payments').select('amount, method, payment_type').eq('shift_id', shiftId),
@@ -7072,6 +7073,10 @@ async function computeShiftCashSummary(shiftId, openingAmount) {
     supabaseClient.from('sale_items').select('product_id, quantity, total, products(name), sales!inner(shift_id, status)').eq('sales.shift_id', shiftId).eq('sales.status', 'completed'),
     supabaseClient.from('cash_account_transactions').select('amount').eq('reference_id', shiftId).eq('type', 'shift_cash_drop'),
     supabaseClient.from('cash_account_transactions').select('amount').eq('reference_id', shiftId).eq('type', 'shift_cash_injection'),
+    // مرتجعات بيع بطريقة استرداد واحدة كاش: المبلغ كامل فى sale_returns.total (مفيش صف فى sale_return_payments)
+    supabaseClient.from('sale_returns').select('total').eq('shift_id', shiftId).eq('refund_method', 'cash'),
+    // مرتجعات بيع بأكثر من طريقة استرداد (mixed): الجزء الكاش بس من sale_return_payments
+    supabaseClient.from('sale_return_payments').select('amount, method, sale_returns!inner(shift_id)').eq('sale_returns.shift_id', shiftId).eq('method', 'cash'),
   ]);
   if (salesErr) throw salesErr;
   if (salePaymentsErr) throw salePaymentsErr;
@@ -7080,6 +7085,8 @@ async function computeShiftCashSummary(shiftId, openingAmount) {
   if (soldItemsErr) throw soldItemsErr;
   if (cashDropsErr) throw cashDropsErr;
   if (cashInjectionsErr) throw cashInjectionsErr;
+  if (cashReturnsSingleErr) throw cashReturnsSingleErr;
+  if (cashReturnsMixedErr) throw cashReturnsMixedErr;
 
   // تجميع الأصناف المباعة بالوردية: الكمية والإجمالي لكل صنف (لعرضها وطباعتها في تقرير Z)
   const itemsByProduct = new Map();
@@ -7116,10 +7123,13 @@ async function computeShiftCashSummary(shiftId, openingAmount) {
     .reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
   const cashDropsTotal = (cashDrops || []).reduce((sum, d) => sum + (Number(d.amount) || 0), 0);
   const cashInjectionsTotal = (cashInjections || []).reduce((sum, d) => sum + Math.abs(Number(d.amount) || 0), 0);
+  const cashRefundsTotal =
+    (cashReturnsSingle || []).reduce((sum, r) => sum + (Number(r.total) || 0), 0) +
+    (cashReturnsMixed || []).reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
 
-  const expectedCash = Number(openingAmount) + byMethod.cash + cashReceipts - cashPayouts - cashExpenses - cashDropsTotal + cashInjectionsTotal;
+  const expectedCash = Number(openingAmount) + byMethod.cash + cashReceipts - cashPayouts - cashExpenses - cashRefundsTotal - cashDropsTotal + cashInjectionsTotal;
 
-  return { byMethod, byMethodCount, cashReceipts, cashPayouts, cashExpenses, cashDropsTotal, cashInjectionsTotal, expectedCash, invoiceCount: (sales || []).length, totalSales, itemsSummary };
+  return { byMethod, byMethodCount, cashReceipts, cashPayouts, cashExpenses, cashRefundsTotal, cashDropsTotal, cashInjectionsTotal, expectedCash, invoiceCount: (sales || []).length, totalSales, itemsSummary };
 }
 
 // ------------------------------------------------------------
@@ -7262,6 +7272,7 @@ async function openCloseShiftModal() {
     document.getElementById('csCashPayouts').textContent = summary.cashPayouts.toFixed(2);
     document.getElementById('csCashExpenses').textContent = summary.cashExpenses.toFixed(2);
     document.getElementById('csCashDrops').textContent = summary.cashDropsTotal.toFixed(2);
+    document.getElementById('csCashRefunds').textContent = summary.cashRefundsTotal.toFixed(2);
     document.getElementById('csCashInjections').textContent = summary.cashInjectionsTotal.toFixed(2);
     document.getElementById('csExpectedCash').textContent = summary.expectedCash.toFixed(2);
     document.getElementById('csCountedInput').value = '';
@@ -7385,6 +7396,7 @@ function showZReport(shift, summary) {
     <div class="r-row"><span>مقبوضات نقدية (تحصيل من عملاء)</span><span class="num">${summary.cashReceipts.toFixed(2)}</span></div>
     <div class="r-row"><span>مدفوعات نقدية (سداد لموردين)</span><span class="num">−${summary.cashPayouts.toFixed(2)}</span></div>
     <div class="r-row"><span>مصروفات نقدية</span><span class="num">−${summary.cashExpenses.toFixed(2)}</span></div>
+    <div class="r-row"><span>مرتجعات بيع نقدية</span><span class="num">−${summary.cashRefundsTotal.toFixed(2)}</span></div>
     <div class="r-row"><span>سحوبات نقدية أثناء الوردية</span><span class="num">−${summary.cashDropsTotal.toFixed(2)}</span></div>
     <div class="r-row"><span>تحويلات مضافة من المكتب الخلفي</span><span class="num">+${summary.cashInjectionsTotal.toFixed(2)}</span></div>
     <div class="r-row" style="font-weight:700;"><span>النقدية المتوقعة</span><span class="num">${Number(shift.expected_cash).toFixed(2)}</span></div>
