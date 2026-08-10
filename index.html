@@ -691,6 +691,23 @@ a { color: inherit; }
 
 /* -------- Purchases -------- */
 .modal-box.wide { max-width: 680px; }
+#treasuryStatementModalOverlay .modal-box { max-width: 960px; }
+@media (max-width: 1000px) {
+  #treasuryStatementModalOverlay .modal-box { max-width: 94vw; }
+}
+/* شاشتا مرتجع البيع ومرتجع الشراء بتعرضوا جدول أصناف + تفاصيل استرداد،
+   فمحتاجين مساحة أوسع من المودال العادي، لكن مقاسها على قد محتواها
+   (مش Fullscreen) وتفضل مركزية وبمساحة فاضية حواليها زي باقي المودالز. */
+#saleReturnModalOverlay .modal-box,
+#purchaseReturnModalOverlay .modal-box {
+  width: 100%;
+  max-width: 720px;
+  max-height: 90vh;
+}
+@media (max-width: 760px) {
+  #saleReturnModalOverlay .modal-box,
+  #purchaseReturnModalOverlay .modal-box { max-width: 100%; max-height: 94vh; }
+}
 .purchase-lines-wrap { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: visible; margin-bottom: 6px; }
 .purchase-line-row { display: grid; grid-template-columns: 1fr 90px 100px 90px 32px; gap: 8px; padding: 8px 10px; align-items: center; border-bottom: 1px solid var(--surface-sunken); position: relative; }
 .purchase-line-row.with-unit { grid-template-columns: 1fr 100px 84px 100px 90px 32px; }
@@ -727,6 +744,15 @@ a { color: inherit; }
 .ret-items-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 14px 0 6px; }
 .ret-items-toolbar label { font-size: 13px; font-weight: 500; color: var(--ink-soft); }
 .ret-item-filter { max-width: 220px; padding: 7px 10px; font-size: 12.5px; }
+/* قائمة أصناف مرتجع البيع/الشراء: مساحة ثابتة ومريحة بتاسكرول من جوّاها،
+   بدل ما تتقزّم لو الفاتورة فيها صنف أو اتنين وتفضل تكبر من غير سقف لو فيها عناصر كتير
+   (يخلّي شريط الفلترة وأزرار الحفظ/الإلغاء ظاهرين دايمًا من غير ما تسكرول المودال كله). */
+#saleReturnModalOverlay .purchase-lines-wrap,
+#purchaseReturnModalOverlay .purchase-lines-wrap { min-height: 200px; max-height: 46vh; overflow-y: auto; }
+@media (max-width: 760px) {
+  #saleReturnModalOverlay .purchase-lines-wrap,
+  #purchaseReturnModalOverlay .purchase-lines-wrap { max-height: 40vh; }
+}
 .purchase-line-row.ret-row { grid-template-columns: 1fr 84px 92px 84px 46px; }
 .purchase-line-row.has-return-qty { background: var(--teal-100); }
 .purchase-line-row .pr-line-name-wrap { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
@@ -737,6 +763,39 @@ a { color: inherit; }
 .pr-line-all-btn:disabled { opacity: .4; cursor: not-allowed; border-color: var(--border); color: var(--ink-soft); }
 .ret-items-empty { padding: 22px 10px; text-align: center; font-size: 13px; color: var(--ink-soft); }
 .ret-selected-count { font-size: 11.5px; color: var(--ink-soft); }
+
+/* موبايل وشاشات صغيرة: مودالات المرتجع بتتحول لتصميم مكدّس (Stacked Card)
+   بدل جدول أفقي بيحتاج سكرول جانبي، عشان تبقى مقاسه وسهل الاستخدام باللمس. */
+@media (max-width: 760px) {
+  .ret-invoice-stats { grid-template-columns: 1fr 1fr; row-gap: 10px; }
+  .ret-invoice-search-row { grid-template-columns: 1fr; }
+  .ret-items-toolbar { flex-wrap: wrap; row-gap: 8px; }
+  .ret-items-toolbar > div { flex-wrap: wrap; row-gap: 8px; width: 100%; }
+  .ret-item-filter { max-width: 100%; flex: 1 1 100%; }
+
+  #saleReturnModalOverlay .purchase-lines-wrap,
+  #purchaseReturnModalOverlay .purchase-lines-wrap { overflow-x: visible; }
+
+  .purchase-line-row.ret-row {
+    min-width: 0;
+    grid-template-columns: 1fr 96px;
+    grid-template-areas:
+      "name name"
+      "avail qty"
+      "total btn";
+    row-gap: 8px;
+    padding: 10px;
+  }
+  .purchase-line-row.ret-row > *:nth-child(1) { grid-area: name; }
+  .purchase-line-row.ret-row > *:nth-child(2) { grid-area: avail; align-self: center; }
+  .purchase-line-row.ret-row > *:nth-child(3) { grid-area: qty; width: 100%; }
+  .purchase-line-row.ret-row > *:nth-child(4) { grid-area: total; align-self: center; font-weight: 700; }
+  .purchase-line-row.ret-row > *:nth-child(5) { grid-area: btn; justify-self: start; align-self: center; }
+}
+
+@media (max-width: 480px) {
+  .ret-invoice-stats { grid-template-columns: 1fr; }
+}
 
 @media (max-width: 760px) {
   .bo-main { grid-template-columns: 1fr; grid-template-rows: auto 1fr; position: relative; overflow: hidden; }
@@ -1092,6 +1151,7 @@ a { color: inherit; }
           </button>
           <div class="bo-nav-sub" id="purchasesNavSub">
             <button class="bo-nav-sub-item" data-section="suppliers">الموردون</button>
+            <button class="bo-nav-sub-item" data-section="purchase-orders">طلبات الشراء</button>
             <button class="bo-nav-sub-item" data-section="purchases">فواتير الشراء</button>
             <button class="bo-nav-sub-item" data-section="purchase-returns">مرتجعات الشراء</button>
           </div>
@@ -1694,6 +1754,32 @@ a { color: inherit; }
             </table>
           </div>
           <div class="bo-pager" id="salesListPager"></div>
+        </div>
+
+        <!-- قسم طلبات الشراء -->
+        <div id="bo-section-purchase-orders" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">طلبات الشراء</div>
+            <button class="bo-add-btn" id="addPurchaseOrderBtn">+ طلب شراء جديد</button>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>رقم الطلب</th>
+                  <th>المورد</th>
+                  <th>الإجمالي</th>
+                  <th>الحالة</th>
+                  <th>تاريخ التوريد المتوقع</th>
+                  <th>تاريخ الإنشاء</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="purchaseOrdersTableBody">
+                <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <!-- قسم فواتير الشراء -->
@@ -2814,6 +2900,10 @@ a { color: inherit; }
               <div class="report-type-icon">🏦</div>
               <div class="report-type-label">حركة الخزائن والحسابات البنكية</div>
             </button>
+            <button type="button" class="report-type-card" data-report="treasury-statement">
+              <div class="report-type-icon">📒</div>
+              <div class="report-type-label">كشف حساب خزينة</div>
+            </button>
             <button type="button" class="report-type-card" data-report="capital-movements">
               <div class="report-type-icon">🏛️</div>
               <div class="report-type-label">حركة رأس المال</div>
@@ -3488,6 +3578,63 @@ a { color: inherit; }
                   </thead>
                   <tbody id="cmReportTableBody">
                     <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="accountingReportDetail-treasury-statement" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">كشف حساب خزينة</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-icon-btn" id="exportTsrBtn">تصدير إكسل</button>
+                </div>
+              </div>
+
+              <div class="report-filters">
+                <div class="field" id="tsrBranchField" style="display:none;">
+                  <label>الفرع</label>
+                  <select id="tsrBranchFilter"><option value="">كل الفروع</option></select>
+                </div>
+                <div class="field" style="min-width:220px;">
+                  <label>الخزينة / الحساب</label>
+                  <select id="tsrAccountSelect"><option value="">اختر...</option></select>
+                </div>
+                <div class="field"><label>من تاريخ (اختياري)</label><input type="date" id="tsrFromDate"></div>
+                <div class="field"><label>إلى تاريخ (اختياري)</label><input type="date" id="tsrToDate"></div>
+                <button class="bo-add-btn" id="runTsrBtn">عرض الكشف</button>
+              </div>
+
+              <div class="report-cards" id="tsrCardsRow" style="display:none;">
+                <div class="report-card">
+                  <div class="report-card-label">الفرع</div>
+                  <div class="report-card-value" id="tsrBranchLabel" style="direction:rtl;">—</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">الرصيد الافتتاحي</div>
+                  <div class="report-card-value num" id="tsrOpeningBalance">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي داخل</div>
+                  <div class="report-card-value num" id="tsrTotalIn">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي خارج</div>
+                  <div class="report-card-value num" id="tsrTotalOut">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">الرصيد الختامي</div>
+                  <div class="report-card-value num" id="tsrClosingBalance">0.00</div>
+                </div>
+              </div>
+
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead>
+                    <tr><th>التاريخ</th><th>البيان</th><th>داخل</th><th>خارج</th><th>الرصيد</th></tr>
+                  </thead>
+                  <tbody id="tsrTableBody">
+                    <tr><td colspan="5" class="bo-empty">اختر خزينة ثم اضغط "عرض الكشف"</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -5002,6 +5149,54 @@ a { color: inherit; }
   </div>
 </div>
 
+<!-- Modal: كشف حساب خزينة/حساب بنكي (كل الحركات مرتبة زمنيًا مع رصيد تراكمي) -->
+<div class="modal-overlay" id="treasuryStatementModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title" id="treasuryStatementModalTitle">كشف حساب</div>
+
+    <div class="report-filters" style="margin-bottom:14px;">
+      <div class="field"><label>من تاريخ (اختياري)</label><input type="date" id="tstFromDate"></div>
+      <div class="field"><label>إلى تاريخ (اختياري)</label><input type="date" id="tstToDate"></div>
+      <button class="bo-add-btn" id="runTreasuryStatementBtn">عرض</button>
+      <button class="bo-icon-btn" id="exportTreasuryStatementBtn">تصدير إكسل</button>
+    </div>
+
+    <div class="report-cards" id="tstCardsRow">
+      <div class="report-card">
+        <div class="report-card-label">الرصيد الافتتاحي</div>
+        <div class="report-card-value num" id="tstOpeningBalance">0.00</div>
+      </div>
+      <div class="report-card">
+        <div class="report-card-label">إجمالي داخل</div>
+        <div class="report-card-value num" id="tstTotalIn">0.00</div>
+      </div>
+      <div class="report-card">
+        <div class="report-card-label">إجمالي خارج</div>
+        <div class="report-card-value num" id="tstTotalOut">0.00</div>
+      </div>
+      <div class="report-card">
+        <div class="report-card-label">الرصيد الختامي</div>
+        <div class="report-card-value num" id="tstClosingBalance">0.00</div>
+      </div>
+    </div>
+
+    <div class="bo-table-wrap" style="max-height:420px; overflow-y:auto;">
+      <table class="bo-table">
+        <thead>
+          <tr><th>التاريخ</th><th>البيان</th><th>داخل</th><th>خارج</th><th>الرصيد</th></tr>
+        </thead>
+        <tbody id="treasuryStatementTableBody">
+          <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="closeTreasuryStatementBtn">إغلاق</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: حركة رأس مال (رأس مال مبدئي / ضخ إضافي / مسحوبات شخصية) -->
 <div class="modal-overlay" id="capitalModalOverlay">
   <div class="modal-box">
@@ -5234,6 +5429,86 @@ a { color: inherit; }
 </div>
 
 <!-- Modal: فاتورة شراء جديدة -->
+<div class="modal-overlay" id="purchaseOrderModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title">طلب شراء جديد</div>
+    <form id="purchaseOrderForm">
+      <div class="modal-grid">
+        <div class="field">
+          <label>المورد</label>
+          <div class="smart-search" id="purchaseOrderSupplierWrap">
+            <input type="text" id="purchaseOrderSupplier" autocomplete="off" placeholder="اكتب اسم المورد أو اضغط للعرض..." required>
+            <input type="hidden" id="purchaseOrderSupplierValue">
+            <div class="smart-search-dropdown" id="purchaseOrderSupplierDropdown"></div>
+          </div>
+        </div>
+        <div class="field"><label>تاريخ التوريد المتوقع (اختياري)</label><input type="date" id="purchaseOrderExpectedDate"></div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <label style="display:block; font-size:13px; font-weight:500; color:var(--ink-soft); margin-bottom:6px;">الأصناف المطلوبة</label>
+        <div class="purchase-line-row header-row with-unit">
+          <div>الصنف</div><div>الوحدة</div><div>الكمية</div><div>سعر الشراء المتوقع</div><div>الإجمالي</div><div></div>
+        </div>
+        <div class="purchase-lines-wrap" id="purchaseOrderLinesWrap"></div>
+        <button type="button" class="add-line-btn" id="addPurchaseOrderLineBtn">+ إضافة صنف</button>
+      </div>
+
+      <div class="purchase-totals-row">
+        <div>إجمالي الطلب التقديري: <span class="num" id="purchaseOrderTotalLabel">0.00</span></div>
+      </div>
+
+      <div class="modal-grid">
+        <div class="field"><label>ملاحظات (اختياري)</label><input type="text" id="purchaseOrderNotes" placeholder="أي ملاحظات على الطلب..."></div>
+      </div>
+
+      <div class="error-msg" id="purchaseOrderModalError"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelPurchaseOrderBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="savePurchaseOrderBtn">حفظ الطلب</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- شاشة استلام طلب الشراء: بتعرض المطلوب/المُستلم سابقًا/المتبقي لكل صنف،
+     وبتسمح باستلام كل الكمية أو جزء منها، وبتحوّلها لفاتورة شراء فعلية
+     عبر دالة fn_receive_purchase_order اللي بتحدّث المخزون تلقائيًا -->
+<div class="modal-overlay" id="receivePOModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title" id="receivePOModalTitle">استلام طلب الشراء</div>
+    <div class="modal-grid">
+      <div class="field"><span style="font-size:13px; color:var(--ink-soft);">المورد</span><div id="receivePOSupplierLabel" style="font-weight:600;">—</div></div>
+      <div class="field" id="receivePOWarehouseField" style="display:none;">
+        <label>استلام البضاعة في مخزن</label>
+        <select id="receivePOWarehouse"></select>
+      </div>
+    </div>
+    <div class="bo-table-wrap" style="margin-top:10px;">
+      <table class="bo-table">
+        <thead>
+          <tr>
+            <th>الصنف</th>
+            <th>المطلوب</th>
+            <th>مُستلم سابقًا</th>
+            <th>المتبقي</th>
+            <th>الكمية الآن</th>
+            <th>سعر الوحدة</th>
+          </tr>
+        </thead>
+        <tbody id="receivePOLinesBody"></tbody>
+      </table>
+    </div>
+    <div class="error-msg" id="receivePOModalError"></div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="cancelReceivePOBtn">إغلاق</button>
+      <button type="button" class="submit-btn" id="cancelPOFromReceiveBtn" style="background:var(--danger);">إلغاء الطلب</button>
+      <button type="button" class="submit-btn" id="saveReceivePOBtn">تأكيد الاستلام</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="purchaseModalOverlay">
   <div class="modal-box wide">
     <div class="modal-title">فاتورة شراء جديدة</div>
@@ -5345,7 +5620,11 @@ a { color: inherit; }
       <div id="saleReturnLinesSection" style="display:none; margin-top:6px;">
         <div class="ret-items-toolbar">
           <label>الأصناف التي سيتم إرجاعها</label>
-          <input type="text" class="ret-item-filter" id="saleReturnItemFilter" placeholder="فلترة الأصناف...">
+          <div style="display:flex; gap:8px; align-items:center;">
+            <button type="button" class="bo-outline-btn" id="saleReturnAllItemsBtn" style="padding:6px 12px; font-size:12.5px;">إرجاع كل الأصناف</button>
+            <button type="button" class="bo-outline-btn" id="saleReturnClearItemsBtn" style="padding:6px 12px; font-size:12.5px;">إلغاء التحديد</button>
+            <input type="text" class="ret-item-filter" id="saleReturnItemFilter" placeholder="فلترة بالاسم أو الباركود...">
+          </div>
         </div>
         <div class="purchase-line-row header-row ret-row">
           <div>الصنف</div><div>المتبقي للإرجاع</div><div>الكمية المرتجعة</div><div>الإجمالي</div><div></div>
@@ -7956,6 +8235,14 @@ function bindPosEvents() {
     saleReturnItemFilterText = e.target.value;
     renderSaleReturnLines();
   });
+  document.getElementById('saleReturnAllItemsBtn').addEventListener('click', () => {
+    saleReturnLines.forEach(l => { l.returnQty = l.availableQty; });
+    renderSaleReturnLines();
+  });
+  document.getElementById('saleReturnClearItemsBtn').addEventListener('click', () => {
+    saleReturnLines.forEach(l => { l.returnQty = 0; });
+    renderSaleReturnLines();
+  });
   saleReturnInvoiceSearch = createSmartSearch({
     input: document.getElementById('saleReturnInvoiceInput'),
     hidden: document.getElementById('saleReturnInvoiceValue'),
@@ -9341,7 +9628,7 @@ function openSaleReturnModal() {
   document.getElementById('saleReturnInvoiceValue').value = '';
   document.getElementById('saleReturnItemFilter').value = '';
   document.getElementById('saleReturnInvoiceInfo').classList.remove('show');
-  document.getElementById('saleReturnLinesSection').style.display = 'none';
+  document.getElementById('saleReturnLinesSection').style.display = 'block';
   document.getElementById('saveSaleReturnBtn').style.display = 'none';
   document.getElementById('saleReturnReasonInput').value = '';
   document.getElementById('saleReturnMethodSelect').value = 'cash';
@@ -9350,6 +9637,7 @@ function openSaleReturnModal() {
   document.getElementById('saleReturnSplitToggle').checked = false;
   document.getElementById('saleReturnSplitBlock').style.display = 'none';
   renderSaleReturnSplitRows();
+  renderSaleReturnLines();
   document.getElementById('saleReturnModalError').classList.remove('show');
   document.getElementById('saleReturnModalOverlay').classList.add('show');
   loadSaleReturnRecentSales();
@@ -9453,7 +9741,7 @@ async function searchSaleForReturn(invoiceNumberOverride) {
     try {
       const { data, error } = await supabaseClient
         .from('sales')
-        .select('*, customers(name), sale_items(*, products(name))')
+        .select('*, customers(name), sale_items(*, products(name, product_barcodes(barcode)))')
         .eq('invoice_number', invoiceNumber)
         .maybeSingle();
       if (error) throw error;
@@ -9484,7 +9772,6 @@ async function searchSaleForReturn(invoiceNumberOverride) {
         errEl.textContent = `الفاتورة (${cached.invoiceLabel}) لا تزال بانتظار المزامنة — يرجى الانتظار حتى تتم مزامنتها قبل تنفيذ مرتجع عليها`;
         errEl.classList.add('show');
         document.getElementById('saleReturnInvoiceInfo').classList.remove('show');
-        document.getElementById('saleReturnLinesSection').style.display = 'none';
         document.getElementById('saveSaleReturnBtn').style.display = 'none';
         return;
       }
@@ -9510,8 +9797,9 @@ async function searchSaleForReturn(invoiceNumberOverride) {
       : 'لا توجد فاتورة بهذا الرقم في النسخة المحفوظة محليًا — الفواتير الأقدم تتطلب اتصالاً بالإنترنت';
     errEl.classList.add('show');
     document.getElementById('saleReturnInvoiceInfo').classList.remove('show');
-    document.getElementById('saleReturnLinesSection').style.display = 'none';
     document.getElementById('saveSaleReturnBtn').style.display = 'none';
+    saleReturnLines = [];
+    renderSaleReturnLines();
     return;
   }
 
@@ -9529,6 +9817,7 @@ async function searchSaleForReturn(invoiceNumberOverride) {
     const alreadyReturnedQty = alreadyReturnedByItem[si.id] || 0;
     return {
       saleItemId: si.id, productId: si.product_id, name: si.products?.name || '—',
+      code: (si.products?.product_barcodes || []).map(b => b.barcode).join(' '),
       soldQty, alreadyReturnedQty, availableQty: Math.max(0, soldQty - alreadyReturnedQty),
       unitPrice: Number(si.unit_price), returnQty: 0,
       warehouseId: si.warehouse_id || null,
@@ -9543,15 +9832,37 @@ async function searchSaleForReturn(invoiceNumberOverride) {
   document.getElementById('saveSaleReturnBtn').style.display = 'inline-block';
 }
 
+// فلترة عربية "ذكية": بتتجاهل التشكيل والتطويل وبتوحّد أشكال الحروف المتقاربة
+// (أ/إ/آ/ٱ -> ا، ة -> ه، ى -> ي) عشان البحث يشتغل مهما كانت طريقة كتابة المستخدم،
+// وبتفصل كلمات البحث وتطلب كل كلمة تكون موجودة (مش بالضرورة متجاورة) في الاسم أو الباركود.
+function normalizeArabicSearch(s) {
+  return String(s || '')
+    .replace(/[\u064B-\u0652\u0670\u0640]/g, '') // تشكيل وتطويل
+    .replace(/[إأآٱ]/g, 'ا')
+    .replace(/ة/g, 'ه')
+    .replace(/ى/g, 'ي')
+    .replace(/[\u200e\u200f\u061c]/g, '')
+    .toLowerCase()
+    .trim();
+}
+function matchesReturnItemFilter(line, filterText) {
+  const q = normalizeArabicSearch(filterText);
+  if (!q) return true;
+  const haystack = normalizeArabicSearch(line.name) + ' ' + normalizeArabicSearch(line.code || '');
+  return q.split(/\s+/).filter(Boolean).every(term => haystack.includes(term));
+}
+
 function renderSaleReturnLines() {
   const wrap = document.getElementById('saleReturnLinesWrap');
   wrap.innerHTML = '';
 
-  const q = saleReturnItemFilterText.trim().toLowerCase();
-  const visibleLines = q ? saleReturnLines.filter(l => l.name.toLowerCase().includes(q)) : saleReturnLines;
+  const q = saleReturnItemFilterText.trim();
+  const visibleLines = q ? saleReturnLines.filter(l => matchesReturnItemFilter(l, q)) : saleReturnLines;
 
   if (visibleLines.length === 0) {
-    wrap.innerHTML = `<div class="ret-items-empty">${saleReturnLines.length === 0 ? 'لا توجد أصناف في هذه الفاتورة' : 'لا يوجد صنف مطابق للفلترة'}</div>`;
+    const emptyMsg = saleReturnLines.length !== 0 ? 'لا يوجد صنف مطابق للفلترة'
+      : (saleReturnSale ? 'لا توجد أصناف في هذه الفاتورة' : 'ابحث برقم فاتورة البيع لعرض أصنافها هنا');
+    wrap.innerHTML = `<div class="ret-items-empty">${emptyMsg}</div>`;
     updateSaleReturnTotal();
     return;
   }
@@ -9863,14 +10174,14 @@ async function enterBackoffice() {
 }
 
 const boAllSections = ['dashboard','products','categories','unit-types','tax-rates','quick-discounts','customer-types',
-  'sales-list','customers','suppliers','payments','purchases','purchase-returns','sale-returns',
+  'sales-list','customers','suppliers','payments','purchase-orders','purchases','purchase-returns','sale-returns',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
   'soon','company-info','permissions','users','branches','branch-settings','print-settings','stock','backup','reset-data','employees','expense-items','expenses','salaries','treasuries','capital','fixed-assets'];
 
 const boNavGroups = [
   { toggle: 'stockNavToggle', group: 'stockNavGroup', sections: ['products','categories','unit-types','tax-rates','quick-discounts','stock'] },
   { toggle: 'salesNavToggle', group: 'salesNavGroup', sections: ['sales-list','customers','customer-types','sale-returns'] },
-  { toggle: 'purchasesNavToggle', group: 'purchasesNavGroup', sections: ['suppliers','purchases','purchase-returns'] },
+  { toggle: 'purchasesNavToggle', group: 'purchasesNavGroup', sections: ['suppliers','purchase-orders','purchases','purchase-returns'] },
   { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
   { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['treasuries','payments','expense-items','expenses','capital','fixed-assets'] },
   { toggle: 'hrNavToggle', group: 'hrNavGroup', sections: ['employees','salaries'] },
@@ -9883,7 +10194,7 @@ const SECTION_PERMISSION_MAP = {
   'products': 'stock_management', 'categories': 'stock_management', 'unit-types': 'stock_management',
   'tax-rates': 'stock_management', 'quick-discounts': 'stock_management', 'stock': 'stock_management',
   'sales-list': 'sales_management', 'customers': 'sales_management', 'customer-types': 'sales_management', 'sale-returns': 'sales_management',
-  'suppliers': 'purchases_management', 'purchases': 'purchases_management', 'purchase-returns': 'purchases_management',
+  'suppliers': 'purchases_management', 'purchase-orders': 'purchases_management', 'purchases': 'purchases_management', 'purchase-returns': 'purchases_management',
   'reports-sales': 'reports', 'reports-purchases': 'reports', 'reports-inventory': 'reports', 'reports-accounting': 'reports', 'reports-other': 'reports',
   'treasuries': 'finance', 'payments': 'finance', 'expense-items': 'finance', 'expenses': 'finance', 'capital': 'admin', 'fixed-assets': 'finance',
   'employees': 'hr', 'salaries': 'hr',
@@ -9935,6 +10246,7 @@ const REPORT_TABS = {
     { key: 'tax', title: 'تقرير الضريبة المحصلة' },
     { key: 'fixed-assets', title: 'الأصول الثابتة والإهلاك' },
     { key: 'cash-movements', title: 'حركة الخزائن والحسابات البنكية' },
+    { key: 'treasury-statement', title: 'كشف حساب خزينة' },
     { key: 'capital-movements', title: 'حركة رأس المال' },
     { key: 'expenses-analysis', title: 'تحليل المصروفات' }
   ]},
@@ -10239,6 +10551,7 @@ function activateBoSection(section, btn) {
   if (section === 'fixed-assets' && !fixedAssetsLoadedOnce) { loadBoFixedAssets().then(renderFixedAssetsTable); fixedAssetsLoadedOnce = true; }
   if (section === 'payments' && !boPaymentsLoadedOnce) { loadBoPayments().then(renderPaymentsTable); boPaymentsLoadedOnce = true; }
   if (section === 'sales-list' && !boSalesListLoadedOnce) { loadBoSalesList().then(renderSalesListTable); boSalesListLoadedOnce = true; }
+  if (section === 'purchase-orders') { loadBoPurchaseOrders().then(renderPurchaseOrdersTable); }
   if (section === 'purchase-returns') { loadBoPurchaseReturns().then(renderPurchaseReturnsTable); }
   if (section === 'sale-returns') { loadBoSaleReturns().then(renderSaleReturnsTable); }
   if (section === 'stock' && !stockSectionLoadedOnce) { initStockSection(); stockSectionLoadedOnce = true; }
@@ -11089,6 +11402,7 @@ function bindBackofficeEvents() {
       if (key === 'tax') { populateTaxReportBranchFilter(); refreshTaxReport(); }
       if (key === 'fixed-assets') { populateFixedAssetsReportBranchFilter(); refreshFixedAssetsReport(); }
       if (key === 'cash-movements') { populateCashMovementsReportFilters().then(() => refreshCashMovementsReport()); }
+      if (key === 'treasury-statement') { initTreasuryStatementReport(); }
       if (key === 'capital-movements') { populateCapitalMovementsReportFilters(); refreshCapitalMovementsReport(); }
       if (key === 'expenses-analysis') { populateExpensesAnalysisBranchFilter(); refreshExpensesAnalysisReport(); }
     });
@@ -11357,6 +11671,15 @@ function bindBackofficeEvents() {
   });
   document.getElementById('cashMovementForm').addEventListener('submit', saveCashMovement);
   document.getElementById('cashMovementType').addEventListener('change', applyCashMovementTypeVisibility);
+
+  // ---- Treasury statement modal (كشف حساب خزينة) ----
+  document.getElementById('closeTreasuryStatementBtn').addEventListener('click', closeTreasuryStatementModal);
+  document.getElementById('treasuryStatementModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'treasuryStatementModalOverlay') closeTreasuryStatementModal();
+  });
+  document.getElementById('runTreasuryStatementBtn').addEventListener('click', refreshTreasuryStatement);
+  document.getElementById('exportTreasuryStatementBtn').addEventListener('click', exportTreasuryStatementToExcel);
+
   document.getElementById('addCapitalBtn').addEventListener('click', openCapitalModal);
   document.getElementById('cancelCapitalBtn').addEventListener('click', closeCapitalModal);
 
@@ -11422,6 +11745,29 @@ function bindBackofficeEvents() {
     dropdown: document.getElementById('purchaseSupplierDropdown'),
     getItems: () => boSuppliers.map(s => ({ value: s.id, label: s.name })),
   });
+
+  // ---- Purchase order modal ----
+  document.getElementById('addPurchaseOrderBtn').addEventListener('click', openPurchaseOrderModal);
+  document.getElementById('cancelPurchaseOrderBtn').addEventListener('click', closePurchaseOrderModal);
+  document.getElementById('purchaseOrderModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'purchaseOrderModalOverlay') closePurchaseOrderModal();
+  });
+  document.getElementById('addPurchaseOrderLineBtn').addEventListener('click', () => addPurchaseOrderLine());
+  document.getElementById('purchaseOrderForm').addEventListener('submit', savePurchaseOrder);
+  purchaseOrderSupplierSearch = createSmartSearch({
+    input: document.getElementById('purchaseOrderSupplier'),
+    hidden: document.getElementById('purchaseOrderSupplierValue'),
+    dropdown: document.getElementById('purchaseOrderSupplierDropdown'),
+    getItems: () => boSuppliers.map(s => ({ value: s.id, label: s.name })),
+  });
+
+  // ---- Receive purchase order modal ----
+  document.getElementById('cancelReceivePOBtn').addEventListener('click', closeReceivePOModal);
+  document.getElementById('receivePOModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'receivePOModalOverlay') closeReceivePOModal();
+  });
+  document.getElementById('saveReceivePOBtn').addEventListener('click', saveReceivePO);
+  document.getElementById('cancelPOFromReceiveBtn').addEventListener('click', cancelPurchaseOrderFromReceive);
 
   // ---- Purchase return modal ----
   document.getElementById('addPurchaseReturnBtn').addEventListener('click', openPurchaseReturnModal);
@@ -11678,6 +12024,9 @@ function bindBackofficeEvents() {
   document.getElementById('exportFixedAssetsReportBtn').addEventListener('click', () => exportFixedAssetsReportToExcel());
   document.getElementById('exportCashMovementsReportBtn').addEventListener('click', () => exportCashMovementsReportToExcel());
   document.getElementById('runCashMovementsReportBtn').addEventListener('click', () => refreshCashMovementsReport());
+  document.getElementById('runTsrBtn').addEventListener('click', () => refreshTreasuryStatementReport());
+  document.getElementById('exportTsrBtn').addEventListener('click', () => exportTsrToExcel());
+  document.getElementById('tsrBranchFilter').addEventListener('change', () => populateTsrAccountSelect());
   document.getElementById('cmBranchFilter').addEventListener('change', () => refreshCashMovementsReport());
   document.getElementById('cmAccountFilter').addEventListener('change', () => refreshCashMovementsReport());
   document.getElementById('cmTypeFilter').addEventListener('change', () => refreshCashMovementsReport());
@@ -14402,6 +14751,15 @@ async function loadBoTreasuries() {
 }
 
 const treasuryTypeLabels = { cash: 'نقدية', bank: 'بنك' };
+// بيان احتياطي لو الـ description جه فاضي من الـ view (مثلاً سجل مرتبط اتحذف)
+const cashTxnTypeLabels = {
+  shift_close_in: 'إغلاق وردية', deposit: 'إيداع', withdrawal: 'سحب',
+  transfer_in: 'تحويل داخل', transfer_out: 'تحويل خارج', reversal: 'عكس حركة',
+  adjustment: 'تسوية يدوية', capital_in: 'رأس مال داخل', capital_out: 'سحب رأس مال',
+  shift_cash_drop: 'إيداع نقدية وردية', shift_cash_injection: 'تعزيز نقدية وردية',
+  expense_payment: 'مصروف', supplier_payment: 'دفعة لمورد', customer_receipt: 'دفعة من عميل',
+  salary_payment: 'راتب', supplier_refund: 'استرداد من مورد',
+};
 
 function renderTreasuriesTable() {
   const tbody = document.getElementById('treasuriesTableBody');
@@ -14427,11 +14785,13 @@ function renderTreasuriesTable() {
       <td>${t.is_active ? 'مفعّل' : 'متوقف'}</td>
       <td>
         <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="statement">كشف حساب</button>
           <button class="bo-icon-btn" data-action="movement">حركة</button>
           <button class="bo-icon-btn" data-action="edit">تعديل</button>
           ${t.is_main ? '' : '<button class="bo-icon-btn danger" data-action="delete">حذف</button>'}
         </div>
       </td>`;
+    tr.querySelector('[data-action="statement"]').addEventListener('click', () => openTreasuryStatementModal(t));
     tr.querySelector('[data-action="movement"]').addEventListener('click', () => openCashMovementModal(t.id));
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openTreasuryModal(t));
     const delBtn = tr.querySelector('[data-action="delete"]');
@@ -14690,6 +15050,219 @@ async function saveCashMovement(e) {
     saveBtn.disabled = false;
     applyCashMovementTypeVisibility();
   }
+}
+
+// ---- كشف حساب خزينة/حساب بنكي (باستخدام view cash_account_ledger) ----
+// نفس منطق الحساب مستخدم في مكانين: مودال سريع من جدول الخزائن، وتقرير
+// كامل تحت "تقارير المحاسبة" بفلترة أوضح — فالجزء المشترك (سحب الحركات
+// وحساب الرصيد التراكمي) في دالتين منفصلتين، وكل استخدام عنده الـ render
+// والـ export بتاعته.
+
+async function fetchTreasuryLedgerEntries(accountId) {
+  const { data, error } = await supabaseClient
+    .from('cash_account_ledger')
+    .select('*')
+    .eq('cash_account_id', accountId)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+// بيرجع { rows, opening, in, out, closing } لفترة معينة (fromISO/toISO
+// اختياريين). entries لازم تكون كل حركات الحساب من الأول مرتبة تصاعديًا،
+// عشان الرصيد الافتتاحي يتحسب صح من مجموع الحركات اللي قبل "من تاريخ"
+function computeTreasuryStatement(entries, fromISO, toISO) {
+  let opening = 0;
+  let visible = entries;
+  if (fromISO) {
+    entries.forEach(e => { if (new Date(e.created_at) < new Date(fromISO)) opening += Number(e.amount); });
+    visible = entries.filter(e => new Date(e.created_at) >= new Date(fromISO));
+  }
+  if (toISO) visible = visible.filter(e => new Date(e.created_at) <= new Date(toISO));
+
+  let running = opening;
+  const rows = visible.map(e => { running += Number(e.amount); return { ...e, balance: running }; });
+  const totalIn = visible.reduce((sum, e) => sum + (Number(e.amount) > 0 ? Number(e.amount) : 0), 0);
+  const totalOut = visible.reduce((sum, e) => sum + (Number(e.amount) < 0 ? -Number(e.amount) : 0), 0);
+  const closing = opening + totalIn - totalOut;
+  return { rows, opening, in: totalIn, out: totalOut, closing };
+}
+
+function treasuryStatementRowsToExcel(rows, summary, accountLabel) {
+  const excelRows = rows.map(r => {
+    const amt = Number(r.amount);
+    return {
+      'التاريخ': new Date(r.created_at).toLocaleString('ar-EG'),
+      'البيان': r.description || cashTxnTypeLabels[r.type] || r.type,
+      'داخل': amt > 0 ? amt : '',
+      'خارج': amt < 0 ? -amt : '',
+      'الرصيد': Number(r.balance.toFixed(2)),
+    };
+  });
+  excelRows.push({ 'التاريخ': '', 'البيان': 'الرصيد الافتتاحي', 'داخل': '', 'خارج': '', 'الرصيد': Number(summary.opening.toFixed(2)) });
+  excelRows.push({ 'التاريخ': '', 'البيان': 'إجمالي داخل', 'داخل': Number(summary.in.toFixed(2)), 'خارج': '', 'الرصيد': '' });
+  excelRows.push({ 'التاريخ': '', 'البيان': 'إجمالي خارج', 'داخل': '', 'خارج': Number(summary.out.toFixed(2)), 'الرصيد': '' });
+  excelRows.push({ 'التاريخ': '', 'البيان': 'الرصيد الختامي', 'داخل': '', 'خارج': '', 'الرصيد': Number(summary.closing.toFixed(2)) });
+
+  const ws = XLSX.utils.json_to_sheet(excelRows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'كشف حساب');
+  XLSX.writeFile(wb, `كشف حساب - ${accountLabel}.xlsx`);
+}
+
+function renderTreasuryStatementTable(tbodyEl, result, fromISO) {
+  const { rows, opening } = result;
+  if (rows.length === 0) {
+    tbodyEl.innerHTML = `<tr><td colspan="5" class="bo-empty">لا توجد حركات في هذه الفترة</td></tr>`;
+    return;
+  }
+  tbodyEl.innerHTML = '';
+  if (fromISO) {
+    const trOpen = document.createElement('tr');
+    trOpen.innerHTML = `<td colspan="4" style="font-weight:600;">رصيد افتتاحي</td><td class="num" style="font-weight:600;">${opening.toFixed(2)}</td>`;
+    tbodyEl.appendChild(trOpen);
+  }
+  rows.forEach(r => {
+    const amt = Number(r.amount);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${new Date(r.created_at).toLocaleString('ar-EG')}</td>
+      <td>${escapeHtml(r.description || cashTxnTypeLabels[r.type] || r.type)}</td>
+      <td class="num">${amt > 0 ? amt.toFixed(2) : '—'}</td>
+      <td class="num">${amt < 0 ? (-amt).toFixed(2) : '—'}</td>
+      <td class="num">${r.balance.toFixed(2)}</td>`;
+    tbodyEl.appendChild(tr);
+  });
+}
+
+function renderTreasuryStatementCards(prefix, result) {
+  document.getElementById(prefix + 'OpeningBalance').textContent = result.opening.toFixed(2);
+  document.getElementById(prefix + 'TotalIn').textContent = result.in.toFixed(2);
+  document.getElementById(prefix + 'TotalOut').textContent = result.out.toFixed(2);
+  const closingEl = document.getElementById(prefix + 'ClosingBalance');
+  closingEl.textContent = result.closing.toFixed(2);
+  closingEl.classList.toggle('positive', result.closing >= 0);
+  closingEl.classList.toggle('negative', result.closing < 0);
+}
+
+// ==== مودال سريع (بيتفتح من زرار "كشف حساب" في جدول الخزائن) ====
+let tstCurrentAccount = null;
+let lastTreasuryStatementRows = [];
+let lastTreasuryStatementSummary = { opening: 0, in: 0, out: 0, closing: 0 };
+
+function openTreasuryStatementModal(treasury) {
+  tstCurrentAccount = treasury;
+  document.getElementById('treasuryStatementModalTitle').textContent =
+    `كشف حساب — ${treasury.branches?.name ? treasury.branches.name + ' — ' : ''}${treasury.name}`;
+  document.getElementById('tstFromDate').value = '';
+  document.getElementById('tstToDate').value = '';
+  document.getElementById('treasuryStatementTableBody').innerHTML =
+    `<tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>`;
+  document.getElementById('treasuryStatementModalOverlay').classList.add('show');
+  refreshTreasuryStatement();
+}
+
+function closeTreasuryStatementModal() {
+  document.getElementById('treasuryStatementModalOverlay').classList.remove('show');
+  tstCurrentAccount = null;
+}
+
+async function refreshTreasuryStatement() {
+  if (!tstCurrentAccount) return;
+  const tbody = document.getElementById('treasuryStatementTableBody');
+  const fromDate = document.getElementById('tstFromDate').value || null;
+  const toDate = document.getElementById('tstToDate').value || null;
+  const fromISO = fromDate ? `${fromDate}T00:00:00` : null;
+  const toISO = toDate ? `${toDate}T23:59:59` : null;
+
+  tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>`;
+  try {
+    const entries = await fetchTreasuryLedgerEntries(tstCurrentAccount.id);
+    const result = computeTreasuryStatement(entries, fromISO, toISO);
+    lastTreasuryStatementRows = result.rows;
+    lastTreasuryStatementSummary = result;
+    renderTreasuryStatementCards('tst', result);
+    renderTreasuryStatementTable(tbody, result, fromISO);
+  } catch (err) {
+    console.error(err);
+    tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">تعذر تحميل كشف الحساب</td></tr>`;
+    showToast('تعذر تحميل كشف الحساب', true);
+  }
+}
+
+function exportTreasuryStatementToExcel() {
+  if (!tstCurrentAccount) return;
+  if (lastTreasuryStatementRows.length === 0) { showToast('لا توجد بيانات للتصدير', true); return; }
+  treasuryStatementRowsToExcel(lastTreasuryStatementRows, lastTreasuryStatementSummary, tstCurrentAccount.name);
+}
+
+// ==== تقرير كامل (تحت تقارير المحاسبة « كشف حساب خزينة) ====
+let lastTsrRows = [];
+let lastTsrSummary = { opening: 0, in: 0, out: 0, closing: 0 };
+
+async function initTreasuryStatementReport() {
+  if (!treasuriesLoadedOnce) { await loadBoTreasuries(); treasuriesLoadedOnce = true; }
+  const branchField = document.getElementById('tsrBranchField');
+  const branchSel = document.getElementById('tsrBranchFilter');
+  if (boBranchesList.length <= 1) {
+    branchField.style.display = 'none';
+    branchSel.innerHTML = '<option value="">كل الفروع</option>';
+  } else {
+    branchSel.innerHTML = '<option value="">كل الفروع</option>' +
+      boBranchesList.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+    branchField.style.display = 'block';
+  }
+  branchSel.value = '';
+  populateTsrAccountSelect();
+  document.getElementById('tsrFromDate').value = '';
+  document.getElementById('tsrToDate').value = '';
+  document.getElementById('tsrCardsRow').style.display = 'none';
+  document.getElementById('tsrTableBody').innerHTML =
+    `<tr><td colspan="5" class="bo-empty">اختر خزينة ثم اضغط "عرض الكشف"</td></tr>`;
+}
+
+function populateTsrAccountSelect() {
+  const branchId = document.getElementById('tsrBranchFilter').value || null;
+  const sel = document.getElementById('tsrAccountSelect');
+  const filtered = branchId ? boTreasuries.filter(t => t.branch_id === branchId) : boTreasuries;
+  sel.innerHTML = '<option value="">اختر...</option>' + filtered
+    .map(t => `<option value="${t.id}">${escapeHtml(t.branches?.name || '')} — ${escapeHtml(t.name)}</option>`)
+    .join('');
+}
+
+async function refreshTreasuryStatementReport() {
+  const accountId = document.getElementById('tsrAccountSelect').value;
+  const tbody = document.getElementById('tsrTableBody');
+  if (!accountId) { showToast('يرجى اختيار الخزينة / الحساب', true); return; }
+  const account = boTreasuries.find(t => t.id === accountId);
+
+  const fromDate = document.getElementById('tsrFromDate').value || null;
+  const toDate = document.getElementById('tsrToDate').value || null;
+  const fromISO = fromDate ? `${fromDate}T00:00:00` : null;
+  const toISO = toDate ? `${toDate}T23:59:59` : null;
+
+  tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>`;
+  try {
+    const entries = await fetchTreasuryLedgerEntries(accountId);
+    const result = computeTreasuryStatement(entries, fromISO, toISO);
+    lastTsrRows = result.rows;
+    lastTsrSummary = result;
+    document.getElementById('tsrCardsRow').style.display = 'grid';
+    document.getElementById('tsrBranchLabel').textContent = account?.branches?.name || '—';
+    renderTreasuryStatementCards('tsr', result);
+    renderTreasuryStatementTable(tbody, result, fromISO);
+  } catch (err) {
+    console.error(err);
+    tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">تعذر تحميل كشف الحساب</td></tr>`;
+    showToast('تعذر تحميل كشف الحساب', true);
+  }
+}
+
+function exportTsrToExcel() {
+  if (lastTsrRows.length === 0) { showToast('لا توجد بيانات للتصدير', true); return; }
+  const sel = document.getElementById('tsrAccountSelect');
+  const accountLabel = sel.options[sel.selectedIndex]?.textContent || 'كشف حساب';
+  treasuryStatementRowsToExcel(lastTsrRows, lastTsrSummary, accountLabel);
 }
 
 // ---- رأس المال وحقوق الملكية (أدمن فقط) ----
@@ -16636,6 +17209,11 @@ async function saveEditSalePayment() {
 
 // ---- Purchases ----
 let boPurchases = [];
+let boPurchaseOrders = [];
+let purchaseOrderLines = []; // [{ productId, quantity, unitCost, productUnitId, unitFactor, unitLabel }]
+let purchaseOrderSupplierSearch = null;
+let currentReceivingPO = null; // طلب الشراء المفتوح حاليًا في شاشة الاستلام
+let poReceiveLines = []; // [{ poItemId, productId, name, unitLabel, ordered, received, remaining, qtyNow, unitCost }]
 let purchaseLines = []; // [{ productId, quantity, unitCost }]
 let lastPurchaseSavedItems = []; // [{ product, quantity }] — تُستخدم في طباعة ملصقات الأصناف المستلمة
 
@@ -16944,6 +17522,399 @@ async function savePurchase(e) {
   }
 }
 
+// ============================================================
+// ---- طلبات الشراء (Purchase Orders) ----
+// مرحلة "نية شراء" قبل الاستلام الفعلي، بدون أي تأثير على المخزون
+// أو الحسابات. عند الاستلام (كامل أو جزئي) بتتحوّل لفاتورة شراء
+// فعلية عبر دالة قاعدة البيانات fn_receive_purchase_order، اللي
+// بتشغّل نفس تريجر تأثير المخزون المستخدم في الشراء المباشر.
+// ============================================================
+
+async function loadBoPurchaseOrders() {
+  const { data, error } = await supabaseClient
+    .from('purchase_orders')
+    .select('*, suppliers(name)')
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (error) { console.error(error); showToast('تعذر تحميل طلبات الشراء', true); return; }
+  boPurchaseOrders = data || [];
+}
+
+function purchaseOrderStatusInfo(status) {
+  const map = {
+    draft: { label: 'مسودة', cls: 'info' },
+    sent: { label: 'بانتظار المورد', cls: 'info' },
+    confirmed: { label: 'مؤكد من المورد', cls: 'info' },
+    partially_received: { label: 'مُستلم جزئيًا', cls: 'info' },
+    received: { label: 'مُستلم بالكامل', cls: 'active' },
+    cancelled: { label: 'ملغي', cls: 'inactive' },
+  };
+  return map[status] || { label: status || '—', cls: 'info' };
+}
+
+function renderPurchaseOrdersTable() {
+  const tbody = document.getElementById('purchaseOrdersTableBody');
+  if (boPurchaseOrders.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لا توجد طلبات شراء مسجّلة حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boPurchaseOrders.forEach(po => {
+    const tr = document.createElement('tr');
+    const createdDate = new Date(po.created_at).toLocaleDateString('ar-EG');
+    const expectedDate = po.expected_date ? new Date(po.expected_date).toLocaleDateString('ar-EG') : '—';
+    const st = purchaseOrderStatusInfo(po.status);
+    tr.innerHTML = `
+      <td class="num">#${po.order_number}</td>
+      <td>${escapeHtml(po.suppliers?.name || '—')}</td>
+      <td class="num">${Number(po.total).toFixed(2)}</td>
+      <td><span class="bo-badge ${st.cls}">${escapeHtml(st.label)}</span></td>
+      <td class="num">${expectedDate}</td>
+      <td class="num">${createdDate}</td>
+      <td><button class="bo-icon-btn" data-action="open">فتح</button></td>`;
+    tr.querySelector('[data-action="open"]').addEventListener('click', () => openReceivePOModal(po));
+    tbody.appendChild(tr);
+  });
+}
+
+function openPurchaseOrderModal() {
+  purchaseOrderSupplierSearch.clear();
+  purchaseOrderLines = [];
+  addPurchaseOrderLine();
+  document.getElementById('purchaseOrderExpectedDate').value = '';
+  document.getElementById('purchaseOrderNotes').value = '';
+  document.getElementById('purchaseOrderModalError').classList.remove('show');
+  document.getElementById('purchaseOrderModalOverlay').classList.add('show');
+}
+
+function closePurchaseOrderModal() {
+  document.getElementById('purchaseOrderModalOverlay').classList.remove('show');
+}
+
+function addPurchaseOrderLine() {
+  purchaseOrderLines.push({ productId: '', quantity: 1, unitCost: 0, productUnitId: null, unitFactor: 1, unitLabel: null });
+  renderPurchaseOrderLines();
+}
+
+function removePurchaseOrderLine(idx) {
+  purchaseOrderLines.splice(idx, 1);
+  renderPurchaseOrderLines();
+}
+
+function renderPurchaseOrderLines() {
+  const wrap = document.getElementById('purchaseOrderLinesWrap');
+  wrap.innerHTML = '';
+  purchaseOrderLines.forEach((line, idx) => {
+    const row = document.createElement('div');
+    row.className = 'purchase-line-row with-unit';
+
+    const productWrap = document.createElement('div');
+    productWrap.className = 'smart-search';
+    const productInput = document.createElement('input');
+    productInput.type = 'text'; productInput.autocomplete = 'off'; productInput.placeholder = 'اكتب اسم الصنف...';
+    const productHidden = document.createElement('input');
+    productHidden.type = 'hidden';
+    const productDropdown = document.createElement('div');
+    productDropdown.className = 'smart-search-dropdown';
+    productWrap.appendChild(productInput);
+    productWrap.appendChild(productHidden);
+    productWrap.appendChild(productDropdown);
+
+    const productSearch = createSmartSearch({
+      input: productInput,
+      hidden: productHidden,
+      dropdown: productDropdown,
+      getItems: () => boProducts.map(p => ({ value: p.id, label: p.name })),
+      onChange: (item) => {
+        line.productId = item.value;
+        const prod = boProducts.find(p => p.id === line.productId);
+        line.productUnitId = null;
+        line.unitFactor = 1;
+        line.unitLabel = prod ? (prod.unit_type || null) : null;
+        if (prod) line.unitCost = Number(prod.cost_price) || 0;
+        renderPurchaseOrderLines();
+      },
+    });
+    if (line.productId) productSearch.setValue(line.productId);
+
+    const product = boProducts.find(p => p.id === line.productId);
+    const extraUnits = product ? (product.product_units || []).filter(u => u.is_active) : [];
+
+    const unitSelect = document.createElement('select');
+    if (!product) {
+      unitSelect.innerHTML = '<option value="">—</option>';
+      unitSelect.disabled = true;
+    } else if (extraUnits.length === 0) {
+      unitSelect.innerHTML = `<option value="">${escapeHtml(product.unit_type || 'الوحدة الأساسية')}</option>`;
+      unitSelect.disabled = true;
+    } else {
+      const baseLabel = product.unit_type || 'الوحدة الأساسية';
+      unitSelect.innerHTML =
+        `<option value="">${escapeHtml(baseLabel)}</option>` +
+        extraUnits.map(u => `<option value="${u.id}">${escapeHtml(u.unit_types?.name || 'وحدة')}</option>`).join('');
+      unitSelect.value = line.productUnitId || '';
+      unitSelect.addEventListener('change', () => {
+        const chosen = extraUnits.find(u => u.id === unitSelect.value);
+        line.productUnitId = chosen ? chosen.id : null;
+        line.unitFactor = chosen ? Number(chosen.factor_to_base) || 1 : 1;
+        line.unitLabel = chosen ? (chosen.unit_types?.name || null) : (product.unit_type || null);
+        const baseCost = Number(product.cost_price) || 0;
+        line.unitCost = Math.round(baseCost * line.unitFactor * 100) / 100;
+        updatePOLineTotal(row, line);
+        updatePurchaseOrderTotals();
+      });
+    }
+
+    const qtyInput = document.createElement('input');
+    qtyInput.type = 'number'; qtyInput.min = '0.001'; qtyInput.step = '0.001'; qtyInput.value = line.quantity;
+    qtyInput.addEventListener('input', () => { line.quantity = Number(qtyInput.value) || 0; updatePOLineTotal(row, line); updatePurchaseOrderTotals(); });
+
+    const costInput = document.createElement('input');
+    costInput.type = 'number'; costInput.min = '0'; costInput.step = '0.01'; costInput.value = line.unitCost;
+    costInput.addEventListener('input', () => { line.unitCost = Number(costInput.value) || 0; updatePOLineTotal(row, line); updatePurchaseOrderTotals(); });
+
+    const totalDiv = document.createElement('div');
+    totalDiv.className = 'purchase-line-total num';
+    totalDiv.textContent = (line.quantity * line.unitCost).toFixed(2);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button'; removeBtn.className = 'purchase-line-remove'; removeBtn.textContent = '×';
+    removeBtn.addEventListener('click', () => removePurchaseOrderLine(idx));
+
+    row.appendChild(productWrap);
+    row.appendChild(unitSelect);
+    row.appendChild(qtyInput);
+    row.appendChild(costInput);
+    row.appendChild(totalDiv);
+    row.appendChild(removeBtn);
+    wrap.appendChild(row);
+  });
+  updatePurchaseOrderTotals();
+}
+
+function updatePOLineTotal(row, line) {
+  row.querySelector('.purchase-line-total').textContent = (line.quantity * line.unitCost).toFixed(2);
+}
+
+function calcPurchaseOrderTotal() {
+  return purchaseOrderLines.reduce((sum, l) => sum + (Number(l.quantity) || 0) * (Number(l.unitCost) || 0), 0);
+}
+
+function updatePurchaseOrderTotals() {
+  document.getElementById('purchaseOrderTotalLabel').textContent = calcPurchaseOrderTotal().toFixed(2);
+}
+
+async function savePurchaseOrder(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('purchaseOrderModalError');
+  errEl.classList.remove('show');
+
+  const supplierId = document.getElementById('purchaseOrderSupplierValue').value;
+  if (!supplierId) { errEl.textContent = 'يرجى اختيار المورد أولاً'; errEl.classList.add('show'); return; }
+
+  const validLines = purchaseOrderLines.filter(l => l.productId && l.quantity > 0);
+  if (validLines.length === 0) { errEl.textContent = 'أضف صنفًا واحدًا على الأقل بكمية صحيحة'; errEl.classList.add('show'); return; }
+
+  const saveBtn = document.getElementById('savePurchaseOrderBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  try {
+    const expectedDate = document.getElementById('purchaseOrderExpectedDate').value || null;
+    const notes = document.getElementById('purchaseOrderNotes').value.trim() || null;
+    const total = calcPurchaseOrderTotal();
+
+    const { data: po, error: poError } = await supabaseClient
+      .from('purchase_orders')
+      .insert({
+        branch_id: currentProfile.branch_id, user_id: currentProfile.id, supplier_id: supplierId,
+        status: 'sent', expected_date: expectedDate, notes, total,
+      }).select().single();
+    if (poError) throw poError;
+
+    const poItems = validLines.map(l => ({
+      purchase_order_id: po.id, product_id: l.productId, product_unit_id: l.productUnitId || null,
+      quantity: l.quantity, unit_cost: l.unitCost, total: l.quantity * l.unitCost,
+    }));
+    const { error: itemsError } = await supabaseClient.from('purchase_order_items').insert(poItems);
+    if (itemsError) throw itemsError;
+
+    showToast(`تم إنشاء طلب الشراء رقم ${po.order_number}`);
+    closePurchaseOrderModal();
+    await loadBoPurchaseOrders();
+    renderPurchaseOrdersTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء حفظ الطلب';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ الطلب';
+  }
+}
+
+// شاشة استلام الطلب (كامل أو جزئي) — بتفتح كمان لعرض طلب مُستلم بالكامل
+// أو ملغي في وضع القراءة فقط (بدون إمكانية تعديل)
+async function openReceivePOModal(po) {
+  currentReceivingPO = po;
+  document.getElementById('receivePOModalTitle').textContent = `طلب الشراء رقم #${po.order_number}`;
+  document.getElementById('receivePOSupplierLabel').textContent = po.suppliers?.name || '—';
+  document.getElementById('receivePOModalError').classList.remove('show');
+
+  const readOnly = po.status === 'received' || po.status === 'cancelled';
+  document.getElementById('saveReceivePOBtn').style.display = readOnly ? 'none' : '';
+  document.getElementById('cancelPOFromReceiveBtn').style.display = readOnly ? 'none' : '';
+
+  const whField = document.getElementById('receivePOWarehouseField');
+  const whSel = document.getElementById('receivePOWarehouse');
+  const branchWarehouses = boWarehouses.filter(w => w.is_active && w.branch_id === po.branch_id);
+  if (!readOnly && branchWarehouses.length > 1) {
+    whSel.innerHTML = branchWarehouses.map(w => `<option value="${w.id}">${escapeHtml(warehouseLabel(w))}</option>`).join('');
+    const main = branchWarehouses.find(w => w.is_main);
+    if (main) whSel.value = main.id;
+    whField.style.display = 'block';
+  } else {
+    whSel.innerHTML = '';
+    whField.style.display = 'none';
+  }
+
+  const body = document.getElementById('receivePOLinesBody');
+  body.innerHTML = `<tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>`;
+  document.getElementById('receivePOModalOverlay').classList.add('show');
+
+  const { data: items, error } = await supabaseClient
+    .from('purchase_order_items')
+    .select('id, quantity, unit_cost, received_quantity, product_id, product_unit_id, products(name, unit_type), product_units(sale_price, unit_types(name))')
+    .eq('purchase_order_id', po.id);
+  if (error) { console.error(error); body.innerHTML = `<tr><td colspan="6" class="bo-empty">تعذر تحميل أصناف الطلب</td></tr>`; return; }
+
+  poReceiveLines = (items || []).map(it => ({
+    poItemId: it.id,
+    productId: it.product_id,
+    name: it.products?.name || '—',
+    unitLabel: it.product_units?.unit_types?.name || it.products?.unit_type || '',
+    ordered: Number(it.quantity),
+    received: Number(it.received_quantity),
+    remaining: Math.max(0, Number(it.quantity) - Number(it.received_quantity)),
+    qtyNow: readOnly ? 0 : Math.max(0, Number(it.quantity) - Number(it.received_quantity)),
+    unitCost: Number(it.unit_cost),
+  }));
+
+  renderReceivePOLines(readOnly);
+}
+
+function renderReceivePOLines(readOnly) {
+  const body = document.getElementById('receivePOLinesBody');
+  if (poReceiveLines.length === 0) {
+    body.innerHTML = `<tr><td colspan="6" class="bo-empty">لا توجد أصناف في هذا الطلب</td></tr>`;
+    return;
+  }
+  body.innerHTML = '';
+  poReceiveLines.forEach((line, idx) => {
+    const tr = document.createElement('tr');
+    const unitSuffix = line.unitLabel ? ` ${escapeHtml(line.unitLabel)}` : '';
+    tr.innerHTML = `
+      <td>${escapeHtml(line.name)}</td>
+      <td class="num">${line.ordered}${unitSuffix}</td>
+      <td class="num">${line.received}${unitSuffix}</td>
+      <td class="num">${line.remaining}${unitSuffix}</td>
+      <td></td>
+      <td></td>`;
+    const qtyTd = tr.children[4];
+    const costTd = tr.children[5];
+    if (readOnly || line.remaining <= 0) {
+      qtyTd.textContent = readOnly ? '—' : '0';
+      costTd.textContent = Number(line.unitCost).toFixed(2);
+    } else {
+      const qtyInput = document.createElement('input');
+      qtyInput.type = 'number'; qtyInput.min = '0'; qtyInput.max = String(line.remaining); qtyInput.step = '0.001';
+      qtyInput.value = line.qtyNow;
+      qtyInput.addEventListener('input', () => { line.qtyNow = Number(qtyInput.value) || 0; });
+      qtyTd.appendChild(qtyInput);
+
+      const costInput = document.createElement('input');
+      costInput.type = 'number'; costInput.min = '0'; costInput.step = '0.01'; costInput.value = line.unitCost;
+      costInput.addEventListener('input', () => { line.unitCost = Number(costInput.value) || 0; });
+      costTd.appendChild(costInput);
+    }
+    body.appendChild(tr);
+  });
+}
+
+function closeReceivePOModal() {
+  document.getElementById('receivePOModalOverlay').classList.remove('show');
+  currentReceivingPO = null;
+  poReceiveLines = [];
+}
+
+async function saveReceivePO() {
+  const errEl = document.getElementById('receivePOModalError');
+  errEl.classList.remove('show');
+  if (!currentReceivingPO) return;
+
+  const linesToReceive = poReceiveLines.filter(l => l.qtyNow > 0);
+  if (linesToReceive.length === 0) {
+    errEl.textContent = 'أدخل كمية استلام أكبر من صفر لصنف واحد على الأقل';
+    errEl.classList.add('show');
+    return;
+  }
+
+  const whField = document.getElementById('receivePOWarehouseField');
+  const warehouseId = whField.style.display !== 'none'
+    ? (document.getElementById('receivePOWarehouse').value || null)
+    : null;
+
+  const saveBtn = document.getElementById('saveReceivePOBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الاستلام...';
+
+  try {
+    const payloadItems = linesToReceive.map(l => ({
+      po_item_id: l.poItemId, quantity: l.qtyNow, unit_cost: l.unitCost,
+      ...(warehouseId ? { warehouse_id: warehouseId } : {}),
+    }));
+    const { data, error } = await supabaseClient.rpc('fn_receive_purchase_order', {
+      p_purchase_order_id: currentReceivingPO.id,
+      p_items: payloadItems,
+    });
+    if (error) throw error;
+
+    const st = purchaseOrderStatusInfo(data?.status);
+    showToast(`تم الاستلام بنجاح — حالة الطلب الآن: ${st.label}`);
+    closeReceivePOModal();
+    await Promise.all([loadBoPurchaseOrders(), loadBoPurchases(), loadBoProducts()]);
+    renderPurchaseOrdersTable();
+    renderPurchasesTable();
+    renderProductsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الاستلام';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'تأكيد الاستلام';
+  }
+}
+
+async function cancelPurchaseOrderFromReceive() {
+  if (!currentReceivingPO) return;
+  if (!confirm(`هل أنت متأكد من إلغاء طلب الشراء رقم #${currentReceivingPO.order_number}؟`)) return;
+  try {
+    const { error } = await supabaseClient
+      .from('purchase_orders')
+      .update({ status: 'cancelled' })
+      .eq('id', currentReceivingPO.id);
+    if (error) throw error;
+    showToast('تم إلغاء طلب الشراء');
+    closeReceivePOModal();
+    await loadBoPurchaseOrders();
+    renderPurchaseOrdersTable();
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر إلغاء الطلب', true);
+  }
+}
+
 // ---- Purchase Returns ----
 let boPurchaseReturns = [];
 let purchaseReturnPurchase = null;
@@ -17023,11 +17994,12 @@ function openPurchaseReturnModal() {
   document.getElementById('purchaseReturnInvoiceValue').value = '';
   document.getElementById('purchaseReturnItemFilter').value = '';
   document.getElementById('purchaseReturnInvoiceInfo').classList.remove('show');
-  document.getElementById('purchaseReturnLinesSection').style.display = 'none';
+  document.getElementById('purchaseReturnLinesSection').style.display = 'block';
   document.getElementById('savePurchaseReturnBtn').style.display = 'none';
   document.getElementById('purchaseReturnReasonInput').value = '';
   document.getElementById('purchaseReturnMethod').value = 'credit';
   applyPurchaseReturnCashFieldVisibility();
+  renderPurchaseReturnLines();
   document.getElementById('purchaseReturnModalError').classList.remove('show');
   document.getElementById('purchaseReturnModalOverlay').classList.add('show');
   loadPurchaseReturnRecentPurchases();
@@ -17082,8 +18054,10 @@ async function searchPurchaseForReturn(invoiceNumberOverride) {
     errEl.textContent = 'لا توجد فاتورة شراء بهذا الرقم';
     errEl.classList.add('show');
     infoEl.classList.remove('show');
-    document.getElementById('purchaseReturnLinesSection').style.display = 'none';
     document.getElementById('savePurchaseReturnBtn').style.display = 'none';
+    purchaseReturnPurchase = null;
+    purchaseReturnLines = [];
+    renderPurchaseReturnLines();
     return;
   }
 
@@ -17132,7 +18106,9 @@ function renderPurchaseReturnLines() {
   const visibleLines = q ? purchaseReturnLines.filter(l => l.name.toLowerCase().includes(q)) : purchaseReturnLines;
 
   if (visibleLines.length === 0) {
-    wrap.innerHTML = `<div class="ret-items-empty">${purchaseReturnLines.length === 0 ? 'لا توجد أصناف في هذه الفاتورة' : 'لا يوجد صنف مطابق للفلترة'}</div>`;
+    const emptyMsg = purchaseReturnLines.length !== 0 ? 'لا يوجد صنف مطابق للفلترة'
+      : (purchaseReturnPurchase ? 'لا توجد أصناف في هذه الفاتورة' : 'ابحث برقم فاتورة الشراء لعرض أصنافها هنا');
+    wrap.innerHTML = `<div class="ret-items-empty">${emptyMsg}</div>`;
     updatePurchaseReturnTotal();
     return;
   }
@@ -19876,20 +20852,44 @@ async function refreshStatement() {
 
     if (type === 'customer') {
       const { data: sales, error: salesErr } = await supabaseClient
-        .from('sales').select('invoice_number, total, created_at')
+        .from('sales').select('id, invoice_number, total, created_at')
         .eq('status', 'completed').eq('customer_id', partyId);
       if (salesErr) throw salesErr;
       (sales || []).forEach(s => entries.push({
         date: s.created_at, desc: `فاتورة بيع رقم ${s.invoice_number}`, debit: Number(s.total), credit: 0,
       }));
 
+      // المبلغ المدفوع فعليًا لحظة البيع (sale_payments) — لازم يظهر كدائن، وإلا
+      // هتفضل الفاتورة ظاهرة كدين حتى لو العميل دفعها كاش بالكامل عند الفاتورة.
+      const saleIds = (sales || []).map(s => s.id);
+      if (saleIds.length > 0) {
+        const { data: salePays, error: salePaysErr } = await supabaseClient
+          .from('sale_payments').select('amount, method, created_at, sale_id')
+          .in('sale_id', saleIds);
+        if (salePaysErr) throw salePaysErr;
+        const invoiceBySaleId = {};
+        (sales || []).forEach(s => { invoiceBySaleId[s.id] = s.invoice_number; });
+        (salePays || []).forEach(p => entries.push({
+          date: p.created_at,
+          desc: `دفعة عند البيع (${stmtMethodLabel(p.method)}) — فاتورة رقم ${invoiceBySaleId[p.sale_id] ?? '—'}`,
+          debit: 0, credit: Number(p.amount),
+        }));
+      }
+
       const { data: returns, error: returnsErr } = await supabaseClient
-        .from('sale_returns').select('total, created_at, sales(invoice_number)')
+        .from('sale_returns').select('total, created_at, refund_method, sales(invoice_number)')
         .eq('customer_id', partyId);
       if (returnsErr) throw returnsErr;
-      (returns || []).forEach(r => entries.push({
-        date: r.created_at, desc: `مرتجع فاتورة بيع رقم ${r.sales?.invoice_number ?? '—'}`, debit: 0, credit: Number(r.total),
-      }));
+      (returns || []).forEach(r => {
+        // مرتجع بخصم من رصيد العميل (credit) بيقلل مديونيته فعلًا، أما الاسترداد النقدي
+        // الفعلي (cash) فمابيأثرش على الرصيد (الفلوس رجعتله كاش مش خصم من حسابه).
+        const affectsBalance = r.refund_method === 'credit';
+        entries.push({
+          date: r.created_at,
+          desc: `مرتجع فاتورة بيع رقم ${r.sales?.invoice_number ?? '—'}${affectsBalance ? '' : ' (استرداد نقدي — لا يؤثر على الرصيد)'}`,
+          debit: 0, credit: affectsBalance ? Number(r.total) : 0,
+        });
+      });
 
       const { data: payments, error: paysErr } = await supabaseClient
         .from('payments').select('amount, method, created_at, note')
@@ -19908,12 +20908,20 @@ async function refreshStatement() {
       }));
 
       const { data: returns, error: returnsErr } = await supabaseClient
-        .from('purchase_returns').select('total, created_at, purchases(invoice_number)')
+        .from('purchase_returns').select('total, created_at, refund_method, purchases(invoice_number)')
         .eq('supplier_id', partyId);
       if (returnsErr) throw returnsErr;
-      (returns || []).forEach(r => entries.push({
-        date: r.created_at, desc: `مرتجع فاتورة شراء رقم ${r.purchases?.invoice_number ?? '—'}`, debit: 0, credit: Number(r.total),
-      }));
+      (returns || []).forEach(r => {
+        // خصم من مديونية المورد (credit، وهو الافتراضي) بيقلل اللي احنا مديونين بيه فعلًا،
+        // أما الاسترداد النقدي الفعلي (cash) فمابيأثرش على الرصيد (المورد رجّعلنا فلوس
+        // كاش للخزينة مش خصم من حسابه).
+        const affectsBalance = r.refund_method !== 'cash';
+        entries.push({
+          date: r.created_at,
+          desc: `مرتجع فاتورة شراء رقم ${r.purchases?.invoice_number ?? '—'}${affectsBalance ? '' : ' (استرداد نقدي — لا يؤثر على الرصيد)'}`,
+          debit: 0, credit: affectsBalance ? Number(r.total) : 0,
+        });
+      });
 
       const { data: payments, error: paysErr } = await supabaseClient
         .from('payments').select('amount, method, created_at, note')
