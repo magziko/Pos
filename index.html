@@ -1016,6 +1016,9 @@ a { color: inherit; }
             <button class="btn-secondary" id="recallBtn">استرجاع (<span id="heldCount">0</span>)</button>
           </div>
           <button class="checkout-btn" id="checkoutBtn" disabled>إتمام البيع</button>
+          <div id="posReadOnlyBanner" style="display:none; margin-top:8px; padding:8px 10px; background:var(--surface-sunken); border-radius:var(--radius-sm); font-size:12.5px; color:var(--ink-soft); text-align:center;">
+            هذا الدور "قراءة فقط" — يمكنك استعراض الشاشات لكن لا يمكن إتمام عمليات بيع
+          </div>
         </div>
       </div>
     </div>
@@ -4787,6 +4790,13 @@ a { color: inherit; }
 
       <div class="field field-full cost-guard-toggle-row">
         <label class="perm-select-all" style="margin:0;">
+          <input type="checkbox" id="permReadOnly">
+          قراءة فقط (Read-only) — يشوف كل الشاشات والتقارير لكن مايقدرش يضيف/يعدل/يحذف نهائي
+        </label>
+      </div>
+
+      <div class="field field-full cost-guard-toggle-row">
+        <label class="perm-select-all" style="margin:0;">
           <input type="checkbox" id="permViewCost" checked>
           إظهار سعر التكلفة وهامش الربح لهذا الدور (في شاشة الأصناف وتقارير الربحية)
         </label>
@@ -4797,6 +4807,16 @@ a { color: inherit; }
         <div style="display:flex; align-items:center; gap:8px;">
           <input type="number" id="permMaxDiscount" min="0" max="100" step="1" placeholder="بدون حد" style="max-width:140px;">
           <span style="font-size:11.5px; color:var(--ink-soft);">اتركه فارغًا لعدم وضع حد أقصى</span>
+        </div>
+      </div>
+
+      <div class="field field-full" style="margin-top:6px;">
+        <label class="perm-select-all" style="margin:0 0 8px;">
+          <input type="checkbox" id="permBranchRestricted">
+          تقييد هذا الدور بفروع محددة بدل كل الفروع
+        </label>
+        <div id="permBranchListWrap" style="display:none; padding:10px; background:var(--surface-sunken); border-radius:var(--radius-sm);">
+          <div class="perm-items" id="permBranchList"></div>
         </div>
       </div>
 
@@ -9009,6 +9029,10 @@ async function queueOfflineSale(ctx) {
 async function doCheckout() {
   if (cart.length === 0) return;
   if (!requireOpenShift()) return;
+  if (currentProfile.roles?.permissions?.read_only === true) {
+    showToast('هذا الدور "قراءة فقط" ولا يمكنه إتمام عمليات بيع', true);
+    return;
+  }
   posEls.checkoutBtn.disabled = true;
   posEls.checkoutBtn.textContent = 'جاري إتمام البيع...';
   try {
@@ -9892,6 +9916,27 @@ function applyCostGuard() {
   });
 }
 
+function getAllowedBranchIds() {
+  const perms = currentProfile.roles?.permissions || {};
+  if (perms.all === true) return null;
+  if (perms.branch_restricted !== true) return null;
+  return Array.isArray(perms.allowed_branch_ids) ? perms.allowed_branch_ids : [];
+}
+
+// عدسة موحّدة لتطبيق تقييد الفروع على أي استعلام Supabase في شاشات
+// التقارير/الإدارة. لو المستخدم اختار فرع معين من الفلتر، بنفلتر عليه
+// مباشرة زي القديم. لو مفيش فرع مختار لكن الدور "مقيّد بفروع محددة"،
+// بنفلتر تلقائيًا على قائمة الفروع المسموح بيها بدل ما نسيب الاستعلام
+// يرجّع بيانات كل الفروع. عمود المقارنة قابل للتخصيص لأنه بيختلف لما
+// يكون فلتر على جدول متصل (join) زي 'sales.branch_id'.
+function applyBranchScope(query, branchId, column) {
+  column = column || 'branch_id';
+  if (branchId) return query.eq(column, branchId);
+  const allowed = getAllowedBranchIds();
+  if (allowed === null) return query;
+  return query.in(column, allowed.length ? allowed : ['00000000-0000-0000-0000-000000000000']);
+}
+
 function hasBoPermission(permKey) {
   if (!permKey) return true;
   const perms = currentProfile.roles?.permissions || {};
@@ -9907,6 +9952,7 @@ function hasBoScreenPermission(section) {
   if (!moduleKey) return true;
   const perms = currentProfile.roles?.permissions || {};
   if (perms.all === true) return true;
+  if (perms.read_only === true) return true;
   if (perms[moduleKey] !== true) return false;
   const fineKey = 'scr:' + section;
   if (perms[fineKey] === false) return false;
@@ -9956,8 +10002,9 @@ const ADD_BUTTON_MAP = {
 // بترجع true افتراضيًا (مسموح) طالما الشاشة نفسها مسموحة وملهاش تسجيل صريح
 // بـ false، عشان الأدوار القديمة تفضل شغالة زي ما هي من غير ما تنكسر.
 function hasBoActionPermission(section, action) {
-  if (!hasBoScreenPermission(section)) return false;
   const perms = currentProfile.roles?.permissions || {};
+  if (perms.read_only === true) return false;
+  if (!hasBoScreenPermission(section)) return false;
   if (perms.all === true) return true;
   const fineKey = 'act:' + section + ':' + action;
   if (perms[fineKey] === false) return false;
@@ -9993,6 +10040,7 @@ function hasBoReportPermission(sectionId, reportKey) {
   const moduleKey = SECTION_PERMISSION_MAP[sectionId];
   const perms = currentProfile.roles?.permissions || {};
   if (perms.all === true) return true;
+  if (perms.read_only === true) return true;
   if (perms[moduleKey] !== true) return false;
   const fineKey = 'rep:' + sectionId + ':' + reportKey;
   if (perms[fineKey] === false) return false;
@@ -10013,6 +10061,20 @@ function applyBoPermissions() {
   applyReportCardPermissions();
   applyBoActionButtonPermissions();
   applyCostGuard();
+  applyReadOnlyGuard();
+}
+
+// وضع "قراءة فقط" على مستوى الدور بالكامل: يشوف كل الشاشات والتقارير
+// (متضمّن أعلاه في hasBoScreenPermission/hasBoReportPermission) لكن مايقدرش
+// يضيف/يعدل/يحذف نهائي — بما في ذلك إتمام عملية بيع جديدة من شاشة الكاشير،
+// اللي هي أهم عملية "إضافة" في التطبيق كله.
+function applyReadOnlyGuard() {
+  const readOnly = currentProfile.roles?.permissions?.read_only === true;
+  if (posEls.checkoutBtn) {
+    posEls.checkoutBtn.style.display = readOnly ? 'none' : '';
+  }
+  const readOnlyBanner = document.getElementById('posReadOnlyBanner');
+  if (readOnlyBanner) readOnlyBanner.style.display = readOnly ? 'block' : 'none';
 }
 
 // إخفاء كروت التقارير الفردية (جوه شاشات التقارير الخمسة) اللي مش مسموح
@@ -11112,6 +11174,9 @@ function bindBackofficeEvents() {
     const checked = e.target.checked;
     document.querySelectorAll('#permGrid input[type="checkbox"]').forEach(cb => { cb.checked = checked; cb.disabled = false; });
     document.querySelectorAll('#permGrid .perm-category').forEach(c => c.classList.toggle('checked', checked));
+  });
+  document.getElementById('permBranchRestricted').addEventListener('change', (e) => {
+    document.getElementById('permBranchListWrap').style.display = e.target.checked ? 'block' : 'none';
   });
 
   // ---- Stock / warehouses ----
@@ -13509,7 +13574,21 @@ async function loadBoBranches() {
   const { data, error } = await supabaseClient.from('branches').select('*').order('name');
   if (error) { console.error(error); return; }
   boBranchesList = data || [];
+  applyBranchRestrictionToList();
 }
+
+// لو الدور الحالي "مقيد بفروع محددة"، بنفلتر boBranchesList بحيث كل فلاتر
+// الفروع في التقارير والشاشات (اللي كلها بتاخد بياناتها من boBranchesList)
+// تعرض بس الفروع المسموح بيها تلقائيًا، من غير ما نلمس كل شاشة لوحدها.
+function applyBranchRestrictionToList() {
+  const allowed = getAllowedBranchIds();
+  if (allowed === null) return; // بدون تقييد
+  boBranchesList = boBranchesList.filter(b => allowed.includes(b.id));
+}
+
+// بترجع null لو الدور مش مقيد بفروع (يشوف كل الفروع)، أو Array من IDs
+// الفروع المسموح بيها لو مقيّد. "كل الصلاحيات" دايمًا بيشوف كل الفروع.
+// (تعريف getAllowedBranchIds نفسه موجود فوق مع باقي دوال الصلاحيات.)
 
 function renderBranchesTable() {
   const tbody = document.getElementById('branchesTableBody');
@@ -13881,10 +13960,31 @@ function openPermissionModal(role) {
   document.getElementById('permissionName').value = role ? role.name : '';
   renderPermGrid(role ? role.permissions : null);
   document.getElementById('permViewCost').checked = !(role && role.permissions && role.permissions.view_cost === false);
+  document.getElementById('permReadOnly').checked = !!(role && role.permissions && role.permissions.read_only === true);
   const maxDiscVal = role && role.permissions && role.permissions.max_discount_percent;
   document.getElementById('permMaxDiscount').value = (maxDiscVal === undefined || maxDiscVal === null) ? '' : maxDiscVal;
+  renderPermBranchList(role ? role.permissions : null);
   document.getElementById('permissionModalError').classList.remove('show');
   document.getElementById('permissionModalOverlay').classList.add('show');
+}
+
+// بناء قائمة الفروع القابلة للتحديد داخل مودال الصلاحية الأمنية، وضبط حالة
+// تفعيل/إخفاء القائمة حسب checkbox التقييد.
+function renderPermBranchList(selected) {
+  const restricted = !!(selected && selected.branch_restricted === true);
+  const allowedIds = (selected && Array.isArray(selected.allowed_branch_ids)) ? selected.allowed_branch_ids : [];
+  document.getElementById('permBranchRestricted').checked = restricted;
+  document.getElementById('permBranchListWrap').style.display = restricted ? 'block' : 'none';
+  const listEl = document.getElementById('permBranchList');
+  if (boBranchesList.length === 0) {
+    listEl.innerHTML = '<div style="font-size:12px; color:var(--ink-soft);">لا توجد فروع مسجّلة بعد</div>';
+    return;
+  }
+  listEl.innerHTML = boBranchesList.map(b => `
+    <label class="perm-item">
+      <input type="checkbox" class="perm-cb-branch" value="${b.id}" ${allowedIds.includes(b.id) ? 'checked' : ''}>
+      <span>${escapeHtml(b.name)}</span>
+    </label>`).join('');
 }
 
 function closePermissionModal() {
@@ -13906,8 +14006,11 @@ async function savePermission(e) {
     permissions[cb.dataset.permKey] = cb.checked;
   });
   permissions.view_cost = document.getElementById('permViewCost').checked;
+  permissions.read_only = document.getElementById('permReadOnly').checked;
   const maxDiscInput = document.getElementById('permMaxDiscount').value.trim();
   permissions.max_discount_percent = maxDiscInput === '' ? null : Math.max(0, Math.min(100, Number(maxDiscInput)));
+  permissions.branch_restricted = document.getElementById('permBranchRestricted').checked;
+  permissions.allowed_branch_ids = [...document.querySelectorAll('.perm-cb-branch:checked')].map(cb => cb.value);
 
   try {
     if (!name) throw new Error('من فضلك اكتب اسم الصلاحية');
@@ -17096,7 +17199,7 @@ async function loadBoShifts() {
   const status = document.getElementById('shiftsStatusFilter')?.value;
   const branchId = document.getElementById('shiftsBranchFilter')?.value;
   if (status) query = query.eq('status', status);
-  if (branchId) query = query.eq('branch_id', branchId);
+  query = applyBranchScope(query, branchId, 'branch_id');
   const { data, error } = await query;
   if (error) { console.error(error); showToast('تعذر تحميل الورديات', true); return; }
   boShifts = data || [];
@@ -17602,7 +17705,7 @@ async function runReport() {
       .eq('status', 'completed')
       .gte('created_at', fromISO)
       .lte('created_at', toISO);
-    if (branchId) salesQuery = salesQuery.eq('branch_id', branchId);
+    salesQuery = applyBranchScope(salesQuery, branchId, 'branch_id');
     const { data: sales, error: salesError } = await salesQuery;
     if (salesError) throw salesError;
 
@@ -17705,7 +17808,7 @@ async function runReport() {
       .eq('sales.status', 'completed')
       .gte('sales.created_at', fromISO)
       .lte('sales.created_at', toISO);
-    if (branchId) itemsQuery = itemsQuery.eq('sales.branch_id', branchId);
+    itemsQuery = applyBranchScope(itemsQuery, branchId, 'sales.branch_id');
     const { data: items, error: itemsError } = await itemsQuery;
     if (itemsError) throw itemsError;
 
@@ -17746,7 +17849,7 @@ async function runReport() {
       .select('amount')
       .gte('expense_date', fromDate)
       .lte('expense_date', toDate);
-    if (branchId) expensesQuery = expensesQuery.eq('branch_id', branchId);
+    expensesQuery = applyBranchScope(expensesQuery, branchId, 'branch_id');
     const { data: expensesInRange, error: expensesError } = await expensesQuery;
     if (expensesError) throw expensesError;
     const totalExpensesInRange = (expensesInRange || []).reduce((sum, x) => sum + Number(x.amount), 0);
@@ -17758,7 +17861,7 @@ async function runReport() {
       .select('net_amount, employees!inner(branch_id)')
       .gte('payment_date', fromDate)
       .lte('payment_date', toDate);
-    if (branchId) salariesQuery = salariesQuery.eq('employees.branch_id', branchId);
+    salariesQuery = applyBranchScope(salariesQuery, branchId, 'employees.branch_id');
     const { data: salariesInRange, error: salariesError } = await salariesQuery;
     if (salariesError) throw salariesError;
     const totalSalariesInRange = (salariesInRange || []).reduce((sum, x) => sum + Number(x.net_amount), 0);
@@ -17853,7 +17956,7 @@ async function runPurchasesReport() {
       .eq('status', 'completed')
       .gte('created_at', fromISO)
       .lte('created_at', toISO);
-    if (branchId) purchasesQuery = purchasesQuery.eq('branch_id', branchId);
+    purchasesQuery = applyBranchScope(purchasesQuery, branchId, 'branch_id');
     const { data: purchases, error: purchasesError } = await purchasesQuery;
     if (purchasesError) throw purchasesError;
 
@@ -17905,7 +18008,7 @@ async function runPurchasesReport() {
       .eq('purchases.status', 'completed')
       .gte('purchases.created_at', fromISO)
       .lte('purchases.created_at', toISO);
-    if (branchId) itemsQuery = itemsQuery.eq('purchases.branch_id', branchId);
+    itemsQuery = applyBranchScope(itemsQuery, branchId, 'purchases.branch_id');
     const { data: items, error: itemsError } = await itemsQuery;
     if (itemsError) throw itemsError;
 
@@ -18326,7 +18429,7 @@ async function runDiscountsReport() {
       .eq('status', 'completed')
       .gte('created_at', fromISO)
       .lte('created_at', toISO);
-    if (branchId) query = query.eq('branch_id', branchId);
+    query = applyBranchScope(query, branchId, 'branch_id');
     const { data: sales, error } = await query;
     if (error) throw error;
 
@@ -18446,6 +18549,92 @@ const ACTIVITY_LOG_FIELD_LABELS = {
 };
 // حقول تقنية بحتة لا تفيد المستخدم عند عرض الفروقات (ونخفي رقم الـ PIN لأسباب أمنية)
 const ACTIVITY_LOG_HIDDEN_FIELDS = new Set(['id', 'created_at', 'updated_at', 'pin']);
+
+// ---- عرض تفصيلي ومقروء لتغييرات الصلاحيات نفسها (جدول roles) ----
+// بدل عرض عمود permissions كـ JSON خام، بنبني خريطة كل مفتاح صلاحية → اسمه
+// المفهوم بالعربي (شاشة/عملية/تقرير)، ونحسب فرق حقيقي: إيه اللي اتضاف
+// وإيه اللي اتشال، بدل مجرد "تم التعديل".
+let PERM_KEY_LABELS_CACHE = null;
+function getPermKeyLabels() {
+  if (PERM_KEY_LABELS_CACHE) return PERM_KEY_LABELS_CACHE;
+  const map = {};
+  PERMISSION_GROUPS.forEach(g => {
+    map[g.key] = g.title;
+    (g.children || []).forEach(child => {
+      map['scr:' + child.key] = `${g.title} — ${child.title}`;
+      const caps = ACTION_CAPABLE_SCREENS[child.key];
+      if (caps) {
+        Object.keys(ACTION_LABELS).filter(a => caps[a]).forEach(a => {
+          map['act:' + child.key + ':' + a] = `${g.title} — ${child.title} — ${ACTION_LABELS[a]}`;
+        });
+      }
+    });
+    if (g.reportGroups) {
+      Object.entries(g.reportGroups).forEach(([sectionId, rg]) => {
+        (rg.items || []).forEach(item => {
+          map['rep:' + sectionId + ':' + item.key] = `${g.title} — تقرير: ${item.title}`;
+        });
+      });
+    }
+  });
+  PERM_KEY_LABELS_CACHE = map;
+  return map;
+}
+
+// وصف مقروء لفرق كامل بين نسختين من عمود permissions
+function describePermissionsDiff(oldP, newP) {
+  oldP = oldP || {}; newP = newP || {};
+  const labels = getPermKeyLabels();
+  const added = [], removed = [], notes = [];
+
+  if (!!oldP.all !== !!newP.all) {
+    notes.push(newP.all ? 'تم منح <b>كل الصلاحيات</b> (Admin كامل)' : 'تم إلغاء صلاحية <b>كل الصلاحيات</b>');
+  }
+  if (!!oldP.read_only !== !!newP.read_only) {
+    notes.push(newP.read_only ? 'تفعيل وضع <b>قراءة فقط</b> (منع الإضافة/التعديل/الحذف بالكامل)' : 'إلغاء وضع <b>قراءة فقط</b>');
+  }
+  const oldCost = oldP.view_cost !== false, newCost = newP.view_cost !== false;
+  if (oldCost !== newCost) notes.push(newCost ? 'تفعيل إظهار <b>سعر التكلفة والربح</b>' : 'إخفاء <b>سعر التكلفة والربح</b>');
+
+  const oldDisc = (oldP.max_discount_percent === undefined || oldP.max_discount_percent === null) ? null : Number(oldP.max_discount_percent);
+  const newDisc = (newP.max_discount_percent === undefined || newP.max_discount_percent === null) ? null : Number(newP.max_discount_percent);
+  if (oldDisc !== newDisc) {
+    notes.push(`تغيير <b>الحد الأقصى للخصم</b>: من ${oldDisc === null ? 'بدون حد' : oldDisc + '%'} إلى ${newDisc === null ? 'بدون حد' : newDisc + '%'}`);
+  }
+
+  const oldRestricted = oldP.branch_restricted === true, newRestricted = newP.branch_restricted === true;
+  const oldBranchIds = JSON.stringify((oldP.allowed_branch_ids || []).slice().sort());
+  const newBranchIds = JSON.stringify((newP.allowed_branch_ids || []).slice().sort());
+  if (oldRestricted !== newRestricted || (newRestricted && oldBranchIds !== newBranchIds)) {
+    const branchName = id => (boBranchesList.find(b => b.id === id)?.name) || `#${String(id).slice(0, 8)}`;
+    if (!newRestricted) {
+      notes.push('تم إلغاء <b>تقييد الفروع</b> — الدور بيشوف كل الفروع دلوقتي');
+    } else {
+      const names = (newP.allowed_branch_ids || []).map(branchName).join('، ') || '(لا يوجد فرع محدد)';
+      notes.push(`تفعيل/تعديل <b>تقييد الفروع</b> — الفروع المسموحة: ${escapeHtml(names)}`);
+    }
+  }
+
+  const skip = new Set(['all', 'read_only', 'view_cost', 'max_discount_percent', 'branch_restricted', 'allowed_branch_ids']);
+  const allKeys = new Set([...Object.keys(oldP), ...Object.keys(newP)].filter(k => !skip.has(k)));
+  allKeys.forEach(k => {
+    const wasOn = oldP[k] === true;
+    const isOn = newP[k] === true;
+    if (wasOn === isOn) return;
+    const label = labels[k] || k;
+    if (isOn) added.push(label); else removed.push(label);
+  });
+
+  if (added.length === 0 && removed.length === 0 && notes.length === 0) {
+    return '<span style="color:var(--ink-soft);">لا يوجد فرق فعلي في الصلاحيات (نفس القيم)</span>';
+  }
+  let html = '';
+  notes.forEach(n => { html += `<div style="margin-bottom:4px;">• ${n}</div>`; });
+  if (added.length) html += `<div style="margin-bottom:4px; color:var(--teal-700);">+ إضافة صلاحية: ${added.map(escapeHtml).join('، ')}</div>`;
+  if (removed.length) html += `<div style="color:var(--danger);">− إزالة صلاحية: ${removed.map(escapeHtml).join('، ')}</div>`;
+  return html;
+}
+
 // جداول مرجعية محمّلة مسبقًا في الذاكرة يمكن الاستعانة بها لتحويل معرّف (id) إلى اسم مفهوم
 const ACTIVITY_LOG_REF_LOOKUPS = {
   category_id: () => boCategories, branch_id: () => boBranchesList, warehouse_id: () => boWarehouses,
@@ -18629,14 +18818,25 @@ function viewActivityLogDetail(logId) {
       html += `<p class="bo-empty">لا توجد فروق ظاهرة في البيانات</p>`;
     } else {
       html += `<div class="bo-table-wrap"><table class="bo-table"><thead><tr><th>الحقل</th><th>القيمة قبل</th><th>القيمة بعد</th></tr></thead><tbody>` +
-        keys.map(k => `<tr><td>${escapeHtml(ACTIVITY_LOG_FIELD_LABELS[k] || k)}</td><td>${formatActivityLogValue(k, row.old_data[k])}</td><td>${formatActivityLogValue(k, row.new_data[k])}</td></tr>`).join('') +
+        keys.map(k => {
+          if (k === 'permissions' && row.table_name === 'roles') {
+            return `<tr><td>الصلاحيات</td><td colspan="2">${describePermissionsDiff(row.old_data.permissions, row.new_data.permissions)}</td></tr>`;
+          }
+          return `<tr><td>${escapeHtml(ACTIVITY_LOG_FIELD_LABELS[k] || k)}</td><td>${formatActivityLogValue(k, row.old_data[k])}</td><td>${formatActivityLogValue(k, row.new_data[k])}</td></tr>`;
+        }).join('') +
         `</tbody></table></div>`;
     }
   } else {
     const data = row.action === 'delete' ? row.old_data : row.new_data;
     const entries = Object.entries(data || {}).filter(([k]) => !ACTIVITY_LOG_HIDDEN_FIELDS.has(k));
     html += `<div class="bo-table-wrap"><table class="bo-table"><thead><tr><th>الحقل</th><th>القيمة</th></tr></thead><tbody>` +
-      entries.map(([k, v]) => `<tr><td>${escapeHtml(ACTIVITY_LOG_FIELD_LABELS[k] || k)}</td><td>${formatActivityLogValue(k, v)}</td></tr>`).join('') +
+      entries.map(([k, v]) => {
+        if (k === 'permissions' && row.table_name === 'roles') {
+          const desc = row.action === 'delete' ? describePermissionsDiff(v, {}) : describePermissionsDiff({}, v);
+          return `<tr><td>الصلاحيات</td><td>${desc}</td></tr>`;
+        }
+        return `<tr><td>${escapeHtml(ACTIVITY_LOG_FIELD_LABELS[k] || k)}</td><td>${formatActivityLogValue(k, v)}</td></tr>`;
+      }).join('') +
       `</tbody></table></div>`;
   }
   body.innerHTML = html;
@@ -18767,7 +18967,7 @@ async function refreshGrossProfitReport() {
       .eq('sales.status', 'completed')
       .gte('sales.created_at', fromISO)
       .lte('sales.created_at', toISO);
-    if (branchId) itemsQuery = itemsQuery.eq('sales.branch_id', branchId);
+    itemsQuery = applyBranchScope(itemsQuery, branchId, 'sales.branch_id');
     const { data: items, error: itemsError } = await itemsQuery;
     if (itemsError) throw itemsError;
 
@@ -18790,7 +18990,7 @@ async function refreshGrossProfitReport() {
       .select('quantity, total, product_id, products(name, cost_price), sale_returns!inner(created_at, branch_id)')
       .gte('sale_returns.created_at', fromISO)
       .lte('sale_returns.created_at', toISO);
-    if (branchId) returnItemsQuery = returnItemsQuery.eq('sale_returns.branch_id', branchId);
+    returnItemsQuery = applyBranchScope(returnItemsQuery, branchId, 'sale_returns.branch_id');
     const { data: returnItems, error: returnItemsError } = await returnItemsQuery;
     if (returnItemsError) throw returnItemsError;
 
@@ -18934,7 +19134,7 @@ async function refreshIncomeStatement() {
       .eq('status', 'completed')
       .gte('created_at', fromISO)
       .lte('created_at', toISO);
-    if (branchId) salesQuery = salesQuery.eq('branch_id', branchId);
+    salesQuery = applyBranchScope(salesQuery, branchId, 'branch_id');
     const { data: sales, error: salesError } = await salesQuery;
     if (salesError) throw salesError;
     const totalSales = (sales || []).reduce((sum, s) => sum + Number(s.total), 0);
@@ -18945,7 +19145,7 @@ async function refreshIncomeStatement() {
       .select('total, branch_id')
       .gte('created_at', fromISO)
       .lte('created_at', toISO);
-    if (branchId) returnsQuery = returnsQuery.eq('branch_id', branchId);
+    returnsQuery = applyBranchScope(returnsQuery, branchId, 'branch_id');
     const { data: returns, error: returnsError } = await returnsQuery;
     if (returnsError) throw returnsError;
     const totalReturns = (returns || []).reduce((sum, r) => sum + Number(r.total), 0);
@@ -18956,7 +19156,7 @@ async function refreshIncomeStatement() {
       .select('amount, branch_id')
       .gte('expense_date', fromDate)
       .lte('expense_date', toDate);
-    if (branchId) expensesQuery = expensesQuery.eq('branch_id', branchId);
+    expensesQuery = applyBranchScope(expensesQuery, branchId, 'branch_id');
     const { data: expenses, error: expensesError } = await expensesQuery;
     if (expensesError) throw expensesError;
     const totalExpenses = (expenses || []).reduce((sum, x) => sum + Number(x.amount), 0);
@@ -18971,7 +19171,7 @@ async function refreshIncomeStatement() {
       .eq('sales.status', 'completed')
       .gte('sales.created_at', fromISO)
       .lte('sales.created_at', toISO);
-    if (branchId) saleItemsQuery = saleItemsQuery.eq('sales.branch_id', branchId);
+    saleItemsQuery = applyBranchScope(saleItemsQuery, branchId, 'sales.branch_id');
     const { data: soldItemsForCost, error: soldItemsCostError } = await saleItemsQuery;
     if (soldItemsCostError) throw soldItemsCostError;
     const costOfGoodsSold = (soldItemsForCost || []).reduce((sum, it) => {
@@ -18987,7 +19187,7 @@ async function refreshIncomeStatement() {
       .select('quantity, sale_returns!inner(created_at, branch_id), products(cost_price), sale_items(product_unit_id, product_units(factor_to_base))')
       .gte('sale_returns.created_at', fromISO)
       .lte('sale_returns.created_at', toISO);
-    if (branchId) returnItemsQuery = returnItemsQuery.eq('sale_returns.branch_id', branchId);
+    returnItemsQuery = applyBranchScope(returnItemsQuery, branchId, 'sale_returns.branch_id');
     const { data: returnedItemsForCost, error: returnedItemsCostError } = await returnItemsQuery;
     if (returnedItemsCostError) throw returnedItemsCostError;
     const returnedCOGS = (returnedItemsForCost || []).reduce((sum, it) => {
@@ -19005,7 +19205,7 @@ async function refreshIncomeStatement() {
       .select('net_amount, employees!inner(branch_id)')
       .gte('payment_date', fromDate)
       .lte('payment_date', toDate);
-    if (branchId) salariesQuery = salariesQuery.eq('employees.branch_id', branchId);
+    salariesQuery = applyBranchScope(salariesQuery, branchId, 'employees.branch_id');
     const { data: salaries, error: salariesError } = await salariesQuery;
     if (salariesError) throw salariesError;
     const totalSalaries = (salaries || []).reduce((sum, x) => sum + Number(x.net_amount), 0);
@@ -19699,7 +19899,7 @@ async function refreshTaxReport() {
       .eq('sales.status', 'completed')
       .gte('sales.created_at', fromISO)
       .lte('sales.created_at', toISO);
-    if (branchId) itemsQuery = itemsQuery.eq('sales.branch_id', branchId);
+    itemsQuery = applyBranchScope(itemsQuery, branchId, 'sales.branch_id');
     const { data: items, error: itemsError } = await itemsQuery;
     if (itemsError) throw itemsError;
 
@@ -19708,7 +19908,7 @@ async function refreshTaxReport() {
       .select('quantity, total, product_id, products(name, tax_rate_id, tax_rates(name, rate)), sale_returns!inner(created_at, branch_id)')
       .gte('sale_returns.created_at', fromISO)
       .lte('sale_returns.created_at', toISO);
-    if (branchId) returnItemsQuery = returnItemsQuery.eq('sale_returns.branch_id', branchId);
+    returnItemsQuery = applyBranchScope(returnItemsQuery, branchId, 'sale_returns.branch_id');
     const { data: returnItems, error: returnItemsError } = await returnItemsQuery;
     if (returnItemsError) throw returnItemsError;
 
@@ -19873,7 +20073,7 @@ async function refreshExpensesAnalysisReport() {
       .select('amount, expense_date, branch_id, expense_items(name), branches(name)')
       .gte('expense_date', fromDate)
       .lte('expense_date', toDate);
-    if (branchId) query = query.eq('branch_id', branchId);
+    query = applyBranchScope(query, branchId, 'branch_id');
     const { data, error } = await query;
     if (error) throw error;
 
@@ -20055,7 +20255,7 @@ async function refreshReturnsAnalysisReport() {
         .from('sale_returns')
         .select('id, total, reason, created_at, branch_id')
         .gte('created_at', fromISO).lte('created_at', toISO);
-      if (branchId) srHeadQuery = srHeadQuery.eq('branch_id', branchId);
+      srHeadQuery = applyBranchScope(srHeadQuery, branchId, 'branch_id');
       const { data: srHead, error: srHeadErr } = await srHeadQuery;
       if (srHeadErr) throw srHeadErr;
       saleHeaders = srHead || [];
@@ -20064,7 +20264,7 @@ async function refreshReturnsAnalysisReport() {
         .from('sale_return_items')
         .select('quantity, total, product_id, products(name), sale_returns!inner(created_at, branch_id)')
         .gte('sale_returns.created_at', fromISO).lte('sale_returns.created_at', toISO);
-      if (branchId) srItemsQuery = srItemsQuery.eq('sale_returns.branch_id', branchId);
+      srItemsQuery = applyBranchScope(srItemsQuery, branchId, 'sale_returns.branch_id');
       const { data: srItems, error: srItemsErr } = await srItemsQuery;
       if (srItemsErr) throw srItemsErr;
       saleItems = srItems || [];
@@ -20075,7 +20275,7 @@ async function refreshReturnsAnalysisReport() {
         .from('purchase_returns')
         .select('id, total, reason, created_at, branch_id')
         .gte('created_at', fromISO).lte('created_at', toISO);
-      if (branchId) prHeadQuery = prHeadQuery.eq('branch_id', branchId);
+      prHeadQuery = applyBranchScope(prHeadQuery, branchId, 'branch_id');
       const { data: prHead, error: prHeadErr } = await prHeadQuery;
       if (prHeadErr) throw prHeadErr;
       purchaseHeaders = prHead || [];
@@ -20084,7 +20284,7 @@ async function refreshReturnsAnalysisReport() {
         .from('purchase_return_items')
         .select('quantity, total, product_id, products(name), purchase_returns!inner(created_at, branch_id)')
         .gte('purchase_returns.created_at', fromISO).lte('purchase_returns.created_at', toISO);
-      if (branchId) prItemsQuery = prItemsQuery.eq('purchase_returns.branch_id', branchId);
+      prItemsQuery = applyBranchScope(prItemsQuery, branchId, 'purchase_returns.branch_id');
       const { data: prItems, error: prItemsErr } = await prItemsQuery;
       if (prItemsErr) throw prItemsErr;
       purchaseItems = prItems || [];
@@ -20249,7 +20449,7 @@ async function refreshFixedAssetsReport() {
       .from('fixed_assets_valuation')
       .select('*, branches(name)')
       .order('purchase_date', { ascending: false });
-    if (branchId) query = query.eq('branch_id', branchId);
+    query = applyBranchScope(query, branchId, 'branch_id');
     if (status === 'active') query = query.eq('is_active', true);
     if (status === 'disposed') query = query.eq('is_active', false);
     const { data: rows, error } = await query;
@@ -20472,7 +20672,7 @@ async function refreshCashMovementsReport() {
       .gte('created_at', fromISO)
       .lte('created_at', toISO);
     if (accountId) txQuery = txQuery.eq('cash_account_id', accountId);
-    if (branchId) txQuery = txQuery.eq('cash_accounts.branch_id', branchId);
+    txQuery = applyBranchScope(txQuery, branchId, 'cash_accounts.branch_id');
     if (categoryFilter) {
       const typesInCategory = Object.keys(cashAccountTxCategoryOf).filter(k => cashAccountTxCategoryOf[k] === categoryFilter);
       txQuery = txQuery.in('type', typesInCategory);
@@ -20664,7 +20864,7 @@ async function refreshCapitalMovementsReport() {
       .gte('transaction_date', fromDate)
       .lte('transaction_date', toDate)
       .order('transaction_date', { ascending: false });
-    if (branchId) query = query.eq('cash_accounts.branch_id', branchId);
+    query = applyBranchScope(query, branchId, 'cash_accounts.branch_id');
     const { data: rows, error } = await query;
     if (error) throw error;
 
