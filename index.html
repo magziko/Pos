@@ -339,6 +339,8 @@ a { color: inherit; }
 .bo-section-title { font-size: 18px; font-weight: 700; }
 .bo-add-btn { background: var(--teal-700); color: white; padding: 10px 18px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 600; }
 .bo-add-btn:hover { background: var(--teal-900); }
+.bo-add-btn.secondary { background: var(--surface); color: var(--ink); border: 1px solid var(--border); }
+.bo-add-btn.secondary:hover { background: var(--surface-sunken); }
 .bo-section-actions { display: flex; align-items: center; gap: 8px; }
 .bo-outline-btn { background: var(--surface); color: var(--teal-700); border: 1px solid var(--teal-700); padding: 9px 16px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 600; }
 .bo-outline-btn:hover { background: var(--teal-100); }
@@ -4275,7 +4277,10 @@ a { color: inherit; }
         <div id="bo-section-permissions" style="display:none;">
           <div class="bo-section-header">
             <div class="bo-section-title">الصلاحية الأمنية</div>
-            <button class="bo-add-btn" id="addPermissionBtn">+ إضافة صلاحية أمنية جديدة</button>
+            <div style="display:flex; gap:8px;">
+              <button class="bo-add-btn secondary" id="compareRolesBtn" type="button">مقارنة دورين</button>
+              <button class="bo-add-btn" id="addPermissionBtn">+ إضافة صلاحية أمنية جديدة</button>
+            </div>
           </div>
           <div class="bo-table-wrap">
             <table class="bo-table">
@@ -4820,12 +4825,40 @@ a { color: inherit; }
         </div>
       </div>
 
+      <div class="field field-full" style="margin-top:6px;">
+        <label style="margin-bottom:6px;">تاريخ انتهاء صلاحية هذا الدور بالكامل (اختياري)</label>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <input type="date" id="permExpiresAt" style="max-width:180px;">
+          <span style="font-size:11.5px; color:var(--ink-soft);">بعد هذا التاريخ، أي مستخدم بهذا الدور مايقدرش يسجّل دخول خالص</span>
+        </div>
+      </div>
+
       <div class="error-msg" id="permissionModalError"></div>
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelPermissionBtn">إلغاء</button>
         <button type="submit" class="submit-btn" id="savePermissionBtn">حفظ</button>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="compareRolesModalOverlay">
+  <div class="modal-box" style="max-width:720px;">
+    <div class="modal-title">مقارنة دورين</div>
+    <div class="field-full" style="display:flex; gap:12px; margin-bottom:14px;">
+      <div class="field" style="flex:1;">
+        <label>الدور الأول</label>
+        <select id="compareRoleA"></select>
+      </div>
+      <div class="field" style="flex:1;">
+        <label>الدور الثاني</label>
+        <select id="compareRoleB"></select>
+      </div>
+    </div>
+    <div id="compareRolesResult" style="max-height:50vh; overflow-y:auto; font-size:13px; line-height:1.9;"></div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="closeCompareRolesBtn">إغلاق</button>
+    </div>
   </div>
 </div>
 
@@ -5678,6 +5711,10 @@ a { color: inherit; }
             <option value="male">ذكر</option>
             <option value="female">أنثى</option>
           </select>
+        </div>
+        <div class="field">
+          <label>تاريخ انتهاء الحساب (اختياري — للموظفين المؤقتين)</label>
+          <input type="date" id="userExpiresAt">
         </div>
       </div>
 
@@ -6740,6 +6777,14 @@ async function getUserProfile(userId) {
       .eq('id', userId)
       .single();
     if (error) throw error;
+    // نجيب تاريخ انتهاء صلاحية الحساب لو محدد لهذا المستخدم بالذات (مخزّن في
+    // جدول settings العام لعدم وجود عمود مخصص لكل مستخدم، بمفتاح فريد لكل واحد).
+    // لو فشل الاستعلام لأي سبب (مثلاً السطر مش موجود) بنكمل عادي بدون تاريخ انتهاء.
+    try {
+      const { data: expRow } = await supabaseClient
+        .from('settings').select('value').eq('key', userExpiryKey(userId)).maybeSingle();
+      data.user_expires_at = expRow?.value?.expires_at || null;
+    } catch (e) { data.user_expires_at = null; }
     offSet(OFF.profile, { userId, profile: data });
     const { data: { session: currentSession } } = await supabaseClient.auth.getSession();
     cachePinProfile(data, currentSession);
@@ -6751,6 +6796,39 @@ async function getUserProfile(userId) {
     if (cached && cached.userId === userId) return cached.profile;
     return null;
   }
+}
+
+// ---- انتهاء صلاحية تلقائي (Expiry) — لدور كامل أو لمستخدم بعينه ----
+// مفيد للموظفين المؤقتين: بمجرد ما تاريخ اليوم يعدّي تاريخ الانتهاء، الحساب
+// يترفض عند أي محاولة دخول جديدة (بكلمة مرور أو PIN) حتى لو باقي بيانات
+// الحساب سليمة. الفحص بيتم في كل نقاط الدخول (بما فيها استرجاع الجلسة
+// عند فتح الصفحة)، فمش لازم المستخدم يعمل logout يدوي عشان يتفعّل المنع.
+function userExpiryKey(userId) {
+  return 'user_expiry:' + userId;
+}
+
+function accountExpiryStatus(profile) {
+  const today = new Date().toISOString().slice(0, 10);
+  const roleExp = profile?.roles?.permissions?.expires_at || null;
+  const userExp = profile?.user_expires_at || null;
+  const roleExpired = !!(roleExp && roleExp < today);
+  const userExpired = !!(userExp && userExp < today);
+  return { expired: roleExpired || userExpired, roleExpired, userExpired, roleExp, userExp };
+}
+
+async function setUserExpiryDate(userId, dateStr) {
+  const key = userExpiryKey(userId);
+  if (!dateStr) {
+    return supabaseClient.from('settings').delete().eq('key', key);
+  }
+  return supabaseClient.from('settings').upsert({ key, value: { expires_at: dateStr }, updated_at: new Date().toISOString() });
+}
+
+async function getUserExpiryDate(userId) {
+  try {
+    const { data } = await supabaseClient.from('settings').select('value').eq('key', userExpiryKey(userId)).maybeSingle();
+    return data?.value?.expires_at || null;
+  } catch (e) { return null; }
 }
 
 // ------------------------------------------------------------
@@ -6766,6 +6844,15 @@ async function getUserProfile(userId) {
     if (session) {
       currentProfile = await getUserProfile(session.user.id);
       if (currentProfile && currentProfile.is_active) {
+        const expiry = accountExpiryStatus(currentProfile);
+        if (expiry.expired) {
+          await supabaseClient.auth.signOut();
+          currentProfile = null;
+          showView('login');
+          loginError.textContent = 'انتهت صلاحية هذا الحساب، يرجى مراجعة مدير النظام';
+          loginError.classList.add('show');
+          return;
+        }
         enterPos();
         return;
       }
@@ -6819,6 +6906,16 @@ loginForm.addEventListener('submit', async (e) => {
   const profile = await getUserProfile(data.user.id);
   if (!profile || !profile.is_active) {
     loginError.textContent = 'الحساب غير مفعّل، يرجى التواصل مع مدير النظام';
+    loginError.classList.add('show');
+    await supabaseClient.auth.signOut();
+    loginSubmitBtn.disabled = false;
+    loginSubmitBtn.textContent = 'دخول';
+    return;
+  }
+
+  const expiryCheck = accountExpiryStatus(profile);
+  if (expiryCheck.expired) {
+    loginError.textContent = 'انتهت صلاحية هذا الحساب، يرجى مراجعة مدير النظام';
     loginError.classList.add('show');
     await supabaseClient.auth.signOut();
     loginSubmitBtn.disabled = false;
@@ -6921,6 +7018,15 @@ async function submitPinLogin() {
 
   if (!match || !match.profile || !match.profile.is_active) {
     errEl.textContent = 'رمز PIN غير صحيح، أو لم يسبق تسجيل الدخول بهذا الحساب على هذا الجهاز';
+    errEl.classList.add('show');
+    pinValue = '';
+    renderPinDots();
+    return;
+  }
+
+  const pinExpiryCheck = accountExpiryStatus(match.profile);
+  if (pinExpiryCheck.expired) {
+    errEl.textContent = 'انتهت صلاحية هذا الحساب، يرجى مراجعة مدير النظام';
     errEl.classList.add('show');
     pinValue = '';
     renderPinDots();
@@ -10033,6 +10139,9 @@ function applyRowActionPerm(tr, section) {
   if (!hasBoActionPermission(section, 'delete')) {
     tr.querySelectorAll('[data-action="delete"]').forEach(el => el.style.display = 'none');
   }
+  if (!hasBoActionPermission(section, 'add')) {
+    tr.querySelectorAll('[data-action="duplicate"]').forEach(el => el.style.display = 'none');
+  }
 }
 
 // نفس الفكرة لكن لكارت تقرير واحد جوه أحد أقسام التقارير الخمسة.
@@ -11165,6 +11274,13 @@ function bindBackofficeEvents() {
 
   // ---- Permission (role) modal ----
   document.getElementById('addPermissionBtn').addEventListener('click', () => openPermissionModal(null));
+  document.getElementById('compareRolesBtn').addEventListener('click', openCompareRolesModal);
+  document.getElementById('closeCompareRolesBtn').addEventListener('click', closeCompareRolesModal);
+  document.getElementById('compareRoleA').addEventListener('change', runCompareRoles);
+  document.getElementById('compareRoleB').addEventListener('change', runCompareRoles);
+  document.getElementById('compareRolesModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'compareRolesModalOverlay') closeCompareRolesModal();
+  });
   document.getElementById('cancelPermissionBtn').addEventListener('click', closePermissionModal);
   document.getElementById('permissionModalOverlay').addEventListener('click', (e) => {
     if (e.target.id === 'permissionModalOverlay') closePermissionModal();
@@ -13773,12 +13889,14 @@ function renderPermissionsTable() {
       <td class="num">${userCount}</td>
       <td>
         <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="duplicate">نسخ</button>
           <button class="bo-icon-btn" data-action="edit">تعديل</button>
           <button class="bo-icon-btn danger" data-action="delete">حذف</button>
         </div>
       </td>`;
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openPermissionModal(r));
     tr.querySelector('[data-action="delete"]').addEventListener('click', () => deletePermission(r));
+    tr.querySelector('[data-action="duplicate"]').addEventListener('click', () => duplicateRole(r));
     applyRowActionPerm(tr, 'permissions');
     tbody.appendChild(tr);
   });
@@ -13954,13 +14072,56 @@ function syncPermSelectAllState() {
   if (el) el.checked = boxes.length > 0 && boxes.every(cb => cb.checked);
 }
 
+// نسخ دور موجود بالكامل (كل الصلاحيات التفصيلية) كنقطة بداية لدور جديد،
+// بدل ما تبني نفس الإعدادات من الصفر تاني لكل دور مشابه.
+function duplicateRole(role) {
+  const clonedPermissions = JSON.parse(JSON.stringify(role.permissions || {}));
+  openPermissionModal({ id: '', name: role.name + ' (نسخة)', permissions: clonedPermissions });
+  showToast('تم نسخ صلاحيات "' + role.name + '" — عدّل الاسم والصلاحيات ثم احفظ كدور جديد');
+}
+
+// ---- مقارنة دورين جنب بعض ----
+// بتعتمد على نفس دالة describePermissionsDiff المستخدمة في سجل النشاط،
+// وبتعرض الفرق في الاتجاهين: إيه اللي عند الدور التاني وناقص عند الأول، والعكس.
+function openCompareRolesModal() {
+  const selA = document.getElementById('compareRoleA');
+  const selB = document.getElementById('compareRoleB');
+  const optsHtml = boRoles.map(r => `<option value="${r.id}">${escapeHtml(r.name)}</option>`).join('');
+  selA.innerHTML = optsHtml;
+  selB.innerHTML = optsHtml;
+  if (boRoles.length > 1) selB.value = boRoles[1].id;
+  runCompareRoles();
+  document.getElementById('compareRolesModalOverlay').classList.add('show');
+}
+
+function closeCompareRolesModal() {
+  document.getElementById('compareRolesModalOverlay').classList.remove('show');
+}
+
+function runCompareRoles() {
+  const resultEl = document.getElementById('compareRolesResult');
+  const roleA = boRoles.find(r => r.id === document.getElementById('compareRoleA').value);
+  const roleB = boRoles.find(r => r.id === document.getElementById('compareRoleB').value);
+  if (!roleA || !roleB) { resultEl.innerHTML = ''; return; }
+  if (roleA.id === roleB.id) {
+    resultEl.innerHTML = '<span style="color:var(--ink-soft);">اختر دورين مختلفين للمقارنة</span>';
+    return;
+  }
+  resultEl.innerHTML = `
+    <div style="margin-bottom:10px; padding:8px 10px; background:var(--surface-sunken); border-radius:var(--radius-sm);">
+      <b>${escapeHtml(roleB.name)}</b> عنده أكتر من <b>${escapeHtml(roleA.name)}</b>، والعكس بالعكس:
+    </div>
+    ${describePermissionsDiff(roleA.permissions, roleB.permissions)}`;
+}
+
 function openPermissionModal(role) {
-  document.getElementById('permissionModalTitle').textContent = role ? 'تعديل صلاحية أمنية' : 'صلاحية أمنية جديدة';
+  document.getElementById('permissionModalTitle').textContent = (role && role.id) ? 'تعديل صلاحية أمنية' : 'صلاحية أمنية جديدة';
   document.getElementById('permissionId').value = role ? role.id : '';
   document.getElementById('permissionName').value = role ? role.name : '';
   renderPermGrid(role ? role.permissions : null);
   document.getElementById('permViewCost').checked = !(role && role.permissions && role.permissions.view_cost === false);
   document.getElementById('permReadOnly').checked = !!(role && role.permissions && role.permissions.read_only === true);
+  document.getElementById('permExpiresAt').value = (role && role.permissions && role.permissions.expires_at) || '';
   const maxDiscVal = role && role.permissions && role.permissions.max_discount_percent;
   document.getElementById('permMaxDiscount').value = (maxDiscVal === undefined || maxDiscVal === null) ? '' : maxDiscVal;
   renderPermBranchList(role ? role.permissions : null);
@@ -14007,6 +14168,7 @@ async function savePermission(e) {
   });
   permissions.view_cost = document.getElementById('permViewCost').checked;
   permissions.read_only = document.getElementById('permReadOnly').checked;
+  permissions.expires_at = document.getElementById('permExpiresAt').value || null;
   const maxDiscInput = document.getElementById('permMaxDiscount').value.trim();
   permissions.max_discount_percent = maxDiscInput === '' ? null : Math.max(0, Math.min(100, Number(maxDiscInput)));
   permissions.branch_restricted = document.getElementById('permBranchRestricted').checked;
@@ -15606,11 +15768,20 @@ function openUserModal(user) {
   document.getElementById('userPassportNumber').value = user ? (user.passport_number || '') : '';
   document.getElementById('userLanguage').value = user ? (user.language || 'ar') : 'ar';
   document.getElementById('userGender').value = user ? (user.gender || '') : '';
+  document.getElementById('userExpiresAt').value = '';
   populateUserSelects(user?.roles?.id, user?.branches?.id);
   populateUserEmployeeSelect(user?.employees?.id || user?.employee_id || '');
   populateUserTimezoneSelect(user ? (user.timezone || '') : '');
   document.getElementById('userModalError').classList.remove('show');
   document.getElementById('userModalOverlay').classList.add('show');
+  // تاريخ الانتهاء مخزّن منفصل (جدول settings) فمش جزء من كائن المستخدم نفسه؛
+  // بنجيبه بشكل غير متزامن بعد ما المودال يكون فتح عشان الفتح ميتأخرش في انتظار الشبكة.
+  if (user && user.id) {
+    getUserExpiryDate(user.id).then(dateStr => {
+      const el = document.getElementById('userExpiresAt');
+      if (el && document.getElementById('userId').value === user.id) el.value = dateStr || '';
+    });
+  }
 }
 
 function closeUserModal() {
@@ -15644,6 +15815,7 @@ async function saveUser(e) {
   const passportNumber = document.getElementById('userPassportNumber').value.trim() || null;
   const language = document.getElementById('userLanguage').value || 'ar';
   const gender = document.getElementById('userGender').value || null;
+  const expiresAt = document.getElementById('userExpiresAt').value || null;
   const extraFields = {
     phone, work_email: workEmail, work_phone: workPhone, timezone, department,
     national_id: nationalId, passport_number: passportNumber, language, gender,
@@ -15684,6 +15856,7 @@ async function saveUser(e) {
         if (rpcError) throw rpcError;
       }
       showToast('تم تحديث بيانات المستخدم');
+      await setUserExpiryDate(id, expiresAt);
     } else {
       // مستخدم جديد: إنشاء حساب Auth بعميل منفصل حتى لا تُفصَل جلسة الأدمن الحالي
       if (!username) throw new Error('اكتب اسم المستخدم');
@@ -15701,6 +15874,7 @@ async function saveUser(e) {
 
       await adminCreateClient.auth.signOut(); // تنظيف جلسة العميل المؤقت
       showToast('تمت إضافة المستخدم بنجاح');
+      await setUserExpiryDate(signUpData.user.id, expiresAt);
     }
 
     closeUserModal();
@@ -18593,6 +18767,9 @@ function describePermissionsDiff(oldP, newP) {
   if (!!oldP.read_only !== !!newP.read_only) {
     notes.push(newP.read_only ? 'تفعيل وضع <b>قراءة فقط</b> (منع الإضافة/التعديل/الحذف بالكامل)' : 'إلغاء وضع <b>قراءة فقط</b>');
   }
+  if ((oldP.expires_at || null) !== (newP.expires_at || null)) {
+    notes.push(`تغيير <b>تاريخ انتهاء صلاحية الدور</b>: من ${oldP.expires_at || 'بدون تاريخ'} إلى ${newP.expires_at || 'بدون تاريخ'}`);
+  }
   const oldCost = oldP.view_cost !== false, newCost = newP.view_cost !== false;
   if (oldCost !== newCost) notes.push(newCost ? 'تفعيل إظهار <b>سعر التكلفة والربح</b>' : 'إخفاء <b>سعر التكلفة والربح</b>');
 
@@ -18615,7 +18792,7 @@ function describePermissionsDiff(oldP, newP) {
     }
   }
 
-  const skip = new Set(['all', 'read_only', 'view_cost', 'max_discount_percent', 'branch_restricted', 'allowed_branch_ids']);
+  const skip = new Set(['all', 'read_only', 'expires_at', 'view_cost', 'max_discount_percent', 'branch_restricted', 'allowed_branch_ids']);
   const allKeys = new Set([...Object.keys(oldP), ...Object.keys(newP)].filter(k => !skip.has(k)));
   allKeys.forEach(k => {
     const wasOn = oldP[k] === true;
