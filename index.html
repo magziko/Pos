@@ -4873,6 +4873,11 @@ a { color: inherit; }
             <input type="checkbox" id="productActive" checked style="width:auto;"> الصنف مفعّل ويظهر في شاشة المبيعات
           </label>
         </div>
+        <div class="field field-full">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="productSellByWeight" style="width:auto;"> يباع بالوزن (كجم) — سعر البيع أعلاه يُعتبر سعر الكيلوجرام
+          </label>
+        </div>
       </div>
 
       <div class="error-msg" id="productModalError"></div>
@@ -6327,6 +6332,23 @@ a { color: inherit; }
     <div class="unit-picker-title" id="unitPickerTitle">اختر الوحدة</div>
     <div id="unitPickerOptions"></div>
     <button type="button" class="unit-picker-cancel" id="unitPickerCancelBtn">إلغاء</button>
+  </div>
+</div>
+
+<div class="unit-picker-overlay" id="weightPickerOverlay">
+  <div class="unit-picker-box">
+    <div class="unit-picker-title" id="weightPickerTitle">أدخل الوزن</div>
+    <input type="number" id="weightPickerInput" step="0.001" min="0.001" inputmode="decimal"
+      style="width:100%; font-size:22px; text-align:center; padding:14px; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:4px; font-family:var(--font-num);"
+      placeholder="0.000">
+    <div style="text-align:center; font-size:11.5px; color:var(--ink-soft); margin-bottom:12px;">بالكيلوجرام (كجم)</div>
+    <div style="display:flex; gap:8px; margin-bottom:10px;">
+      <button type="button" class="unit-picker-option" data-weight-preset="0.25" style="flex:1; justify-content:center;">250 جم</button>
+      <button type="button" class="unit-picker-option" data-weight-preset="0.5" style="flex:1; justify-content:center;">500 جم</button>
+      <button type="button" class="unit-picker-option" data-weight-preset="1" style="flex:1; justify-content:center;">1 كجم</button>
+    </div>
+    <button type="button" class="submit-btn" id="weightPickerConfirmBtn" style="margin-bottom:8px;">إضافة للفاتورة</button>
+    <button type="button" class="unit-picker-cancel" id="weightPickerCancelBtn">إلغاء</button>
   </div>
 </div>
 
@@ -8258,6 +8280,20 @@ function bindPosEvents() {
     if (e.target.id === 'unitPickerOverlay') closeUnitPicker();
   });
 
+  document.getElementById('weightPickerCancelBtn').addEventListener('click', closeWeightPicker);
+  document.getElementById('weightPickerConfirmBtn').addEventListener('click', confirmWeightPicker);
+  document.getElementById('weightPickerOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'weightPickerOverlay') closeWeightPicker();
+  });
+  document.getElementById('weightPickerInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); confirmWeightPicker(); }
+  });
+  document.querySelectorAll('#weightPickerOverlay [data-weight-preset]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('weightPickerInput').value = btn.dataset.weightPreset;
+    });
+  });
+
   document.getElementById('closeReceiptBtn').addEventListener('click', () => {
     document.getElementById('receiptModalOverlay').classList.remove('show');
   });
@@ -8372,7 +8408,7 @@ async function loadProducts() {
     if (!sessionUsable()) throw new Error('offline');
     const { data, error } = await supabaseClient
       .from('products')
-      .select('id, name, category_id, sale_price, unit_type, image_url, tax_rate_id, tax_rates(rate), product_barcodes(barcode), product_units(id, unit_type_id, factor_to_base, sale_price, is_active, unit_types(name))')
+      .select('id, name, category_id, sale_price, unit_type, sell_by, image_url, tax_rate_id, tax_rates(rate), product_barcodes(barcode), product_units(id, unit_type_id, factor_to_base, sale_price, is_active, unit_types(name))')
       .eq('is_active', true).order('name');
     if (error) throw error;
     allProducts = data || [];
@@ -8608,7 +8644,7 @@ function renderProducts() {
     card.innerHTML = `
       <div class="product-thumb">${p.image_url ? `<img src="${p.image_url}" alt="">` : '🛒'}</div>
       <div class="product-name">${escapeHtml(p.name)}</div>
-      <div class="product-price"><span class="num">${Number(p.sale_price).toFixed(2)}</span></div>
+      <div class="product-price"><span class="num">${Number(p.sale_price).toFixed(2)}</span>${p.sell_by === 'weight' ? ' <span style="font-size:10.5px; color:var(--ink-soft); font-weight:500;">/كجم</span>' : ''}</div>
       <div style="font-size:11px;">${branchSettings.show_available_qty_pos ? stockLabel : ''}</div>`;
     card.addEventListener('click', () => addToCart(p));
     posEls.productGrid.appendChild(card);
@@ -8618,12 +8654,61 @@ function renderProducts() {
 function lineKeyOf(productId, productUnitId) { return productId + '::' + (productUnitId || 'base'); }
 
 function addToCart(product) {
+  if (product.sell_by === 'weight') {
+    openWeightPicker(product);
+    return;
+  }
   const extraUnits = (product.product_units || []).filter(u => u.is_active);
   if (extraUnits.length === 0) {
     addUnitToCart(product, null, Number(product.sale_price), 1, null);
     return;
   }
   openUnitPicker(product, extraUnits);
+}
+
+let weightPickerProduct = null;
+let weightPickerEditMode = false;
+
+function openWeightPicker(product, existingQty) {
+  weightPickerProduct = product;
+  weightPickerEditMode = existingQty != null;
+  document.getElementById('weightPickerTitle').textContent = `أدخل وزن "${product.name}"`;
+  const input = document.getElementById('weightPickerInput');
+  input.value = existingQty != null ? existingQty : '';
+  document.getElementById('weightPickerOverlay').classList.add('show');
+  setTimeout(() => input.focus(), 50);
+}
+function closeWeightPicker() {
+  document.getElementById('weightPickerOverlay').classList.remove('show');
+  weightPickerProduct = null;
+  weightPickerEditMode = false;
+}
+function confirmWeightPicker() {
+  const input = document.getElementById('weightPickerInput');
+  const weight = Number(input.value);
+  if (!weight || weight <= 0) { showToast('أدخل وزنًا صحيحًا أكبر من صفر', true); return; }
+  if (weightPickerEditMode) setWeightInCart(weightPickerProduct, weight);
+  else addWeightToCart(weightPickerProduct, weight);
+  closeWeightPicker();
+}
+function addWeightToCart(product, weight) {
+  const key = lineKeyOf(product.id, null);
+  const existing = cart.find(l => lineKeyOf(l.product.id, l.productUnitId) === key);
+  const newQty = (existing ? existing.quantity : 0) + weight;
+  if (!confirmStockIfNeeded(product, newQty, 1)) return;
+  if (existing) existing.quantity = newQty;
+  else cart.push({ product, quantity: weight, unitPrice: Number(product.sale_price), productUnitId: null, unitLabel: 'كجم', factor: 1, basePrice: Number(product.sale_price), isWeighted: true });
+  renderCart();
+  renderProducts();
+}
+function setWeightInCart(product, weight) {
+  const key = lineKeyOf(product.id, null);
+  const line = cart.find(l => lineKeyOf(l.product.id, l.productUnitId) === key);
+  if (!line) return;
+  if (!confirmStockIfNeeded(product, weight, 1)) return;
+  line.quantity = weight;
+  renderCart();
+  renderProducts();
 }
 
 function openUnitPicker(product, extraUnits) {
@@ -9247,23 +9332,28 @@ function renderCart() {
       const nameLabel = line.unitLabel && line.productUnitId
         ? `${escapeHtml(line.product.name)} <span style="color:var(--ink-soft); font-weight:500;">(${escapeHtml(line.unitLabel)})</span>`
         : escapeHtml(line.product.name);
+      const qtyControlsHtml = line.isWeighted
+        ? `<button class="qty-btn" data-action="editWeight">✎</button><span class="qty-value num">${Number(line.quantity).toFixed(3)} كجم</span>`
+        : `<button class="qty-btn" data-action="dec">−</button><span class="qty-value num">${line.quantity}</span><button class="qty-btn" data-action="inc">+</button>`;
       row.innerHTML = `
         <div class="cart-line-swipe-bg">حذف</div>
         <div class="cart-line-content">
           <div class="cart-line-name">${nameLabel}</div>
           <div class="cart-line-total"><span class="num">${lineTotal}</span></div>
           <div class="cart-line-controls">
-            <button class="qty-btn" data-action="dec">−</button>
-            <span class="qty-value num">${line.quantity}</span>
-            <button class="qty-btn" data-action="inc">+</button>
-            <span class="unit-price num">${line.unitPrice.toFixed(2)} / وحدة</span>
+            ${qtyControlsHtml}
+            <span class="unit-price num">${line.unitPrice.toFixed(2)} / ${line.isWeighted ? 'كجم' : 'وحدة'}</span>
             <button class="remove-btn" data-action="remove">حذف</button>
           </div>
         </div>`;
       const contentEl = row.querySelector('.cart-line-content');
       const bgEl = row.querySelector('.cart-line-swipe-bg');
-      contentEl.querySelector('[data-action="inc"]').addEventListener('click', () => changeQty(line.product.id, line.productUnitId, 1));
-      contentEl.querySelector('[data-action="dec"]').addEventListener('click', () => changeQty(line.product.id, line.productUnitId, -1));
+      if (line.isWeighted) {
+        contentEl.querySelector('[data-action="editWeight"]').addEventListener('click', () => openWeightPicker(line.product, line.quantity));
+      } else {
+        contentEl.querySelector('[data-action="inc"]').addEventListener('click', () => changeQty(line.product.id, line.productUnitId, 1));
+        contentEl.querySelector('[data-action="dec"]').addEventListener('click', () => changeQty(line.product.id, line.productUnitId, -1));
+      }
       contentEl.querySelector('[data-action="remove"]').addEventListener('click', () => removeLine(line.product.id, line.productUnitId));
       attachSwipeToDelete(contentEl, bgEl, () => removeLine(line.product.id, line.productUnitId));
       posEls.cartItems.appendChild(row);
@@ -12671,6 +12761,7 @@ function openProductModal(product) {
   document.getElementById('productReorder').value = product ? product.reorder_level : 0;
   setImageUploadFieldValue('productImage', product?.image_url || '', 'productImagePreview', 'productImagePlaceholder', 'productImageRemoveBtn', 'productImageSizeLabel');
   document.getElementById('productActive').checked = product ? product.is_active : true;
+  document.getElementById('productSellByWeight').checked = product ? product.sell_by === 'weight' : false;
   document.getElementById('productModalError').classList.remove('show');
   document.getElementById('newBarcodeInput').value = '';
   renderBarcodeList();
@@ -12935,6 +13026,7 @@ async function saveProduct(e) {
     reorder_level: Number(document.getElementById('productReorder').value) || 0,
     image_url: document.getElementById('productImage').value.trim() || null,
     is_active: document.getElementById('productActive').checked,
+    sell_by: document.getElementById('productSellByWeight').checked ? 'weight' : 'unit',
   };
   // لو مفيش صلاحية رؤية التكلفة، الحقل أصلاً مخفي في الفورم؛ منشيلش cost_price
   // من الـ payload إلا لو التعديل على صنف موجود بالفعل، عشان ميتصفرش سعر
