@@ -1077,6 +1077,7 @@ a { color: inherit; }
             <button class="btn-secondary" id="recallBtn">استرجاع (<span id="heldCount">0</span>)</button>
           </div>
           <button class="checkout-btn" id="checkoutBtn" disabled>إتمام البيع</button>
+          <button class="btn-secondary" id="saveSaleOrderBtn" disabled style="width:100%; margin-top:8px;" title="حفظ الفاتورة كطلبية بيع مبدئية — لا تؤثر على المخزون أو حساب العميل إلا بعد تأكيدها من شاشة طلبات البيع">حفظ كطلبية بيع (بدون تأثير على الأرصدة)</button>
           <div id="posReadOnlyBanner" style="display:none; margin-top:8px; padding:8px 10px; background:var(--surface-sunken); border-radius:var(--radius-sm); font-size:12.5px; color:var(--ink-soft); text-align:center;">
             هذا الدور "قراءة فقط" — يمكنك استعراض الشاشات لكن لا يمكن إتمام عمليات بيع
           </div>
@@ -1137,6 +1138,7 @@ a { color: inherit; }
           </button>
           <div class="bo-nav-sub" id="salesNavSub">
             <button class="bo-nav-sub-item" data-section="sales-list">فواتير البيع</button>
+            <button class="bo-nav-sub-item" data-section="sale-orders">طلبات البيع</button>
             <button class="bo-nav-sub-item" data-section="customers">العملاء</button>
             <button class="bo-nav-sub-item" data-section="customer-types">أنواع العملاء</button>
             <button class="bo-nav-sub-item" data-section="sale-returns">مرتجعات البيع</button>
@@ -1756,6 +1758,33 @@ a { color: inherit; }
           <div class="bo-pager" id="salesListPager"></div>
         </div>
 
+        <!-- قسم طلبات البيع -->
+        <div id="bo-section-sale-orders" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">طلبات البيع</div>
+          </div>
+          <div style="font-size:12.5px; color:var(--ink-soft); margin:-6px 0 10px;">
+            طلبيات مبدئية يتم حفظها من شاشة الكاشير (زر "حفظ كطلبية بيع") ولا تؤثر على المخزون أو حساب العميل إطلاقًا إلا بعد تأكيدها هنا وتحويلها لفاتورة بيع فعلية.
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>رقم الطلبية</th>
+                  <th>العميل</th>
+                  <th>الإجمالي</th>
+                  <th>الحالة</th>
+                  <th>تاريخ الإنشاء</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="saleOrdersTableBody">
+                <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- قسم طلبات الشراء -->
         <div id="bo-section-purchase-orders" style="display:none;">
           <div class="bo-section-header">
@@ -1818,8 +1847,8 @@ a { color: inherit; }
             <div class="field"><label>من تاريخ</label><input type="date" id="purchaseReturnsFromDate"></div>
             <div class="field"><label>إلى تاريخ</label><input type="date" id="purchaseReturnsToDate"></div>
             <div class="field">
-              <label>المورد أو رقم الفاتورة</label>
-              <input type="text" id="purchaseReturnsTextFilter" placeholder="ابحث بالاسم أو رقم الفاتورة...">
+              <label>المورد / رقم الفاتورة / التليفون / الصنف</label>
+              <input type="text" id="purchaseReturnsTextFilter" placeholder="ابحث باسم المورد، رقم الفاتورة، التليفون، أو اسم الصنف...">
             </div>
             <button class="bo-add-btn" id="runPurchaseReturnsFilterBtn">تحديث</button>
             <button class="bo-outline-btn" id="resetPurchaseReturnsFilterBtn">إعادة تعيين</button>
@@ -1867,8 +1896,8 @@ a { color: inherit; }
               </select>
             </div>
             <div class="field">
-              <label>العميل أو رقم الفاتورة</label>
-              <input type="text" id="saleReturnsTextFilter" placeholder="ابحث بالاسم أو رقم الفاتورة...">
+              <label>العميل / رقم الفاتورة / التليفون / الصنف</label>
+              <input type="text" id="saleReturnsTextFilter" placeholder="ابحث باسم العميل، رقم الفاتورة، التليفون، أو اسم الصنف...">
             </div>
             <button class="bo-add-btn" id="runSaleReturnsFilterBtn">تحديث</button>
             <button class="bo-outline-btn" id="resetSaleReturnsFilterBtn">إعادة تعيين</button>
@@ -5429,6 +5458,41 @@ a { color: inherit; }
 </div>
 
 <!-- Modal: فاتورة شراء جديدة -->
+<div class="modal-overlay" id="saleOrderDetailModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title" id="saleOrderDetailModalTitle">طلبية بيع</div>
+    <div class="modal-grid">
+      <div class="field"><span style="font-size:13px; color:var(--ink-soft);">العميل</span><div id="saleOrderDetailCustomerLabel" style="font-weight:600;">—</div></div>
+      <div class="field"><span style="font-size:13px; color:var(--ink-soft);">الحالة</span><div id="saleOrderDetailStatusLabel" style="font-weight:600;">—</div></div>
+    </div>
+    <div class="bo-table-wrap" style="margin-top:10px;">
+      <table class="bo-table">
+        <thead>
+          <tr>
+            <th>الصنف</th>
+            <th>الكمية</th>
+            <th>سعر الوحدة</th>
+            <th>الإجمالي</th>
+          </tr>
+        </thead>
+        <tbody id="saleOrderDetailLinesBody"></tbody>
+      </table>
+    </div>
+    <div class="purchase-totals-row" style="margin-top:10px;">
+      <div>الإجمالي الفرعي: <span class="num" id="saleOrderDetailSubtotal">0.00</span></div>
+      <div>الخصم: <span class="num" id="saleOrderDetailDiscount">0.00</span></div>
+      <div>الضريبة: <span class="num" id="saleOrderDetailTax">0.00</span></div>
+      <div>الإجمالي: <span class="num" id="saleOrderDetailTotal">0.00</span></div>
+    </div>
+    <div class="error-msg" id="saleOrderDetailModalError"></div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="closeSaleOrderDetailBtn">إغلاق</button>
+      <button type="button" class="submit-btn" id="cancelSaleOrderBtn" style="background:var(--danger);">إلغاء الطلبية</button>
+      <button type="button" class="submit-btn" id="confirmSaleOrderBtn">تأكيد وتحويل لفاتورة بيع</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="purchaseOrderModalOverlay">
   <div class="modal-box wide">
     <div class="modal-title">طلب شراء جديد</div>
@@ -5593,8 +5657,8 @@ a { color: inherit; }
     <form id="saleReturnForm">
       <div class="ret-invoice-search-row">
         <div class="field smart-search">
-          <label>رقم فاتورة البيع</label>
-          <input type="text" id="saleReturnInvoiceInput" placeholder="ابحث برقم الفاتورة..." autocomplete="off" inputmode="numeric">
+          <label>رقم الفاتورة أو اسم العميل</label>
+          <input type="text" id="saleReturnInvoiceInput" placeholder="ابحث برقم الفاتورة أو اسم العميل أو تليفونه..." autocomplete="off">
           <input type="hidden" id="saleReturnInvoiceValue">
           <div class="smart-search-dropdown" id="saleReturnInvoiceDropdown"></div>
         </div>
@@ -5683,7 +5747,7 @@ a { color: inherit; }
       <div class="ret-invoice-search-row">
         <div class="field smart-search">
           <label>رقم الفاتورة أو اسم المورد</label>
-          <input type="text" id="purchaseReturnInvoiceInput" placeholder="ابحث برقم الفاتورة أو اسم المورد..." autocomplete="off">
+          <input type="text" id="purchaseReturnInvoiceInput" placeholder="ابحث برقم الفاتورة أو اسم المورد أو تليفونه..." autocomplete="off">
           <input type="hidden" id="purchaseReturnInvoiceValue">
           <div class="smart-search-dropdown" id="purchaseReturnInvoiceDropdown"></div>
         </div>
@@ -6985,7 +7049,9 @@ function createSmartSearch(opts) {
   function filterAndOpen(query) {
     items = getItems() || [];
     const q = (query || '').trim().toLowerCase();
-    filtered = q ? items.filter(it => it.label.toLowerCase().includes(q)) : items.slice();
+    // لو العنصر معاه حقل search (نص مجمّع زي: رقم الفاتورة + اسم العميل/المورد + تليفونه) نفلتر بيه،
+    // وإلا نرجع للسلوك القديم اللي بيفلتر بالـ label بس (متوافق مع كل استخدامات createSmartSearch الأخرى)
+    filtered = q ? items.filter(it => (it.search || it.label).toLowerCase().includes(q)) : items.slice();
     activeIndex = filtered.length > 0 ? 0 : -1;
     renderList();
   }
@@ -7483,6 +7549,7 @@ function cachePosEls() {
   posEls.recallBtn = document.getElementById('recallBtn');
   posEls.heldCount = document.getElementById('heldCount');
   posEls.checkoutBtn = document.getElementById('checkoutBtn');
+  posEls.saveSaleOrderBtn = document.getElementById('saveSaleOrderBtn');
   posEls.paidRow = document.getElementById('paidRow');
   posEls.paidInput = document.getElementById('paidInput');
   posEls.paymentMethodSelect = document.getElementById('posPaymentMethod');
@@ -7554,6 +7621,7 @@ function updateShiftBadge() {
     if (posEls.cashDropBtn) posEls.cashDropBtn.style.display = 'none';
   }
   if (posEls.checkoutBtn) posEls.checkoutBtn.disabled = cart.length === 0 || !currentShift;
+  if (posEls.saveSaleOrderBtn) posEls.saveSaleOrderBtn.disabled = cart.length === 0;
 }
 
 function requireOpenShift() {
@@ -8179,6 +8247,7 @@ function bindPosEvents() {
   posEls.splitAddBtn.addEventListener('click', () => { addSplitRow('cash', 0); renderCart(); });
 
   posEls.checkoutBtn.addEventListener('click', doCheckout);
+  if (posEls.saveSaleOrderBtn) posEls.saveSaleOrderBtn.addEventListener('click', saveSaleOrder);
 
   posEls.mobileCartBar.addEventListener('click', openMobileCart);
   posEls.cartMobileClose.addEventListener('click', closeMobileCart);
@@ -8251,6 +8320,7 @@ function bindPosEvents() {
       value: s.invoice_number,
       label: `فاتورة #${s.invoice_number}`,
       sublabel: `${s.customers?.name || 'عميل نقدي'} — ${Number(s.total).toFixed(2)} — ${new Date(s.created_at).toLocaleDateString('ar-EG')}`,
+      search: `${s.invoice_number} ${s.customers?.name || ''} ${s.customers?.phone || ''}`,
     })),
     onChange: (item) => searchSaleForReturn(item.value),
   });
@@ -9233,6 +9303,7 @@ function renderCart() {
   }
 
   posEls.checkoutBtn.disabled = cart.length === 0 || !currentShift;
+  if (posEls.saveSaleOrderBtn) posEls.saveSaleOrderBtn.disabled = cart.length === 0;
 
   const itemCount = cart.reduce((sum, l) => sum + Number(l.quantity), 0);
   posEls.mobileCartCount.textContent = itemCount;
@@ -9428,6 +9499,7 @@ async function doCheckout() {
   }
   posEls.checkoutBtn.disabled = true;
   posEls.checkoutBtn.textContent = 'جاري إتمام البيع...';
+  if (posEls.saveSaleOrderBtn) posEls.saveSaleOrderBtn.disabled = true;
   try {
     const subtotal = calcSubtotal();
     const discount = Number(posEls.discountInput.value) || 0;
@@ -9525,6 +9597,81 @@ async function doCheckout() {
   } finally {
     posEls.checkoutBtn.disabled = cart.length === 0 || !currentShift;
     posEls.checkoutBtn.textContent = 'إتمام البيع';
+    if (posEls.saveSaleOrderBtn) posEls.saveSaleOrderBtn.disabled = cart.length === 0;
+  }
+}
+
+// ============================================================
+// ---- طلبية بيع (Sale Order) من شاشة الكاشير ----
+// حفظ محتوى الفاتورة الحالية كـ"طلبية بيع" مبدئية بدون أي تأثير على
+// المخزون أو حساب العميل — بنفس فلسفة "طلبات الشراء". التحويل الفعلي
+// لفاتورة بيع حقيقية (تحديث المخزون + مديونية العميل) بيحصل فقط لما
+// المستخدم يفتح الطلبية من شاشة "طلبات البيع" في لوحة التحكم ويضغط
+// "تأكيد وتحويل لفاتورة بيع".
+// ============================================================
+async function saveSaleOrder() {
+  if (cart.length === 0) return;
+  if (currentProfile.roles?.permissions?.read_only === true) {
+    showToast('هذا الدور "قراءة فقط" ولا يمكنه حفظ طلبيات بيع', true);
+    return;
+  }
+  if (!sessionUsable()) {
+    showToast('حفظ الطلبية يحتاج اتصال بالإنترنت', true);
+    return;
+  }
+  const btn = posEls.saveSaleOrderBtn;
+  if (btn) { btn.disabled = true; btn.textContent = 'جاري الحفظ...'; }
+  try {
+    const subtotal = calcSubtotal();
+    const discount = Number(posEls.discountInput.value) || 0;
+    const maxDiscountCheck = checkMaxDiscountAllowed(subtotal, discount);
+    if (!maxDiscountCheck.ok) throw new Error(maxDiscountCheck.message);
+    const tax = calcTaxTotal();
+    const total = calcTotal();
+    const customerId = posEls.customerSelect.value || null;
+    if (branchSettings.require_customer_pos && !customerId) {
+      throw new Error('من إعدادات الفرع: يجب تحديد العميل قبل إتمام البيع');
+    }
+    const paymentMethod = posEls.splitToggle.checked ? 'mixed' : (posEls.paymentMethodSelect.value || 'cash');
+    const saleWarehouseId = posSelectedWarehouseId() || await getMainWarehouseId(currentProfile.branch_id);
+
+    const { data: order, error: orderError } = await supabaseClient
+      .from('sale_orders')
+      .insert({
+        branch_id: currentProfile.branch_id, user_id: currentProfile.id, customer_id: customerId,
+        status: 'draft', subtotal, discount, tax, total, payment_method: paymentMethod,
+        warehouse_id: saleWarehouseId,
+      }).select().single();
+    if (orderError) throw orderError;
+
+    const orderItems = cart.map(l => ({
+      sale_order_id: order.id, product_id: l.product.id, product_unit_id: l.productUnitId || null,
+      quantity: l.quantity, unit_price: l.unitPrice, discount: 0, total: l.quantity * l.unitPrice,
+      warehouse_id: saleWarehouseId,
+    }));
+    const { error: itemsError } = await supabaseClient.from('sale_order_items').insert(orderItems);
+    if (itemsError) throw itemsError;
+
+    showToast(`تم حفظ الطلبية رقم ${order.order_number} — بدون أي تأثير على المخزون أو حساب العميل حتى تأكيدها من "طلبات البيع"`);
+
+    cart = []; posEls.discountInput.value = 0; setCustomerSelection('', { silent: true });
+    delete posEls.paidInput.dataset.touched; posEls.paidInput.value = '';
+    posEls.paymentMethodSelect.value = 'cash';
+    splitPaymentLines = [];
+    posEls.splitToggle.checked = false;
+    posEls.splitBlock.style.display = 'none';
+    document.getElementById('paymentMethodRow').style.display = 'flex';
+    renderSplitRows();
+    const instantNoteEl = document.getElementById('instantNoteInput');
+    if (instantNoteEl) instantNoteEl.value = '';
+    resetQuickDiscountSelection();
+    renderCart();
+    closeMobileCart();
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || 'حدث خطأ أثناء حفظ الطلبية', true);
+  } finally {
+    if (btn) { btn.disabled = cart.length === 0; btn.textContent = 'حفظ كطلبية بيع (بدون تأثير على الأرصدة)'; }
   }
 }
 
@@ -9608,7 +9755,7 @@ async function loadSaleReturnRecentSales() {
   try {
     const { data, error } = await supabaseClient
       .from('sales')
-      .select('id, invoice_number, total, created_at, customers(name)')
+      .select('id, invoice_number, total, created_at, customers(name, phone)')
       .order('created_at', { ascending: false })
       .limit(50);
     if (error) throw error;
@@ -9723,12 +9870,66 @@ function factorForSaleItem(productId, productUnitId) {
 async function searchSaleForReturn(invoiceNumberOverride) {
   const errEl = document.getElementById('saleReturnModalError');
   errEl.classList.remove('show');
+  const inputEl = document.getElementById('saleReturnInvoiceInput');
   const hiddenVal = document.getElementById('saleReturnInvoiceValue').value;
-  const rawValue = invoiceNumberOverride ?? (hiddenVal !== '' ? hiddenVal : document.getElementById('saleReturnInvoiceInput').value);
-  const invoiceNumber = Number(rawValue);
-  if (!invoiceNumber) { errEl.textContent = 'اكتب رقم فاتورة صحيح، أو اختر فاتورة من قائمة الاقتراحات'; errEl.classList.add('show'); return; }
+  const rawValue = invoiceNumberOverride ?? (hiddenVal !== '' ? hiddenVal : inputEl.value);
+  const rawText = String(rawValue ?? '').trim();
+  if (!rawText) { errEl.textContent = 'اكتب رقم فاتورة، أو اسم/تليفون عميل، أو اختر فاتورة من قائمة الاقتراحات'; errEl.classList.add('show'); return; }
 
   const searchBtn = document.getElementById('saleReturnSearchBtn');
+  let invoiceNumber = Number(rawText);
+  const isPureInvoiceNumber = /^\d+$/.test(rawText);
+
+  if (!isPureInvoiceNumber) {
+    // مفيش رقم فاتورة صريح — نحاول نلاقي فاتورة/فواتير العميل عن طريق اسمه أو رقم تليفونه
+    if (!appIsOnline) {
+      errEl.textContent = 'البحث بالاسم أو رقم التليفون يتطلب اتصالاً بالإنترنت — أو اكتب رقم الفاتورة مباشرة';
+      errEl.classList.add('show');
+      return;
+    }
+    searchBtn.disabled = true;
+    const originalBtnText = searchBtn.textContent;
+    searchBtn.textContent = 'جارٍ البحث...';
+    let matches = [];
+    try {
+      const { data, error } = await supabaseClient
+        .from('sales')
+        .select('id, invoice_number, total, created_at, customers!inner(name, phone)')
+        .or(`name.ilike.%${rawText}%,phone.ilike.%${rawText}%`, { foreignTable: 'customers' })
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      matches = data || [];
+    } catch (err) {
+      if (isNetworkError(err)) { appIsOnline = false; updateOfflineBanner(); }
+      else console.error(err);
+    }
+    searchBtn.disabled = false;
+    searchBtn.textContent = originalBtnText;
+
+    if (matches.length === 0) {
+      errEl.textContent = 'لا توجد فواتير بيع لعميل بهذا الاسم أو رقم التليفون';
+      errEl.classList.add('show');
+      document.getElementById('saleReturnInvoiceInfo').classList.remove('show');
+      document.getElementById('saveSaleReturnBtn').style.display = 'none';
+      return;
+    }
+    if (matches.length > 1) {
+      // أكتر من فاتورة مطابقة — نضيفهم لقائمة الاقتراحات عشان المستخدم يختار الفاتورة المقصودة بدقة
+      matches.forEach(m => {
+        if (!saleReturnRecentSales.some(s => s.invoice_number === m.invoice_number)) saleReturnRecentSales.push(m);
+      });
+      errEl.textContent = `تم العثور على ${matches.length} فاتورة مطابقة لهذا الاسم/التليفون — اختر الفاتورة المطلوبة من قائمة الاقتراحات تحت الحقل`;
+      errEl.classList.add('show');
+      inputEl.focus();
+      inputEl.dispatchEvent(new Event('input'));
+      return;
+    }
+    invoiceNumber = matches[0].invoice_number;
+  }
+
+  if (!invoiceNumber) { errEl.textContent = 'اكتب رقم فاتورة صحيح، أو اسم/تليفون عميل، أو اختر فاتورة من قائمة الاقتراحات'; errEl.classList.add('show'); return; }
+
   searchBtn.disabled = true;
   const originalBtnText = searchBtn.textContent;
   searchBtn.textContent = 'جارٍ البحث...';
@@ -10174,13 +10375,13 @@ async function enterBackoffice() {
 }
 
 const boAllSections = ['dashboard','products','categories','unit-types','tax-rates','quick-discounts','customer-types',
-  'sales-list','customers','suppliers','payments','purchase-orders','purchases','purchase-returns','sale-returns',
+  'sales-list','sale-orders','customers','suppliers','payments','purchase-orders','purchases','purchase-returns','sale-returns',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
   'soon','company-info','permissions','users','branches','branch-settings','print-settings','stock','backup','reset-data','employees','expense-items','expenses','salaries','treasuries','capital','fixed-assets'];
 
 const boNavGroups = [
   { toggle: 'stockNavToggle', group: 'stockNavGroup', sections: ['products','categories','unit-types','tax-rates','quick-discounts','stock'] },
-  { toggle: 'salesNavToggle', group: 'salesNavGroup', sections: ['sales-list','customers','customer-types','sale-returns'] },
+  { toggle: 'salesNavToggle', group: 'salesNavGroup', sections: ['sales-list','sale-orders','customers','customer-types','sale-returns'] },
   { toggle: 'purchasesNavToggle', group: 'purchasesNavGroup', sections: ['suppliers','purchase-orders','purchases','purchase-returns'] },
   { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
   { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['treasuries','payments','expense-items','expenses','capital','fixed-assets'] },
@@ -10193,7 +10394,7 @@ const SECTION_PERMISSION_MAP = {
   'dashboard': 'dashboard',
   'products': 'stock_management', 'categories': 'stock_management', 'unit-types': 'stock_management',
   'tax-rates': 'stock_management', 'quick-discounts': 'stock_management', 'stock': 'stock_management',
-  'sales-list': 'sales_management', 'customers': 'sales_management', 'customer-types': 'sales_management', 'sale-returns': 'sales_management',
+  'sales-list': 'sales_management', 'sale-orders': 'sales_management', 'customers': 'sales_management', 'customer-types': 'sales_management', 'sale-returns': 'sales_management',
   'suppliers': 'purchases_management', 'purchase-orders': 'purchases_management', 'purchases': 'purchases_management', 'purchase-returns': 'purchases_management',
   'reports-sales': 'reports', 'reports-purchases': 'reports', 'reports-inventory': 'reports', 'reports-accounting': 'reports', 'reports-other': 'reports',
   'treasuries': 'finance', 'payments': 'finance', 'expense-items': 'finance', 'expenses': 'finance', 'capital': 'admin', 'fixed-assets': 'finance',
@@ -10494,6 +10695,9 @@ function applyReadOnlyGuard() {
   if (posEls.checkoutBtn) {
     posEls.checkoutBtn.style.display = readOnly ? 'none' : '';
   }
+  if (posEls.saveSaleOrderBtn) {
+    posEls.saveSaleOrderBtn.style.display = readOnly ? 'none' : '';
+  }
   const readOnlyBanner = document.getElementById('posReadOnlyBanner');
   if (readOnlyBanner) readOnlyBanner.style.display = readOnly ? 'block' : 'none';
 }
@@ -10551,6 +10755,7 @@ function activateBoSection(section, btn) {
   if (section === 'fixed-assets' && !fixedAssetsLoadedOnce) { loadBoFixedAssets().then(renderFixedAssetsTable); fixedAssetsLoadedOnce = true; }
   if (section === 'payments' && !boPaymentsLoadedOnce) { loadBoPayments().then(renderPaymentsTable); boPaymentsLoadedOnce = true; }
   if (section === 'sales-list' && !boSalesListLoadedOnce) { loadBoSalesList().then(renderSalesListTable); boSalesListLoadedOnce = true; }
+  if (section === 'sale-orders') { loadBoSaleOrders().then(renderSaleOrdersTable); }
   if (section === 'purchase-orders') { loadBoPurchaseOrders().then(renderPurchaseOrdersTable); }
   if (section === 'purchase-returns') { loadBoPurchaseReturns().then(renderPurchaseReturnsTable); }
   if (section === 'sale-returns') { loadBoSaleReturns().then(renderSaleReturnsTable); }
@@ -11749,6 +11954,12 @@ function bindBackofficeEvents() {
   // ---- Purchase order modal ----
   document.getElementById('addPurchaseOrderBtn').addEventListener('click', openPurchaseOrderModal);
   document.getElementById('cancelPurchaseOrderBtn').addEventListener('click', closePurchaseOrderModal);
+  document.getElementById('saleOrderDetailModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'saleOrderDetailModalOverlay') closeSaleOrderDetailModal();
+  });
+  document.getElementById('closeSaleOrderDetailBtn').addEventListener('click', closeSaleOrderDetailModal);
+  document.getElementById('confirmSaleOrderBtn').addEventListener('click', confirmSaleOrder);
+  document.getElementById('cancelSaleOrderBtn').addEventListener('click', cancelSaleOrder);
   document.getElementById('purchaseOrderModalOverlay').addEventListener('click', (e) => {
     if (e.target.id === 'purchaseOrderModalOverlay') closePurchaseOrderModal();
   });
@@ -11800,6 +12011,7 @@ function bindBackofficeEvents() {
       value: p.invoice_number,
       label: `فاتورة #${p.invoice_number}`,
       sublabel: `${p.suppliers?.name || 'بدون مورد'} — ${Number(p.total).toFixed(2)} — ${new Date(p.created_at).toLocaleDateString('ar-EG')}`,
+      search: `${p.invoice_number} ${p.suppliers?.name || ''} ${p.suppliers?.phone || ''}`,
     })),
     onChange: (item) => searchPurchaseForReturn(item.value),
   });
@@ -17523,6 +17735,142 @@ async function savePurchase(e) {
 }
 
 // ============================================================
+// ---- طلبات البيع (Sale Orders) ----
+// مرحلة "نية بيع" تُحفظ من شاشة الكاشير (زر "حفظ كطلبية بيع")، بدون أي
+// تأثير على المخزون أو حساب العميل. عند التأكيد من هنا بتتحوّل لفاتورة
+// بيع فعلية عبر دالة قاعدة البيانات fn_confirm_sale_order، اللي بتعمل
+// إدراج عادي في sales و sale_items (فيشتغل تلقائيًا نفس التريجر
+// trg_sale_item_stock_effect المستخدم في البيع المباشر من الكاشير).
+// ============================================================
+let boSaleOrders = [];
+let currentViewingSaleOrder = null;
+
+async function loadBoSaleOrders() {
+  const { data, error } = await supabaseClient
+    .from('sale_orders')
+    .select('*, customers(name), sale_order_items(*, products(name))')
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (error) { console.error(error); showToast('تعذر تحميل طلبات البيع', true); return; }
+  boSaleOrders = data || [];
+}
+
+function saleOrderStatusInfo(status) {
+  const map = {
+    draft: { label: 'بانتظار التأكيد', cls: 'info' },
+    confirmed: { label: 'مؤكدة (تحوّلت لفاتورة)', cls: 'active' },
+    cancelled: { label: 'ملغاة', cls: 'inactive' },
+  };
+  return map[status] || { label: status || '—', cls: 'info' };
+}
+
+function renderSaleOrdersTable() {
+  const tbody = document.getElementById('saleOrdersTableBody');
+  if (boSaleOrders.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">لا توجد طلبات بيع مسجّلة حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boSaleOrders.forEach(so => {
+    const tr = document.createElement('tr');
+    const createdDate = new Date(so.created_at).toLocaleDateString('ar-EG');
+    const st = saleOrderStatusInfo(so.status);
+    tr.innerHTML = `
+      <td class="num">#${so.order_number}</td>
+      <td>${escapeHtml(so.customers?.name || 'عميل نقدي')}</td>
+      <td class="num">${Number(so.total).toFixed(2)}</td>
+      <td><span class="bo-badge ${st.cls}">${escapeHtml(st.label)}</span></td>
+      <td class="num">${createdDate}</td>
+      <td><button class="bo-icon-btn" data-action="open">فتح</button></td>`;
+    tr.querySelector('[data-action="open"]').addEventListener('click', () => openSaleOrderDetailModal(so));
+    tbody.appendChild(tr);
+  });
+}
+
+function openSaleOrderDetailModal(so) {
+  currentViewingSaleOrder = so;
+  document.getElementById('saleOrderDetailModalError').classList.remove('show');
+  document.getElementById('saleOrderDetailModalTitle').textContent = `طلبية بيع #${so.order_number}`;
+  document.getElementById('saleOrderDetailCustomerLabel').textContent = so.customers?.name || 'عميل نقدي';
+  const st = saleOrderStatusInfo(so.status);
+  document.getElementById('saleOrderDetailStatusLabel').textContent = st.label;
+
+  const body = document.getElementById('saleOrderDetailLinesBody');
+  const items = so.sale_order_items || [];
+  body.innerHTML = items.length === 0
+    ? `<tr><td colspan="4" class="bo-empty">لا توجد أصناف</td></tr>`
+    : items.map(it => `
+      <tr>
+        <td>${escapeHtml(it.products?.name || '—')}</td>
+        <td class="num">${Number(it.quantity)}</td>
+        <td class="num">${Number(it.unit_price).toFixed(2)}</td>
+        <td class="num">${Number(it.total).toFixed(2)}</td>
+      </tr>`).join('');
+
+  document.getElementById('saleOrderDetailSubtotal').textContent = Number(so.subtotal).toFixed(2);
+  document.getElementById('saleOrderDetailDiscount').textContent = Number(so.discount).toFixed(2);
+  document.getElementById('saleOrderDetailTax').textContent = Number(so.tax).toFixed(2);
+  document.getElementById('saleOrderDetailTotal').textContent = Number(so.total).toFixed(2);
+
+  const isDraft = so.status === 'draft';
+  document.getElementById('confirmSaleOrderBtn').style.display = isDraft ? '' : 'none';
+  document.getElementById('cancelSaleOrderBtn').style.display = isDraft ? '' : 'none';
+
+  document.getElementById('saleOrderDetailModalOverlay').classList.add('show');
+}
+
+function closeSaleOrderDetailModal() {
+  document.getElementById('saleOrderDetailModalOverlay').classList.remove('show');
+  currentViewingSaleOrder = null;
+}
+
+async function confirmSaleOrder() {
+  if (!currentViewingSaleOrder) return;
+  const errEl = document.getElementById('saleOrderDetailModalError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('confirmSaleOrderBtn');
+  btn.disabled = true;
+  btn.textContent = 'جاري التحويل...';
+  try {
+    const { data, error } = await supabaseClient.rpc('fn_confirm_sale_order', {
+      p_sale_order_id: currentViewingSaleOrder.id,
+    });
+    if (error) throw error;
+    showToast(`تم تأكيد الطلبية وتحويلها إلى فاتورة بيع رقم ${data?.invoice_number ?? ''} بنجاح`);
+    closeSaleOrderDetailModal();
+    await Promise.all([loadBoSaleOrders(), loadBoProducts()]);
+    renderSaleOrdersTable();
+    renderProductsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء تأكيد الطلبية';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'تأكيد وتحويل لفاتورة بيع';
+  }
+}
+
+async function cancelSaleOrder() {
+  if (!currentViewingSaleOrder) return;
+  if (!confirm(`هل أنت متأكد من إلغاء طلبية البيع رقم #${currentViewingSaleOrder.order_number}؟`)) return;
+  try {
+    const { error } = await supabaseClient
+      .from('sale_orders')
+      .update({ status: 'cancelled' })
+      .eq('id', currentViewingSaleOrder.id);
+    if (error) throw error;
+    showToast('تم إلغاء طلبية البيع');
+    closeSaleOrderDetailModal();
+    await loadBoSaleOrders();
+    renderSaleOrdersTable();
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر إلغاء الطلبية', true);
+  }
+}
+
+// ============================================================
 // ---- طلبات الشراء (Purchase Orders) ----
 // مرحلة "نية شراء" قبل الاستلام الفعلي، بدون أي تأثير على المخزون
 // أو الحسابات. عند الاستلام (كامل أو جزئي) بتتحوّل لفاتورة شراء
@@ -17926,7 +18274,7 @@ let purchaseReturnInvoiceSearch = null;
 async function loadPurchaseReturnRecentPurchases() {
   const { data, error } = await supabaseClient
     .from('purchases')
-    .select('id, invoice_number, total, created_at, suppliers(name)')
+    .select('id, invoice_number, total, created_at, suppliers(name, phone)')
     .order('created_at', { ascending: false })
     .limit(50);
   if (error) { console.error(error); purchaseReturnRecentPurchases = []; return; }
@@ -17939,7 +18287,7 @@ async function loadBoPurchaseReturns() {
 
   let query = supabaseClient
     .from('purchase_returns')
-    .select('*, purchases(invoice_number), suppliers(name)')
+    .select('*, purchases(invoice_number), suppliers(name, phone), purchase_return_items(products(name))')
     .order('created_at', { ascending: false });
 
   if (fromVal) query = query.gte('created_at', `${fromVal}T00:00:00`);
@@ -17960,8 +18308,11 @@ function renderPurchaseReturnsTable() {
   if (textFilter) {
     rows = rows.filter(r => {
       const supplierName = (r.suppliers?.name || '').toLowerCase();
+      const supplierPhone = String(r.suppliers?.phone || '').toLowerCase();
       const invoiceNo = String(r.purchases?.invoice_number ?? '');
-      return supplierName.includes(textFilter) || invoiceNo.includes(textFilter);
+      const itemNames = (r.purchase_return_items || []).map(it => (it.products?.name || '').toLowerCase()).join(' ');
+      return supplierName.includes(textFilter) || supplierPhone.includes(textFilter)
+        || invoiceNo.includes(textFilter) || itemNames.includes(textFilter);
     });
   }
 
@@ -18030,12 +18381,66 @@ function closePurchaseReturnModal() {
 async function searchPurchaseForReturn(invoiceNumberOverride) {
   const errEl = document.getElementById('purchaseReturnModalError');
   errEl.classList.remove('show');
+  const inputEl = document.getElementById('purchaseReturnInvoiceInput');
   const hiddenVal = document.getElementById('purchaseReturnInvoiceValue').value;
-  const rawValue = invoiceNumberOverride ?? (hiddenVal !== '' ? hiddenVal : document.getElementById('purchaseReturnInvoiceInput').value);
-  const invoiceNumber = Number(rawValue);
-  if (!invoiceNumber) { errEl.textContent = 'اكتب رقم فاتورة صحيح، أو اختر فاتورة من قائمة الاقتراحات'; errEl.classList.add('show'); return; }
+  const rawValue = invoiceNumberOverride ?? (hiddenVal !== '' ? hiddenVal : inputEl.value);
+  const rawText = String(rawValue ?? '').trim();
+  if (!rawText) { errEl.textContent = 'اكتب رقم فاتورة، أو اسم/تليفون مورد، أو اختر فاتورة من قائمة الاقتراحات'; errEl.classList.add('show'); return; }
 
   const searchBtn = document.getElementById('purchaseReturnSearchBtn');
+  let invoiceNumber = Number(rawText);
+  const isPureInvoiceNumber = /^\d+$/.test(rawText);
+
+  if (!isPureInvoiceNumber) {
+    // مفيش رقم فاتورة صريح — نحاول نلاقي فاتورة/فواتير المورد عن طريق اسمه أو رقم تليفونه
+    if (!appIsOnline) {
+      errEl.textContent = 'البحث بالاسم أو رقم التليفون يتطلب اتصالاً بالإنترنت — أو اكتب رقم الفاتورة مباشرة';
+      errEl.classList.add('show');
+      return;
+    }
+    searchBtn.disabled = true;
+    const originalBtnText = searchBtn.textContent;
+    searchBtn.textContent = 'جارٍ البحث...';
+    let matches = [];
+    try {
+      const { data, error } = await supabaseClient
+        .from('purchases')
+        .select('id, invoice_number, total, created_at, suppliers!inner(name, phone)')
+        .or(`name.ilike.%${rawText}%,phone.ilike.%${rawText}%`, { foreignTable: 'suppliers' })
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      matches = data || [];
+    } catch (err) {
+      if (isNetworkError(err)) { appIsOnline = false; updateOfflineBanner(); }
+      else console.error(err);
+    }
+    searchBtn.disabled = false;
+    searchBtn.textContent = originalBtnText;
+
+    if (matches.length === 0) {
+      errEl.textContent = 'لا توجد فواتير شراء لمورد بهذا الاسم أو رقم التليفون';
+      errEl.classList.add('show');
+      document.getElementById('purchaseReturnInvoiceInfo').classList.remove('show');
+      document.getElementById('savePurchaseReturnBtn').style.display = 'none';
+      return;
+    }
+    if (matches.length > 1) {
+      // أكتر من فاتورة مطابقة — نضيفهم لقائمة الاقتراحات عشان المستخدم يختار الفاتورة المقصودة بدقة
+      matches.forEach(m => {
+        if (!purchaseReturnRecentPurchases.some(p => p.invoice_number === m.invoice_number)) purchaseReturnRecentPurchases.push(m);
+      });
+      errEl.textContent = `تم العثور على ${matches.length} فاتورة مطابقة لهذا الاسم/التليفون — اختر الفاتورة المطلوبة من قائمة الاقتراحات تحت الحقل`;
+      errEl.classList.add('show');
+      inputEl.focus();
+      inputEl.dispatchEvent(new Event('input'));
+      return;
+    }
+    invoiceNumber = matches[0].invoice_number;
+  }
+
+  if (!invoiceNumber) { errEl.textContent = 'اكتب رقم فاتورة صحيح، أو اسم/تليفون مورد، أو اختر فاتورة من قائمة الاقتراحات'; errEl.classList.add('show'); return; }
+
   searchBtn.disabled = true;
   const originalBtnText = searchBtn.textContent;
   searchBtn.textContent = 'جارٍ البحث...';
@@ -18268,7 +18673,7 @@ async function loadBoSaleReturns() {
 
   let query = supabaseClient
     .from('sale_returns')
-    .select('*, sales(invoice_number), customers(name)')
+    .select('*, sales(invoice_number), customers(name, phone), sale_return_items(products(name))')
     .order('created_at', { ascending: false });
 
   if (fromVal) query = query.gte('created_at', `${fromVal}T00:00:00`);
@@ -18290,8 +18695,11 @@ function renderSaleReturnsTable() {
   if (textFilter) {
     rows = rows.filter(r => {
       const customerName = (r.customers?.name || 'عميل نقدي').toLowerCase();
+      const customerPhone = String(r.customers?.phone || '').toLowerCase();
       const invoiceNo = String(r.sales?.invoice_number ?? '');
-      return customerName.includes(textFilter) || invoiceNo.includes(textFilter);
+      const itemNames = (r.sale_return_items || []).map(it => (it.products?.name || '').toLowerCase()).join(' ');
+      return customerName.includes(textFilter) || customerPhone.includes(textFilter)
+        || invoiceNo.includes(textFilter) || itemNames.includes(textFilter);
     });
   }
 
