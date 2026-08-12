@@ -6500,11 +6500,16 @@ a { color: inherit; }
 <div class="unit-picker-overlay" id="weightPickerOverlay">
   <div class="unit-picker-box">
     <div class="unit-picker-title" id="weightPickerTitle">أدخل الوزن</div>
+    <div style="display:flex; gap:8px; margin-bottom:10px;">
+      <button type="button" class="unit-picker-option" id="weightModeByWeightBtn" style="flex:1; justify-content:center;">بالوزن (كجم)</button>
+      <button type="button" class="unit-picker-option" id="weightModeByPriceBtn" style="flex:1; justify-content:center;">بمبلغ محدد (جنيه)</button>
+    </div>
     <input type="number" id="weightPickerInput" step="0.001" min="0.001" inputmode="decimal"
       style="width:100%; font-size:22px; text-align:center; padding:14px; border-radius:var(--radius-sm); border:1px solid var(--border); margin-bottom:4px; font-family:var(--font-num);"
       placeholder="0.000">
-    <div style="text-align:center; font-size:11.5px; color:var(--ink-soft); margin-bottom:12px;">بالكيلوجرام (كجم)</div>
-    <div style="display:flex; gap:8px; margin-bottom:10px;">
+    <div style="text-align:center; font-size:11.5px; color:var(--ink-soft); margin-bottom:6px;" id="weightPickerUnitHint">بالكيلوجرام (كجم)</div>
+    <div style="text-align:center; font-size:13px; font-weight:700; color:var(--teal-700); margin-bottom:12px;" id="weightPickerPreview">&nbsp;</div>
+    <div style="display:flex; gap:8px; margin-bottom:10px;" id="weightPickerPresetsRow">
       <button type="button" class="unit-picker-option" data-weight-preset="0.25" style="flex:1; justify-content:center;">250 جم</button>
       <button type="button" class="unit-picker-option" data-weight-preset="0.5" style="flex:1; justify-content:center;">500 جم</button>
       <button type="button" class="unit-picker-option" data-weight-preset="1" style="flex:1; justify-content:center;">1 كجم</button>
@@ -8466,6 +8471,9 @@ function bindPosEvents() {
 
   document.getElementById('weightPickerCancelBtn').addEventListener('click', closeWeightPicker);
   document.getElementById('weightPickerConfirmBtn').addEventListener('click', confirmWeightPicker);
+  document.getElementById('weightModeByWeightBtn').addEventListener('click', () => setWeightPickerMode('weight'));
+  document.getElementById('weightModeByPriceBtn').addEventListener('click', () => setWeightPickerMode('price'));
+  document.getElementById('weightPickerInput').addEventListener('input', updateWeightPickerPreview);
   document.getElementById('weightPickerOverlay').addEventListener('click', (e) => {
     if (e.target.id === 'weightPickerOverlay') closeWeightPicker();
   });
@@ -8475,6 +8483,7 @@ function bindPosEvents() {
   document.querySelectorAll('#weightPickerOverlay [data-weight-preset]').forEach(btn => {
     btn.addEventListener('click', () => {
       document.getElementById('weightPickerInput').value = btn.dataset.weightPreset;
+      updateWeightPickerPreview();
     });
   });
 
@@ -8852,13 +8861,16 @@ function addToCart(product) {
 
 let weightPickerProduct = null;
 let weightPickerEditMode = false;
+let weightPickerMode = 'weight'; // 'weight' | 'price'
 
 function openWeightPicker(product, existingQty) {
   weightPickerProduct = product;
   weightPickerEditMode = existingQty != null;
+  weightPickerMode = 'weight';
   document.getElementById('weightPickerTitle').textContent = `أدخل وزن "${product.name}"`;
   const input = document.getElementById('weightPickerInput');
   input.value = existingQty != null ? existingQty : '';
+  setWeightPickerMode('weight');
   document.getElementById('weightPickerOverlay').classList.add('show');
   setTimeout(() => input.focus(), 50);
 }
@@ -8867,10 +8879,41 @@ function closeWeightPicker() {
   weightPickerProduct = null;
   weightPickerEditMode = false;
 }
+function setWeightPickerMode(mode) {
+  weightPickerMode = mode;
+  const byWeightBtn = document.getElementById('weightModeByWeightBtn');
+  const byPriceBtn = document.getElementById('weightModeByPriceBtn');
+  const input = document.getElementById('weightPickerInput');
+  const hint = document.getElementById('weightPickerUnitHint');
+  const presetsRow = document.getElementById('weightPickerPresetsRow');
+  const isWeight = mode === 'weight';
+  byWeightBtn.style.background = isWeight ? 'var(--teal-700)' : '';
+  byWeightBtn.style.color = isWeight ? '#fff' : '';
+  byPriceBtn.style.background = !isWeight ? 'var(--teal-700)' : '';
+  byPriceBtn.style.color = !isWeight ? '#fff' : '';
+  hint.textContent = isWeight ? 'بالكيلوجرام (كجم)' : 'بالجنيه — هنحسبلك الوزن المقابل تلقائيًا';
+  presetsRow.style.display = isWeight ? 'flex' : 'none';
+  input.value = '';
+  updateWeightPickerPreview();
+}
+function updateWeightPickerPreview() {
+  const previewEl = document.getElementById('weightPickerPreview');
+  const val = Number(document.getElementById('weightPickerInput').value);
+  const unitPrice = Number(weightPickerProduct?.sale_price) || 0;
+  if (!val || val <= 0 || !unitPrice) { previewEl.innerHTML = '&nbsp;'; return; }
+  if (weightPickerMode === 'weight') {
+    previewEl.textContent = `= ${(val * unitPrice).toFixed(2)} جنيه`;
+  } else {
+    previewEl.textContent = `= ${(val / unitPrice).toFixed(3)} كجم`;
+  }
+}
 function confirmWeightPicker() {
   const input = document.getElementById('weightPickerInput');
-  const weight = Number(input.value);
-  if (!weight || weight <= 0) { showToast('أدخل وزنًا صحيحًا أكبر من صفر', true); return; }
+  const val = Number(input.value);
+  if (!val || val <= 0) { showToast(weightPickerMode === 'weight' ? 'أدخل وزنًا صحيحًا أكبر من صفر' : 'أدخل مبلغًا صحيحًا أكبر من صفر', true); return; }
+  const unitPrice = Number(weightPickerProduct.sale_price) || 0;
+  const weight = weightPickerMode === 'weight' ? val : (unitPrice > 0 ? val / unitPrice : 0);
+  if (!weight || weight <= 0) { showToast('تعذر حساب الوزن — تأكد من سعر الصنف', true); return; }
   if (weightPickerEditMode) setWeightInCart(weightPickerProduct, weight);
   else addWeightToCart(weightPickerProduct, weight);
   closeWeightPicker();
