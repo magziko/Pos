@@ -1044,6 +1044,20 @@ a { color: inherit; }
           <div class="quick-discount-row" id="quickDiscountRow"></div>
           <div class="discount-row"><input type="number" id="discountInput" placeholder="خصم (قيمة)" min="0" value="0"></div>
           <div class="discount-hint" id="discountMaxHint" style="display:none; font-size:11px; color:var(--danger); margin-top:-6px;"></div>
+          <div class="discount-row" id="couponRow" style="display:flex; gap:6px;">
+            <input type="text" id="couponCodeInput" placeholder="كود الكوبون" style="direction:ltr; text-align:right; flex:1;">
+            <button type="button" class="btn-secondary" id="applyCouponBtn" style="white-space:nowrap;">تطبيق</button>
+          </div>
+          <div class="discount-hint" id="couponAppliedNote" style="display:none; font-size:12px; color:var(--success, green); margin-top:-6px; display:flex; justify-content:space-between; align-items:center;">
+            <span id="couponAppliedText"></span>
+            <button type="button" id="removeCouponBtn" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:12px;">إلغاء</button>
+          </div>
+          <div class="discount-row" id="loyaltyRedeemRow" style="display:none; gap:6px; align-items:center;">
+            <span id="loyaltyBalanceLabel" style="font-size:12px; color:var(--ink-soft); white-space:nowrap;"></span>
+            <input type="number" id="loyaltyPointsInput" placeholder="نقاط للاسترداد" min="0" value="0" style="flex:1;">
+            <button type="button" class="btn-secondary" id="maxLoyaltyBtn" style="white-space:nowrap;">أقصى</button>
+          </div>
+          <div class="totals-row" id="autoDiscountRow" style="display:none;"><span>خصومات تلقائية (عروض/كوبون/نقاط)</span><span class="num" id="autoDiscountLabel">0.00</span></div>
           <div class="discount-row" id="instantNoteRow" style="display:none;"><input type="text" id="instantNoteInput" placeholder="ملاحظة فورية (تُطبع مع الفاتورة)"></div>
           <div class="totals-row" id="taxRow" style="display:none;"><span id="taxRowLabel">الضريبة</span><span class="num" id="taxLabel">0.00</span></div>
           <div class="totals-row grand"><span>الإجمالي</span><span class="num" id="totalLabel">0.00</span></div>
@@ -1127,6 +1141,18 @@ a { color: inherit; }
             <button class="bo-nav-sub-item" data-section="tax-rates">الضريبة</button>
             <button class="bo-nav-sub-item" data-section="quick-discounts">الخصومات</button>
             <button class="bo-nav-sub-item" data-section="stock">المخازن ونقل البضاعة</button>
+          </div>
+        </div>
+
+        <!-- 1.5 التسويق -->
+        <div class="bo-nav-group" id="marketingNavGroup">
+          <button class="bo-nav-item bo-nav-parent" id="marketingNavToggle" type="button">
+            <span>التسويق</span>
+            <span class="bo-nav-chevron">‹</span>
+          </button>
+          <div class="bo-nav-sub" id="marketingNavSub">
+            <button class="bo-nav-sub-item" data-section="promotions">العروض</button>
+            <button class="bo-nav-sub-item" data-section="coupons">الكوبونات</button>
           </div>
         </div>
 
@@ -1478,6 +1504,38 @@ a { color: inherit; }
               <thead><tr><th>التسمية</th><th>النوع</th><th>القيمة</th><th>الحالة</th><th></th></tr></thead>
               <tbody id="quickDiscountsTableBody">
                 <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم العروض -->
+        <div id="bo-section-promotions" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">العروض والخصومات التلقائية</div>
+            <button class="bo-add-btn" id="addPromotionBtn">+ عرض جديد</button>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>اسم العرض</th><th>النطاق</th><th>الخصم</th><th>الفترة</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="promotionsTableBody">
+                <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم الكوبونات -->
+        <div id="bo-section-coupons" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">أكواد الكوبونات</div>
+            <button class="bo-add-btn" id="addCouponBtn">+ كوبون جديد</button>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>الكود</th><th>الخصم</th><th>الاستخدام</th><th>أقل قيمة فاتورة</th><th>الفترة</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="couponsTableBody">
+                <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
@@ -4394,6 +4452,25 @@ a { color: inherit; }
               <span class="ci-saved-note" id="branchSettingsSavedNote"></span>
             </div>
           </form>
+
+          <div class="ci-section-subtitle" style="margin-top:24px;">برنامج نقاط الولاء (على مستوى كل الفروع)</div>
+          <form id="loyaltySettingsForm">
+            <div class="ci-grid">
+              <div class="field field-full" style="flex-direction:row; align-items:center; gap:8px;">
+                <input type="checkbox" id="lsEnabled" style="width:auto;">
+                <label for="lsEnabled" style="margin:0;">تفعيل نظام نقاط الولاء</label>
+              </div>
+              <div class="field"><label for="lsEarnRate">معدّل الكسب (نقطة لكل 1 من قيمة الفاتورة)</label><input type="number" id="lsEarnRate" step="0.001" min="0" value="0.1"></div>
+              <div class="field"><label for="lsRedeemValue">قيمة النقطة عند الاسترداد (بالعملة)</label><input type="number" id="lsRedeemValue" step="0.001" min="0" value="0.1"></div>
+              <div class="field"><label for="lsMinRedeem">أقل عدد نقاط للاسترداد</label><input type="number" id="lsMinRedeem" step="1" min="0" value="50"></div>
+            </div>
+            <p style="font-size:11.5px; color:var(--ink-soft); margin:6px 0 16px;">مثال: معدّل كسب 0.1 يعني نقطة واحدة لكل 10 جنيه من إجمالي الفاتورة. قيمة استرداد 0.1 تعني كل نقطة = 0.1 جنيه خصم.</p>
+            <div class="error-msg" id="loyaltySettingsError"></div>
+            <div class="ci-save-row">
+              <button type="submit" class="submit-btn" id="loyaltySettingsSaveBtn">حفظ إعدادات الولاء</button>
+              <span class="ci-saved-note" id="loyaltySettingsSavedNote"></span>
+            </div>
+          </form>
         </div>
 
         <!-- قسم إعدادات الطباعة -->
@@ -4924,6 +5001,15 @@ a { color: inherit; }
         <div class="field"><label>نقاط الولاء</label><input type="number" id="customerLoyalty" step="0.01" value="0"></div>
         <div class="field field-full"><label>العنوان</label><input type="text" id="customerAddress"></div>
         <div class="field field-full"><label>الرصيد الافتتاحي</label><input type="number" id="customerBalance" step="0.01" value="0"></div>
+      </div>
+      <div id="customerLoyaltyLedgerWrap" style="display:none; margin-top:10px;">
+        <div class="ci-section-subtitle" style="margin-top:0;">آخر حركات نقاط الولاء</div>
+        <div class="bo-table-wrap" style="max-height:180px; overflow:auto;">
+          <table class="bo-table">
+            <thead><tr><th>التاريخ</th><th>النوع</th><th>النقاط</th></tr></thead>
+            <tbody id="customerLoyaltyLedgerBody"></tbody>
+          </table>
+        </div>
       </div>
       <div class="error-msg" id="customerModalError"></div>
       <div class="modal-actions">
@@ -5989,6 +6075,82 @@ a { color: inherit; }
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelQuickDiscountBtn">إلغاء</button>
         <button type="submit" class="submit-btn" id="saveQuickDiscountBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: إضافة / تعديل عرض -->
+<div class="modal-overlay" id="promotionModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="promotionModalTitle">عرض جديد</div>
+    <form id="promotionForm">
+      <input type="hidden" id="promotionId">
+      <div class="field field-full"><label>اسم العرض</label><input type="text" id="promotionName" required></div>
+      <div class="field field-full"><label>وصف (اختياري)</label><input type="text" id="promotionDescription"></div>
+      <div class="field field-full"><label>نطاق العرض</label>
+        <select id="promotionScope">
+          <option value="all">كل الأصناف</option>
+          <option value="category">فئة معيّنة</option>
+          <option value="product">صنف معيّن</option>
+        </select>
+      </div>
+      <div class="field field-full" id="promotionCategoryField" style="display:none;"><label>الفئة</label>
+        <select id="promotionCategoryId"></select>
+      </div>
+      <div class="field field-full" id="promotionProductField" style="display:none;"><label>الصنف</label>
+        <select id="promotionProductId"></select>
+      </div>
+      <div class="field field-full"><label>نوع الخصم</label>
+        <select id="promotionDiscountType">
+          <option value="percentage">نسبة %</option>
+          <option value="fixed">مبلغ ثابت لكل صنف</option>
+        </select>
+      </div>
+      <div class="field field-full"><label id="promotionValueLabel">النسبة %</label><input type="number" id="promotionValue" step="0.01" min="0" required value="0"></div>
+      <div class="field field-full"><label>تاريخ البداية</label><input type="date" id="promotionStartDate"></div>
+      <div class="field field-full"><label>تاريخ النهاية (اختياري)</label><input type="date" id="promotionEndDate"></div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="promotionActive" checked style="width:auto;"> مفعّل
+        </label>
+      </div>
+      <div class="error-msg" id="promotionModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelPromotionBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="savePromotionBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: إضافة / تعديل كوبون -->
+<div class="modal-overlay" id="couponModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="couponModalTitle">كوبون جديد</div>
+    <form id="couponForm">
+      <input type="hidden" id="couponId">
+      <div class="field field-full"><label>كود الكوبون</label><input type="text" id="couponCode" required style="direction:ltr; text-align:right;" placeholder="مثال: SAVE10"></div>
+      <div class="field field-full"><label>نوع الخصم</label>
+        <select id="couponDiscountType">
+          <option value="percentage">نسبة %</option>
+          <option value="fixed">مبلغ ثابت</option>
+        </select>
+      </div>
+      <div class="field field-full"><label id="couponValueLabel">النسبة %</label><input type="number" id="couponValue" step="0.01" min="0" required value="0"></div>
+      <div class="field field-full"><label>أقل قيمة فاتورة (اختياري)</label><input type="number" id="couponMinOrder" step="0.01" min="0" value="0"></div>
+      <div class="field field-full"><label>أقصى عدد استخدام (اتركه فارغًا لعدد غير محدود)</label><input type="number" id="couponMaxUses" step="1" min="1"></div>
+      <div class="field field-full"><label>تاريخ البداية (اختياري)</label><input type="date" id="couponStartDate"></div>
+      <div class="field field-full"><label>تاريخ النهاية (اختياري)</label><input type="date" id="couponEndDate"></div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="couponActive" checked style="width:auto;"> مفعّل
+        </label>
+      </div>
+      <div class="error-msg" id="couponModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelCouponBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveCouponBtn">حفظ</button>
       </div>
     </form>
   </div>
@@ -7563,6 +7725,18 @@ function cachePosEls() {
   posEls.subtotalLabel = document.getElementById('subtotalLabel');
   posEls.totalLabel = document.getElementById('totalLabel');
   posEls.discountInput = document.getElementById('discountInput');
+  posEls.couponCodeInput = document.getElementById('couponCodeInput');
+  posEls.couponRow = document.getElementById('couponRow');
+  posEls.applyCouponBtn = document.getElementById('applyCouponBtn');
+  posEls.couponAppliedNote = document.getElementById('couponAppliedNote');
+  posEls.couponAppliedText = document.getElementById('couponAppliedText');
+  posEls.removeCouponBtn = document.getElementById('removeCouponBtn');
+  posEls.loyaltyRedeemRow = document.getElementById('loyaltyRedeemRow');
+  posEls.loyaltyBalanceLabel = document.getElementById('loyaltyBalanceLabel');
+  posEls.loyaltyPointsInput = document.getElementById('loyaltyPointsInput');
+  posEls.maxLoyaltyBtn = document.getElementById('maxLoyaltyBtn');
+  posEls.autoDiscountRow = document.getElementById('autoDiscountRow');
+  posEls.autoDiscountLabel = document.getElementById('autoDiscountLabel');
   posEls.taxRow = document.getElementById('taxRow');
   posEls.taxRowLabel = document.getElementById('taxRowLabel');
   posEls.taxLabel = document.getElementById('taxLabel');
@@ -8098,7 +8272,7 @@ async function enterPos() {
   appIsOnline = await checkRealConnectivity();
   updateOfflineBanner();
   await loadPosWarehouses();
-  await Promise.all([loadCategories(), loadProducts(), loadCustomers(), loadStockBalances(), loadQuickDiscounts(), loadTaxInclusiveSetting(), loadCompanyInfoGlobal(), loadBranchSettings(), loadPrintSettings()]);
+  await Promise.all([loadCategories(), loadProducts(), loadCustomers(), loadStockBalances(), loadQuickDiscounts(), loadTaxInclusiveSetting(), loadCompanyInfoGlobal(), loadBranchSettings(), loadPrintSettings(), loadPosActivePromotions(), loadLoyaltySettings()]);
   applyPrintSettingsToPosUI();
   renderCategories();
   renderProducts();
@@ -8187,6 +8361,14 @@ function bindPosEvents() {
   });
   posEls.searchInput.addEventListener('input', renderProducts);
   posEls.discountInput.addEventListener('input', renderCart);
+  posEls.applyCouponBtn.addEventListener('click', applyCouponCode);
+  posEls.removeCouponBtn.addEventListener('click', removeCouponCode);
+  posEls.couponCodeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); applyCouponCode(); } });
+  posEls.loyaltyPointsInput.addEventListener('input', renderCart);
+  posEls.maxLoyaltyBtn.addEventListener('click', () => {
+    posEls.loyaltyPointsInput.value = maxRedeemablePoints();
+    renderCart();
+  });
   posEls.paidInput.addEventListener('input', (e) => { e.target.dataset.touched = '1'; renderCart(); });
   posEls.warehouseSelect.addEventListener('change', async () => {
     await loadStockBalances();
@@ -8231,6 +8413,7 @@ function bindPosEvents() {
     localStorage.setItem('pos_held_orders', JSON.stringify(heldOrders));
     cart = []; posEls.discountInput.value = 0;
     resetQuickDiscountSelection();
+    resetAutoDiscountsSelection();
     renderCart(); updateHeldCount();
     closeMobileCart();
     showToast('تم تعليق الفاتورة');
@@ -8247,6 +8430,7 @@ function bindPosEvents() {
     }));
     posEls.discountInput.value = last.discount || 0;
     resetQuickDiscountSelection();
+    resetAutoDiscountsSelection();
     posEls.paymentMethodSelect.value = last.paymentMethod || 'cash';
     setCustomerSelection(last.customerId || '', { silent: true });
     renderCart(); updateHeldCount();
@@ -8797,8 +8981,196 @@ function calcTaxTotal() {
 function calcTotal() {
   const d = Number(posEls.discountInput.value) || 0;
   const subtotal = calcSubtotal();
-  if (taxInclusive) return Math.max(0, subtotal - d);
-  return Math.max(0, subtotal - d + calcTaxTotal());
+  const auto = calcAutoDiscountsTotal(subtotal, d);
+  const totalDiscount = d + auto;
+  if (taxInclusive) return Math.max(0, subtotal - totalDiscount);
+  return Math.max(0, subtotal - totalDiscount + calcTaxTotal());
+}
+
+// ------------------------------------------------------------
+// العروض التلقائية + الكوبونات + استرداد نقاط الولاء (شاشة الكاشير)
+// ------------------------------------------------------------
+let posActivePromotions = [];
+let appliedCoupon = null; // { id, code, discount_type, value, min_order_amount }
+let currentCustomerLoyaltyBalance = 0;
+
+async function loadPosActivePromotions() {
+  try {
+    if (!sessionUsable()) throw new Error('offline');
+    const today = new Date().toISOString().slice(0, 10);
+    const { data, error } = await supabaseClient.from('promotions').select('*')
+      .eq('is_active', true).lte('start_date', today).or(`end_date.is.null,end_date.gte.${today}`);
+    if (error) throw error;
+    posActivePromotions = data || [];
+  } catch (err) {
+    if (!isNetworkError(err)) console.error(err);
+    posActivePromotions = [];
+  }
+}
+
+// أفضل خصم عرض ينطبق على كل سطر فى العربة (نطاق "الكل" أو الفئة أو الصنف نفسه)، ونجمعهم
+function calcPromotionDiscount() {
+  if (!posActivePromotions.length || !cart.length) return 0;
+  let total = 0;
+  cart.forEach(l => {
+    const lineTotal = l.quantity * l.unitPrice;
+    const matches = posActivePromotions.filter(p =>
+      p.scope === 'all' ||
+      (p.scope === 'product' && p.product_id === l.product.id) ||
+      (p.scope === 'category' && p.category_id === l.product.category_id)
+    );
+    if (matches.length === 0) return;
+    let best = 0;
+    matches.forEach(p => {
+      const amt = p.discount_type === 'percentage' ? lineTotal * (Number(p.value) / 100) : Math.min(Number(p.value) * l.quantity, lineTotal);
+      if (amt > best) best = amt;
+    });
+    total += best;
+  });
+  return total;
+}
+
+function calcCouponDiscount(baseAmount) {
+  if (!appliedCoupon) return 0;
+  const base = Math.max(0, baseAmount);
+  if (base < Number(appliedCoupon.min_order_amount || 0)) return 0;
+  const amt = appliedCoupon.discount_type === 'percentage' ? base * (Number(appliedCoupon.value) / 100) : Number(appliedCoupon.value);
+  return Math.min(amt, base);
+}
+
+function selectedCustomerObject() {
+  const id = posEls.customerSelect.value;
+  if (!id) return null;
+  return allCustomers.find(c => c.id === id) || null;
+}
+
+// أقصى عدد نقاط ممكن استردادها: محدود برصيد العميل، وبألا يخلي الإجمالي بعد
+// الخصومات الأخرى يقل عن صفر
+function maxRedeemablePoints() {
+  const customer = selectedCustomerObject();
+  if (!customer || !loyaltySettings.enabled || !loyaltySettings.redeem_value) return 0;
+  const subtotal = calcSubtotal();
+  const d = Number(posEls.discountInput.value) || 0;
+  const promo = calcPromotionDiscount();
+  const afterPromo = Math.max(0, subtotal - d - promo);
+  const coupon = calcCouponDiscount(afterPromo);
+  const remaining = Math.max(0, afterPromo - coupon);
+  const balancePoints = Number(customer.loyalty_points) || 0;
+  const maxByRemaining = Math.floor(remaining / loyaltySettings.redeem_value);
+  return Math.max(0, Math.min(balancePoints, maxByRemaining));
+}
+
+function calcLoyaltyDiscount(baseAmount) {
+  if (!loyaltySettings.enabled) return 0;
+  const points = Number(posEls.loyaltyPointsInput?.value) || 0;
+  if (points <= 0) return 0;
+  const amt = points * Number(loyaltySettings.redeem_value || 0);
+  return Math.min(amt, Math.max(0, baseAmount));
+}
+
+// إجمالي كل الخصومات التلقائية (عروض + كوبون + نقاط ولاء)، بالترتيب: عروض ثم كوبون ثم نقاط،
+// كل واحد بيتحسب على الباقي بعد اللي قبله
+function calcAutoDiscountsTotal(subtotal, manualDiscount) {
+  const d = manualDiscount !== undefined ? manualDiscount : (Number(posEls.discountInput.value) || 0);
+  const promo = calcPromotionDiscount();
+  const afterPromo = Math.max(0, subtotal - d - promo);
+  const coupon = calcCouponDiscount(afterPromo);
+  const afterCoupon = Math.max(0, afterPromo - coupon);
+  const loyalty = calcLoyaltyDiscount(afterCoupon);
+  return promo + coupon + loyalty;
+}
+
+async function applyCouponCode() {
+  const code = (posEls.couponCodeInput.value || '').trim().toUpperCase();
+  if (!code) return;
+  if (!sessionUsable()) { showToast('تطبيق الكوبون يتطلب اتصال بالإنترنت', true); return; }
+  posEls.applyCouponBtn.disabled = true;
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const { data, error } = await supabaseClient.from('coupons').select('*').eq('code', code).eq('is_active', true).maybeSingle();
+    if (error) throw error;
+    if (!data) { showToast('كود الكوبون غير صحيح أو غير مفعّل', true); return; }
+    if (data.start_date && data.start_date > today) { showToast('الكوبون لم يبدأ بعد', true); return; }
+    if (data.end_date && data.end_date < today) { showToast('انتهت صلاحية الكوبون', true); return; }
+    if (data.max_uses != null && Number(data.used_count) >= Number(data.max_uses)) { showToast('تم استنفاد عدد مرات استخدام هذا الكوبون', true); return; }
+    const subtotal = calcSubtotal();
+    if (subtotal < Number(data.min_order_amount || 0)) {
+      showToast(`الكوبون يتطلب فاتورة بقيمة ${Number(data.min_order_amount).toFixed(2)} على الأقل`, true);
+      return;
+    }
+    appliedCoupon = data;
+    renderCart();
+    showToast('تم تطبيق الكوبون بنجاح');
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر التحقق من الكوبون', true);
+  } finally {
+    posEls.applyCouponBtn.disabled = false;
+  }
+}
+
+function removeCouponCode() {
+  appliedCoupon = null;
+  posEls.couponCodeInput.value = '';
+  renderCart();
+}
+
+// بعد إتمام بيع أونلاين ناجح فيه كوبون و/أو استرداد نقاط، نسجّل الاستخدام الفعلي عبر
+// دوال قاعدة البيانات الذرية (آمنة ضد التزامن) — لو فشل أي منها، البيع نفسه يبقى صحيحًا
+// بس بنبلّغ الكاشير إن الاسترداد محتاج مراجعة يدوية.
+async function finalizeAutoDiscountsAfterSale(saleId, customerId, couponDiscountAmount, loyaltyPointsUsed) {
+  try {
+    if (appliedCoupon && couponDiscountAmount > 0) {
+      const ok = await supabaseClient.rpc('fn_redeem_coupon', {
+        p_coupon_id: appliedCoupon.id, p_sale_id: saleId, p_customer_id: customerId, p_discount_amount: couponDiscountAmount,
+      });
+      if (ok?.error || ok?.data === false) showToast('تنبيه: تعذر تسجيل استخدام الكوبون (قد يكون استُخدم بالكامل فى نفس اللحظة)', true);
+    }
+    if (loyaltyPointsUsed > 0 && customerId) {
+      const ok = await supabaseClient.rpc('fn_redeem_loyalty_points', {
+        p_customer_id: customerId, p_points: loyaltyPointsUsed, p_sale_id: saleId,
+      });
+      if (ok?.error || ok?.data === false) showToast('تنبيه: تعذر خصم نقاط الولاء (تأكد من رصيد العميل)', true);
+    }
+  } catch (err) {
+    console.error(err);
+    showToast('تنبيه: حدث خطأ أثناء تسجيل الكوبون/نقاط الولاء لهذه الفاتورة', true);
+  }
+}
+
+function resetAutoDiscountsSelection() {
+  appliedCoupon = null;
+  posEls.couponCodeInput.value = '';
+  posEls.loyaltyPointsInput.value = 0;
+}
+
+function updateAutoDiscountsUI() {
+  const subtotal = calcSubtotal();
+  const d = Number(posEls.discountInput.value) || 0;
+  const auto = calcAutoDiscountsTotal(subtotal, d);
+  posEls.autoDiscountRow.style.display = auto > 0.004 ? 'flex' : 'none';
+  posEls.autoDiscountLabel.textContent = auto.toFixed(2);
+
+  if (appliedCoupon) {
+    posEls.couponAppliedNote.style.display = 'flex';
+    const valueLabel = appliedCoupon.discount_type === 'fixed' ? Number(appliedCoupon.value).toFixed(2) : `${Number(appliedCoupon.value)}%`;
+    posEls.couponAppliedText.textContent = `الكوبون "${appliedCoupon.code}" مطبّق (خصم ${valueLabel})`;
+    posEls.couponRow.style.display = 'none';
+  } else {
+    posEls.couponAppliedNote.style.display = 'none';
+    posEls.couponRow.style.display = 'flex';
+  }
+
+  const customer = selectedCustomerObject();
+  if (customer && loyaltySettings.enabled && Number(customer.loyalty_points) >= Number(loyaltySettings.min_redeem_points || 0) && Number(customer.loyalty_points) > 0) {
+    posEls.loyaltyRedeemRow.style.display = 'flex';
+    posEls.loyaltyBalanceLabel.textContent = `رصيد النقاط: ${Number(customer.loyalty_points).toFixed(0)}`;
+    const maxPts = maxRedeemablePoints();
+    if (Number(posEls.loyaltyPointsInput.value) > maxPts) posEls.loyaltyPointsInput.value = maxPts;
+  } else {
+    posEls.loyaltyRedeemRow.style.display = 'none';
+    if (Number(posEls.loyaltyPointsInput.value) > 0) posEls.loyaltyPointsInput.value = 0;
+  }
 }
 
 // إظهار تنبيه فوري تحت حقل الخصم لو المستخدم كتب قيمة أعلى من الحد الأقصى
@@ -9104,6 +9476,56 @@ async function saveBranchSettings(e) {
   }
 }
 
+// ---- إعدادات برنامج نقاط الولاء (على مستوى كل الفروع، وليست لكل فرع على حدة) ----
+let loyaltySettings = { enabled: false, earn_rate: 0.1, redeem_value: 0.1, min_redeem_points: 50 };
+
+async function loadLoyaltySettings() {
+  try {
+    if (!sessionUsable()) throw new Error('offline');
+    const { data, error } = await supabaseClient.from('settings').select('value').eq('key', 'loyalty_settings').maybeSingle();
+    if (error) throw error;
+    if (data && data.value) loyaltySettings = { ...loyaltySettings, ...data.value };
+  } catch (err) {
+    if (!isNetworkError(err)) console.error(err);
+  }
+}
+
+function initLoyaltySettingsSection() {
+  document.getElementById('lsEnabled').checked = !!loyaltySettings.enabled;
+  document.getElementById('lsEarnRate').value = loyaltySettings.earn_rate;
+  document.getElementById('lsRedeemValue').value = loyaltySettings.redeem_value;
+  document.getElementById('lsMinRedeem').value = loyaltySettings.min_redeem_points;
+  document.getElementById('loyaltySettingsForm').addEventListener('submit', saveLoyaltySettings);
+}
+
+async function saveLoyaltySettings(e) {
+  e.preventDefault();
+  const errBox = document.getElementById('loyaltySettingsError');
+  errBox.classList.remove('show');
+  const btn = document.getElementById('loyaltySettingsSaveBtn');
+  const payload = {
+    enabled: document.getElementById('lsEnabled').checked,
+    earn_rate: Number(document.getElementById('lsEarnRate').value) || 0,
+    redeem_value: Number(document.getElementById('lsRedeemValue').value) || 0,
+    min_redeem_points: Number(document.getElementById('lsMinRedeem').value) || 0,
+  };
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  try {
+    const { error } = await supabaseClient.from('settings')
+      .upsert({ key: 'loyalty_settings', value: payload, updated_at: new Date().toISOString() });
+    if (error) throw error;
+    loyaltySettings = payload;
+    showToast('تم حفظ إعدادات برنامج الولاء بنجاح');
+    document.getElementById('loyaltySettingsSavedNote').textContent = 'آخر حفظ: ' + new Date().toLocaleString('ar-EG');
+  } catch (err) {
+    console.error(err);
+    errBox.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errBox.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ إعدادات الولاء';
+  }
+}
+
 function initPrintSettingsSection() {
   document.getElementById('psPrintLogo').checked = printSettings.print_logo;
   document.getElementById('psPrintDeviceName').checked = printSettings.print_device_name;
@@ -9364,6 +9786,7 @@ function renderCart() {
   posEls.taxRow.style.display = taxTotal > 0 ? 'flex' : 'none';
   posEls.taxRowLabel.textContent = taxInclusive ? 'الضريبة (شاملة ضمن السعر)' : 'الضريبة';
   posEls.taxLabel.textContent = taxTotal.toFixed(2);
+  updateAutoDiscountsUI();
   const total = calcTotal();
   posEls.totalLabel.textContent = total.toFixed(2);
   updateDiscountHint();
@@ -9449,7 +9872,7 @@ async function computeDailyInvoiceNumber(sale) {
 
 // البيع أونلاين (المسار العادي): يبعت الفاتورة وتفاصيل الدفع لسوباابيز على طول
 async function performOnlineCheckout(ctx) {
-  const { subtotal, discount, tax, total, customerId, customerName, paymentLines, paymentMethod, paidAmount, remaining, saleWarehouseId, instantNote } = ctx;
+  const { subtotal, discount, tax, total, customerId, customerName, paymentLines, paymentMethod, paidAmount, remaining, saleWarehouseId, instantNote, couponDiscountAmount, loyaltyPointsUsed } = ctx;
 
   const { data: sale, error: saleError } = await supabaseClient
     .from('sales')
@@ -9485,6 +9908,9 @@ async function performOnlineCheckout(ctx) {
     await supabaseClient.from('customers').update({ balance: newBalance }).eq('id', customerId);
   }
 
+  // تسجيل استخدام الكوبون واسترداد نقاط الولاء (لو فيه) — بعد إنشاء الفاتورة فعليًا حتى يكون لدينا sale_id
+  await finalizeAutoDiscountsAfterSale(sale.id, customerId, couponDiscountAmount || 0, loyaltyPointsUsed || 0);
+
   showToast(`تمت الفاتورة رقم ${sale.invoice_number} بنجاح`);
 
   let displayInvoiceNumber = sale.invoice_number;
@@ -9504,6 +9930,7 @@ async function performOnlineCheckout(ctx) {
 
   return {
     invoiceNumber: displayInvoiceNumber, realInvoiceNumber: sale.invoice_number, pendingSync: false,
+    saleId: sale.id,
     createdAt: sale.created_at, cashierName: currentProfile.full_name, branchName: currentProfile.branches?.name || '',
     customerName, instantNote,
     lines: cart.map(l => ({
@@ -9591,12 +10018,24 @@ async function doCheckout() {
   posEls.checkoutBtn.textContent = 'جاري إتمام البيع...';
   if (posEls.saveSaleOrderBtn) posEls.saveSaleOrderBtn.disabled = true;
   try {
+    if (!sessionUsable() && (appliedCoupon || Number(posEls.loyaltyPointsInput.value) > 0)) {
+      resetAutoDiscountsSelection();
+      renderCart();
+      showToast('تم إلغاء الكوبون/نقاط الولاء لأن البيع سيتم بدون اتصال — يمكنك تطبيقها مرة أخرى عند عودة الاتصال', true);
+    }
     const subtotal = calcSubtotal();
     const discount = Number(posEls.discountInput.value) || 0;
     const maxDiscountCheck = checkMaxDiscountAllowed(subtotal, discount);
     if (!maxDiscountCheck.ok) {
       throw new Error(maxDiscountCheck.message);
     }
+    const promoDiscountAmount = calcPromotionDiscount();
+    const afterPromo = Math.max(0, subtotal - discount - promoDiscountAmount);
+    const couponDiscountAmount = calcCouponDiscount(afterPromo);
+    const afterCoupon = Math.max(0, afterPromo - couponDiscountAmount);
+    const loyaltyPointsUsed = loyaltySettings.enabled ? (Number(posEls.loyaltyPointsInput.value) || 0) : 0;
+    const loyaltyDiscountAmount = calcLoyaltyDiscount(afterCoupon);
+    const totalDiscountForRecord = Math.round((discount + promoDiscountAmount + couponDiscountAmount + loyaltyDiscountAmount) * 100) / 100;
     const tax = calcTaxTotal();
     const total = calcTotal();
     const customerId = posEls.customerSelect.value || null;
@@ -9643,7 +10082,7 @@ async function doCheckout() {
     const instantNote = printSettings.print_instant_note
       ? (document.getElementById('instantNoteInput')?.value || '').trim()
       : '';
-    const ctx = { subtotal, discount, tax, total, customerId, customerName, paymentLines, paymentMethod, paidAmount, remaining, saleWarehouseId, instantNote };
+    const ctx = { subtotal, discount: totalDiscountForRecord, tax, total, customerId, customerName, paymentLines, paymentMethod, paidAmount, remaining, saleWarehouseId, instantNote, couponDiscountAmount, loyaltyPointsUsed };
 
     let receiptData;
     // إذا كانت الوردية نفسها لا تزال بانتظار المزامنة، يجب أن يُسجَّل البيع دون اتصال أيضًا (حتى لو كان الإنترنت متاحًا)
@@ -9677,6 +10116,7 @@ async function doCheckout() {
     const instantNoteEl = document.getElementById('instantNoteInput');
     if (instantNoteEl) instantNoteEl.value = '';
     resetQuickDiscountSelection();
+    resetAutoDiscountsSelection();
     renderCart();
     closeMobileCart();
     await loadStockBalances();
@@ -9755,6 +10195,7 @@ async function saveSaleOrder() {
     const instantNoteEl = document.getElementById('instantNoteInput');
     if (instantNoteEl) instantNoteEl.value = '';
     resetQuickDiscountSelection();
+    resetAutoDiscountsSelection();
     renderCart();
     closeMobileCart();
   } catch (err) {
@@ -10430,6 +10871,7 @@ async function enterBackoffice() {
     loadBoPurchases(), loadBoWarehouses(), loadBoRoles(), loadBoBranches(),
     loadBoUsers(), loadBoEmployees(), loadBoExpenseItems(), loadBoUnitTypes(),
     loadBoCustomerTypes(), loadBoTaxRates(), loadBoQuickDiscounts(),
+    loadBoPromotions(), loadBoCoupons(), loadLoyaltySettings(),
     loadTaxInclusiveSetting(), loadCompanyInfoGlobal(), loadBranchSettings(),
     loadPrintSettings(), loadDebtReminderSettings()
   ]);
@@ -10446,6 +10888,8 @@ async function enterBackoffice() {
   renderCustomerTypesTable();
   renderTaxRatesTable();
   renderQuickDiscountsTable();
+  renderPromotionsTable();
+  renderCouponsTable();
   document.getElementById('taxInclusiveToggle').checked = taxInclusive;
   populateProductCategorySelect();
 
@@ -10467,10 +10911,11 @@ async function enterBackoffice() {
 const boAllSections = ['dashboard','products','categories','unit-types','tax-rates','quick-discounts','customer-types',
   'sales-list','sale-orders','customers','suppliers','payments','purchase-orders','purchases','purchase-returns','sale-returns',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
-  'soon','company-info','permissions','users','branches','branch-settings','print-settings','stock','backup','reset-data','employees','expense-items','expenses','salaries','treasuries','capital','fixed-assets'];
+  'soon','company-info','permissions','users','branches','branch-settings','print-settings','stock','backup','reset-data','employees','expense-items','expenses','salaries','treasuries','capital','fixed-assets','promotions','coupons'];
 
 const boNavGroups = [
   { toggle: 'stockNavToggle', group: 'stockNavGroup', sections: ['products','categories','unit-types','tax-rates','quick-discounts','stock'] },
+  { toggle: 'marketingNavToggle', group: 'marketingNavGroup', sections: ['promotions','coupons'] },
   { toggle: 'salesNavToggle', group: 'salesNavGroup', sections: ['sales-list','sale-orders','customers','customer-types','sale-returns'] },
   { toggle: 'purchasesNavToggle', group: 'purchasesNavGroup', sections: ['suppliers','purchase-orders','purchases','purchase-returns'] },
   { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
@@ -10484,6 +10929,7 @@ const SECTION_PERMISSION_MAP = {
   'dashboard': 'dashboard',
   'products': 'stock_management', 'categories': 'stock_management', 'unit-types': 'stock_management',
   'tax-rates': 'stock_management', 'quick-discounts': 'stock_management', 'stock': 'stock_management',
+  'promotions': 'admin', 'coupons': 'admin',
   'sales-list': 'sales_management', 'sale-orders': 'sales_management', 'customers': 'sales_management', 'customer-types': 'sales_management', 'sale-returns': 'sales_management',
   'suppliers': 'purchases_management', 'purchase-orders': 'purchases_management', 'purchases': 'purchases_management', 'purchase-returns': 'purchases_management',
   'reports-sales': 'reports', 'reports-purchases': 'reports', 'reports-inventory': 'reports', 'reports-accounting': 'reports', 'reports-other': 'reports',
@@ -10557,6 +11003,7 @@ const REPORT_TABS = {
 const SCREEN_LABELS = {
   'products': 'الأصناف', 'categories': 'مجموعات الأصناف', 'unit-types': 'نوع الوحدة',
   'tax-rates': 'الضريبة', 'quick-discounts': 'الخصومات', 'stock': 'المخازن ونقل البضاعة',
+  'promotions': 'العروض', 'coupons': 'الكوبونات',
   'sales-list': 'فواتير البيع', 'customers': 'العملاء', 'customer-types': 'أنواع العملاء', 'sale-returns': 'مرتجعات البيع',
   'suppliers': 'الموردون', 'purchases': 'فواتير الشراء', 'purchase-returns': 'مرتجعات الشراء',
   'treasuries': 'الخزائن والحسابات البنكية', 'payments': 'سجل المدفوعات', 'expense-items': 'بنود المصروفات',
@@ -10679,6 +11126,8 @@ const ACTION_CAPABLE_SCREENS = {
   'customer-types': { add: true, edit: true },
   'tax-rates': { add: true, edit: true },
   'quick-discounts': { add: true, edit: true },
+  'promotions': { add: true, edit: true, delete: true },
+  'coupons': { add: true, edit: true, delete: true },
   'stock': { add: true, edit: true, delete: true },
   'customers': { add: true, edit: true, delete: true },
   'suppliers': { add: true, edit: true, delete: true },
@@ -10701,6 +11150,7 @@ const ACTION_LABELS = { add: 'إضافة', edit: 'تعديل', delete: 'حذف' 
 const ADD_BUTTON_MAP = {
   'products': 'addProductBtn', 'categories': 'addCategoryBtn', 'unit-types': 'addUnitTypeBtn',
   'customer-types': 'addCustomerTypeBtn', 'tax-rates': 'addTaxRateBtn', 'quick-discounts': 'addQuickDiscountBtn',
+  'promotions': 'addPromotionBtn', 'coupons': 'addCouponBtn',
   'stock': 'addWarehouseBtn', 'customers': 'addCustomerBtn', 'suppliers': 'addSupplierBtn',
   'treasuries': 'addTreasuryBtn', 'expense-items': 'addExpenseItemBtn', 'expenses': 'addExpenseBtn',
   'fixed-assets': 'addFixedAssetBtn', 'employees': 'addEmployeeBtn', 'salaries': 'addSalaryBtn',
@@ -10852,7 +11302,7 @@ function activateBoSection(section, btn) {
   if (section === 'stock' && !stockSectionLoadedOnce) { initStockSection(); stockSectionLoadedOnce = true; }
   if (section === 'reset-data' && !resetDataLoadedOnce) { initResetDataSection(); resetDataLoadedOnce = true; }
   if (section === 'company-info' && !companyInfoLoadedOnce) { initCompanyInfoSection(); companyInfoLoadedOnce = true; }
-  if (section === 'branch-settings' && !branchSettingsLoadedOnce) { initBranchSettingsSection(); branchSettingsLoadedOnce = true; }
+  if (section === 'branch-settings' && !branchSettingsLoadedOnce) { initBranchSettingsSection(); initLoyaltySettingsSection(); branchSettingsLoadedOnce = true; }
   if (section === 'print-settings' && !printSettingsLoadedOnce) { initPrintSettingsSection(); printSettingsLoadedOnce = true; }
   if (section === 'permissions') { renderPermissionsTable(); }
   if (section === 'reports-sales' && !reportsLoadedOnce) { populateReportBranchFilter(); runReport(); reportsLoadedOnce = true; }
@@ -12219,6 +12669,25 @@ function bindBackofficeEvents() {
   document.getElementById('quickDiscountForm').addEventListener('submit', saveQuickDiscount);
   document.getElementById('quickDiscountType').addEventListener('change', updateQuickDiscountValueLabel);
 
+  // ---- العروض (Promotions) ----
+  document.getElementById('addPromotionBtn').addEventListener('click', () => openPromotionModal(null));
+  document.getElementById('cancelPromotionBtn').addEventListener('click', closePromotionModal);
+  document.getElementById('promotionModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'promotionModalOverlay') closePromotionModal();
+  });
+  document.getElementById('promotionForm').addEventListener('submit', savePromotion);
+  document.getElementById('promotionScope').addEventListener('change', updatePromotionScopeFields);
+  document.getElementById('promotionDiscountType').addEventListener('change', updatePromotionValueLabel);
+
+  // ---- الكوبونات (Coupons) ----
+  document.getElementById('addCouponBtn').addEventListener('click', () => openCouponModal(null));
+  document.getElementById('cancelCouponBtn').addEventListener('click', closeCouponModal);
+  document.getElementById('couponModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'couponModalOverlay') closeCouponModal();
+  });
+  document.getElementById('couponForm').addEventListener('submit', saveCoupon);
+  document.getElementById('couponDiscountType').addEventListener('change', updateCouponValueLabel);
+
   // ---- إعداد السعر شامل الضريبة ----
   document.getElementById('taxInclusiveToggle').addEventListener('change', async (e) => {
     const checked = e.target.checked;
@@ -13257,6 +13726,37 @@ function openCustomerModal(customer) {
   document.getElementById('customerBalance').value = customer ? customer.balance : 0;
   document.getElementById('customerModalError').classList.remove('show');
   document.getElementById('customerModalOverlay').classList.add('show');
+  const ledgerWrap = document.getElementById('customerLoyaltyLedgerWrap');
+  if (customer) {
+    ledgerWrap.style.display = 'block';
+    loadCustomerLoyaltyLedger(customer.id);
+  } else {
+    ledgerWrap.style.display = 'none';
+  }
+}
+
+async function loadCustomerLoyaltyLedger(customerId) {
+  const tbody = document.getElementById('customerLoyaltyLedgerBody');
+  tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>`;
+  try {
+    const { data, error } = await supabaseClient.from('loyalty_transactions').select('*')
+      .eq('customer_id', customerId).order('created_at', { ascending: false }).limit(20);
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">لا توجد حركات نقاط بعد</td></tr>`;
+      return;
+    }
+    const typeLabels = { earn: 'كسب', redeem: 'استرداد', adjustment: 'تعديل', expire: 'انتهاء' };
+    tbody.innerHTML = data.map(t => `
+      <tr>
+        <td>${new Date(t.created_at).toLocaleDateString('ar-EG')}</td>
+        <td>${typeLabels[t.type] || t.type}</td>
+        <td class="num">${Number(t.points) > 0 ? '+' : ''}${Number(t.points).toFixed(2)}</td>
+      </tr>`).join('');
+  } catch (err) {
+    console.error(err);
+    tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">تعذر تحميل الحركات</td></tr>`;
+  }
 }
 
 function closeCustomerModal() {
@@ -14326,6 +14826,290 @@ async function toggleQuickDiscountActive(item) {
   if (error) { console.error(error); showToast('تعذر تحديث حالة الخصم', true); return; }
   await loadBoQuickDiscounts();
   renderQuickDiscountsTable();
+}
+
+// ---- العروض (Promotions) ----
+let boPromotions = [];
+
+async function loadBoPromotions() {
+  const { data, error } = await supabaseClient.from('promotions').select('*').order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل العروض', true); return; }
+  boPromotions = data || [];
+}
+
+function promotionScopeLabel(p) {
+  if (p.scope === 'category') {
+    const c = boCategories.find(x => x.id === p.category_id);
+    return `فئة: ${c ? escapeHtml(c.name) : '—'}`;
+  }
+  if (p.scope === 'product') {
+    const pr = boProducts.find(x => x.id === p.product_id);
+    return `صنف: ${pr ? escapeHtml(pr.name) : '—'}`;
+  }
+  return 'كل الأصناف';
+}
+
+function renderPromotionsTable() {
+  const tbody = document.getElementById('promotionsTableBody');
+  if (boPromotions.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">لا توجد عروض مضافة حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boPromotions.forEach(x => {
+    const tr = document.createElement('tr');
+    const valueLabel = x.discount_type === 'fixed' ? Number(x.value).toFixed(2) : `${Number(x.value).toFixed(2)}%`;
+    const periodLabel = `${x.start_date || '—'} → ${x.end_date || 'بدون نهاية'}`;
+    tr.innerHTML = `
+      <td>${escapeHtml(x.name)}</td>
+      <td>${promotionScopeLabel(x)}</td>
+      <td class="num">${valueLabel}</td>
+      <td>${periodLabel}</td>
+      <td><span class="bo-badge ${x.is_active ? 'active' : 'inactive'}">${x.is_active ? 'مفعّل' : 'موقّف'}</span></td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="toggle">${x.is_active ? 'إيقاف' : 'تفعيل'}</button>
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openPromotionModal(x));
+    tr.querySelector('[data-action="toggle"]').addEventListener('click', () => togglePromotionActive(x));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deletePromotion(x));
+    applyRowActionPerm(tr, 'promotions');
+    tbody.appendChild(tr);
+  });
+}
+
+function updatePromotionScopeFields() {
+  const scope = document.getElementById('promotionScope').value;
+  document.getElementById('promotionCategoryField').style.display = scope === 'category' ? '' : 'none';
+  document.getElementById('promotionProductField').style.display = scope === 'product' ? '' : 'none';
+}
+
+function updatePromotionValueLabel() {
+  const type = document.getElementById('promotionDiscountType').value;
+  document.getElementById('promotionValueLabel').textContent = type === 'fixed' ? 'المبلغ لكل قطعة' : 'النسبة %';
+}
+
+function populatePromotionSelects() {
+  const catSel = document.getElementById('promotionCategoryId');
+  catSel.innerHTML = boCategories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+  const prodSel = document.getElementById('promotionProductId');
+  prodSel.innerHTML = boProducts.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+}
+
+function openPromotionModal(item) {
+  populatePromotionSelects();
+  document.getElementById('promotionModalTitle').textContent = item ? 'تعديل عرض' : 'عرض جديد';
+  document.getElementById('promotionId').value = item ? item.id : '';
+  document.getElementById('promotionName').value = item ? item.name : '';
+  document.getElementById('promotionDescription').value = item ? (item.description || '') : '';
+  document.getElementById('promotionScope').value = item ? item.scope : 'all';
+  document.getElementById('promotionCategoryId').value = item ? (item.category_id || '') : '';
+  document.getElementById('promotionProductId').value = item ? (item.product_id || '') : '';
+  document.getElementById('promotionDiscountType').value = item ? item.discount_type : 'percentage';
+  document.getElementById('promotionValue').value = item ? item.value : 0;
+  document.getElementById('promotionStartDate').value = item ? (item.start_date || '') : new Date().toISOString().slice(0, 10);
+  document.getElementById('promotionEndDate').value = item ? (item.end_date || '') : '';
+  document.getElementById('promotionActive').checked = item ? item.is_active : true;
+  updatePromotionScopeFields();
+  updatePromotionValueLabel();
+  document.getElementById('promotionModalError').classList.remove('show');
+  document.getElementById('promotionModalOverlay').classList.add('show');
+}
+
+function closePromotionModal() {
+  document.getElementById('promotionModalOverlay').classList.remove('show');
+}
+
+async function savePromotion(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('promotionModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('savePromotionBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('promotionId').value || null;
+  const scope = document.getElementById('promotionScope').value;
+  const payload = {
+    name: document.getElementById('promotionName').value.trim(),
+    description: document.getElementById('promotionDescription').value.trim() || null,
+    scope,
+    category_id: scope === 'category' ? (document.getElementById('promotionCategoryId').value || null) : null,
+    product_id: scope === 'product' ? (document.getElementById('promotionProductId').value || null) : null,
+    discount_type: document.getElementById('promotionDiscountType').value,
+    value: Number(document.getElementById('promotionValue').value) || 0,
+    start_date: document.getElementById('promotionStartDate').value || new Date().toISOString().slice(0, 10),
+    end_date: document.getElementById('promotionEndDate').value || null,
+    is_active: document.getElementById('promotionActive').checked,
+  };
+
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('promotions').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('promotions').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث العرض' : 'تمت إضافة العرض بنجاح');
+    closePromotionModal();
+    await loadBoPromotions();
+    renderPromotionsTable();
+    await loadPosActivePromotions();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function togglePromotionActive(item) {
+  const { error } = await supabaseClient.from('promotions').update({ is_active: !item.is_active }).eq('id', item.id);
+  if (error) { console.error(error); showToast('تعذر تحديث حالة العرض', true); return; }
+  await loadBoPromotions();
+  renderPromotionsTable();
+  await loadPosActivePromotions();
+}
+
+async function deletePromotion(item) {
+  if (!confirm(`هل أنت متأكد من حذف العرض "${item.name}"؟`)) return;
+  const { error } = await supabaseClient.from('promotions').delete().eq('id', item.id);
+  if (error) { console.error(error); showToast('تعذر حذف العرض', true); return; }
+  await loadBoPromotions();
+  renderPromotionsTable();
+  await loadPosActivePromotions();
+}
+
+// ---- الكوبونات (Coupons) ----
+let boCoupons = [];
+
+async function loadBoCoupons() {
+  const { data, error } = await supabaseClient.from('coupons').select('*').order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل الكوبونات', true); return; }
+  boCoupons = data || [];
+}
+
+function renderCouponsTable() {
+  const tbody = document.getElementById('couponsTableBody');
+  if (boCoupons.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لا توجد كوبونات مضافة حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boCoupons.forEach(x => {
+    const tr = document.createElement('tr');
+    const valueLabel = x.discount_type === 'fixed' ? Number(x.value).toFixed(2) : `${Number(x.value).toFixed(2)}%`;
+    const usageLabel = `${x.used_count || 0} / ${x.max_uses || '∞'}`;
+    const periodLabel = `${x.start_date || 'بدون بداية'} → ${x.end_date || 'بدون نهاية'}`;
+    tr.innerHTML = `
+      <td style="direction:ltr; text-align:right;">${escapeHtml(x.code)}</td>
+      <td class="num">${valueLabel}</td>
+      <td class="num">${usageLabel}</td>
+      <td class="num">${Number(x.min_order_amount || 0).toFixed(2)}</td>
+      <td>${periodLabel}</td>
+      <td><span class="bo-badge ${x.is_active ? 'active' : 'inactive'}">${x.is_active ? 'مفعّل' : 'موقّف'}</span></td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="toggle">${x.is_active ? 'إيقاف' : 'تفعيل'}</button>
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openCouponModal(x));
+    tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleCouponActive(x));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteCoupon(x));
+    applyRowActionPerm(tr, 'coupons');
+    tbody.appendChild(tr);
+  });
+}
+
+function updateCouponValueLabel() {
+  const type = document.getElementById('couponDiscountType').value;
+  document.getElementById('couponValueLabel').textContent = type === 'fixed' ? 'المبلغ' : 'النسبة %';
+}
+
+function openCouponModal(item) {
+  document.getElementById('couponModalTitle').textContent = item ? 'تعديل كوبون' : 'كوبون جديد';
+  document.getElementById('couponId').value = item ? item.id : '';
+  document.getElementById('couponCode').value = item ? item.code : '';
+  document.getElementById('couponDiscountType').value = item ? item.discount_type : 'percentage';
+  document.getElementById('couponValue').value = item ? item.value : 0;
+  document.getElementById('couponMinOrder').value = item ? (item.min_order_amount || 0) : 0;
+  document.getElementById('couponMaxUses').value = item ? (item.max_uses || '') : '';
+  document.getElementById('couponStartDate').value = item ? (item.start_date || '') : '';
+  document.getElementById('couponEndDate').value = item ? (item.end_date || '') : '';
+  document.getElementById('couponActive').checked = item ? item.is_active : true;
+  updateCouponValueLabel();
+  document.getElementById('couponModalError').classList.remove('show');
+  document.getElementById('couponModalOverlay').classList.add('show');
+}
+
+function closeCouponModal() {
+  document.getElementById('couponModalOverlay').classList.remove('show');
+}
+
+async function saveCoupon(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('couponModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveCouponBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('couponId').value || null;
+  const maxUsesRaw = document.getElementById('couponMaxUses').value;
+  const payload = {
+    code: document.getElementById('couponCode').value.trim().toUpperCase(),
+    discount_type: document.getElementById('couponDiscountType').value,
+    value: Number(document.getElementById('couponValue').value) || 0,
+    min_order_amount: Number(document.getElementById('couponMinOrder').value) || 0,
+    max_uses: maxUsesRaw ? Number(maxUsesRaw) : null,
+    start_date: document.getElementById('couponStartDate').value || null,
+    end_date: document.getElementById('couponEndDate').value || null,
+    is_active: document.getElementById('couponActive').checked,
+  };
+
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('coupons').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('coupons').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث الكوبون' : 'تمت إضافة الكوبون بنجاح');
+    closeCouponModal();
+    await loadBoCoupons();
+    renderCouponsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ (تأكد أن الكود غير مستخدم من قبل)';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function toggleCouponActive(item) {
+  const { error } = await supabaseClient.from('coupons').update({ is_active: !item.is_active }).eq('id', item.id);
+  if (error) { console.error(error); showToast('تعذر تحديث حالة الكوبون', true); return; }
+  await loadBoCoupons();
+  renderCouponsTable();
+}
+
+async function deleteCoupon(item) {
+  if (!confirm(`هل أنت متأكد من حذف الكوبون "${item.code}"؟`)) return;
+  const { error } = await supabaseClient.from('coupons').delete().eq('id', item.id);
+  if (error) { console.error(error); showToast('تعذر حذف الكوبون', true); return; }
+  await loadBoCoupons();
+  renderCouponsTable();
 }
 
 // ---- Users ----
