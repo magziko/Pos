@@ -1140,6 +1140,7 @@ a { color: inherit; }
             <button class="bo-nav-sub-item" data-section="unit-types">نوع الوحدة</button>
             <button class="bo-nav-sub-item" data-section="tax-rates">الضريبة</button>
             <button class="bo-nav-sub-item" data-section="quick-discounts">الخصومات</button>
+            <button class="bo-nav-sub-item" data-section="modifier-groups">الإضافات والتعديلات</button>
             <button class="bo-nav-sub-item" data-section="stock">المخازن ونقل البضاعة</button>
           </div>
         </div>
@@ -1507,6 +1508,34 @@ a { color: inherit; }
               <thead><tr><th>التسمية</th><th>النوع</th><th>القيمة</th><th>الحالة</th><th></th></tr></thead>
               <tbody id="quickDiscountsTableBody">
                 <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم الإضافات والتعديلات (للمطاعم والكافيهات) -->
+        <div id="bo-section-modifier-groups" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">الإضافات والتعديلات</div>
+            <button class="bo-add-btn" id="addModifierGroupBtn">+ مجموعة جديدة</button>
+          </div>
+          <div style="color:var(--ink-soft); font-size:13px; margin-bottom:14px;">
+            لأصناف زي وجبات المطاعم: اعمل مجموعة (مثلاً "الإضافات" أو "المقاس")، وحدد داخلها الخيارات وسعر كل واحد، بعدين اربط المجموعة بالصنف المناسب من شاشة "الأصناف".
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>اسم المجموعة</th>
+                  <th>نوع الاختيار</th>
+                  <th>إجباري؟</th>
+                  <th>عدد الخيارات</th>
+                  <th>الحالة</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="modifierGroupsTableBody">
+                <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
@@ -5003,6 +5032,12 @@ a { color: inherit; }
         </div>
 
         <div class="field field-full">
+          <label>الإضافات والتعديلات (اختياري) — هتظهر للكاشير وقت إضافة الصنف للفاتورة</label>
+          <div id="productModifierGroupsList" style="display:flex; flex-direction:column; gap:6px;"></div>
+          <p id="productModifierGroupsEmptyHint" style="font-size:11.5px; color:var(--ink-soft); margin:6px 0 0; display:none;">لا توجد مجموعات إضافات مفعّلة حتى الآن — أنشئ مجموعة أولاً من شاشة "الإضافات والتعديلات".</p>
+        </div>
+
+        <div class="field field-full">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
             <input type="checkbox" id="productActive" checked style="width:auto;"> الصنف مفعّل ويظهر في شاشة المبيعات
           </label>
@@ -6122,6 +6157,103 @@ a { color: inherit; }
   </div>
 </div>
 
+<!-- Modal: إضافة / تعديل مجموعة إضافات -->
+<div class="modal-overlay" id="modifierGroupModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="modifierGroupModalTitle">مجموعة جديدة</div>
+    <form id="modifierGroupForm">
+      <input type="hidden" id="modifierGroupId">
+      <div class="field field-full"><label>اسم المجموعة</label><input type="text" id="modifierGroupName" required placeholder="مثال: الإضافات، المقاس، درجة النضج"></div>
+      <div class="field field-full">
+        <label>نوع الاختيار</label>
+        <select id="modifierGroupSelectionType">
+          <option value="single">اختيار واحد بس (مثال: المقاس)</option>
+          <option value="multiple">أكتر من اختيار مع بعض (مثال: الإضافات)</option>
+        </select>
+      </div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="modifierGroupRequired" style="width:auto;"> إجباري — العميل لازم يختار قبل إضافة الصنف للسلة
+        </label>
+      </div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="modifierGroupActive" checked style="width:auto;"> مفعّل
+        </label>
+      </div>
+      <div class="error-msg" id="modifierGroupModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelModifierGroupBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveModifierGroupBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: خيارات مجموعة إضافات -->
+<div class="modal-overlay" id="modifierOptionsListModalOverlay">
+  <div class="modal-box" style="max-width:600px;">
+    <div class="modal-title">خيارات مجموعة — <span id="modifierOptionsGroupName"></span></div>
+    <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+      <button type="button" class="bo-add-btn" id="addModifierOptionBtn">+ خيار جديد</button>
+    </div>
+    <div class="bo-table-wrap">
+      <table class="bo-table">
+        <thead><tr><th>الاسم</th><th>السعر الإضافي</th><th>افتراضي؟</th><th>الحالة</th><th></th></tr></thead>
+        <tbody id="modifierOptionsTableBody">
+          <tr><td colspan="5" class="bo-empty">لا توجد خيارات مضافة حتى الآن</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="closeModifierOptionsListBtn">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: إضافة / تعديل خيار إضافة -->
+<div class="modal-overlay" id="modifierOptionFormModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="modifierOptionFormModalTitle">خيار جديد</div>
+    <form id="modifierOptionForm">
+      <input type="hidden" id="modifierOptionId">
+      <input type="hidden" id="modifierOptionGroupId">
+      <div class="field field-full"><label>اسم الخيار</label><input type="text" id="modifierOptionName" required placeholder="مثال: جبنة إضافية، بدون بصل، كبير"></div>
+      <div class="field field-full"><label>السعر الإضافي (اتركه صفر لو مجاني)</label><input type="number" id="modifierOptionPriceDelta" step="0.01" value="0"></div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="modifierOptionDefault" style="width:auto;"> مختار افتراضيًا
+        </label>
+      </div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="modifierOptionActive" checked style="width:auto;"> مفعّل
+        </label>
+      </div>
+      <div class="error-msg" id="modifierOptionFormModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelModifierOptionFormBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveModifierOptionBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: ربط مجموعات الإضافات بصنف -->
+<div class="modal-overlay" id="productModifierLinkModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">ربط الإضافات — <span id="productModifierLinkProductName"></span></div>
+    <div style="color:var(--ink-soft); font-size:13px; margin-bottom:12px;">
+      اختار مجموعات الإضافات اللي هتظهر للكاشير عند إضافة الصنف ده للفاتورة.
+    </div>
+    <div id="productModifierLinkList" style="display:flex; flex-direction:column; gap:8px; max-height:320px; overflow-y:auto;"></div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="cancelProductModifierLinkBtn">إلغاء</button>
+      <button type="button" class="submit-btn" id="saveProductModifierLinkBtn">حفظ</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: إضافة / تعديل نوع عميل -->
 <div class="modal-overlay" id="customerTypeModalOverlay">
   <div class="modal-box">
@@ -6678,6 +6810,21 @@ a { color: inherit; }
     <div class="unit-picker-title" id="variantPickerTitle">اختر المتغير</div>
     <div id="variantPickerOptions"></div>
     <button type="button" class="unit-picker-cancel" id="variantPickerCancelBtn">إلغاء</button>
+  </div>
+</div>
+
+<div class="unit-picker-overlay" id="posModifierPickerOverlay">
+  <div class="unit-picker-box" style="max-width:420px;">
+    <div class="unit-picker-title" id="posModifierPickerTitle">اختر الإضافات</div>
+    <div id="posModifierPickerGroups" style="max-height:360px; overflow-y:auto; text-align:right;"></div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; font-weight:700;">
+      <span>الإجمالي الإضافي:</span>
+      <span class="num" id="posModifierPickerDeltaTotal">0.00</span>
+    </div>
+    <div style="display:flex; gap:8px; margin-top:10px;">
+      <button type="button" class="unit-picker-cancel" id="posModifierPickerCancelBtn" style="flex:1; margin:0;">إلغاء</button>
+      <button type="button" class="submit-btn" id="posModifierPickerConfirmBtn" style="flex:1; margin-top:0;">تأكيد</button>
+    </div>
   </div>
 </div>
 
@@ -7261,6 +7408,7 @@ async function syncQueuedSale(item) {
   const saleItems = item.payload.items.map(it => ({
     sale_id: sale.id, product_id: it.product_id, product_unit_id: it.product_unit_id || null,
     quantity: it.quantity, unit_price: it.unit_price, discount: 0, total: it.total, warehouse_id: it.warehouse_id,
+    selected_modifiers: it.selected_modifiers || [],
   }));
   const { data: insertedItems, error: itemsError } = await supabaseClient
     .from('sale_items').insert(saleItems).select();
@@ -8658,6 +8806,12 @@ function bindPosEvents() {
     if (e.target.id === 'variantPickerOverlay') closeVariantPicker();
   });
 
+  document.getElementById('posModifierPickerCancelBtn').addEventListener('click', closeModifierPicker);
+  document.getElementById('posModifierPickerConfirmBtn').addEventListener('click', confirmModifierPicker);
+  document.getElementById('posModifierPickerOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'posModifierPickerOverlay') closeModifierPicker();
+  });
+
   document.getElementById('weightPickerCancelBtn').addEventListener('click', closeWeightPicker);
   document.getElementById('weightPickerConfirmBtn').addEventListener('click', confirmWeightPicker);
   document.getElementById('weightModeByWeightBtn').addEventListener('click', () => setWeightPickerMode('weight'));
@@ -8790,7 +8944,7 @@ async function loadProducts() {
     if (!sessionUsable()) throw new Error('offline');
     const { data, error } = await supabaseClient
       .from('products')
-      .select('id, name, category_id, sale_price, unit_type, sell_by, image_url, tax_rate_id, parent_product_id, variant_attributes, tax_rates(rate), product_barcodes(barcode), product_units(id, unit_type_id, factor_to_base, sale_price, is_active, unit_types(name))')
+      .select('id, name, category_id, sale_price, unit_type, sell_by, image_url, tax_rate_id, parent_product_id, variant_attributes, tax_rates(rate), product_barcodes(barcode), product_units(id, unit_type_id, factor_to_base, sale_price, is_active, unit_types(name)), product_modifier_groups(group_id, modifier_groups(id, name, selection_type, is_required, is_active, modifier_options(id, name, price_delta, is_default, is_active)))')
       .eq('is_active', true).order('name');
     if (error) throw error;
     allProducts = data || [];
@@ -9048,7 +9202,23 @@ function renderProducts() {
   });
 }
 
-function lineKeyOf(productId, productUnitId) { return productId + '::' + (productUnitId || 'base'); }
+function modifiersKeyOf(modifiers) {
+  if (!modifiers || !modifiers.list || modifiers.list.length === 0) return '';
+  return modifiers.list.map(m => m.option_id).sort().join(',');
+}
+
+function lineKeyOf(productId, productUnitId, modifiersKey) { return productId + '::' + (productUnitId || 'base') + '::' + (modifiersKey || ''); }
+
+let pendingCartModifiers = null; // {list, delta} — بيتحدد بعد تأكيد نافذة اختيار الإضافات
+
+function getActiveModifierGroups(product) {
+  const links = product.product_modifier_groups || [];
+  return links
+    .map(l => l.modifier_groups)
+    .filter(g => g && g.is_active)
+    .map(g => ({ ...g, modifier_options: (g.modifier_options || []).filter(o => o.is_active) }))
+    .filter(g => g.modifier_options.length > 0);
+}
 
 function addToCart(product) {
   const variants = allProducts.filter(v => v.parent_product_id === product.id);
@@ -9056,16 +9226,24 @@ function addToCart(product) {
     openVariantPicker(product, variants);
     return;
   }
+  const modGroups = getActiveModifierGroups(product);
+  if (modGroups.length > 0 && !pendingCartModifiers) {
+    openModifierPicker(product, modGroups);
+    return;
+  }
+  const modifiers = pendingCartModifiers;
+  pendingCartModifiers = null;
+
   if (product.sell_by === 'weight') {
-    openWeightPicker(product);
+    openWeightPicker(product, undefined, modifiers);
     return;
   }
   const extraUnits = (product.product_units || []).filter(u => u.is_active);
   if (extraUnits.length === 0) {
-    addUnitToCart(product, null, Number(product.sale_price), 1, null);
+    addUnitToCart(product, null, Number(product.sale_price) + (modifiers?.delta || 0), 1, null, modifiers);
     return;
   }
-  openUnitPicker(product, extraUnits);
+  openUnitPicker(product, extraUnits, modifiers);
 }
 
 function formatPosVariantAttrs(attrs) {
@@ -9098,15 +9276,102 @@ function openVariantPicker(product, variants) {
 }
 function closeVariantPicker() { document.getElementById('variantPickerOverlay').classList.remove('show'); }
 
+let modifierPickerProduct = null;
+let modifierPickerGroups = [];
+let modifierPickerSelections = {}; // groupId -> [optionId,...]
+
+function openModifierPicker(product, groups) {
+  modifierPickerProduct = product;
+  modifierPickerGroups = groups;
+  modifierPickerSelections = {};
+  groups.forEach(g => {
+    modifierPickerSelections[g.id] = g.modifier_options.filter(o => o.is_default).map(o => o.id);
+  });
+  document.getElementById('posModifierPickerTitle').textContent = `إضافات — ${product.name}`;
+  renderModifierPicker();
+  document.getElementById('posModifierPickerOverlay').classList.add('show');
+}
+function closeModifierPicker() {
+  document.getElementById('posModifierPickerOverlay').classList.remove('show');
+  modifierPickerProduct = null; modifierPickerGroups = []; modifierPickerSelections = {};
+}
+function renderModifierPicker() {
+  const wrap = document.getElementById('posModifierPickerGroups');
+  wrap.innerHTML = '';
+  modifierPickerGroups.forEach(g => {
+    const groupDiv = document.createElement('div');
+    groupDiv.style.cssText = 'margin-bottom:14px;';
+    groupDiv.innerHTML = `<div style="font-weight:700; margin-bottom:6px;">${escapeHtml(g.name)} <span style="font-weight:500; color:var(--ink-soft); font-size:12px;">${g.is_required ? '(إجباري)' : '(اختياري)'}</span></div>`;
+    g.modifier_options.forEach(o => {
+      const isChecked = (modifierPickerSelections[g.id] || []).includes(o.id);
+      const priceLabel = Number(o.price_delta) !== 0 ? (Number(o.price_delta) > 0 ? '+' + Number(o.price_delta).toFixed(2) : Number(o.price_delta).toFixed(2)) : '';
+      const optRow = document.createElement('label');
+      optRow.style.cssText = 'display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 8px; border:1px solid var(--border); border-radius:8px; margin-bottom:6px; cursor:pointer;';
+      optRow.innerHTML = `
+        <span style="display:flex; align-items:center; gap:8px;">
+          <input type="${g.selection_type === 'multiple' ? 'checkbox' : 'radio'}" name="modgroup-${g.id}" ${isChecked ? 'checked' : ''} style="width:auto;">
+          ${escapeHtml(o.name)}
+        </span>
+        <span class="num" style="color:var(--ink-soft);">${priceLabel}</span>`;
+      optRow.querySelector('input').addEventListener('change', (e) => {
+        if (g.selection_type === 'multiple') {
+          const cur = modifierPickerSelections[g.id] || [];
+          modifierPickerSelections[g.id] = e.target.checked ? [...cur, o.id] : cur.filter(id => id !== o.id);
+        } else {
+          modifierPickerSelections[g.id] = e.target.checked ? [o.id] : [];
+        }
+        updateModifierPickerTotal();
+      });
+      groupDiv.appendChild(optRow);
+    });
+    wrap.appendChild(groupDiv);
+  });
+  updateModifierPickerTotal();
+}
+function updateModifierPickerTotal() {
+  let total = 0;
+  modifierPickerGroups.forEach(g => {
+    (modifierPickerSelections[g.id] || []).forEach(optId => {
+      const opt = g.modifier_options.find(o => o.id === optId);
+      if (opt) total += Number(opt.price_delta);
+    });
+  });
+  document.getElementById('posModifierPickerDeltaTotal').textContent = total.toFixed(2);
+}
+function confirmModifierPicker() {
+  for (const g of modifierPickerGroups) {
+    if (g.is_required && (modifierPickerSelections[g.id] || []).length === 0) {
+      showToast(`لازم تختار "${g.name}" الأول`, true);
+      return;
+    }
+  }
+  const list = [];
+  let delta = 0;
+  modifierPickerGroups.forEach(g => {
+    (modifierPickerSelections[g.id] || []).forEach(optId => {
+      const opt = g.modifier_options.find(o => o.id === optId);
+      if (opt) { list.push({ group_name: g.name, option_id: opt.id, option_name: opt.name, price_delta: Number(opt.price_delta) }); delta += Number(opt.price_delta); }
+    });
+  });
+  pendingCartModifiers = { list, delta };
+  const product = modifierPickerProduct;
+  closeModifierPicker();
+  addToCart(product);
+}
+
 
 let weightPickerProduct = null;
 let weightPickerEditMode = false;
 let weightPickerMode = 'weight'; // 'weight' | 'price'
+let weightPickerModifiers = null;
+let weightPickerExistingModifiersKey = '';
 
-function openWeightPicker(product, existingQty) {
+function openWeightPicker(product, existingQty, modifiers, existingModifiersKey) {
   weightPickerProduct = product;
   weightPickerEditMode = existingQty != null;
   weightPickerMode = 'weight';
+  weightPickerModifiers = modifiers || null;
+  weightPickerExistingModifiersKey = existingModifiersKey || '';
   document.getElementById('weightPickerTitle').textContent = `أدخل وزن "${product.name}"`;
   const input = document.getElementById('weightPickerInput');
   input.value = existingQty != null ? existingQty : '';
@@ -9118,6 +9383,8 @@ function closeWeightPicker() {
   document.getElementById('weightPickerOverlay').classList.remove('show');
   weightPickerProduct = null;
   weightPickerEditMode = false;
+  weightPickerModifiers = null;
+  weightPickerExistingModifiersKey = '';
 }
 function setWeightPickerMode(mode) {
   weightPickerMode = mode;
@@ -9139,7 +9406,7 @@ function setWeightPickerMode(mode) {
 function updateWeightPickerPreview() {
   const previewEl = document.getElementById('weightPickerPreview');
   const val = Number(document.getElementById('weightPickerInput').value);
-  const unitPrice = Number(weightPickerProduct?.sale_price) || 0;
+  const unitPrice = (Number(weightPickerProduct?.sale_price) || 0) + (weightPickerModifiers?.delta || 0);
   if (!val || val <= 0 || !unitPrice) { previewEl.innerHTML = '&nbsp;'; return; }
   if (weightPickerMode === 'weight') {
     previewEl.textContent = `= ${(val * unitPrice).toFixed(2)} جنيه`;
@@ -9151,26 +9418,28 @@ function confirmWeightPicker() {
   const input = document.getElementById('weightPickerInput');
   const val = Number(input.value);
   if (!val || val <= 0) { showToast(weightPickerMode === 'weight' ? 'أدخل وزنًا صحيحًا أكبر من صفر' : 'أدخل مبلغًا صحيحًا أكبر من صفر', true); return; }
-  const unitPrice = Number(weightPickerProduct.sale_price) || 0;
+  const unitPrice = (Number(weightPickerProduct.sale_price) || 0) + (weightPickerModifiers?.delta || 0);
   const weight = weightPickerMode === 'weight' ? val : (unitPrice > 0 ? val / unitPrice : 0);
   if (!weight || weight <= 0) { showToast('تعذر حساب الوزن — تأكد من سعر الصنف', true); return; }
-  if (weightPickerEditMode) setWeightInCart(weightPickerProduct, weight);
-  else addWeightToCart(weightPickerProduct, weight);
+  if (weightPickerEditMode) setWeightInCart(weightPickerProduct, weight, weightPickerExistingModifiersKey);
+  else addWeightToCart(weightPickerProduct, weight, weightPickerModifiers);
   closeWeightPicker();
 }
-function addWeightToCart(product, weight) {
-  const key = lineKeyOf(product.id, null);
-  const existing = cart.find(l => lineKeyOf(l.product.id, l.productUnitId) === key);
+function addWeightToCart(product, weight, modifiers) {
+  const modifiersKey = modifiersKeyOf(modifiers);
+  const key = lineKeyOf(product.id, null, modifiersKey);
+  const existing = cart.find(l => lineKeyOf(l.product.id, l.productUnitId, l.modifiersKey) === key);
   const newQty = (existing ? existing.quantity : 0) + weight;
   if (!confirmStockIfNeeded(product, newQty, 1)) return;
+  const unitPrice = Number(product.sale_price) + (modifiers?.delta || 0);
   if (existing) existing.quantity = newQty;
-  else cart.push({ product, quantity: weight, unitPrice: Number(product.sale_price), productUnitId: null, unitLabel: 'كجم', factor: 1, basePrice: Number(product.sale_price), isWeighted: true });
+  else cart.push({ product, quantity: weight, unitPrice, productUnitId: null, unitLabel: 'كجم', factor: 1, basePrice: Number(product.sale_price), isWeighted: true, modifiers: modifiers?.list || [], modifiersKey });
   renderCart();
   renderProducts();
 }
-function setWeightInCart(product, weight) {
-  const key = lineKeyOf(product.id, null);
-  const line = cart.find(l => lineKeyOf(l.product.id, l.productUnitId) === key);
+function setWeightInCart(product, weight, modifiersKey) {
+  const key = lineKeyOf(product.id, null, modifiersKey);
+  const line = cart.find(l => lineKeyOf(l.product.id, l.productUnitId, l.modifiersKey) === key);
   if (!line) return;
   if (!confirmStockIfNeeded(product, weight, 1)) return;
   line.quantity = weight;
@@ -9178,17 +9447,18 @@ function setWeightInCart(product, weight) {
   renderProducts();
 }
 
-function openUnitPicker(product, extraUnits) {
+function openUnitPicker(product, extraUnits, modifiers) {
   const overlay = document.getElementById('unitPickerOverlay');
   const optionsWrap = document.getElementById('unitPickerOptions');
   document.getElementById('unitPickerTitle').textContent = `اختر وحدة "${product.name}"`;
   optionsWrap.innerHTML = '';
 
+  const delta = modifiers?.delta || 0;
   const baseBtn = document.createElement('button');
   baseBtn.type = 'button'; baseBtn.className = 'unit-picker-option';
-  baseBtn.innerHTML = `<span>${escapeHtml(product.unit_type || 'الوحدة الأساسية')}</span><span class="num">${Number(product.sale_price).toFixed(2)}</span>`;
+  baseBtn.innerHTML = `<span>${escapeHtml(product.unit_type || 'الوحدة الأساسية')}</span><span class="num">${(Number(product.sale_price) + delta).toFixed(2)}</span>`;
   baseBtn.addEventListener('click', () => {
-    addUnitToCart(product, null, Number(product.sale_price), 1, product.unit_type);
+    addUnitToCart(product, null, Number(product.sale_price) + delta, 1, product.unit_type, modifiers);
     closeUnitPicker();
   });
   optionsWrap.appendChild(baseBtn);
@@ -9197,9 +9467,9 @@ function openUnitPicker(product, extraUnits) {
     const btn = document.createElement('button');
     btn.type = 'button'; btn.className = 'unit-picker-option';
     const label = u.unit_types?.name || 'وحدة';
-    btn.innerHTML = `<span>${escapeHtml(label)}</span><span class="num">${Number(u.sale_price).toFixed(2)}</span>`;
+    btn.innerHTML = `<span>${escapeHtml(label)}</span><span class="num">${(Number(u.sale_price) + delta).toFixed(2)}</span>`;
     btn.addEventListener('click', () => {
-      addUnitToCart(product, u.id, Number(u.sale_price), Number(u.factor_to_base), label);
+      addUnitToCart(product, u.id, Number(u.sale_price) + delta, Number(u.factor_to_base), label, modifiers);
       closeUnitPicker();
     });
     optionsWrap.appendChild(btn);
@@ -9209,24 +9479,25 @@ function openUnitPicker(product, extraUnits) {
 }
 function closeUnitPicker() { document.getElementById('unitPickerOverlay').classList.remove('show'); }
 
-function addUnitToCart(product, productUnitId, unitPrice, factor, unitLabel) {
-  const key = lineKeyOf(product.id, productUnitId);
-  const existing = cart.find(l => lineKeyOf(l.product.id, l.productUnitId) === key);
+function addUnitToCart(product, productUnitId, unitPrice, factor, unitLabel, modifiers) {
+  const modifiersKey = modifiersKeyOf(modifiers);
+  const key = lineKeyOf(product.id, productUnitId, modifiersKey);
+  const existing = cart.find(l => lineKeyOf(l.product.id, l.productUnitId, l.modifiersKey) === key);
   const requestedQty = existing ? existing.quantity + 1 : 1;
   if (!confirmStockIfNeeded(product, requestedQty, factor)) return;
   if (existing) existing.quantity += 1;
-  else cart.push({ product, quantity: 1, unitPrice, productUnitId, unitLabel, factor, basePrice: Number(product.sale_price) });
+  else cart.push({ product, quantity: 1, unitPrice, productUnitId, unitLabel, factor, basePrice: Number(product.sale_price), modifiers: modifiers?.list || [], modifiersKey });
   renderCart();
   renderProducts();
 }
 
-function changeQty(productId, productUnitId, delta) {
-  const key = lineKeyOf(productId, productUnitId);
-  const line = cart.find(l => lineKeyOf(l.product.id, l.productUnitId) === key);
+function changeQty(productId, productUnitId, delta, modifiersKey) {
+  const key = lineKeyOf(productId, productUnitId, modifiersKey);
+  const line = cart.find(l => lineKeyOf(l.product.id, l.productUnitId, l.modifiersKey) === key);
   if (!line) return;
   if (delta > 0 && !confirmStockIfNeeded(line.product, line.quantity + delta, line.factor)) return;
   line.quantity += delta;
-  if (line.quantity <= 0) cart = cart.filter(l => lineKeyOf(l.product.id, l.productUnitId) !== key);
+  if (line.quantity <= 0) cart = cart.filter(l => lineKeyOf(l.product.id, l.productUnitId, l.modifiersKey) !== key);
   renderCart();
   renderProducts();
 }
@@ -9245,9 +9516,9 @@ function confirmStockIfNeeded(product, requestedQty, factor) {
   return confirm(`الرصيد المتاح من "${product.name}" هو ${available} (بالوحدة الأساسية) فقط، والمطلوب ${requestedBaseQty}. هل تريد إتمام عملية البيع؟`);
 }
 
-function removeLine(productId, productUnitId) {
-  const key = lineKeyOf(productId, productUnitId);
-  cart = cart.filter(l => lineKeyOf(l.product.id, l.productUnitId) !== key);
+function removeLine(productId, productUnitId, modifiersKey) {
+  const key = lineKeyOf(productId, productUnitId, modifiersKey);
+  cart = cart.filter(l => lineKeyOf(l.product.id, l.productUnitId, l.modifiersKey) !== key);
   renderCart();
 }
 function calcSubtotal() { return cart.reduce((s, l) => s + l.quantity * l.unitPrice, 0); }
@@ -10037,13 +10308,16 @@ function renderCart() {
       const nameLabel = line.unitLabel && line.productUnitId
         ? `${escapeHtml(line.product.name)} <span style="color:var(--ink-soft); font-weight:500;">(${escapeHtml(line.unitLabel)})</span>`
         : escapeHtml(line.product.name);
+      const modifiersLabel = (line.modifiers && line.modifiers.length > 0)
+        ? `<div style="font-size:11px; color:var(--ink-soft); margin-top:2px;">${line.modifiers.map(m => escapeHtml(m.option_name)).join('، ')}</div>`
+        : '';
       const qtyControlsHtml = line.isWeighted
         ? `<button class="qty-btn" data-action="editWeight">✎</button><span class="qty-value num">${Number(line.quantity).toFixed(3)} كجم</span>`
         : `<button class="qty-btn" data-action="dec">−</button><span class="qty-value num">${line.quantity}</span><button class="qty-btn" data-action="inc">+</button>`;
       row.innerHTML = `
         <div class="cart-line-swipe-bg">حذف</div>
         <div class="cart-line-content">
-          <div class="cart-line-name">${nameLabel}</div>
+          <div class="cart-line-name">${nameLabel}${modifiersLabel}</div>
           <div class="cart-line-total"><span class="num">${lineTotal}</span></div>
           <div class="cart-line-controls">
             ${qtyControlsHtml}
@@ -10054,13 +10328,13 @@ function renderCart() {
       const contentEl = row.querySelector('.cart-line-content');
       const bgEl = row.querySelector('.cart-line-swipe-bg');
       if (line.isWeighted) {
-        contentEl.querySelector('[data-action="editWeight"]').addEventListener('click', () => openWeightPicker(line.product, line.quantity));
+        contentEl.querySelector('[data-action="editWeight"]').addEventListener('click', () => openWeightPicker(line.product, line.quantity, line.modifiers?.length ? { list: line.modifiers, delta: line.modifiers.reduce((s, m) => s + Number(m.price_delta), 0) } : null, line.modifiersKey));
       } else {
-        contentEl.querySelector('[data-action="inc"]').addEventListener('click', () => changeQty(line.product.id, line.productUnitId, 1));
-        contentEl.querySelector('[data-action="dec"]').addEventListener('click', () => changeQty(line.product.id, line.productUnitId, -1));
+        contentEl.querySelector('[data-action="inc"]').addEventListener('click', () => changeQty(line.product.id, line.productUnitId, 1, line.modifiersKey));
+        contentEl.querySelector('[data-action="dec"]').addEventListener('click', () => changeQty(line.product.id, line.productUnitId, -1, line.modifiersKey));
       }
-      contentEl.querySelector('[data-action="remove"]').addEventListener('click', () => removeLine(line.product.id, line.productUnitId));
-      attachSwipeToDelete(contentEl, bgEl, () => removeLine(line.product.id, line.productUnitId));
+      contentEl.querySelector('[data-action="remove"]').addEventListener('click', () => removeLine(line.product.id, line.productUnitId, line.modifiersKey));
+      attachSwipeToDelete(contentEl, bgEl, () => removeLine(line.product.id, line.productUnitId, line.modifiersKey));
       posEls.cartItems.appendChild(row);
     });
   }
@@ -10177,6 +10451,7 @@ async function performOnlineCheckout(ctx) {
   const saleItems = cart.map(l => ({
     sale_id: sale.id, product_id: l.product.id, product_unit_id: l.productUnitId || null, quantity: l.quantity,
     unit_price: l.unitPrice, discount: 0, total: l.quantity * l.unitPrice, warehouse_id: saleWarehouseId,
+    selected_modifiers: l.modifiers || [],
   }));
   // ملحوظة: حركة المخزون بقت تلقائية عبر تريجر trg_sale_item_stock_effect
   // على مستوى قاعدة البيانات (بيحوّل الكمية للوحدة الأساسية بنفسه)،
@@ -10221,6 +10496,7 @@ async function performOnlineCheckout(ctx) {
       quantity: l.quantity, unitPrice: l.unitPrice,
       originalPrice: l.basePrice,
       code: (l.product.product_barcodes && l.product.product_barcodes[0]?.barcode) || '',
+      modifiersNames: (l.modifiers || []).map(m => m.option_name),
     })),
     subtotal, discount, tax, total, paidAmount, remaining, paymentMethod, paymentLines,
   };
@@ -10238,7 +10514,7 @@ async function queueOfflineSale(ctx) {
   const items = cart.map(l => ({
     product_id: l.product.id, product_unit_id: l.productUnitId || null, quantity: l.quantity,
     unit_price: l.unitPrice, total: l.quantity * l.unitPrice, warehouse_id: saleWarehouseId,
-    product_name: l.product.name, factor: l.factor || 1,
+    product_name: l.product.name, factor: l.factor || 1, selected_modifiers: l.modifiers || [],
   }));
 
   // خصم متفائل من نسخة المخزون المحفوظة محليًا (ممكن يعدّي بالسالب مؤقتًا لحد ما يحصل تزامن حقيقي)
@@ -10285,6 +10561,7 @@ async function queueOfflineSale(ctx) {
       quantity: l.quantity, unitPrice: l.unitPrice,
       originalPrice: l.basePrice,
       code: (l.product.product_barcodes && l.product.product_barcodes[0]?.barcode) || '',
+      modifiersNames: (l.modifiers || []).map(m => m.option_name),
     })),
     subtotal, discount, tax, total, paidAmount, remaining, paymentMethod, paymentLines,
   };
@@ -10498,12 +10775,15 @@ function buildReceiptHtml(sale, dateStr) {
     const priceRow = printSettings.print_unit_price
       ? `<div class="r-item-meta"><span>${l.quantity} × ${l.unitPrice.toFixed(2)}</span><span>${(l.quantity * l.unitPrice).toFixed(2)}</span></div>`
       : `<div class="r-item-meta"><span>الكمية: ${l.quantity}</span><span>${(l.quantity * l.unitPrice).toFixed(2)}</span></div>`;
+    const modifiersRow = (l.modifiersNames && l.modifiersNames.length > 0)
+      ? `<div class="r-item-meta" style="color:#666; font-size:11px;"><span>${l.modifiersNames.map(escapeHtml).join('، ')}</span></div>` : '';
     return `
     <div class="r-item-row">
       <div class="r-item-name">${escapeHtml(l.name)}</div>
       ${codeRow}
       ${originalRow}
       ${priceRow}
+      ${modifiersRow}
     </div>`;
   }).join('');
 
@@ -11135,6 +11415,7 @@ const PRODUCTS_PAGE_SIZE = 25;
 let boCategories = [];
 let currentBarcodes = []; // الباركود المرتبط بالصنف المفتوح حاليًا في المودال
 let currentUnits = []; // وحدات البيع الإضافية المرتبطة بالصنف المفتوح حاليًا في المودال
+let currentProductModifierGroupIds = []; // مجموعات الإضافات المرتبطة بالصنف المفتوح حاليًا في المودال
 
 async function enterBackoffice() {
   showView('backoffice');
@@ -11157,7 +11438,7 @@ async function enterBackoffice() {
     loadBoPromotions(), loadBoCoupons(), loadLoyaltySettings(),
     loadTaxInclusiveSetting(), loadCompanyInfoGlobal(), loadBranchSettings(),
     loadPrintSettings(), loadDebtReminderSettings(),
-    loadBoBusinessTypes(), loadBoPosDevices()
+    loadBoBusinessTypes(), loadBoPosDevices(), loadBoModifierGroups(), loadBoProductModifierLinks()
   ]);
   renderProductsTable();
   renderCategoriesTable();
@@ -11168,6 +11449,7 @@ async function enterBackoffice() {
   renderBranchesTable();
   renderBusinessTypesTable();
   renderPosDevicesTable();
+  renderModifierGroupsTable();
   renderEmployeesTable();
   renderExpenseItemsTable();
   renderUnitTypesTable();
@@ -11197,10 +11479,10 @@ async function enterBackoffice() {
 const boAllSections = ['dashboard','products','categories','unit-types','tax-rates','quick-discounts','customer-types',
   'sales-list','sale-orders','customers','suppliers','payments','purchase-orders','purchases','purchase-returns','sale-returns',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
-  'soon','company-info','permissions','users','branches','business-types','pos-devices','branch-settings','print-settings','stock','backup','reset-data','employees','expense-items','expenses','salaries','treasuries','capital','fixed-assets','promotions','coupons'];
+  'soon','company-info','permissions','users','branches','business-types','pos-devices','branch-settings','print-settings','stock','backup','reset-data','employees','expense-items','expenses','salaries','treasuries','capital','fixed-assets','promotions','coupons','modifier-groups'];
 
 const boNavGroups = [
-  { toggle: 'stockNavToggle', group: 'stockNavGroup', sections: ['products','categories','unit-types','tax-rates','quick-discounts','stock'] },
+  { toggle: 'stockNavToggle', group: 'stockNavGroup', sections: ['products','categories','unit-types','tax-rates','quick-discounts','modifier-groups','stock'] },
   { toggle: 'marketingNavToggle', group: 'marketingNavGroup', sections: ['promotions','coupons'] },
   { toggle: 'salesNavToggle', group: 'salesNavGroup', sections: ['sales-list','sale-orders','customers','customer-types','sale-returns'] },
   { toggle: 'purchasesNavToggle', group: 'purchasesNavGroup', sections: ['suppliers','purchase-orders','purchases','purchase-returns'] },
@@ -11215,6 +11497,7 @@ const SECTION_PERMISSION_MAP = {
   'dashboard': 'dashboard',
   'products': 'stock_management', 'categories': 'stock_management', 'unit-types': 'stock_management',
   'tax-rates': 'stock_management', 'quick-discounts': 'stock_management', 'stock': 'stock_management',
+  'modifier-groups': 'stock_management',
   'promotions': 'admin', 'coupons': 'admin',
   'sales-list': 'sales_management', 'sale-orders': 'sales_management', 'customers': 'sales_management', 'customer-types': 'sales_management', 'sale-returns': 'sales_management',
   'suppliers': 'purchases_management', 'purchase-orders': 'purchases_management', 'purchases': 'purchases_management', 'purchase-returns': 'purchases_management',
@@ -11290,6 +11573,7 @@ const REPORT_TABS = {
 const SCREEN_LABELS = {
   'products': 'الأصناف', 'categories': 'مجموعات الأصناف', 'unit-types': 'نوع الوحدة',
   'tax-rates': 'الضريبة', 'quick-discounts': 'الخصومات', 'stock': 'المخازن ونقل البضاعة',
+  'modifier-groups': 'الإضافات والتعديلات',
   'promotions': 'العروض', 'coupons': 'الكوبونات',
   'sales-list': 'فواتير البيع', 'customers': 'العملاء', 'customer-types': 'أنواع العملاء', 'sale-returns': 'مرتجعات البيع',
   'suppliers': 'الموردون', 'purchases': 'فواتير الشراء', 'purchase-returns': 'مرتجعات الشراء',
@@ -11414,6 +11698,7 @@ const ACTION_CAPABLE_SCREENS = {
   'customer-types': { add: true, edit: true },
   'tax-rates': { add: true, edit: true },
   'quick-discounts': { add: true, edit: true },
+  'modifier-groups': { add: true, edit: true },
   'promotions': { add: true, edit: true, delete: true },
   'coupons': { add: true, edit: true, delete: true },
   'stock': { add: true, edit: true, delete: true },
@@ -11440,6 +11725,7 @@ const ACTION_LABELS = { add: 'إضافة', edit: 'تعديل', delete: 'حذف' 
 const ADD_BUTTON_MAP = {
   'products': 'addProductBtn', 'categories': 'addCategoryBtn', 'unit-types': 'addUnitTypeBtn',
   'customer-types': 'addCustomerTypeBtn', 'tax-rates': 'addTaxRateBtn', 'quick-discounts': 'addQuickDiscountBtn',
+  'modifier-groups': 'addModifierGroupBtn',
   'promotions': 'addPromotionBtn', 'coupons': 'addCouponBtn',
   'stock': 'addWarehouseBtn', 'customers': 'addCustomerBtn', 'suppliers': 'addSupplierBtn',
   'treasuries': 'addTreasuryBtn', 'expense-items': 'addExpenseItemBtn', 'expenses': 'addExpenseBtn',
@@ -12973,6 +13259,32 @@ function bindBackofficeEvents() {
   });
   document.getElementById('posDeviceForm').addEventListener('submit', savePosDevice);
 
+  // ---- Modifier groups (الإضافات والتعديلات) ----
+  document.getElementById('addModifierGroupBtn').addEventListener('click', () => openModifierGroupModal(null));
+  document.getElementById('cancelModifierGroupBtn').addEventListener('click', closeModifierGroupModal);
+  document.getElementById('modifierGroupModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'modifierGroupModalOverlay') closeModifierGroupModal();
+  });
+  document.getElementById('modifierGroupForm').addEventListener('submit', saveModifierGroup);
+
+  document.getElementById('closeModifierOptionsListBtn').addEventListener('click', closeModifierOptionsListModal);
+  document.getElementById('modifierOptionsListModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'modifierOptionsListModalOverlay') closeModifierOptionsListModal();
+  });
+  document.getElementById('addModifierOptionBtn').addEventListener('click', () => openModifierOptionFormModal(currentModifierGroup, null));
+
+  document.getElementById('cancelModifierOptionFormBtn').addEventListener('click', closeModifierOptionFormModal);
+  document.getElementById('modifierOptionFormModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'modifierOptionFormModalOverlay') closeModifierOptionFormModal();
+  });
+  document.getElementById('modifierOptionForm').addEventListener('submit', saveModifierOption);
+
+  document.getElementById('cancelProductModifierLinkBtn').addEventListener('click', closeProductModifierLinkModal);
+  document.getElementById('productModifierLinkModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'productModifierLinkModalOverlay') closeProductModifierLinkModal();
+  });
+  document.getElementById('saveProductModifierLinkBtn').addEventListener('click', saveProductModifierLink);
+
   // ---- Tax rates ----
   document.getElementById('addTaxRateBtn').addEventListener('click', () => openTaxRateModal(null));
   document.getElementById('cancelTaxRateBtn').addEventListener('click', closeTaxRateModal);
@@ -13517,13 +13829,14 @@ function renderProductsTable() {
       <td class="num cost-guard-cell">${Number(p.cost_price).toFixed(2)}</td>
       <td style="font-size:11.5px; color:var(--ink-soft);">${escapeHtml(barcodesText)}</td>
       <td>
-        <button class="bo-icon-btn" data-action="variants">${variantsCount > 0 ? `${variantsCount} متغير` : 'إضافة متغيرات'}</button>
+        <button class="bo-icon-btn" data-action="variants">${variantsCount > 0 ? `⚙ إدارة المتغيرات (${variantsCount})` : '⚙ إضافة متغيرات'}</button>
       </td>
       <td><span class="bo-badge ${p.is_active ? 'active' : 'inactive'}">${p.is_active ? 'مفعّل' : 'موقّف'}</span></td>
       <td>
         <div class="bo-row-actions">
           <button class="bo-icon-btn" data-action="edit">تعديل</button>
           <button class="bo-icon-btn" data-action="barcode">طباعة باركود</button>
+          <button class="bo-icon-btn" data-action="modifiers">⚙ ربط الإضافات</button>
           <button class="bo-icon-btn danger" data-action="toggle">${p.is_active ? 'إيقاف' : 'تفعيل'}</button>
         </div>
       </td>`;
@@ -13531,6 +13844,7 @@ function renderProductsTable() {
     tr.querySelector('[data-action="barcode"]').addEventListener('click', () => openBarcodeLabelModal(p));
     tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleProductActive(p));
     tr.querySelector('[data-action="variants"]').addEventListener('click', () => openVariantsListModal(p));
+    tr.querySelector('[data-action="modifiers"]').addEventListener('click', () => openProductModifierLinkModal(p));
     applyRowActionPerm(tr, 'products');
     tbody.appendChild(tr);
   });
@@ -13547,6 +13861,9 @@ function openProductModal(product) {
   currentUnits = product ? (product.product_units || []).map(u => ({
     id: u.id, unit_type_id: u.unit_type_id, factor_to_base: u.factor_to_base, sale_price: u.sale_price, is_active: u.is_active,
   })) : [];
+  currentProductModifierGroupIds = product
+    ? boProductModifierLinks.filter(l => l.product_id === product.id).map(l => l.group_id)
+    : [];
   document.getElementById('productModalTitle').textContent = product ? 'تعديل صنف' : 'صنف جديد';
   document.getElementById('productId').value = product ? product.id : '';
   document.getElementById('productName').value = product ? product.name : '';
@@ -13566,7 +13883,35 @@ function openProductModal(product) {
   document.getElementById('addUnitRowBtn').style.display = product ? '' : 'none';
   document.getElementById('unitsHint').style.display = product ? 'none' : '';
   renderUnitsList();
+  renderProductModifierGroupsCheckboxes();
   document.getElementById('productModalOverlay').classList.add('show');
+}
+
+function renderProductModifierGroupsCheckboxes() {
+  const wrap = document.getElementById('productModifierGroupsList');
+  const emptyHint = document.getElementById('productModifierGroupsEmptyHint');
+  const activeGroups = boModifierGroups.filter(g => g.is_active);
+  if (activeGroups.length === 0) {
+    wrap.innerHTML = '';
+    emptyHint.style.display = '';
+    return;
+  }
+  emptyHint.style.display = 'none';
+  wrap.innerHTML = activeGroups.map(g => `
+    <label style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--border); border-radius:8px; cursor:pointer;">
+      <input type="checkbox" data-group-id="${g.id}" ${currentProductModifierGroupIds.includes(g.id) ? 'checked' : ''} style="width:auto;">
+      <span>${escapeHtml(g.name)} <span style="color:var(--ink-soft); font-size:11.5px;">(${(g.modifier_options || []).length} خيار${g.is_required ? ' — إجباري' : ''})</span></span>
+    </label>`).join('');
+  wrap.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener('change', (e) => {
+      const gid = e.target.dataset.groupId;
+      if (e.target.checked) {
+        if (!currentProductModifierGroupIds.includes(gid)) currentProductModifierGroupIds.push(gid);
+      } else {
+        currentProductModifierGroupIds = currentProductModifierGroupIds.filter(id => id !== gid);
+      }
+    });
+  });
 }
 
 function renderUnitsList() {
@@ -13886,6 +14231,21 @@ async function saveProduct(e) {
         }
       }
     }
+
+    // مزامنة مجموعات الإضافات المرتبطة بالصنف
+    const { data: existingLinks } = await supabaseClient
+      .from('product_modifier_groups').select('id, group_id').eq('product_id', productId);
+    const existingGroupIds = (existingLinks || []).map(l => l.group_id);
+    const toRemoveLinks = (existingLinks || []).filter(l => !currentProductModifierGroupIds.includes(l.group_id)).map(l => l.id);
+    const toAddLinks = currentProductModifierGroupIds.filter(gid => !existingGroupIds.includes(gid)).map(gid => ({ product_id: productId, group_id: gid }));
+    if (toRemoveLinks.length > 0) {
+      await supabaseClient.from('product_modifier_groups').delete().in('id', toRemoveLinks);
+    }
+    if (toAddLinks.length > 0) {
+      const { error: linkErr } = await supabaseClient.from('product_modifier_groups').insert(toAddLinks);
+      if (linkErr) throw linkErr;
+    }
+    await loadBoProductModifierLinks();
 
     showToast(id ? 'تم تحديث الصنف بنجاح' : 'تمت إضافة الصنف بنجاح');
     closeProductModal();
@@ -16037,6 +16397,288 @@ async function deletePosDevice(item) {
   showToast('تم حذف الجهاز');
   await loadBoPosDevices();
   renderPosDevicesTable();
+}
+
+// ---- الإضافات والتعديلات (modifier_groups / modifier_options) ----
+let boModifierGroups = [];
+let boProductModifierLinks = []; // [{id, product_id, group_id}]
+let currentModifierGroup = null; // المجموعة المفتوحة حاليًا في مودال الخيارات
+let currentModifierLinkProduct = null; // الصنف المفتوح حاليًا في مودال ربط الإضافات
+
+async function loadBoModifierGroups() {
+  const { data, error } = await supabaseClient
+    .from('modifier_groups').select('*, modifier_options(*)').order('name');
+  if (error) { console.error(error); showToast('تعذر تحميل مجموعات الإضافات', true); return; }
+  boModifierGroups = (data || []).map(g => ({
+    ...g, modifier_options: (g.modifier_options || []).sort((a, b) => a.sort_order - b.sort_order)
+  }));
+}
+
+async function loadBoProductModifierLinks() {
+  const { data, error } = await supabaseClient.from('product_modifier_groups').select('*');
+  if (error) { console.error(error); return; }
+  boProductModifierLinks = data || [];
+}
+
+function renderModifierGroupsTable() {
+  const tbody = document.getElementById('modifierGroupsTableBody');
+  if (!tbody) return;
+  if (boModifierGroups.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">لا توجد مجموعات إضافات مضافة حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boModifierGroups.forEach(g => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(g.name)}</td>
+      <td>${g.selection_type === 'multiple' ? 'أكتر من اختيار' : 'اختيار واحد'}</td>
+      <td>${g.is_required ? 'نعم' : 'لا'}</td>
+      <td>
+        <button class="bo-icon-btn" data-action="options">⚙ إدارة الخيارات (${(g.modifier_options || []).length})</button>
+      </td>
+      <td><span class="bo-badge ${g.is_active ? 'active' : 'inactive'}">${g.is_active ? 'مفعّل' : 'موقّف'}</span></td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="toggle">${g.is_active ? 'إيقاف' : 'تفعيل'}</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openModifierGroupModal(g));
+    tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleModifierGroupActive(g));
+    tr.querySelector('[data-action="options"]').addEventListener('click', () => openModifierOptionsListModal(g));
+    applyRowActionPerm(tr, 'modifier-groups');
+    tbody.appendChild(tr);
+  });
+}
+
+function openModifierGroupModal(item) {
+  document.getElementById('modifierGroupModalTitle').textContent = item ? 'تعديل مجموعة' : 'مجموعة جديدة';
+  document.getElementById('modifierGroupId').value = item ? item.id : '';
+  document.getElementById('modifierGroupName').value = item ? item.name : '';
+  document.getElementById('modifierGroupSelectionType').value = item ? item.selection_type : 'single';
+  document.getElementById('modifierGroupRequired').checked = item ? !!item.is_required : false;
+  document.getElementById('modifierGroupActive').checked = item ? item.is_active : true;
+  document.getElementById('modifierGroupModalError').classList.remove('show');
+  document.getElementById('modifierGroupModalOverlay').classList.add('show');
+}
+
+function closeModifierGroupModal() {
+  document.getElementById('modifierGroupModalOverlay').classList.remove('show');
+}
+
+async function saveModifierGroup(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('modifierGroupModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveModifierGroupBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('modifierGroupId').value || null;
+  const payload = {
+    name: document.getElementById('modifierGroupName').value.trim(),
+    selection_type: document.getElementById('modifierGroupSelectionType').value,
+    is_required: document.getElementById('modifierGroupRequired').checked,
+    is_active: document.getElementById('modifierGroupActive').checked,
+  };
+
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('modifier_groups').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('modifier_groups').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث المجموعة' : 'تمت إضافة المجموعة بنجاح');
+    closeModifierGroupModal();
+    await loadBoModifierGroups();
+    renderModifierGroupsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function toggleModifierGroupActive(item) {
+  const { error } = await supabaseClient.from('modifier_groups').update({ is_active: !item.is_active }).eq('id', item.id);
+  if (error) { console.error(error); showToast('تعذر تحديث حالة المجموعة', true); return; }
+  await loadBoModifierGroups();
+  renderModifierGroupsTable();
+}
+
+// ---- خيارات مجموعة إضافات ----
+function openModifierOptionsListModal(group) {
+  currentModifierGroup = group;
+  document.getElementById('modifierOptionsGroupName').textContent = group.name;
+  renderModifierOptionsTable();
+  document.getElementById('modifierOptionsListModalOverlay').classList.add('show');
+}
+
+function closeModifierOptionsListModal() {
+  document.getElementById('modifierOptionsListModalOverlay').classList.remove('show');
+  currentModifierGroup = null;
+  renderModifierGroupsTable();
+}
+
+function renderModifierOptionsTable() {
+  const tbody = document.getElementById('modifierOptionsTableBody');
+  if (!currentModifierGroup) return;
+  const options = currentModifierGroup.modifier_options || [];
+  if (options.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">لا توجد خيارات مضافة حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  options.forEach(o => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(o.name)}</td>
+      <td class="num">${Number(o.price_delta).toFixed(2)}</td>
+      <td>${o.is_default ? 'نعم' : '—'}</td>
+      <td><span class="bo-badge ${o.is_active ? 'active' : 'inactive'}">${o.is_active ? 'مفعّل' : 'موقّف'}</span></td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openModifierOptionFormModal(currentModifierGroup, o));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteModifierOption(o));
+    tbody.appendChild(tr);
+  });
+}
+
+function openModifierOptionFormModal(group, option) {
+  document.getElementById('modifierOptionFormModalTitle').textContent = option ? 'تعديل خيار' : 'خيار جديد';
+  document.getElementById('modifierOptionId').value = option ? option.id : '';
+  document.getElementById('modifierOptionGroupId').value = group.id;
+  document.getElementById('modifierOptionName').value = option ? option.name : '';
+  document.getElementById('modifierOptionPriceDelta').value = option ? option.price_delta : 0;
+  document.getElementById('modifierOptionDefault').checked = option ? !!option.is_default : false;
+  document.getElementById('modifierOptionActive').checked = option ? option.is_active : true;
+  document.getElementById('modifierOptionFormModalError').classList.remove('show');
+  document.getElementById('modifierOptionFormModalOverlay').classList.add('show');
+}
+
+function closeModifierOptionFormModal() {
+  document.getElementById('modifierOptionFormModalOverlay').classList.remove('show');
+}
+
+async function saveModifierOption(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('modifierOptionFormModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveModifierOptionBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('modifierOptionId').value || null;
+  const groupId = document.getElementById('modifierOptionGroupId').value;
+  const payload = {
+    group_id: groupId,
+    name: document.getElementById('modifierOptionName').value.trim(),
+    price_delta: Number(document.getElementById('modifierOptionPriceDelta').value) || 0,
+    is_default: document.getElementById('modifierOptionDefault').checked,
+    is_active: document.getElementById('modifierOptionActive').checked,
+  };
+
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('modifier_options').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('modifier_options').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث الخيار' : 'تمت إضافة الخيار بنجاح');
+    closeModifierOptionFormModal();
+    await loadBoModifierGroups();
+    currentModifierGroup = boModifierGroups.find(g => g.id === groupId);
+    renderModifierOptionsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function deleteModifierOption(item) {
+  if (!confirm(`هل أنت متأكد من حذف "${item.name}"؟`)) return;
+  const { error } = await supabaseClient.from('modifier_options').delete().eq('id', item.id);
+  if (error) { console.error(error); showToast('تعذر حذف الخيار', true); return; }
+  showToast('تم حذف الخيار');
+  const groupId = currentModifierGroup?.id;
+  await loadBoModifierGroups();
+  currentModifierGroup = boModifierGroups.find(g => g.id === groupId) || currentModifierGroup;
+  renderModifierOptionsTable();
+}
+
+// ---- ربط مجموعات الإضافات بصنف معين ----
+function openProductModifierLinkModal(product) {
+  currentModifierLinkProduct = product;
+  document.getElementById('productModifierLinkProductName').textContent = product.name;
+  const wrap = document.getElementById('productModifierLinkList');
+  const linkedGroupIds = boProductModifierLinks.filter(l => l.product_id === product.id).map(l => l.group_id);
+  const activeGroups = boModifierGroups.filter(g => g.is_active);
+  if (activeGroups.length === 0) {
+    wrap.innerHTML = `<div class="bo-empty">لا توجد مجموعات إضافات مفعّلة — أنشئ مجموعة أولاً من شاشة "الإضافات والتعديلات"</div>`;
+  } else {
+    wrap.innerHTML = activeGroups.map(g => `
+      <label style="display:flex; align-items:center; gap:8px; padding:8px 10px; border:1px solid var(--border); border-radius:8px; cursor:pointer;">
+        <input type="checkbox" data-group-id="${g.id}" ${linkedGroupIds.includes(g.id) ? 'checked' : ''} style="width:auto;">
+        <span>${escapeHtml(g.name)} <span style="color:var(--ink-soft); font-size:11.5px;">(${(g.modifier_options || []).length} خيار)</span></span>
+      </label>`).join('');
+  }
+  document.getElementById('productModifierLinkModalOverlay').classList.add('show');
+}
+
+function closeProductModifierLinkModal() {
+  document.getElementById('productModifierLinkModalOverlay').classList.remove('show');
+  currentModifierLinkProduct = null;
+}
+
+async function saveProductModifierLink() {
+  if (!currentModifierLinkProduct) return;
+  const saveBtn = document.getElementById('saveProductModifierLinkBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+  try {
+    const checkedIds = Array.from(document.querySelectorAll('#productModifierLinkList input[type="checkbox"]:checked')).map(el => el.dataset.groupId);
+    const productId = currentModifierLinkProduct.id;
+
+    const { data: existing } = await supabaseClient.from('product_modifier_groups').select('id, group_id').eq('product_id', productId);
+    const existingGroupIds = (existing || []).map(r => r.group_id);
+
+    const toRemove = (existing || []).filter(r => !checkedIds.includes(r.group_id)).map(r => r.id);
+    const toAdd = checkedIds.filter(gid => !existingGroupIds.includes(gid)).map(gid => ({ product_id: productId, group_id: gid }));
+
+    if (toRemove.length > 0) {
+      await supabaseClient.from('product_modifier_groups').delete().in('id', toRemove);
+    }
+    if (toAdd.length > 0) {
+      const { error } = await supabaseClient.from('product_modifier_groups').insert(toAdd);
+      if (error) throw error;
+    }
+
+    showToast('تم حفظ ربط الإضافات بالصنف');
+    await loadBoProductModifierLinks();
+    closeProductModifierLinkModal();
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر حفظ ربط الإضافات', true);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
 }
 
 // ---- الصلاحية الأمنية (الأدوار والصلاحيات) ----
