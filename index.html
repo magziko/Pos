@@ -1239,6 +1239,8 @@ a { color: inherit; }
             <button class="bo-nav-sub-item" data-section="permissions">الصلاحية الأمنية</button>
             <button class="bo-nav-sub-item" data-section="users">إدارة المستخدمين</button>
             <button class="bo-nav-sub-item" data-section="branches">الفروع</button>
+            <button class="bo-nav-sub-item" data-section="business-types">أنواع الأنشطة التجارية</button>
+            <button class="bo-nav-sub-item" data-section="pos-devices">أجهزة نقاط البيع</button>
             <button class="bo-nav-sub-item" data-section="branch-settings">إعدادات الفرع</button>
             <button class="bo-nav-sub-item" data-section="print-settings">إعدادات الطباعة</button>
             <button class="bo-nav-sub-item" data-section="backup">نسخة احتياطية</button>
@@ -1412,12 +1414,13 @@ a { color: inherit; }
                   <th>سعر البيع</th>
                   <th class="cost-guard-cell">سعر الشراء</th>
                   <th>الباركود</th>
+                  <th>المتغيرات</th>
                   <th>الحالة</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody id="productsTableBody">
-                <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
+                <tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
@@ -4627,6 +4630,60 @@ a { color: inherit; }
           </div>
         </div>
 
+        <!-- قسم أنواع الأنشطة التجارية -->
+        <div id="bo-section-business-types" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">أنواع الأنشطة التجارية</div>
+            <button class="bo-add-btn" id="addBusinessTypeBtn">+ نوع نشاط جديد</button>
+          </div>
+          <div style="color:var(--ink-soft); font-size:13px; margin-bottom:14px;">
+            كل فرع مربوط بنوع نشاط تجاري (ماركت، جزارة، أحذية، مخازن...) بيحدد طريقة البيع الافتراضية للأصناف — بالوزن، بالمتغيرات (مقاس/لون)، أو بالقطعة العادية.
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>الاسم</th>
+                  <th>الكود</th>
+                  <th>بيع بالوزن</th>
+                  <th>يستخدم متغيرات</th>
+                  <th>الحالة</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="businessTypesTableBody">
+                <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم أجهزة نقاط البيع -->
+        <div id="bo-section-pos-devices" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">أجهزة نقاط البيع (الكاشير)</div>
+            <button class="bo-add-btn" id="addPosDeviceBtn">+ جهاز جديد</button>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>اسم الجهاز</th>
+                  <th>الفرع</th>
+                  <th>كود الجهاز</th>
+                  <th>الموقع</th>
+                  <th>آخر ظهور</th>
+                  <th>الحالة</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="posDevicesTableBody">
+                <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- قسم المخازن ونقل البضاعة -->
         <div id="bo-section-stock" style="display:none;">
           <div class="bo-section-header">
@@ -6009,6 +6066,62 @@ a { color: inherit; }
   </div>
 </div>
 
+<!-- Modal: إضافة / تعديل نوع نشاط تجاري -->
+<div class="modal-overlay" id="businessTypeModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="businessTypeModalTitle">نوع نشاط جديد</div>
+    <form id="businessTypeForm">
+      <input type="hidden" id="businessTypeId">
+      <div class="field field-full"><label>اسم النشاط</label><input type="text" id="businessTypeName" required placeholder="مثال: محل أدوات كهربائية"></div>
+      <div class="field field-full"><label>الكود (بالإنجليزي، بدون مسافات)</label><input type="text" id="businessTypeCode" required placeholder="مثال: electronics"></div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="businessTypeUsesWeight" style="width:auto;"> البيع بالوزن افتراضيًا (زي الجزارة)
+        </label>
+      </div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="businessTypeUsesVariants" style="width:auto;"> يستخدم متغيرات للصنف (مقاس/لون) زي الأحذية
+        </label>
+      </div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="businessTypeActive" checked style="width:auto;"> مفعّل
+        </label>
+      </div>
+      <div class="error-msg" id="businessTypeModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelBusinessTypeBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveBusinessTypeBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: إضافة / تعديل جهاز نقطة بيع -->
+<div class="modal-overlay" id="posDeviceModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="posDeviceModalTitle">جهاز جديد</div>
+    <form id="posDeviceForm">
+      <input type="hidden" id="posDeviceId">
+      <div class="field field-full"><label>اسم الجهاز</label><input type="text" id="posDeviceName" required placeholder="مثال: كاشير 1 - الفرع الرئيسي"></div>
+      <div class="field field-full"><label>الفرع</label><select id="posDeviceBranch" required></select></div>
+      <div class="field field-full"><label>كود الجهاز (اختياري)</label><input type="text" id="posDeviceCode" placeholder="مثال: POS-001"></div>
+      <div class="field field-full"><label>الموقع داخل الفرع (اختياري)</label><input type="text" id="posDeviceLocation" placeholder="مثال: كاونتر الدخول"></div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="posDeviceActive" checked style="width:auto;"> مفعّل
+        </label>
+      </div>
+      <div class="error-msg" id="posDeviceModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelPosDeviceBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="savePosDeviceBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Modal: إضافة / تعديل نوع عميل -->
 <div class="modal-overlay" id="customerTypeModalOverlay">
   <div class="modal-box">
@@ -6487,6 +6600,69 @@ a { color: inherit; }
   </div>
 </div>
 
+<!-- Modal: قائمة متغيرات الصنف -->
+<div class="modal-overlay" id="variantsListModalOverlay">
+  <div class="modal-box" style="max-width:640px;">
+    <div class="modal-title">متغيرات صنف — <span id="variantsListProductName"></span></div>
+    <div style="color:var(--ink-soft); font-size:13px; margin-bottom:12px;">
+      كل متغير (مقاس/لون/موديل...) بيتعامل كصنف مستقل له باركود ورصيد مخزون خاص به، لكنه مرتبط بالصنف الأساسي.
+    </div>
+    <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+      <button type="button" class="bo-add-btn" id="addVariantBtn">+ متغير جديد</button>
+    </div>
+    <div class="bo-table-wrap">
+      <table class="bo-table">
+        <thead>
+          <tr>
+            <th>المتغير</th>
+            <th>سعر البيع</th>
+            <th>الباركود</th>
+            <th>الحالة</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="variantsListTableBody">
+          <tr><td colspan="5" class="bo-empty">لا توجد متغيرات مضافة حتى الآن</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="closeVariantsListBtn">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: إضافة / تعديل متغير -->
+<div class="modal-overlay" id="variantFormModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="variantFormModalTitle">متغير جديد</div>
+    <form id="variantForm">
+      <input type="hidden" id="variantId">
+      <input type="hidden" id="variantParentId">
+      <div class="field-full">
+        <label>خصائص المتغير</label>
+        <div id="variantAttributesList"></div>
+        <button type="button" class="bo-outline-btn" id="addVariantAttrRowBtn" style="margin-top:6px;">+ إضافة خاصية</button>
+      </div>
+      <div class="modal-grid">
+        <div class="field"><label>سعر البيع</label><input type="number" id="variantSalePrice" step="0.01" min="0" required></div>
+        <div class="field"><label>سعر الشراء</label><input type="number" id="variantCostPrice" step="0.01" min="0" value="0"></div>
+        <div class="field field-full"><label>الباركود (اختياري)</label><input type="text" id="variantBarcode" placeholder="اتركه فارغًا للتوليد لاحقًا"></div>
+      </div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="variantActive" checked style="width:auto;"> مفعّل
+        </label>
+      </div>
+      <div class="error-msg" id="variantFormModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelVariantFormBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveVariantBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <div class="unit-picker-overlay" id="unitPickerOverlay">
@@ -6494,6 +6670,14 @@ a { color: inherit; }
     <div class="unit-picker-title" id="unitPickerTitle">اختر الوحدة</div>
     <div id="unitPickerOptions"></div>
     <button type="button" class="unit-picker-cancel" id="unitPickerCancelBtn">إلغاء</button>
+  </div>
+</div>
+
+<div class="unit-picker-overlay" id="variantPickerOverlay">
+  <div class="unit-picker-box">
+    <div class="unit-picker-title" id="variantPickerTitle">اختر المتغير</div>
+    <div id="variantPickerOptions"></div>
+    <button type="button" class="unit-picker-cancel" id="variantPickerCancelBtn">إلغاء</button>
   </div>
 </div>
 
@@ -8469,6 +8653,11 @@ function bindPosEvents() {
     if (e.target.id === 'unitPickerOverlay') closeUnitPicker();
   });
 
+  document.getElementById('variantPickerCancelBtn').addEventListener('click', closeVariantPicker);
+  document.getElementById('variantPickerOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'variantPickerOverlay') closeVariantPicker();
+  });
+
   document.getElementById('weightPickerCancelBtn').addEventListener('click', closeWeightPicker);
   document.getElementById('weightPickerConfirmBtn').addEventListener('click', confirmWeightPicker);
   document.getElementById('weightModeByWeightBtn').addEventListener('click', () => setWeightPickerMode('weight'));
@@ -8601,7 +8790,7 @@ async function loadProducts() {
     if (!sessionUsable()) throw new Error('offline');
     const { data, error } = await supabaseClient
       .from('products')
-      .select('id, name, category_id, sale_price, unit_type, sell_by, image_url, tax_rate_id, tax_rates(rate), product_barcodes(barcode), product_units(id, unit_type_id, factor_to_base, sale_price, is_active, unit_types(name))')
+      .select('id, name, category_id, sale_price, unit_type, sell_by, image_url, tax_rate_id, parent_product_id, variant_attributes, tax_rates(rate), product_barcodes(barcode), product_units(id, unit_type_id, factor_to_base, sale_price, is_active, unit_types(name))')
       .eq('is_active', true).order('name');
     if (error) throw error;
     allProducts = data || [];
@@ -8817,7 +9006,10 @@ function makeCatChip(label, id) {
 
 function renderProducts() {
   const q = posEls.searchInput.value.trim().toLowerCase();
+  // شاشة الكاشير بتعرض الأصناف الأساسية بس؛ المتغيرات (مقاس/لون) بتتعرض
+  // في نافذة اختيار بعد الضغط على الصنف، مش كصنف مستقل في الشبكة
   const filtered = allProducts.filter(p => {
+    if (p.parent_product_id) return false;
     const matchesCat = activeCategory === 'all' || p.category_id === activeCategory;
     if (!matchesCat) return false;
     if (!q) return true;
@@ -8831,14 +9023,26 @@ function renderProducts() {
     const card = document.createElement('button');
     card.className = 'product-card';
     const stock = availableStock(p.id);
+    const variants = allProducts.filter(v => v.parent_product_id === p.id);
+    const hasVariants = variants.length > 0;
     const stockLabel = stock <= 0
       ? `<span style="color:var(--danger);">لا يوجد رصيد</span>`
       : `<span style="color:var(--ink-soft);">متاح: <span class="num">${stock}</span></span>`;
+    let priceHtml;
+    if (hasVariants) {
+      const prices = variants.map(v => Number(v.sale_price));
+      const minP = Math.min(...prices), maxP = Math.max(...prices);
+      priceHtml = minP === maxP
+        ? `<span class="num">${minP.toFixed(2)}</span>`
+        : `<span style="font-size:11.5px;">من <span class="num">${minP.toFixed(2)}</span></span>`;
+    } else {
+      priceHtml = `<span class="num">${Number(p.sale_price).toFixed(2)}</span>${p.sell_by === 'weight' ? ' <span style="font-size:10.5px; color:var(--ink-soft); font-weight:500;">/كجم</span>' : ''}`;
+    }
     card.innerHTML = `
       <div class="product-thumb">${p.image_url ? `<img src="${p.image_url}" alt="">` : '🛒'}</div>
-      <div class="product-name">${escapeHtml(p.name)}</div>
-      <div class="product-price"><span class="num">${Number(p.sale_price).toFixed(2)}</span>${p.sell_by === 'weight' ? ' <span style="font-size:10.5px; color:var(--ink-soft); font-weight:500;">/كجم</span>' : ''}</div>
-      <div style="font-size:11px;">${branchSettings.show_available_qty_pos ? stockLabel : ''}</div>`;
+      <div class="product-name">${escapeHtml(p.name)}${hasVariants ? ' <span style="font-size:10px; color:var(--teal-700); font-weight:700;">(متعدد)</span>' : ''}</div>
+      <div class="product-price">${priceHtml}</div>
+      <div style="font-size:11px;">${hasVariants ? '' : (branchSettings.show_available_qty_pos ? stockLabel : '')}</div>`;
     card.addEventListener('click', () => addToCart(p));
     posEls.productGrid.appendChild(card);
   });
@@ -8847,6 +9051,11 @@ function renderProducts() {
 function lineKeyOf(productId, productUnitId) { return productId + '::' + (productUnitId || 'base'); }
 
 function addToCart(product) {
+  const variants = allProducts.filter(v => v.parent_product_id === product.id);
+  if (variants.length > 0) {
+    openVariantPicker(product, variants);
+    return;
+  }
   if (product.sell_by === 'weight') {
     openWeightPicker(product);
     return;
@@ -8858,6 +9067,37 @@ function addToCart(product) {
   }
   openUnitPicker(product, extraUnits);
 }
+
+function formatPosVariantAttrs(attrs) {
+  if (!attrs || typeof attrs !== 'object') return '';
+  return Object.values(attrs).filter(Boolean).join(' / ');
+}
+
+function openVariantPicker(product, variants) {
+  const overlay = document.getElementById('variantPickerOverlay');
+  const optionsWrap = document.getElementById('variantPickerOptions');
+  document.getElementById('variantPickerTitle').textContent = `اختر المتغير — ${product.name}`;
+  optionsWrap.innerHTML = '';
+
+  variants.forEach(v => {
+    const stock = availableStock(v.id);
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'unit-picker-option';
+    const label = formatPosVariantAttrs(v.variant_attributes) || v.name;
+    const stockNote = stock <= 0 ? ' — لا يوجد رصيد' : '';
+    btn.innerHTML = `<span>${escapeHtml(label)}${stockNote}</span><span class="num">${Number(v.sale_price).toFixed(2)}</span>`;
+    if (stock <= 0) btn.style.opacity = '0.55';
+    btn.addEventListener('click', () => {
+      closeVariantPicker();
+      addToCart(v);
+    });
+    optionsWrap.appendChild(btn);
+  });
+
+  overlay.classList.add('show');
+}
+function closeVariantPicker() { document.getElementById('variantPickerOverlay').classList.remove('show'); }
+
 
 let weightPickerProduct = null;
 let weightPickerEditMode = false;
@@ -10916,7 +11156,8 @@ async function enterBackoffice() {
     loadBoCustomerTypes(), loadBoTaxRates(), loadBoQuickDiscounts(),
     loadBoPromotions(), loadBoCoupons(), loadLoyaltySettings(),
     loadTaxInclusiveSetting(), loadCompanyInfoGlobal(), loadBranchSettings(),
-    loadPrintSettings(), loadDebtReminderSettings()
+    loadPrintSettings(), loadDebtReminderSettings(),
+    loadBoBusinessTypes(), loadBoPosDevices()
   ]);
   renderProductsTable();
   renderCategoriesTable();
@@ -10925,6 +11166,8 @@ async function enterBackoffice() {
   renderPurchasesTable();
   renderUsersTable();
   renderBranchesTable();
+  renderBusinessTypesTable();
+  renderPosDevicesTable();
   renderEmployeesTable();
   renderExpenseItemsTable();
   renderUnitTypesTable();
@@ -10954,7 +11197,7 @@ async function enterBackoffice() {
 const boAllSections = ['dashboard','products','categories','unit-types','tax-rates','quick-discounts','customer-types',
   'sales-list','sale-orders','customers','suppliers','payments','purchase-orders','purchases','purchase-returns','sale-returns',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
-  'soon','company-info','permissions','users','branches','branch-settings','print-settings','stock','backup','reset-data','employees','expense-items','expenses','salaries','treasuries','capital','fixed-assets','promotions','coupons'];
+  'soon','company-info','permissions','users','branches','business-types','pos-devices','branch-settings','print-settings','stock','backup','reset-data','employees','expense-items','expenses','salaries','treasuries','capital','fixed-assets','promotions','coupons'];
 
 const boNavGroups = [
   { toggle: 'stockNavToggle', group: 'stockNavGroup', sections: ['products','categories','unit-types','tax-rates','quick-discounts','stock'] },
@@ -10964,7 +11207,7 @@ const boNavGroups = [
   { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
   { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['treasuries','payments','expense-items','expenses','capital','fixed-assets'] },
   { toggle: 'hrNavToggle', group: 'hrNavGroup', sections: ['employees','salaries'] },
-  { toggle: 'adminNavToggle', group: 'adminNavGroup', sections: ['company-info','permissions','users','branches','branch-settings','print-settings','backup','reset-data'] }
+  { toggle: 'adminNavToggle', group: 'adminNavGroup', sections: ['company-info','permissions','users','branches','business-types','pos-devices','branch-settings','print-settings','backup','reset-data'] }
 ];
 
 // كل قسم في القائمة الجانبية بيتبع لأنهي مفتاح صلاحية (roles.permissions)
@@ -10979,6 +11222,7 @@ const SECTION_PERMISSION_MAP = {
   'treasuries': 'finance', 'payments': 'finance', 'expense-items': 'finance', 'expenses': 'finance', 'capital': 'admin', 'fixed-assets': 'finance',
   'employees': 'hr', 'salaries': 'hr',
   'company-info': 'admin', 'permissions': 'admin', 'users': 'admin', 'branches': 'admin',
+  'business-types': 'admin', 'pos-devices': 'admin',
   'branch-settings': 'admin', 'print-settings': 'admin', 'backup': 'admin', 'reset-data': 'admin',
   'soon': null
 };
@@ -11053,7 +11297,8 @@ const SCREEN_LABELS = {
   'expenses': 'المصروفات', 'fixed-assets': 'الأصول الثابتة',
   'employees': 'بيانات الموظفين', 'salaries': 'الرواتب',
   'company-info': 'بيانات الشركة', 'permissions': 'الصلاحية الأمنية', 'users': 'إدارة المستخدمين',
-  'branches': 'الفروع', 'branch-settings': 'إعدادات الفرع', 'print-settings': 'إعدادات الطباعة',
+  'branches': 'الفروع', 'business-types': 'أنواع الأنشطة التجارية', 'pos-devices': 'أجهزة نقاط البيع',
+  'branch-settings': 'إعدادات الفرع', 'print-settings': 'إعدادات الطباعة',
   'backup': 'نسخة احتياطية', 'reset-data': 'تهيئة البيانات', 'capital': 'رأس المال وحقوق الملكية'
 };
 
@@ -11163,7 +11408,7 @@ function hasBoScreenPermission(section) {
 // تحدد أي العمليات مسموحة، بمعزل عن مجرد "عرض" الشاشة (اللي بيتحكم فيه scr:).
 // أي عملية مش مذكورة لشاشة معينة معناها إنها مش موجودة أصلاً في الشاشة دي.
 const ACTION_CAPABLE_SCREENS = {
-  'products': { add: true, edit: true },
+  'products': { add: true, edit: true, delete: true },
   'categories': { add: true, edit: true },
   'unit-types': { add: true, edit: true },
   'customer-types': { add: true, edit: true },
@@ -11183,6 +11428,8 @@ const ACTION_CAPABLE_SCREENS = {
   'salaries': { add: true, edit: true, delete: true },
   'users': { add: true, edit: true },
   'branches': { add: true, edit: true, delete: true },
+  'business-types': { add: true, edit: true },
+  'pos-devices': { add: true, edit: true, delete: true },
   'permissions': { add: true, edit: true, delete: true }
 };
 
@@ -11197,7 +11444,8 @@ const ADD_BUTTON_MAP = {
   'stock': 'addWarehouseBtn', 'customers': 'addCustomerBtn', 'suppliers': 'addSupplierBtn',
   'treasuries': 'addTreasuryBtn', 'expense-items': 'addExpenseItemBtn', 'expenses': 'addExpenseBtn',
   'fixed-assets': 'addFixedAssetBtn', 'employees': 'addEmployeeBtn', 'salaries': 'addSalaryBtn',
-  'users': 'addUserBtn', 'branches': 'addBranchBtn', 'permissions': 'addPermissionBtn'
+  'users': 'addUserBtn', 'branches': 'addBranchBtn', 'permissions': 'addPermissionBtn',
+  'business-types': 'addBusinessTypeBtn', 'pos-devices': 'addPosDeviceBtn'
 };
 
 // صلاحية دقيقة على مستوى عملية واحدة (إضافة/تعديل/حذف) جوه شاشة معينة.
@@ -12322,6 +12570,20 @@ function bindBackofficeEvents() {
     window.print();
   });
   document.getElementById('productForm').addEventListener('submit', saveProduct);
+
+  // ---- Product variants ----
+  document.getElementById('addVariantBtn').addEventListener('click', () => openVariantFormModal(currentVariantsParent, null));
+  document.getElementById('closeVariantsListBtn').addEventListener('click', closeVariantsListModal);
+  document.getElementById('variantsListModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'variantsListModalOverlay') closeVariantsListModal();
+  });
+  document.getElementById('addVariantAttrRowBtn').addEventListener('click', () => addVariantAttributeRow());
+  document.getElementById('cancelVariantFormBtn').addEventListener('click', closeVariantFormModal);
+  document.getElementById('variantFormModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'variantFormModalOverlay') closeVariantFormModal();
+  });
+  document.getElementById('variantForm').addEventListener('submit', saveVariant);
+
   document.getElementById('addUnitRowBtn').addEventListener('click', () => {
     currentUnits.push({ id: null, unit_type_id: '', factor_to_base: '', sale_price: '', is_active: true });
     renderUnitsList();
@@ -12694,6 +12956,22 @@ function bindBackofficeEvents() {
     if (e.target.id === 'unitTypeModalOverlay') closeUnitTypeModal();
   });
   document.getElementById('unitTypeForm').addEventListener('submit', saveUnitType);
+
+  // ---- Business types ----
+  document.getElementById('addBusinessTypeBtn').addEventListener('click', () => openBusinessTypeModal(null));
+  document.getElementById('cancelBusinessTypeBtn').addEventListener('click', closeBusinessTypeModal);
+  document.getElementById('businessTypeModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'businessTypeModalOverlay') closeBusinessTypeModal();
+  });
+  document.getElementById('businessTypeForm').addEventListener('submit', saveBusinessType);
+
+  // ---- POS devices ----
+  document.getElementById('addPosDeviceBtn').addEventListener('click', () => openPosDeviceModal(null));
+  document.getElementById('cancelPosDeviceBtn').addEventListener('click', closePosDeviceModal);
+  document.getElementById('posDeviceModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'posDeviceModalOverlay') closePosDeviceModal();
+  });
+  document.getElementById('posDeviceForm').addEventListener('submit', savePosDevice);
 
   // ---- Tax rates ----
   document.getElementById('addTaxRateBtn').addEventListener('click', () => openTaxRateModal(null));
@@ -13175,8 +13453,11 @@ async function handleProductsExcelImport(e) {
 function renderProductsTable() {
   const tbody = document.getElementById('productsTableBody');
   const pagerEl = document.getElementById('productsPager');
-  if (boProducts.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لا توجد أصناف مضافة حتى الآن</td></tr>`;
+  // شاشة الأصناف بتعرض الأصناف الأساسية بس (اللي مالهاش parent_product_id)؛
+  // المتغيرات (زي المقاسات/الألوان) بتتعرض جوه مودال "متغيرات" خاص بكل صنف.
+  const topLevelProducts = boProducts.filter(p => !p.parent_product_id);
+  if (topLevelProducts.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" class="bo-empty">لا توجد أصناف مضافة حتى الآن</td></tr>`;
     pagerEl.innerHTML = '';
     return;
   }
@@ -13185,7 +13466,7 @@ function renderProductsTable() {
   const categoryId = document.getElementById('productCategoryFilter')?.value || '';
   const sortBy = document.getElementById('productSortSelect')?.value || 'name_asc';
 
-  let filtered = boProducts.filter(p => {
+  let filtered = topLevelProducts.filter(p => {
     const matchesSearch = !q
       || p.name.toLowerCase().includes(q)
       || (p.product_barcodes || []).some(b => b.barcode.toLowerCase().includes(q));
@@ -13206,7 +13487,7 @@ function renderProductsTable() {
   });
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لا توجد أصناف مطابقة للبحث أو الفلترة</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="bo-empty">لا توجد أصناف مطابقة للبحث أو الفلترة</td></tr>`;
     pagerEl.innerHTML = '';
     return;
   }
@@ -13227,6 +13508,7 @@ function renderProductsTable() {
   tbody.innerHTML = '';
   pageRows.forEach(p => {
     const barcodesText = (p.product_barcodes || []).map(b => b.barcode).join(', ') || '—';
+    const variantsCount = boProducts.filter(v => v.parent_product_id === p.id).length;
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${escapeHtml(p.name)}</td>
@@ -13234,6 +13516,9 @@ function renderProductsTable() {
       <td class="num">${Number(p.sale_price).toFixed(2)}</td>
       <td class="num cost-guard-cell">${Number(p.cost_price).toFixed(2)}</td>
       <td style="font-size:11.5px; color:var(--ink-soft);">${escapeHtml(barcodesText)}</td>
+      <td>
+        <button class="bo-icon-btn" data-action="variants">${variantsCount > 0 ? `${variantsCount} متغير` : 'إضافة متغيرات'}</button>
+      </td>
       <td><span class="bo-badge ${p.is_active ? 'active' : 'inactive'}">${p.is_active ? 'مفعّل' : 'موقّف'}</span></td>
       <td>
         <div class="bo-row-actions">
@@ -13245,6 +13530,7 @@ function renderProductsTable() {
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openProductModal(p));
     tr.querySelector('[data-action="barcode"]').addEventListener('click', () => openBarcodeLabelModal(p));
     tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleProductActive(p));
+    tr.querySelector('[data-action="variants"]').addEventListener('click', () => openVariantsListModal(p));
     applyRowActionPerm(tr, 'products');
     tbody.appendChild(tr);
   });
@@ -13623,6 +13909,204 @@ async function toggleProductActive(product) {
   showToast(product.is_active ? 'تم إيقاف الصنف' : 'تم تفعيل الصنف');
   await loadBoProducts();
   renderProductsTable();
+}
+
+// ---- متغيرات المنتج (product variants: صفوف "products" مرتبطة بـ parent_product_id) ----
+let currentVariantsParent = null; // الصنف الأساسي المفتوح حاليًا في مودال المتغيرات
+let currentVariantAttrs = []; // [{key, value}] لخصائص المتغير المفتوح حاليًا في الفورم
+
+function getProductVariants(parentId) {
+  return boProducts.filter(v => v.parent_product_id === parentId);
+}
+
+function formatVariantAttrs(attrs) {
+  if (!attrs || typeof attrs !== 'object') return '—';
+  const parts = Object.entries(attrs).filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`);
+  return parts.length ? parts.join(' / ') : '—';
+}
+
+function openVariantsListModal(product) {
+  currentVariantsParent = product;
+  document.getElementById('variantsListProductName').textContent = product.name;
+  renderVariantsListTable();
+  document.getElementById('variantsListModalOverlay').classList.add('show');
+}
+
+function closeVariantsListModal() {
+  document.getElementById('variantsListModalOverlay').classList.remove('show');
+  currentVariantsParent = null;
+}
+
+function renderVariantsListTable() {
+  const tbody = document.getElementById('variantsListTableBody');
+  if (!currentVariantsParent) return;
+  const variants = getProductVariants(currentVariantsParent.id);
+  if (variants.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">لا توجد متغيرات مضافة حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  variants.forEach(v => {
+    const barcodesText = (v.product_barcodes || []).map(b => b.barcode).join(', ') || '—';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(formatVariantAttrs(v.variant_attributes))}</td>
+      <td class="num">${Number(v.sale_price).toFixed(2)}</td>
+      <td style="font-size:11.5px; color:var(--ink-soft);">${escapeHtml(barcodesText)}</td>
+      <td><span class="bo-badge ${v.is_active ? 'active' : 'inactive'}">${v.is_active ? 'مفعّل' : 'موقّف'}</span></td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openVariantFormModal(currentVariantsParent, v));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteVariant(v));
+    applyRowActionPerm(tr, 'products');
+    tbody.appendChild(tr);
+  });
+}
+
+function renderVariantAttributesRows() {
+  const wrap = document.getElementById('variantAttributesList');
+  wrap.innerHTML = '';
+  currentVariantAttrs.forEach((attr, idx) => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex; gap:8px; margin-bottom:8px;';
+    row.innerHTML = `
+      <input type="text" placeholder="اسم الخاصية (مثال: المقاس)" value="${escapeHtml(attr.key)}" style="flex:1;" data-attr-key>
+      <input type="text" placeholder="القيمة (مثال: 42)" value="${escapeHtml(attr.value)}" style="flex:1;" data-attr-value>
+      <button type="button" class="bo-icon-btn danger" data-remove-attr>حذف</button>
+    `;
+    row.querySelector('[data-attr-key]').addEventListener('input', (e) => currentVariantAttrs[idx].key = e.target.value);
+    row.querySelector('[data-attr-value]').addEventListener('input', (e) => currentVariantAttrs[idx].value = e.target.value);
+    row.querySelector('[data-remove-attr]').addEventListener('click', () => {
+      currentVariantAttrs.splice(idx, 1);
+      renderVariantAttributesRows();
+    });
+    wrap.appendChild(row);
+  });
+}
+
+function addVariantAttributeRow(key = '', value = '') {
+  currentVariantAttrs.push({ key, value });
+  renderVariantAttributesRows();
+}
+
+function openVariantFormModal(parentProduct, variant) {
+  document.getElementById('variantFormModalTitle').textContent = variant ? 'تعديل متغير' : 'متغير جديد';
+  document.getElementById('variantId').value = variant ? variant.id : '';
+  document.getElementById('variantParentId').value = parentProduct.id;
+  document.getElementById('variantSalePrice').value = variant ? variant.sale_price : parentProduct.sale_price;
+  document.getElementById('variantCostPrice').value = variant ? variant.cost_price : parentProduct.cost_price;
+  document.getElementById('variantBarcode').value = variant ? ((variant.product_barcodes || [])[0]?.barcode || '') : '';
+  document.getElementById('variantActive').checked = variant ? variant.is_active : true;
+
+  // تجهيز صفوف الخصائص: من المتغير نفسه لو موجود، وإلا من إعدادات نوع النشاط
+  // التجاري (business_types.settings.variant_attributes) كنقطة بداية سريعة
+  if (variant && variant.variant_attributes && Object.keys(variant.variant_attributes).length > 0) {
+    currentVariantAttrs = Object.entries(variant.variant_attributes).map(([key, value]) => ({ key, value }));
+  } else {
+    const branchBusinessType = boBusinessTypes.find(bt => bt.id === boBranchesList.find(b => b.id === currentProfile.branch_id)?.business_type_id);
+    const suggestedKeys = branchBusinessType?.settings?.variant_attributes || ['size', 'color'];
+    currentVariantAttrs = suggestedKeys.map(k => ({ key: k === 'size' ? 'المقاس' : (k === 'color' ? 'اللون' : k), value: '' }));
+  }
+  renderVariantAttributesRows();
+
+  document.getElementById('variantFormModalError').classList.remove('show');
+  document.getElementById('variantFormModalOverlay').classList.add('show');
+}
+
+function closeVariantFormModal() {
+  document.getElementById('variantFormModalOverlay').classList.remove('show');
+}
+
+async function saveVariant(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('variantFormModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveVariantBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('variantId').value || null;
+  const parentId = document.getElementById('variantParentId').value;
+  const parentProduct = boProducts.find(p => p.id === parentId);
+
+  const attrsObj = {};
+  currentVariantAttrs.forEach(a => { if (a.key.trim()) attrsObj[a.key.trim()] = a.value.trim(); });
+  const attrsSummary = Object.values(attrsObj).filter(Boolean).join(' - ');
+  const variantName = attrsSummary ? `${parentProduct.name} - ${attrsSummary}` : parentProduct.name;
+
+  const payload = {
+    name: variantName,
+    parent_product_id: parentId,
+    category_id: parentProduct.category_id,
+    unit_type: parentProduct.unit_type,
+    sell_by: parentProduct.sell_by,
+    tax_rate_id: parentProduct.tax_rate_id,
+    is_bundle: false,
+    variant_attributes: attrsObj,
+    sale_price: Number(document.getElementById('variantSalePrice').value) || 0,
+    cost_price: Number(document.getElementById('variantCostPrice').value) || 0,
+    is_active: document.getElementById('variantActive').checked,
+  };
+
+  try {
+    let variantId = id;
+    if (id) {
+      const { error } = await supabaseClient.from('products').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { data, error } = await supabaseClient.from('products').insert(payload).select().single();
+      if (error) throw error;
+      variantId = data.id;
+    }
+
+    // مزامنة الباركود (باركود واحد اختياري لكل متغير)
+    const { data: existingBarcodes } = await supabaseClient
+      .from('product_barcodes').select('id, barcode').eq('product_id', variantId);
+    const newBarcode = document.getElementById('variantBarcode').value.trim();
+    const oldIds = (existingBarcodes || []).map(b => b.id);
+    if (oldIds.length > 0) {
+      await supabaseClient.from('product_barcodes').delete().in('id', oldIds);
+    }
+    if (newBarcode) {
+      const { error: bcError } = await supabaseClient.from('product_barcodes').insert({ product_id: variantId, barcode: newBarcode });
+      if (bcError) throw bcError;
+    }
+
+    showToast(id ? 'تم تحديث المتغير' : 'تمت إضافة المتغير بنجاح');
+    closeVariantFormModal();
+    await loadBoProducts();
+    currentVariantsParent = boProducts.find(p => p.id === parentId);
+    renderProductsTable();
+    renderVariantsListTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function deleteVariant(item) {
+  if (!hasBoActionPermission('products', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm(`هل أنت متأكد من حذف المتغير "${item.name}"؟ لو له حركة مبيعات أو مخزون سابقة، يفضل إيقافه بدل حذفه.`)) return;
+  const { error } = await supabaseClient.from('products').delete().eq('id', item.id);
+  if (error) {
+    console.error(error);
+    showToast('تعذر حذف المتغير — على الأرجح مرتبط بحركة مبيعات أو مخزون سابقة', true);
+    return;
+  }
+  showToast('تم حذف المتغير');
+  await loadBoProducts();
+  const parentId = currentVariantsParent?.id;
+  currentVariantsParent = boProducts.find(p => p.id === parentId) || currentVariantsParent;
+  renderProductsTable();
+  renderVariantsListTable();
 }
 
 // ---- Categories ----
@@ -15328,6 +15812,231 @@ async function deleteBranch(branch) {
   showToast('تم حذف الفرع');
   await loadBoBranches();
   renderBranchesTable();
+}
+
+// ---- أنواع الأنشطة التجارية (business_types) ----
+let boBusinessTypes = [];
+
+async function loadBoBusinessTypes() {
+  const { data, error } = await supabaseClient.from('business_types').select('*').order('name');
+  if (error) { console.error(error); showToast('تعذر تحميل أنواع الأنشطة التجارية', true); return; }
+  boBusinessTypes = data || [];
+}
+
+function renderBusinessTypesTable() {
+  const tbody = document.getElementById('businessTypesTableBody');
+  if (!tbody) return;
+  if (boBusinessTypes.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">لا توجد أنواع أنشطة مضافة حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boBusinessTypes.forEach(x => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(x.name)}</td>
+      <td class="num">${escapeHtml(x.code)}</td>
+      <td>${x.uses_weight ? '✔' : '—'}</td>
+      <td>${x.uses_variants ? '✔' : '—'}</td>
+      <td><span class="bo-badge ${x.is_active ? 'active' : 'inactive'}">${x.is_active ? 'مفعّل' : 'موقّف'}</span></td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="toggle">${x.is_active ? 'إيقاف' : 'تفعيل'}</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openBusinessTypeModal(x));
+    tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleBusinessTypeActive(x));
+    applyRowActionPerm(tr, 'business-types');
+    tbody.appendChild(tr);
+  });
+}
+
+function openBusinessTypeModal(item) {
+  document.getElementById('businessTypeModalTitle').textContent = item ? 'تعديل نوع نشاط' : 'نوع نشاط جديد';
+  document.getElementById('businessTypeId').value = item ? item.id : '';
+  document.getElementById('businessTypeName').value = item ? item.name : '';
+  document.getElementById('businessTypeCode').value = item ? item.code : '';
+  document.getElementById('businessTypeUsesWeight').checked = item ? !!item.uses_weight : false;
+  document.getElementById('businessTypeUsesVariants').checked = item ? !!item.uses_variants : false;
+  document.getElementById('businessTypeActive').checked = item ? item.is_active : true;
+  document.getElementById('businessTypeModalError').classList.remove('show');
+  document.getElementById('businessTypeModalOverlay').classList.add('show');
+}
+
+function closeBusinessTypeModal() {
+  document.getElementById('businessTypeModalOverlay').classList.remove('show');
+}
+
+async function saveBusinessType(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('businessTypeModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveBusinessTypeBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('businessTypeId').value || null;
+  const code = document.getElementById('businessTypeCode').value.trim().toLowerCase().replace(/\s+/g, '_');
+  const usesWeight = document.getElementById('businessTypeUsesWeight').checked;
+  const usesVariants = document.getElementById('businessTypeUsesVariants').checked;
+
+  const payload = {
+    name: document.getElementById('businessTypeName').value.trim(),
+    code,
+    uses_weight: usesWeight,
+    uses_variants: usesVariants,
+    is_active: document.getElementById('businessTypeActive').checked,
+    settings: {
+      default_sell_by: usesWeight ? 'weight' : 'unit',
+      ...(usesVariants ? { variant_attributes: ['size', 'color'] } : {})
+    }
+  };
+
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('business_types').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('business_types').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث نوع النشاط' : 'تمت إضافة نوع النشاط بنجاح');
+    closeBusinessTypeModal();
+    await loadBoBusinessTypes();
+    renderBusinessTypesTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function toggleBusinessTypeActive(item) {
+  const { error } = await supabaseClient.from('business_types').update({ is_active: !item.is_active }).eq('id', item.id);
+  if (error) { console.error(error); showToast('تعذر تحديث حالة النشاط', true); return; }
+  await loadBoBusinessTypes();
+  renderBusinessTypesTable();
+}
+
+// ---- أجهزة نقاط البيع (pos_devices) ----
+let boPosDevices = [];
+
+async function loadBoPosDevices() {
+  const { data, error } = await supabaseClient.from('pos_devices').select('*, branches(name)').order('device_name');
+  if (error) { console.error(error); showToast('تعذر تحميل أجهزة نقاط البيع', true); return; }
+  boPosDevices = data || [];
+}
+
+function populatePosDeviceBranchSelect() {
+  const sel = document.getElementById('posDeviceBranch');
+  if (!sel) return;
+  sel.innerHTML = boBranchesList.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+}
+
+function formatLastSeen(ts) {
+  if (!ts) return 'لم يُستخدم بعد';
+  const d = new Date(ts);
+  return d.toLocaleString('ar-EG', { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+function renderPosDevicesTable() {
+  const tbody = document.getElementById('posDevicesTableBody');
+  if (!tbody) return;
+  if (boPosDevices.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لا توجد أجهزة مضافة حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boPosDevices.forEach(x => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(x.device_name)}</td>
+      <td>${escapeHtml(x.branches?.name || '—')}</td>
+      <td class="num">${escapeHtml(x.device_code || '—')}</td>
+      <td>${escapeHtml(x.location_label || '—')}</td>
+      <td>${formatLastSeen(x.last_seen_at)}</td>
+      <td><span class="bo-badge ${x.is_active ? 'active' : 'inactive'}">${x.is_active ? 'مفعّل' : 'موقّف'}</span></td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openPosDeviceModal(x));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deletePosDevice(x));
+    applyRowActionPerm(tr, 'pos-devices');
+    tbody.appendChild(tr);
+  });
+}
+
+function openPosDeviceModal(item) {
+  populatePosDeviceBranchSelect();
+  document.getElementById('posDeviceModalTitle').textContent = item ? 'تعديل جهاز' : 'جهاز جديد';
+  document.getElementById('posDeviceId').value = item ? item.id : '';
+  document.getElementById('posDeviceName').value = item ? item.device_name : '';
+  document.getElementById('posDeviceBranch').value = item ? item.branch_id : (boBranchesList[0]?.id || '');
+  document.getElementById('posDeviceCode').value = item?.device_code || '';
+  document.getElementById('posDeviceLocation').value = item?.location_label || '';
+  document.getElementById('posDeviceActive').checked = item ? item.is_active : true;
+  document.getElementById('posDeviceModalError').classList.remove('show');
+  document.getElementById('posDeviceModalOverlay').classList.add('show');
+}
+
+function closePosDeviceModal() {
+  document.getElementById('posDeviceModalOverlay').classList.remove('show');
+}
+
+async function savePosDevice(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('posDeviceModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('savePosDeviceBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('posDeviceId').value || null;
+  const payload = {
+    device_name: document.getElementById('posDeviceName').value.trim(),
+    branch_id: document.getElementById('posDeviceBranch').value,
+    device_code: document.getElementById('posDeviceCode').value.trim() || null,
+    location_label: document.getElementById('posDeviceLocation').value.trim() || null,
+    is_active: document.getElementById('posDeviceActive').checked,
+  };
+
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('pos_devices').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('pos_devices').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث بيانات الجهاز' : 'تمت إضافة الجهاز بنجاح');
+    closePosDeviceModal();
+    await loadBoPosDevices();
+    renderPosDevicesTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function deletePosDevice(item) {
+  if (!hasBoActionPermission('pos-devices', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm(`هل أنت متأكد من حذف جهاز "${item.device_name}"؟`)) return;
+  const { error } = await supabaseClient.from('pos_devices').delete().eq('id', item.id);
+  if (error) { console.error(error); showToast('تعذر حذف الجهاز', true); return; }
+  showToast('تم حذف الجهاز');
+  await loadBoPosDevices();
+  renderPosDevicesTable();
 }
 
 // ---- الصلاحية الأمنية (الأدوار والصلاحيات) ----
