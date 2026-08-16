@@ -395,6 +395,14 @@ a { color: inherit; }
 /* fade + hint that a table can be scrolled sideways, shown only while there's more to reveal */
 .bo-table-wrap.has-scroll::after { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 22px; pointer-events: none; background: linear-gradient(to left, rgba(16,30,25,0.08), transparent); opacity: 0; transition: opacity .15s ease; }
 .bo-table-wrap.has-scroll.can-scroll-left::after { opacity: 1; }
+/* رأس جدول ثابت (اختياري لكل جدول لوحده عن طريق كلاس sticky-header) — الجدول بياخد سقف ارتفاع
+   وبيسكرول جوّاه، ورأس الأعمدة يفضل ظاهر فوق أثناء السكرول لتحت */
+.bo-table-wrap.sticky-header { max-height: 62vh; overflow-y: auto; }
+.bo-table-wrap.sticky-header .bo-table thead th { position: sticky; top: 0; z-index: 3; }
+.bo-table-wrap.sticky-header .bo-table thead th:first-child { top: 0; z-index: 4; }
+#productsTableWrap .bo-table th:nth-child(2), #productsTableWrap .bo-table td:nth-child(2) { position: sticky; right: 34px; z-index: 1; background: var(--surface); box-shadow: -6px 0 8px -6px rgba(16,30,25,0.10); }
+#productsTableWrap .bo-table th:nth-child(2) { background: var(--surface-sunken); z-index: 2; }
+#productsTableWrap .bo-table tr:hover td:nth-child(2) { background: #FAFBFA; }
 .bo-scroll-hint { display: none; font-size: 11.5px; color: var(--ink-soft); padding: 6px 14px 0; }
 .bo-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; }
 .bo-badge.active { background: var(--teal-100); color: var(--teal-900); }
@@ -402,6 +410,41 @@ a { color: inherit; }
 .bo-badge.inactive { background: var(--danger-100); color: var(--danger); }
 .bo-badge.info { background: var(--amber-100); color: var(--amber-600); }
 .bo-badge.neutral { background: var(--surface-sunken); color: var(--ink-soft); }
+/* تبديل عرض جدول/شبكة لشاشة الأصناف */
+.bo-view-toggle { display: inline-flex; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; flex-shrink: 0; }
+.bo-view-toggle button { background: var(--surface); color: var(--ink-soft); border: none; padding: 9px 12px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+.bo-view-toggle button + button { border-right: 1px solid var(--border); }
+.bo-view-toggle button.active { background: var(--teal-700); color: #fff; }
+/* عرض شبكي بالصور للأصناف (بديل الجدول) */
+.bo-products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+.bo-product-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; display: flex; flex-direction: column; gap: 8px; position: relative; }
+.bo-product-card .product-thumb { font-size: 28px; }
+.bo-product-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
+.bo-product-card-name { font-size: 13.5px; font-weight: 700; line-height: 1.35; }
+.bo-product-card-meta { font-size: 11.5px; color: var(--ink-soft); }
+.bo-product-card-prices { display: flex; align-items: center; justify-content: space-between; font-size: 13px; }
+.bo-product-card-prices .num { font-weight: 700; color: var(--teal-700); }
+.bo-product-card-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.bo-product-card-actions .bo-icon-btn { flex: none; }
+/* قائمة اختيار الأعمدة الظاهرة في جدول الأصناف */
+.bo-colvis-popup { position: absolute; z-index: 4000; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: 0 8px 24px rgba(0,0,0,0.16); padding: 10px; width: 210px; font-size: 13px; direction: rtl; }
+.bo-colvis-popup .colvis-list { display: flex; flex-direction: column; gap: 2px; }
+.bo-colvis-popup .colvis-item { display: flex; align-items: center; gap: 8px; padding: 6px 4px; border-radius: var(--radius-sm); cursor: pointer; color: var(--ink); }
+.bo-colvis-popup .colvis-item:hover { background: var(--surface-sunken); }
+.bo-colvis-popup .colvis-item input { flex-shrink: 0; }
+.bo-colvis-popup .colvis-footer { margin-top: 6px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 11px; color: var(--ink-soft); }
+.bo-colvis-popup .colvis-select-all { font-weight: 700; color: var(--teal-900); }
+.bo-bulk-actions-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; background: var(--teal-100); border-radius: var(--radius-sm); padding: 10px 14px; margin: -6px 0 14px; font-size: 13px; }
+.bo-bulk-actions-bar .bulk-count-label { font-weight: 700; color: var(--teal-900); white-space: nowrap; }
+.bo-bulk-actions-bar select { padding: 7px 10px; font-size: 12.5px; border-radius: var(--radius-sm); }
+.bo-menu-wrap { position: relative; display: inline-flex; }
+.bo-menu-btn::after { content: "▾"; font-size: 10px; margin-inline-start: 4px; }
+.bo-menu-panel { display: none; flex-direction: column; gap: 2px; position: absolute; top: calc(100% + 6px); right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: 0 10px 28px rgba(0,0,0,.14); padding: 6px; min-width: 220px; z-index: 40; }
+.bo-menu-panel.open { display: flex; }
+.bo-menu-panel select { width: 100%; }
+.bo-menu-item { background: none; border: none; text-align: right; padding: 9px 12px; font-size: 13.5px; font-weight: 600; color: var(--ink); border-radius: 6px; cursor: pointer; white-space: nowrap; width: 100%; }
+.bo-menu-item:hover { background: var(--teal-100); color: var(--teal-900); }
+.bo-menu-sep { height: 1px; background: var(--border); margin: 4px 2px; }
 .activity-log-stats { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
 .activity-log-stat { background: var(--surface-sunken); border-radius: var(--radius-sm); padding: 8px 14px; font-size: 12.5px; font-weight: 700; color: var(--ink-soft); display: flex; align-items: center; gap: 6px; }
 .activity-log-stat .num { font-family: var(--font-num); font-size: 14px; color: var(--ink); }
@@ -418,6 +461,18 @@ a { color: inherit; }
 .bo-icon-btn { background: var(--surface-sunken); color: var(--ink-soft); padding: 6px 10px; border-radius: 6px; font-size: 12px; }
 .bo-icon-btn:hover { background: var(--teal-100); color: var(--teal-700); }
 .bo-icon-btn.danger:hover { background: var(--danger-100); color: var(--danger); }
+/* أزرار الإجراءات الثانوية في صف/كارت الصنف (نسخ، المتغيرات، ربط الإضافات، طباعة باركود):
+   أيقونة فقط بدون نص + tooltip عبر title، عشان تقلل الزحمة البصرية وتسيب الأزرار
+   الأساسية (تعديل، إيقاف/تفعيل) بنصها الكامل زي ما هي. */
+.bo-icon-btn.icon-only { width: 30px; height: 30px; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; flex: none; }
+.bo-icon-btn.icon-only .icon-only-badge { font-size: 9px; position: absolute; margin-inline-start: 16px; margin-block-start: -12px; background: var(--teal-700); color: #fff; border-radius: 8px; padding: 0 4px; line-height: 14px; }
+/* شريط شرائح الفلاتر النشطة فوق جدول الأصناف: بيظهر بس لو فيه فلتر واحد على الأقل
+   مفعّل، وبيدي المستخدم ملخص سريع + إمكانية إلغاء كل فلتر لوحده من غير فتح القوائم تاني. */
+.bo-filter-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: -6px 0 14px; }
+.bo-filter-chip { display: inline-flex; align-items: center; gap: 6px; background: var(--teal-100); color: var(--teal-700); border-radius: 999px; padding: 5px 6px 5px 12px; font-size: 12px; font-weight: 600; }
+.bo-filter-chip button { background: rgba(0,0,0,0.08); color: inherit; border: none; width: 18px; height: 18px; border-radius: 50%; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; line-height: 1; padding: 0; }
+.bo-filter-chip button:hover { background: var(--danger); color: #fff; }
+.bo-filter-chips-clear { background: none; border: none; color: var(--ink-soft); font-size: 12px; text-decoration: underline; cursor: pointer; padding: 4px; }
 .bo-empty { text-align: center; color: var(--ink-soft); padding: 50px 20px; font-size: 13.5px; }
 
 /* -------- تهيئة البيانات -------- */
@@ -619,6 +674,23 @@ a { color: inherit; }
 .report-card-value { font-family: var(--font-num); font-size: 22px; font-weight: 700; direction: ltr; text-align: right; }
 .report-card-value.positive { color: var(--teal-700); }
 .report-card-value.negative { color: var(--danger); }
+.bt-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.bt-toolbar input[type="text"] { flex: 1; min-width: 200px; padding: 10px 14px; font-size: 13.5px; }
+.bt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.bt-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-card); padding: 16px; display: flex; flex-direction: column; gap: 12px; transition: border-color .15s ease; }
+.bt-card:hover { border-color: var(--teal-500); }
+.bt-card.inactive { opacity: .6; }
+.bt-card-top { display: flex; align-items: flex-start; gap: 10px; }
+.bt-card-icon { width: 42px; height: 42px; border-radius: var(--radius-sm); background: var(--teal-100); display: flex; align-items: center; justify-content: center; font-size: 21px; flex-shrink: 0; }
+.bt-card-titles { flex: 1; min-width: 0; }
+.bt-card-name { font-size: 15px; font-weight: 700; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bt-card-code { font-size: 11.5px; color: var(--ink-soft); direction: ltr; text-align: right; }
+.bt-card-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.bt-mini-badge { display: inline-flex; align-items: center; gap: 4px; background: var(--surface-sunken); color: var(--ink-soft); border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 600; }
+.bt-card-stat { font-size: 11.5px; color: var(--ink-soft); }
+.bt-card-stat .num { color: var(--ink); font-weight: 700; }
+.bt-card-actions { display: flex; gap: 6px; margin-top: auto; padding-top: 4px; border-top: 1px solid var(--border); }
+.bt-icon-input { width: 60px !important; text-align: center; font-size: 18px; }
 .stmt-table td.stmt-label { font-weight: 500; }
 .stmt-table tr.stmt-deduct td.stmt-label::before { content: '(–) '; color: var(--ink-soft); }
 .stmt-table tr.stmt-total td { font-weight: 700; border-top: 2px solid var(--border); font-size: 14.5px; }
@@ -729,6 +801,71 @@ a { color: inherit; }
 
 /* -------- Purchases -------- */
 .modal-box.wide { max-width: 680px; }
+.qv-overlay { position: fixed; inset: 0; background: rgba(16, 30, 25, 0.4); display: none; z-index: 150; }
+.qv-overlay.show { display: block; }
+.qv-panel { position: fixed; top: 0; bottom: 0; right: 0; width: 400px; max-width: 92vw; background: var(--surface); box-shadow: -10px 0 30px rgba(0,0,0,.2); padding: 22px 22px 18px; overflow-y: auto; transform: translateX(100%); transition: transform .22s ease; display: flex; flex-direction: column; }
+.qv-overlay.show .qv-panel { transform: translateX(0); }
+.qv-panel-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+.qv-panel-title { font-size: 16px; font-weight: 700; color: var(--ink); }
+.qv-panel-sub { font-size: 12px; color: var(--ink-soft); margin-bottom: 16px; }
+.qv-close-btn { background: none; border: none; font-size: 18px; color: var(--ink-soft); cursor: pointer; line-height: 1; padding: 2px 4px; flex-shrink: 0; }
+.qv-close-btn:hover { color: var(--ink); }
+.qv-thumb { width: 100%; height: 150px; border-radius: var(--radius-md); background: var(--surface-sunken); display: flex; align-items: center; justify-content: center; font-size: 38px; overflow: hidden; margin-bottom: 14px; }
+.qv-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.qv-price-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.qv-price-box { background: var(--surface-sunken); border-radius: var(--radius-sm); padding: 10px 12px; }
+.qv-price-box .qv-price-label { font-size: 11.5px; color: var(--ink-soft); margin-bottom: 4px; }
+.qv-price-box .qv-price-value { font-size: 16px; font-weight: 700; color: var(--ink); font-family: var(--font-num); }
+.qv-section-title { font-size: 12.5px; font-weight: 700; color: var(--ink-soft); margin: 14px 0 8px; }
+.qv-branch-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 2px; font-size: 13px; border-bottom: 1px solid var(--border); }
+.qv-branch-row:last-child { border-bottom: none; }
+.qv-branch-row .qv-branch-qty { font-weight: 700; font-family: var(--font-num); }
+.qv-sale-row { padding: 8px 2px; font-size: 12.5px; border-bottom: 1px solid var(--border); }
+.qv-sale-row:last-child { border-bottom: none; }
+.qv-sale-row .qv-sale-top { display: flex; justify-content: space-between; color: var(--ink); font-weight: 600; }
+.qv-sale-row .qv-sale-sub { color: var(--ink-soft); font-size: 11.5px; margin-top: 2px; }
+.qv-empty { color: var(--ink-soft); font-size: 12.5px; padding: 6px 2px; }
+.qv-panel-footer { margin-top: auto; padding-top: 16px; display: flex; gap: 10px; }
+.qv-name-trigger { background: none; border: none; padding: 0; font: inherit; color: var(--teal-700); font-weight: 600; cursor: pointer; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; }
+.qv-name-trigger:hover { text-decoration-color: currentColor; }
+.import-preview-stats { display: flex; gap: 10px; flex-wrap: wrap; }
+.import-preview-stat { background: var(--surface-sunken); border-radius: var(--radius-sm); padding: 8px 14px; font-size: 12.5px; font-weight: 700; color: var(--ink-soft); }
+.import-preview-stat .num { font-family: var(--font-num); font-size: 14px; color: var(--ink); margin-inline-end: 4px; }
+.import-preview-stat.ok { color: var(--teal-900); }
+.import-preview-stat.warn .num { color: #9a6b00; }
+.import-preview-stat.err .num { color: #b3261e; }
+.import-row-status { font-size: 12px; font-weight: 600; }
+.import-row-status.ok { color: var(--teal-700); }
+.import-row-status.warn { color: #9a6b00; }
+.import-row-status.err { color: #b3261e; }
+.pm-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 18px; overflow-x: auto; }
+.pm-tab-btn { background: none; border: none; padding: 10px 4px; margin-left: 18px; font-family: inherit; font-size: 13.5px; font-weight: 600; color: var(--ink-soft); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+.pm-tab-btn:first-child { margin-right: 0; }
+.pm-tab-btn.active { color: var(--teal-700); border-bottom-color: var(--teal-500); }
+.pm-tab-btn .pm-tab-count { display: inline-block; background: var(--surface-sunken); color: var(--ink-soft); border-radius: 20px; font-size: 11px; padding: 1px 7px; margin-inline-start: 4px; }
+.pm-tab-btn.active .pm-tab-count { background: var(--teal-100); color: var(--teal-700); }
+.pm-tab-panel { display: block; }
+.pm-tab-hint { font-size: 12.5px; color: var(--ink-soft); background: var(--surface-sunken); border-radius: var(--radius-sm); padding: 10px 12px; }
+/* سجل تعديلات الصنف (Audit Trail): تايم لاين مدمج من مصدرين — activity_log (تغييرات
+   حقول الصنف زي السعر) و stock_adjustment_items (تغييرات الكمية بالمخزون) — بيظهر
+   جوه تاب مستقل في مودال الصنف، ونسخة مختصرة منه في المعاينة السريعة. */
+.history-item { padding: 9px 2px; font-size: 12.5px; border-bottom: 1px solid var(--border); }
+.history-item:last-child { border-bottom: none; }
+.history-item .history-top { display: flex; justify-content: space-between; gap: 8px; color: var(--ink); font-weight: 600; }
+.history-item .history-sub { color: var(--ink-soft); font-size: 11.5px; margin-top: 2px; }
+.history-item .history-diff { margin-top: 5px; font-size: 12px; color: var(--ink-soft); }
+.history-item .history-diff b { color: var(--ink); }
+.history-badge { display: inline-block; border-radius: 20px; font-size: 10.5px; padding: 1px 8px; margin-inline-start: 6px; background: var(--surface-sunken); color: var(--ink-soft); }
+.history-badge.stock { background: var(--teal-100); color: var(--teal-700); }
+/* صفوف تحميل هيكلية (Skeleton) بنفس شكل جدول/كارت الأصناف — بديل احترافي لنص
+   "جاري التحميل..."، بتظهر وقت فتح شاشة الأصناف أول مرة لحد ما يوصل رد الشبكة. */
+@keyframes bo-skeleton-pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+.bo-skeleton-block { display: inline-block; height: 12px; border-radius: 4px; background: var(--surface-sunken); animation: bo-skeleton-pulse 1.4s ease-in-out infinite; }
+.bo-skeleton-block.circle { border-radius: 50%; }
+.bo-table td .bo-skeleton-block { vertical-align: middle; }
+.bo-product-card.is-skeleton { pointer-events: none; }
+.bo-product-card.is-skeleton .product-thumb { background: var(--surface-sunken); animation: bo-skeleton-pulse 1.4s ease-in-out infinite; }
+.pm-tab-actions { display: flex; justify-content: flex-end; margin-bottom: 12px; }
 #treasuryStatementModalOverlay .modal-box { max-width: 960px; }
 @media (max-width: 1000px) {
   #treasuryStatementModalOverlay .modal-box { max-width: 94vw; }
@@ -1438,48 +1575,129 @@ a { color: inherit; }
             <div class="bo-section-title">إدارة الأصناف</div>
             <div class="bo-section-actions">
               <input type="file" id="productsExcelInput" accept=".xlsx,.xls" style="display:none;">
-              <button class="bo-outline-btn" id="importProductsBtn">استيراد إكسل</button>
-              <button class="bo-outline-btn" id="exportProductsBtn">تصدير إكسل</button>
-              <button class="bo-outline-btn" id="toggleBulkPriceEditBtn">تعديل سريع للأسعار</button>
+              <div class="bo-menu-wrap">
+                <button type="button" class="bo-outline-btn bo-menu-btn" id="productsMoreActionsBtn">إجراءات أخرى</button>
+                <div class="bo-menu-panel" id="productsMoreActionsPanel">
+                  <button class="bo-menu-item" id="refreshStockBtn" title="جلب أحدث أرقام الكميات المتاحة دون مغادرة الشاشة">⟳ تحديث المخزون</button>
+                  <button class="bo-menu-item" id="generateBarcodesAllMissingBtn" title="توليد باركود تلقائي لكل الأصناف التي لا تملك باركودًا">⚿ توليد الباركود الناقص</button>
+                  <button class="bo-menu-item" id="productsColumnsBtn" title="اختيار الأعمدة الظاهرة في الجدول">⚙ عرض الأعمدة</button>
+                  <div class="bo-menu-sep"></div>
+                  <button class="bo-menu-item" id="importProductsBtn">⇩ استيراد من إكسل</button>
+                  <button class="bo-menu-item" id="exportProductsBtn">⇧ تصدير الكل إلى إكسل</button>
+                  <button class="bo-menu-item" id="exportSelectedProductsBtn" style="display:none;">⇧ تصدير المحدد إلى إكسل</button>
+                  <div class="bo-menu-sep"></div>
+                  <button class="bo-menu-item" id="toggleBulkPriceEditBtn">✎ تعديل الأسعار</button>
+                </div>
+              </div>
               <button class="bo-add-btn" id="saveBulkPriceEditBtn" style="display:none;">حفظ التعديلات</button>
               <button class="bo-outline-btn" id="cancelBulkPriceEditBtn" style="display:none;">إلغاء</button>
+              <div class="bo-menu-wrap">
+                <button type="button" class="bo-outline-btn bo-menu-btn" id="quickAddProductBtn" style="display:none;">⚡ إضافة سريعة</button>
+                <div class="bo-menu-panel" id="quickAddProductPanel"></div>
+              </div>
               <button class="bo-add-btn" id="addProductBtn">+ صنف جديد</button>
             </div>
           </div>
-          <div class="search-row" style="margin-bottom:14px; align-items:center;">
-            <input type="text" id="productSearchInput" placeholder="ابحث بالاسم أو الباركود...">
+          <div class="search-row" style="margin-bottom:14px; align-items:center; flex-wrap:wrap;">
+            <input type="text" id="productSearchInput" placeholder="ابحث بالاسم أو الباركود..." style="flex:1; min-width:180px;">
             <select id="productCategoryFilter" style="padding: 12px 14px; font-size: 13.5px; min-width: 150px;">
               <option value="">كل المجموعات</option>
             </select>
-            <select id="productSortSelect" style="padding: 12px 14px; font-size: 13.5px; min-width: 170px;">
-              <option value="name_asc">الاسم (أ - ي)</option>
-              <option value="name_desc">الاسم (ي - أ)</option>
-              <option value="price_asc">سعر البيع (الأقل أولاً)</option>
-              <option value="price_desc">سعر البيع (الأعلى أولاً)</option>
-              <option value="newest">الأحدث إضافة</option>
-              <option value="oldest">الأقدم إضافة</option>
+            <select id="productStockFilter" style="padding: 12px 14px; font-size: 13.5px; min-width: 150px;">
+              <option value="">كل المخزون</option>
+              <option value="low">مخزون منخفض</option>
+              <option value="out">نافذ من المخزون</option>
             </select>
+            <div class="bo-menu-wrap">
+              <button type="button" class="bo-outline-btn bo-menu-btn" id="productsMoreFiltersBtn">فلاتر إضافية</button>
+              <div class="bo-menu-panel" id="productsMoreFiltersPanel">
+                <select id="productStatusFilter">
+                  <option value="">كل الحالات</option>
+                  <option value="active">مفعّل</option>
+                  <option value="inactive">موقّف</option>
+                </select>
+                <select id="productDataFilter">
+                  <option value="">كل البيانات الناقصة</option>
+                  <option value="no_barcode">بلا باركود</option>
+                  <option value="no_image">بلا صورة</option>
+                  <option value="no_cost">بلا سعر شراء</option>
+                </select>
+                <select id="productSortSelect">
+                  <option value="name_asc">الاسم (أ - ي)</option>
+                  <option value="name_desc">الاسم (ي - أ)</option>
+                  <option value="price_asc">سعر البيع (الأقل أولًا)</option>
+                  <option value="price_desc">سعر البيع (الأعلى أولًا)</option>
+                  <option value="newest">الأحدث إضافةً</option>
+                  <option value="oldest">الأقدم إضافةً</option>
+                </select>
+                <div class="bo-menu-sep"></div>
+                <button class="bo-menu-item" id="bulkPrintFilteredBarcodeBtn" title="طباعة باركود لكل الأصناف المطابقة للفلاتر الحالية دفعة واحدة">🖶 طباعة باركود النتائج</button>
+              </div>
+            </div>
+            <div class="bo-view-toggle" id="productsViewToggle">
+              <button type="button" id="productsViewTableBtn" data-view="table" title="عرض جدول">☰ جدول</button>
+              <button type="button" id="productsViewGridBtn" data-view="grid" title="عرض شبكي بالصور">▦ شبكة</button>
+            </div>
           </div>
-          <div class="bo-table-wrap">
+          <div class="bo-filter-chips" id="productsFilterChips" style="display:none;"></div>
+          <div class="bo-bulk-actions-bar" id="productsBulkActionsBar" style="display:none;">
+            <span class="bulk-count-label" id="productsBulkCountLabel"></span>
+            <select id="bulkMoveCategorySelect">
+              <option value="">نقل لمجموعة...</option>
+            </select>
+            <button class="bo-outline-btn" id="bulkMoveCategoryBtn">نقل</button>
+            <div class="bo-menu-wrap">
+              <button type="button" class="bo-outline-btn bo-menu-btn" id="bulkStatusMenuBtn">الحالة</button>
+              <div class="bo-menu-panel" id="bulkStatusMenuPanel">
+                <button class="bo-menu-item" id="bulkActivateBtn">تفعيل المحدد</button>
+                <button class="bo-menu-item" id="bulkDeactivateBtn">توقيف المحدد</button>
+              </div>
+            </div>
+            <div class="bo-menu-wrap">
+              <button type="button" class="bo-outline-btn bo-menu-btn" id="bulkBarcodeMenuBtn">الباركود</button>
+              <div class="bo-menu-panel" id="bulkBarcodeMenuPanel">
+                <button class="bo-menu-item" id="bulkPrintBarcodeBtn">طباعة باركود المحدد</button>
+                <button class="bo-menu-item" id="bulkGenerateBarcodeBtn" title="توليد باركود تلقائي للأصناف المحددة التي لا تملك باركودًا">توليد باركود للمحدد</button>
+              </div>
+            </div>
+            <button class="bo-outline-btn" id="bulkClearSelectionBtn">✕ إلغاء التحديد</button>
+          </div>
+          <div class="bo-table-wrap sticky-header" id="productsTableWrap">
             <table class="bo-table">
               <thead>
                 <tr>
+                  <th style="width:34px;"><input type="checkbox" id="selectAllProductsCheckbox"></th>
                   <th>الصنف</th>
-                  <th>المجموعة</th>
-                  <th>سعر البيع</th>
-                  <th class="cost-guard-cell">سعر الشراء</th>
-                  <th>الباركود</th>
-                  <th>المتغيرات</th>
-                  <th>الحالة</th>
+                  <th data-col="category">المجموعة</th>
+                  <th data-col="sale_price">سعر البيع</th>
+                  <th class="cost-guard-cell" data-col="cost_price">سعر الشراء</th>
+                  <th data-col="qty">الكمية المتاحة</th>
+                  <th data-col="barcode">الباركود</th>
+                  <th data-col="status">الحالة</th>
+                  <th data-col="updated_at">آخر تعديل</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody id="productsTableBody">
-                <tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr>
+                <tr><td colspan="10" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
-          <div class="bo-pager" id="productsPager"></div>
+          <div class="bo-products-grid" id="productsGridWrap" style="display:none;"></div>
+          <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+            <div class="bo-pager" id="productsPager"></div>
+            <div style="display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--ink-soft); padding:0 4px;">
+              <label for="productsPageSizeSelect">عدد الأصناف بالصفحة</label>
+              <select id="productsPageSizeSelect" style="padding:6px 8px; font-size:12.5px; border-radius:var(--radius-sm);">
+                <option value="10">10</option>
+                <option value="15">15</option>
+                <option value="20">20</option>
+                <option value="25" selected>25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         <!-- قسم المجموعات -->
@@ -5371,25 +5589,13 @@ a { color: inherit; }
             <button class="bo-add-btn" id="addBusinessTypeBtn">+ نوع نشاط جديد</button>
           </div>
           <div style="color:var(--ink-soft); font-size:13px; margin-bottom:14px;">
-            كل فرع مربوط بنوع نشاط تجاري (ماركت، جزارة، أحذية، مخازن...) بيحدد طريقة البيع الافتراضية للأصناف — بالوزن، بالمتغيرات (مقاس/لون)، أو بالقطعة العادية.
+            كل فرع مربوط بنوع نشاط تجاري (ماركت، جزارة، أحذية، مخازن...) بيحدد طريقة البيع الافتراضية للأصناف — بالوزن، بالمتغيرات (مقاس/لون)، أو بالقطعة العادية — وكمان تسمية الصنف والقوالب الجاهزة له.
           </div>
-          <div class="bo-table-wrap">
-            <table class="bo-table">
-              <thead>
-                <tr>
-                  <th>الاسم</th>
-                  <th>الكود</th>
-                  <th>بيع بالوزن</th>
-                  <th>يستخدم متغيرات</th>
-                  <th>الحالة</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="businessTypesTableBody">
-                <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
-              </tbody>
-            </table>
+          <div class="bt-toolbar">
+            <input type="text" id="businessTypesSearchInput" placeholder="ابحث بالاسم أو الكود...">
+            <span id="businessTypesCountLabel" style="font-size:12.5px; color:var(--ink-soft); white-space:nowrap;"></span>
           </div>
+          <div class="bt-grid" id="businessTypesGrid"></div>
         </div>
 
         <!-- قسم أجهزة نقاط البيع -->
@@ -5743,12 +5949,24 @@ a { color: inherit; }
 <div class="modal-overlay" id="productModalOverlay">
   <div class="modal-box wide">
     <div class="modal-title" id="productModalTitle">صنف جديد</div>
+
+    <div class="pm-tabs" id="pmTabs">
+      <button type="button" class="pm-tab-btn active" data-pm-tab="basic">البيانات الأساسية</button>
+      <button type="button" class="pm-tab-btn" data-pm-tab="modifiers">ربط الإضافات <span class="pm-tab-count" id="pmModifiersCount"></span></button>
+      <button type="button" class="pm-tab-btn" data-pm-tab="variants">المتغيرات <span class="pm-tab-count" id="pmVariantsCount"></span></button>
+      <button type="button" class="pm-tab-btn" data-pm-tab="batches">الدفعات والصلاحية <span class="pm-tab-count" id="pmBatchesCount"></span></button>
+      <button type="button" class="pm-tab-btn" data-pm-tab="serials">الأرقام التسلسلية <span class="pm-tab-count" id="pmSerialsCount"></span></button>
+      <button type="button" class="pm-tab-btn" data-pm-tab="stock">المخزون بالمخازن <span class="pm-tab-count" id="pmStockCount"></span></button>
+      <button type="button" class="pm-tab-btn" data-pm-tab="history">سجل التعديلات</button>
+    </div>
+
+    <div class="pm-tab-panel" id="pmPanelBasic">
     <form id="productForm">
       <input type="hidden" id="productId">
 
       <div class="ci-section-subtitle" style="margin-top:0;">البيانات الأساسية</div>
       <div class="modal-grid">
-        <div class="field field-full"><label>اسم الصنف</label><input type="text" id="productName" required></div>
+        <div class="field field-full"><label id="productNameFieldLabel">اسم الصنف</label><input type="text" id="productName" required></div>
         <div class="field"><label>المجموعة</label><select id="productCategory"><option value="">بدون مجموعة</option></select></div>
         <div class="field"><label>نوع البيع</label>
           <select id="productUnitType"></select>
@@ -5781,10 +5999,13 @@ a { color: inherit; }
       <div class="ci-section-subtitle">المخزون والوحدات</div>
       <div class="modal-grid">
         <div class="field"><label>حد إعادة الطلب</label><input type="number" id="productReorder" step="0.01" min="0" value="0"></div>
-        <div class="field field-full">
+        <div class="field field-full" id="productSellByWeightField">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
             <input type="checkbox" id="productSellByWeight" style="width:auto;"> يباع بالوزن (كجم) — سعر البيع أعلاه يُعتبر سعر الكيلوجرام
           </label>
+        </div>
+        <div class="field field-full" id="productVariantsSuggestHint" style="display:none; font-size:11.5px; color:var(--ink-soft); margin-top:-6px;">
+          💡 نشاط الفرع ده بيستخدم المتغيرات (مقاسات/ألوان) — احفظ الصنف الأول، وبعدين تقدر تضيف المتغيرات من تاب "المتغيرات".
         </div>
         <div class="field field-full" id="productUnitsSection">
           <label>وحدات بيع إضافية (اختياري) — مثال: كرتونة فيها 24 قطعة</label>
@@ -5825,15 +6046,6 @@ a { color: inherit; }
         </div>
       </div>
 
-      <div class="ci-section-subtitle">الإضافات والتعديلات</div>
-      <div class="modal-grid">
-        <div class="field field-full">
-          <label>هتظهر للكاشير وقت إضافة الصنف للفاتورة (اختياري)</label>
-          <div id="productModifierGroupsList" style="display:flex; flex-direction:column; gap:6px;"></div>
-          <p id="productModifierGroupsEmptyHint" style="font-size:11.5px; color:var(--ink-soft); margin:6px 0 0; display:none;">لا توجد مجموعات إضافات مفعّلة حتى الآن — أنشئ مجموعة أولاً من شاشة "الإضافات والتعديلات".</p>
-        </div>
-      </div>
-
       <div class="ci-section-subtitle">خيارات متقدمة</div>
       <div class="modal-grid">
         <div class="field field-full">
@@ -5856,6 +6068,101 @@ a { color: inherit; }
         <button type="submit" class="submit-btn" id="saveProductBtn">حفظ</button>
       </div>
     </form>
+    </div>
+
+    <!-- تاب: ربط الإضافات -->
+    <div class="pm-tab-panel" id="pmPanelModifiers" style="display:none;">
+      <p class="pm-tab-hint" id="pmModifiersHint">احفظ الصنف الأساسي أولاً (تاب "البيانات الأساسية") قبل ربط الإضافات به.</p>
+      <div id="pmModifiersContent" style="display:none;">
+        <div style="color:var(--ink-soft); font-size:13px; margin-bottom:12px;">
+          اختار مجموعات الإضافات اللي هتظهر للكاشير عند إضافة الصنف ده للفاتورة، وحدد سعر مستقل لكل خيار لو محتاج.
+        </div>
+        <div id="productModifierGroupsList" style="display:flex; flex-direction:column; gap:6px;"></div>
+        <p id="productModifierGroupsEmptyHint" style="font-size:11.5px; color:var(--ink-soft); margin:6px 0 0; display:none;">لا توجد مجموعات إضافات مفعّلة حتى الآن — أنشئ مجموعة أولاً من شاشة "الإضافات والتعديلات".</p>
+        <div class="error-msg" id="pmModifiersError"></div>
+        <div class="modal-actions">
+          <button type="button" class="submit-btn" id="pmSaveModifiersBtn">حفظ ربط الإضافات</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- تاب: المتغيرات -->
+    <div class="pm-tab-panel" id="pmPanelVariants" style="display:none;">
+      <p class="pm-tab-hint" id="pmVariantsHint">احفظ الصنف الأساسي أولاً (تاب "البيانات الأساسية") قبل إضافة متغيرات له.</p>
+      <div class="pm-tab-actions" id="pmVariantsActions" style="display:none;">
+        <button type="button" class="bo-add-btn" id="pmAddVariantBtn">+ متغير جديد</button>
+      </div>
+      <div class="bo-table-wrap" id="pmVariantsTableWrap" style="display:none;">
+        <table class="bo-table">
+          <thead><tr><th>الخصائص</th><th>سعر البيع</th><th>الباركود</th><th>الحالة</th><th></th></tr></thead>
+          <tbody id="pmVariantsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- تاب: الدفعات وتواريخ الصلاحية -->
+    <div class="pm-tab-panel" id="pmPanelBatches" style="display:none;">
+      <p class="pm-tab-hint" id="pmBatchesHint">احفظ الصنف الأساسي أولاً (تاب "البيانات الأساسية") قبل إضافة دفعات له.</p>
+      <div class="pm-tab-actions" id="pmBatchesActions" style="display:none;">
+        <button type="button" class="bo-add-btn" id="pmAddBatchBtn">+ دفعة جديدة</button>
+      </div>
+      <div class="bo-table-wrap" id="pmBatchesTableWrap" style="display:none;">
+        <table class="bo-table">
+          <thead><tr><th>رقم الدفعة</th><th>المخزن</th><th>تاريخ الإنتاج</th><th>تاريخ الانتهاء</th><th>الكمية</th><th>سعر التكلفة</th><th>الحالة</th><th></th></tr></thead>
+          <tbody id="pmBatchesTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- تاب: الأرقام التسلسلية -->
+    <div class="pm-tab-panel" id="pmPanelSerials" style="display:none;">
+      <p class="pm-tab-hint" id="pmSerialsHint">احفظ الصنف الأساسي أولاً (تاب "البيانات الأساسية") قبل إضافة أرقام تسلسلية له.</p>
+      <div class="pm-tab-actions" id="pmSerialsActions" style="display:none;">
+        <button type="button" class="bo-add-btn" id="pmAddSerialBtn">+ رقم/أرقام تسلسلية</button>
+      </div>
+      <div class="bo-table-wrap" id="pmSerialsTableWrap" style="display:none;">
+        <table class="bo-table">
+          <thead><tr><th>الرقم التسلسلي</th><th>المخزن</th><th>الحالة</th><th>بداية الضمان</th><th>نهاية الضمان</th><th></th></tr></thead>
+          <tbody id="pmSerialsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- تاب: المخزون بالمخازن -->
+    <div class="pm-tab-panel" id="pmPanelStock" style="display:none;">
+      <p class="pm-tab-hint" id="pmStockHint">احفظ الصنف الأساسي أولاً (تاب "البيانات الأساسية") قبل تعديل أرصدته بالمخازن.</p>
+      <div id="pmStockContent" style="display:none;">
+        <div style="color:var(--ink-soft); font-size:13px; margin-bottom:12px;">
+          رصيد الصنف في كل مخزن. غيّر الرقم في أي مخزن واضغط حفظ — التعديل بيتسجل تلقائيًا كحركة "جرد" في سجل تسويات المخزون.
+        </div>
+        <div class="bo-table-wrap">
+          <table class="bo-table">
+            <thead><tr><th>المخزن</th><th>الرصيد الحالي</th><th>الرصيد الجديد</th><th>الفرق</th></tr></thead>
+            <tbody id="pmStockTableBody"></tbody>
+          </table>
+        </div>
+        <div class="field field-full" style="margin-top:12px;">
+          <label>ملاحظة (اختياري)</label>
+          <input type="text" id="pmStockNote" placeholder="سبب التعديل">
+        </div>
+        <div class="error-msg" id="pmStockError"></div>
+        <div class="modal-actions">
+          <button type="button" class="submit-btn" id="pmSaveStockBtn">حفظ تعديلات المخزون</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- تاب: سجل التعديلات (Audit Trail) -->
+    <div class="pm-tab-panel" id="pmPanelHistory" style="display:none;">
+      <p class="pm-tab-hint" id="pmHistoryHint">احفظ الصنف الأساسي أولاً (تاب "البيانات الأساسية") قبل استعراض سجل تعديلاته.</p>
+      <div id="pmHistoryContent" style="display:none;">
+        <div style="color:var(--ink-soft); font-size:13px; margin-bottom:10px;">
+          آخر التغييرات المسجّلة على هذا الصنف: من عدّل، وإمتى، وأي حقل اتغيّر (السعر، الكمية بالمخزون، إلخ).
+        </div>
+        <div id="pmHistoryList"><div class="qv-empty">جارٍ التحميل...</div></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -7007,12 +7314,19 @@ a { color: inherit; }
 
 <!-- Modal: إضافة / تعديل نوع نشاط تجاري -->
 <div class="modal-overlay" id="businessTypeModalOverlay">
-  <div class="modal-box">
+  <div class="modal-box" style="max-width:600px;">
     <div class="modal-title" id="businessTypeModalTitle">نوع نشاط جديد</div>
     <form id="businessTypeForm">
       <input type="hidden" id="businessTypeId">
-      <div class="field field-full"><label>اسم النشاط</label><input type="text" id="businessTypeName" required placeholder="مثال: محل أدوات كهربائية"></div>
-      <div class="field field-full"><label>الكود (بالإنجليزي، بدون مسافات)</label><input type="text" id="businessTypeCode" required placeholder="مثال: electronics"></div>
+      <div class="ci-section-subtitle" style="margin-top:4px;">معلومات أساسية</div>
+      <div class="modal-grid">
+        <div class="field"><label>الأيقونة (اختياري)</label><input type="text" id="businessTypeIcon" class="bt-icon-input" maxlength="4" placeholder="🏬"></div>
+        <div class="field"><label>اسم النشاط</label><input type="text" id="businessTypeName" required placeholder="مثال: محل أدوات كهربائية"></div>
+        <div class="field field-full"><label>الكود (بالإنجليزي، بدون مسافات)</label><input type="text" id="businessTypeCode" required placeholder="مثال: electronics"></div>
+        <div class="field field-full"><label>مسمّى الصنف في الشاشات (اختياري)</label><input type="text" id="businessTypeItemNameLabel" placeholder="مثال: الموديل (أحذية)، الصنف/الطبق (مطاعم) — سيب فاضي عشان يفضل &quot;الصنف&quot;"></div>
+      </div>
+
+      <div class="ci-section-subtitle">طريقة بيع الأصناف</div>
       <div class="field field-full">
         <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
           <input type="checkbox" id="businessTypeUsesWeight" style="width:auto;"> البيع بالوزن افتراضيًا (زي الجزارة)
@@ -7023,11 +7337,22 @@ a { color: inherit; }
           <input type="checkbox" id="businessTypeUsesVariants" style="width:auto;"> يستخدم متغيرات للصنف (مقاس/لون) زي الأحذية
         </label>
       </div>
+
+      <div class="ci-section-subtitle">قوالب أصناف سريعة</div>
+      <div class="field field-full">
+        <div class="units-list" id="businessTypeTemplatesList"></div>
+        <button type="button" class="btn-secondary" id="addBusinessTypeTemplateRowBtn" style="margin-top:8px;">+ إضافة قالب</button>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin:6px 0 0;">هتظهر كخيارات جاهزة في زرار "إضافة سريعة" بشاشة الأصناف، لأي فرع نشاطه ده.</p>
+      </div>
+
+      <div class="ci-section-subtitle">الحالة</div>
       <div class="field field-full">
         <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
           <input type="checkbox" id="businessTypeActive" checked style="width:auto;"> مفعّل
         </label>
       </div>
+      <div class="field field-full" id="businessTypeBranchCountNote" style="display:none; font-size:11.5px; color:var(--ink-soft); margin-top:-6px;"></div>
+
       <div class="error-msg" id="businessTypeModalError"></div>
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelBusinessTypeBtn">إلغاء</button>
@@ -13067,14 +13392,38 @@ let boDeliveries = [];
 let boSupplierPrices = [];
 let supplierPricesLoadedOnce = false;
 let productsListPage = 1;
-const PRODUCTS_PAGE_SIZE = 25;
+let productsPageSize = Number(localStorage.getItem('productsPageSize')) || 25; // عدد الأصناف بالصفحة — قابل للتغيير من الشاشة ومحفوظ محليًا
+let productsViewMode = localStorage.getItem('productsViewMode') === 'grid' ? 'grid' : 'table'; // عرض جدول أو شبكة بالصور لشاشة الأصناف — محفوظ محليًا
+// أعمدة جدول الأصناف القابلة للإخفاء/الإظهار (الصنف والإجراءات ثابتين دايمًا وموجودين خارج القائمة)
+const PRODUCT_TABLE_COLUMNS = [
+  { key: 'category', label: 'المجموعة' },
+  { key: 'sale_price', label: 'سعر البيع' },
+  { key: 'cost_price', label: 'سعر الشراء' },
+  { key: 'qty', label: 'الكمية المتاحة' },
+  { key: 'barcode', label: 'الباركود' },
+  { key: 'status', label: 'الحالة' },
+  { key: 'updated_at', label: 'آخر تعديل' },
+];
+function loadProductsVisibleColumns() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('productsVisibleColumns') || 'null');
+    if (Array.isArray(saved)) return new Set(saved);
+  } catch (err) { /* تجاهل قيمة تالفة في التخزين المحلي والرجوع للافتراضي */ }
+  // افتراضيًا: الأعمدة الأكثر استخدامًا ظاهرة، و"سعر الشراء" و"آخر تعديل" مخفيّان (ينفع إظهارهما من قائمة الأعمدة)
+  const DEFAULT_HIDDEN = new Set(['cost_price', 'updated_at']);
+  return new Set(PRODUCT_TABLE_COLUMNS.filter(c => !DEFAULT_HIDDEN.has(c.key)).map(c => c.key));
+}
+let productsVisibleColumns = loadProductsVisibleColumns();
 let boCategories = [];
 let currentBarcodes = []; // الباركود المرتبط بالصنف المفتوح حاليًا في المودال
 let currentUnits = []; // وحدات البيع الإضافية المرتبطة بالصنف المفتوح حاليًا في المودال
+let pendingQuickTemplateInitialTab = null; // التاب المطلوب فتحه بعد أول حفظ لصنف اتفتح من "إضافة سريعة"
 let currentProductModifierGroupIds = []; // مجموعات الإضافات المرتبطة بالصنف المفتوح حاليًا في المودال
 let currentBundleItems = []; // مكوّنات الباقة المرتبطة بالصنف المفتوح حاليًا في المودال (لو منتج مركّب)
 let productsBulkEditMode = false; // وضع تعديل الأسعار الجماعي (inline) في جدول الأصناف
 let bulkPriceEditChanges = {}; // { productId: { sale_price, cost_price } } — التعديلات المعلّقة لسه ما اتحفظتش
+let productsStockMap = {}; // { product_id: qty } إجمالي الكمية بكل المخازن — بيتحدّث عند دخول شاشة الأصناف
+let productsSelectedIds = new Set(); // الأصناف المحددة حاليًا بالتحديد المتعدد في جدول الأصناف
 let currentProductModifierOptionPrices = {}; // { option_id: price } لمجموعات "سعر مستقل لكل صنف" الخاصة بالصنف المفتوح حاليًا
 let currentProductTierPrices = {}; // { price_tier_id: price } أسعار الشرائح الخاصة بالصنف المفتوح حاليًا
 
@@ -13096,7 +13445,7 @@ async function enterBackoffice() {
   // بالتوازي بدل التتابع بيقلل وقت الانتظار بشكل كبير، وبالتالي بيقلل فرصة
   // إن المستخدم يضغط على شاشة تانية قبل ما التحميل يخلص
   await Promise.all([
-    loadBoCategories(), loadBoProducts(), loadBoCustomers(), loadBoSuppliers(),
+    loadBoCategories(), loadBoProducts(), loadProductsStockMap(), loadBoCustomers(), loadBoSuppliers(),
     loadBoPurchases(), loadBoWarehouses(), loadBoRoles(), loadBoBranches(),
     loadBoUsers(), loadBoEmployees(), loadBoExpenseItems(), loadBoUnitTypes(),
     loadBoCustomerTypes(), loadBoTaxRates(), loadBoPriceTiers(), loadBoQuickDiscounts(),
@@ -13925,6 +14274,15 @@ function activateBoSection(section, btn) {
   if (section === 'stocktake') { initStocktakeSection(); }
   if (section === 'product-batches' && !productBatchesLoadedOnce) { initProductBatchesSection(); productBatchesLoadedOnce = true; }
   if (section === 'product-serials' && !productSerialsLoadedOnce) { initProductSerialsSection(); productSerialsLoadedOnce = true; }
+  if (section === 'products') {
+    showProductsSkeleton();
+    loadProductsStockMap().then(renderProductsTable);
+    renderProductsFilterChips();
+    // تركيز تلقائي على مربع البحث عشان لو المستخدم مسح باركود بقارئ خارجي
+    // (بيتصرف كلوحة مفاتيح) يروح مباشرة لمربع البحث من غير ما يضطر يضغط عليه الأول
+    const searchInput = document.getElementById('productSearchInput');
+    if (searchInput) setTimeout(() => searchInput.focus(), 50);
+  }
 }
 
 async function loadDashboard(fromDate, toDate) {
@@ -14875,15 +15233,80 @@ function bindBackofficeEvents() {
   document.getElementById('toggleBulkPriceEditBtn').addEventListener('click', () => enterBulkPriceEditMode());
   document.getElementById('cancelBulkPriceEditBtn').addEventListener('click', () => exitBulkPriceEditMode());
   document.getElementById('saveBulkPriceEditBtn').addEventListener('click', () => saveBulkPriceEdits());
-  document.getElementById('exportProductsBtn').addEventListener('click', exportProductsToExcel);
+  document.getElementById('exportProductsBtn').addEventListener('click', () => exportProductsToExcel());
+  document.getElementById('exportSelectedProductsBtn').addEventListener('click', exportSelectedProductsToExcel);
   document.getElementById('importProductsBtn').addEventListener('click', () => document.getElementById('productsExcelInput').click());
   document.getElementById('productsExcelInput').addEventListener('change', handleProductsExcelImport);
+  document.getElementById('importPreviewConfirmBtn').addEventListener('click', confirmProductsImport);
+  document.getElementById('importPreviewCancelBtn').addEventListener('click', () => closeImportPreviewModal(true));
+  document.getElementById('importPreviewModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'importPreviewModalOverlay') closeImportPreviewModal(true);
+  });
   document.getElementById('productSearchInput').addEventListener('input', filterProductsTableFromStart);
+  document.getElementById('productSearchInput').addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    // قارئ الباركود الخارجي بيبعت Enter بعد الكود مباشرة — لو النتيجة صنف واحد بالظبط، نفتح معاينته فورًا
+    const matches = getFilteredProductsList();
+    if (matches.length === 1) openProductQuickView(matches[0]);
+  });
   document.getElementById('productCategoryFilter').addEventListener('change', filterProductsTableFromStart);
+  document.getElementById('productStatusFilter').addEventListener('change', filterProductsTableFromStart);
+  document.getElementById('productStockFilter').addEventListener('change', filterProductsTableFromStart);
+  document.getElementById('productDataFilter').addEventListener('change', filterProductsTableFromStart);
   document.getElementById('productSortSelect').addEventListener('change', filterProductsTableFromStart);
+  const productsPageSizeSelect = document.getElementById('productsPageSizeSelect');
+  productsPageSizeSelect.value = String(productsPageSize);
+  productsPageSizeSelect.addEventListener('change', (e) => {
+    productsPageSize = Number(e.target.value) || 25;
+    localStorage.setItem('productsPageSize', String(productsPageSize));
+    productsListPage = 1;
+    renderProductsTable();
+  });
+
+  // ---- تحديد متعدد وعمليات جماعية على الأصناف ----
+  document.getElementById('selectAllProductsCheckbox').addEventListener('change', (e) => {
+    document.querySelectorAll('.product-row-checkbox').forEach(cb => {
+      cb.checked = e.target.checked;
+      const pid = cb.dataset.productId;
+      if (e.target.checked) productsSelectedIds.add(pid); else productsSelectedIds.delete(pid);
+    });
+    updateProductsBulkActionsBar();
+  });
+  document.getElementById('bulkActivateBtn').addEventListener('click', () => bulkSetProductsActive(true));
+  document.getElementById('bulkDeactivateBtn').addEventListener('click', () => bulkSetProductsActive(false));
+  document.getElementById('bulkMoveCategoryBtn').addEventListener('click', () => bulkMoveSelectedToCategory());
+  document.getElementById('bulkPrintBarcodeBtn').addEventListener('click', () => bulkPrintSelectedBarcodes());
+  document.getElementById('bulkClearSelectionBtn').addEventListener('click', () => clearProductsSelection());
+  document.getElementById('bulkGenerateBarcodeBtn').addEventListener('click', () => bulkGenerateBarcodesForSelected());
+  document.getElementById('bulkPrintFilteredBarcodeBtn').addEventListener('click', () => bulkPrintFilteredBarcodes());
+  document.getElementById('refreshStockBtn').addEventListener('click', () => refreshProductsStock());
+  document.getElementById('productsViewTableBtn').addEventListener('click', () => setProductsViewMode('table'));
+  document.getElementById('productsViewGridBtn').addEventListener('click', () => setProductsViewMode('grid'));
+  document.getElementById('generateBarcodesAllMissingBtn').addEventListener('click', () => bulkGenerateBarcodesForAllMissing());
+  document.getElementById('productsColumnsBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (productsColumnsPopupEl) { closeProductsColumnsPopup(); return; }
+    openProductsColumnsPopup(e.currentTarget);
+  });
+
   document.getElementById('cancelProductBtn').addEventListener('click', closeProductModal);
   document.getElementById('productModalOverlay').addEventListener('click', (e) => {
     if (e.target.id === 'productModalOverlay') closeProductModal();
+  });
+  document.querySelectorAll('.pm-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchPmTab(btn.dataset.pmTab));
+  });
+  document.getElementById('pmAddVariantBtn').addEventListener('click', () => {
+    if (currentPmProduct) openVariantFormModal(currentPmProduct, null);
+  });
+  document.getElementById('pmSaveModifiersBtn').addEventListener('click', saveProductModifierLinksTab);
+  document.getElementById('pmSaveStockBtn').addEventListener('click', saveProductStockTab);
+  document.getElementById('pmAddBatchBtn').addEventListener('click', () => {
+    if (currentPmProduct) openProductBatchModal(null, currentPmProduct.id);
+  });
+  document.getElementById('pmAddSerialBtn').addEventListener('click', () => {
+    if (currentPmProduct) openProductSerialModal(null, currentPmProduct.id);
   });
   document.getElementById('addBarcodeBtn').addEventListener('click', addBarcodeToCurrentProduct);
   document.getElementById('newBarcodeInput').addEventListener('keydown', (e) => {
@@ -14927,6 +15350,11 @@ function bindBackofficeEvents() {
   document.getElementById('addUnitRowBtn').addEventListener('click', () => {
     currentUnits.push({ id: null, unit_type_id: '', factor_to_base: '', sale_price: '', is_active: true });
     renderUnitsList();
+  });
+
+  document.getElementById('addBusinessTypeTemplateRowBtn').addEventListener('click', () => {
+    currentBusinessTypeTemplates.push({ label: '', sell_by: 'unit', initial_tab: 'basic' });
+    renderBusinessTypeTemplatesList();
   });
 
   document.getElementById('productIsBundle').addEventListener('change', (e) => {
@@ -15357,6 +15785,10 @@ function bindBackofficeEvents() {
 
   // ---- Business types ----
   document.getElementById('addBusinessTypeBtn').addEventListener('click', () => openBusinessTypeModal(null));
+  document.getElementById('businessTypesSearchInput').addEventListener('input', (e) => {
+    businessTypesSearchTerm = e.target.value;
+    renderBusinessTypesTable();
+  });
   document.getElementById('cancelBusinessTypeBtn').addEventListener('click', closeBusinessTypeModal);
   document.getElementById('businessTypeModalOverlay').addEventListener('click', (e) => {
     if (e.target.id === 'businessTypeModalOverlay') closeBusinessTypeModal();
@@ -15812,6 +16244,13 @@ async function loadBoProducts() {
   boProducts = data || [];
 }
 
+// إجمالي كمية كل صنف بكل المخازن، بيتحدّث عند دخول شاشة الأصناف عشان
+// عمود "الكمية المتاحة" ومؤشر المخزون المنخفض يفضلوا محدّثين
+async function loadProductsStockMap() {
+  try { productsStockMap = await fetchStockByProduct(null); }
+  catch (err) { console.error(err); }
+}
+
 async function loadBoCategories() {
   const { data, error } = await supabaseClient.from('categories').select('*').order('name');
   if (error) { console.error(error); return; }
@@ -15827,6 +16266,7 @@ function populateProductCategorySelect() {
     sel.appendChild(opt);
   });
   populateProductCategoryFilter();
+  populateBulkMoveCategorySelect();
 }
 
 function populateProductCategoryFilter() {
@@ -15870,13 +16310,14 @@ function populateProductTaxRateSelect(currentValue) {
   sel.value = currentValue || '';
 }
 
-function exportProductsToExcel() {
-  if (boProducts.length === 0) {
+function exportProductsToExcel(productsList) {
+  const list = productsList || boProducts;
+  if (list.length === 0) {
     showToast('لا توجد أصناف لتصديرها', true);
     return;
   }
   const tiers = getManagedPriceTiers().filter(t => t.is_active);
-  const rows = boProducts.map(p => {
+  const rows = list.map(p => {
     const tierPricesByTierId = {};
     (p.product_prices || []).forEach(pp => { if (pp.price != null) tierPricesByTierId[pp.price_tier_id] = Number(pp.price); });
     const tierCols = {};
@@ -15901,8 +16342,17 @@ function exportProductsToExcel() {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'الأصناف');
   const dateStr = new Date().toISOString().slice(0, 10);
-  XLSX.writeFile(wb, `الأصناف-${dateStr}.xlsx`);
+  const fileSuffix = productsList ? `-المحدد-${list.length}` : '';
+  XLSX.writeFile(wb, `الأصناف${fileSuffix}-${dateStr}.xlsx`);
   showToast('تم تصدير ملف الإكسل بنجاح');
+}
+
+// تصدير الأصناف المحددة بس (تحديد متعدد من الجدول) — نفس منطق التصدير الكامل
+// لكن بيمرر قائمة الأصناف المحددة بس بدل كل boProducts.
+function exportSelectedProductsToExcel() {
+  if (productsSelectedIds.size === 0) return;
+  const selected = Array.from(productsSelectedIds).map(id => boProducts.find(p => p.id === id)).filter(Boolean);
+  exportProductsToExcel(selected);
 }
 
 function findOrCreateCategoryId(name) {
@@ -15931,12 +16381,15 @@ function findOrCreateUnitTypeName(name) {
     });
 }
 
+let pendingImportRows = null; // الصفوف اللي المستخدم شافها في شاشة المعاينة وأكّد استيرادها
+let pendingImportFileInput = null; // مرجع لعنصر input الملف عشان نصفّره بعد التأكيد أو الإلغاء
+
+// بيقرأ الملف بس (من غير أي كتابة على قاعدة البيانات)، وبيحلل كل صف عشان يوريّ
+// المستخدم قبل التأكيد: كام صف جاهز، كام فيه تنبيه (زي باركود مكرر)، وكام فيه خطأ يمنع إضافته (زي اسم مفقود)
 async function handleProductsExcelImport(e) {
   const file = e.target.files[0];
   if (!file) return;
-  const importBtn = document.getElementById('importProductsBtn');
-  importBtn.disabled = true;
-  importBtn.textContent = 'جاري الاستيراد...';
+  pendingImportFileInput = e.target;
 
   try {
     const buf = await file.arrayBuffer();
@@ -15946,96 +16399,202 @@ async function handleProductsExcelImport(e) {
 
     if (rows.length === 0) {
       showToast('الملف فارغ، لا توجد صفوف لاستيرادها', true);
+      e.target.value = '';
       return;
     }
 
-    let successCount = 0;
-    const errors = [];
+    const existingBarcodes = new Set();
+    boProducts.forEach(p => (p.product_barcodes || []).forEach(b => existingBarcodes.add(b.barcode.trim().toLowerCase())));
+    const barcodesSeenInFile = new Set();
 
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
+    const analysis = rows.map((row, i) => {
       const name = (row['اسم الصنف'] || row['الاسم'] || row['name'] || '').toString().trim();
-      if (!name) {
-        errors.push(`صف ${i + 2}: الاسم مفقود`);
-        continue;
-      }
-      try {
-        const categoryId = await findOrCreateCategoryId(row['المجموعة'] || row['category']);
-        const unitType = await findOrCreateUnitTypeName(row['نوع الوحدة'] || row['unit_type']);
-        const payload = {
-          name,
-          category_id: categoryId,
-          unit_type: unitType,
-          cost_price: Number(row['سعر الشراء']) || 0,
-          sale_price: Number(row['سعر البيع']) || 0,
-          reorder_level: Number(row['حد إعادة الطلب']) || 0,
-          is_active: (row['الحالة'] || '').toString().trim() !== 'موقّف',
-        };
-        const { data: newProduct, error: prodError } = await supabaseClient
-          .from('products').insert(payload).select().single();
-        if (prodError) throw prodError;
+      const salePrice = Number(row['سعر البيع']);
+      const barcodeText = (row['الباركود'] || row['barcode'] || '').toString().trim();
+      const barcodesInRow = barcodeText.split(/[,،\s]+/).filter(Boolean);
+      const warnings = [];
+      let hasError = false;
 
-        // أسعار الشرائح: أي عمود في الملف باسم مطابق لشريحة سعر مفعّلة موجودة
-        // فعلاً، وله قيمة، بيتسجل كسعر خاص بهذا الصنف لتلك الشريحة
-        const tierPriceRows = getManagedPriceTiers().filter(t => t.is_active)
-          .filter(t => row[t.name] !== '' && row[t.name] != null)
-          .map(t => ({ product_id: newProduct.id, price_tier_id: t.id, price: Number(row[t.name]) }));
-        if (tierPriceRows.length > 0) {
-          const { error: tierError } = await supabaseClient.from('product_prices').insert(tierPriceRows);
-          if (tierError) errors.push(`صف ${i + 2}: تعذر حفظ أسعار الشرائح`);
-        }
+      if (!name) { hasError = true; warnings.push('الاسم مفقود'); }
+      if (name && (!salePrice || salePrice <= 0)) warnings.push('سعر البيع فارغ أو صفر');
+      barcodesInRow.forEach(bc => {
+        const key = bc.trim().toLowerCase();
+        if (existingBarcodes.has(key)) warnings.push(`الباركود "${bc}" مستخدم لصنف موجود بالفعل`);
+        else if (barcodesSeenInFile.has(key)) warnings.push(`الباركود "${bc}" مكرر داخل الملف نفسه`);
+        barcodesSeenInFile.add(key);
+      });
 
-        const barcodeText = (row['الباركود'] || row['barcode'] || '').toString().trim();
-        if (barcodeText) {
-          const barcodes = barcodeText.split(/[,،\s]+/).filter(Boolean)
-            .map(b => ({ product_id: newProduct.id, barcode: b }));
-          if (barcodes.length > 0) {
-            const { error: bcError } = await supabaseClient.from('product_barcodes').insert(barcodes);
-            if (bcError) errors.push(`صف ${i + 2}: الباركود مكرر أو حدث به خطأ`);
-          }
-        }
-        successCount++;
-      } catch (err) {
-        console.error(err);
-        errors.push(`صف ${i + 2} (${name}): ${err.message || 'حدث خطأ'}`);
-      }
-    }
+      return { rowNum: i + 2, name: name || '(بدون اسم)', hasError, warnings, row };
+    });
 
-    await loadBoCategories();
-    await loadBoProducts();
-    populateProductCategorySelect();
-    renderProductsTable();
-
-    if (errors.length === 0) {
-      showToast(`تمت إضافة ${successCount} صنف بنجاح`);
-    } else {
-      showToast(`تمت إضافة ${successCount} صنف، وفشلت إضافة ${errors.length}`, errors.length === rows.length);
-      console.warn('أخطاء الاستيراد:', errors);
-    }
+    pendingImportRows = analysis;
+    openImportPreviewModal(analysis);
   } catch (err) {
     console.error(err);
     showToast('تعذر قراءة ملف الإكسل، تأكد من الصيغة', true);
-  } finally {
-    importBtn.disabled = false;
-    importBtn.textContent = 'استيراد إكسل';
     e.target.value = '';
   }
 }
 
-function renderProductsTable() {
-  const tbody = document.getElementById('productsTableBody');
-  const pagerEl = document.getElementById('productsPager');
-  // شاشة الأصناف بتعرض الأصناف الأساسية بس (اللي مالهاش parent_product_id)؛
-  // المتغيرات (زي المقاسات/الألوان) بتتعرض جوه مودال "متغيرات" خاص بكل صنف.
-  const topLevelProducts = boProducts.filter(p => !p.parent_product_id);
-  if (topLevelProducts.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" class="bo-empty">لا توجد أصناف مضافة حتى الآن</td></tr>`;
-    pagerEl.innerHTML = '';
-    return;
+function openImportPreviewModal(analysis) {
+  const errCount = analysis.filter(r => r.hasError).length;
+  const warnCount = analysis.filter(r => !r.hasError && r.warnings.length > 0).length;
+  const okCount = analysis.length - errCount - warnCount;
+
+  document.getElementById('importPreviewStats').innerHTML = `
+    <div class="import-preview-stat"><span class="num">${analysis.length}</span>إجمالي الصفوف</div>
+    <div class="import-preview-stat ok"><span class="num">${okCount}</span>جاهزة للاستيراد</div>
+    <div class="import-preview-stat warn"><span class="num">${warnCount}</span>بها تنبيهات</div>
+    <div class="import-preview-stat err"><span class="num">${errCount}</span>بها أخطاء (لن تُستورد)</div>`;
+
+  document.getElementById('importPreviewTableBody').innerHTML = analysis.map(r => {
+    const statusHtml = r.hasError
+      ? `<span class="import-row-status err">✕ ${escapeHtml(r.warnings.join(' — '))}</span>`
+      : r.warnings.length
+        ? `<span class="import-row-status warn">⚠ ${escapeHtml(r.warnings.join(' — '))}</span>`
+        : `<span class="import-row-status ok">✓ جاهز</span>`;
+    return `<tr><td>${r.rowNum}</td><td>${escapeHtml(r.name)}</td><td>${statusHtml}</td></tr>`;
+  }).join('');
+
+  const confirmBtn = document.getElementById('importPreviewConfirmBtn');
+  confirmBtn.disabled = okCount + warnCount === 0;
+  confirmBtn.textContent = `تأكيد استيراد ${okCount + warnCount} صنف`;
+  document.getElementById('importPreviewModalOverlay').classList.add('show');
+}
+
+function closeImportPreviewModal(resetFile) {
+  document.getElementById('importPreviewModalOverlay').classList.remove('show');
+  if (resetFile && pendingImportFileInput) pendingImportFileInput.value = '';
+  pendingImportRows = null;
+  pendingImportFileInput = null;
+}
+
+// بيشتغل بس على الصفوف اللي المستخدم شافها ووافق عليها في شاشة المعاينة (بيتجاهل الصفوف اللي فيها خطأ زي الاسم المفقود)
+async function confirmProductsImport() {
+  if (!pendingImportRows) return;
+  const importBtn = document.getElementById('importPreviewConfirmBtn');
+  const rowsToImport = pendingImportRows.filter(r => !r.hasError);
+  importBtn.disabled = true;
+  importBtn.textContent = 'جاري الاستيراد...';
+
+  let successCount = 0;
+  const errors = [];
+
+  for (const entry of rowsToImport) {
+    const { row, rowNum, name } = entry;
+    try {
+      const categoryId = await findOrCreateCategoryId(row['المجموعة'] || row['category']);
+      const unitType = await findOrCreateUnitTypeName(row['نوع الوحدة'] || row['unit_type']);
+      const payload = {
+        name,
+        category_id: categoryId,
+        unit_type: unitType,
+        cost_price: Number(row['سعر الشراء']) || 0,
+        sale_price: Number(row['سعر البيع']) || 0,
+        reorder_level: Number(row['حد إعادة الطلب']) || 0,
+        is_active: (row['الحالة'] || '').toString().trim() !== 'موقّف',
+      };
+      const { data: newProduct, error: prodError } = await supabaseClient
+        .from('products').insert(payload).select().single();
+      if (prodError) throw prodError;
+
+      // أسعار الشرائح: أي عمود في الملف باسم مطابق لشريحة سعر مفعّلة موجودة
+      // فعلاً، وله قيمة، بيتسجل كسعر خاص بهذا الصنف لتلك الشريحة
+      const tierPriceRows = getManagedPriceTiers().filter(t => t.is_active)
+        .filter(t => row[t.name] !== '' && row[t.name] != null)
+        .map(t => ({ product_id: newProduct.id, price_tier_id: t.id, price: Number(row[t.name]) }));
+      if (tierPriceRows.length > 0) {
+        const { error: tierError } = await supabaseClient.from('product_prices').insert(tierPriceRows);
+        if (tierError) errors.push(`صف ${rowNum}: تعذر حفظ أسعار الشرائح`);
+      }
+
+      const barcodeText = (row['الباركود'] || row['barcode'] || '').toString().trim();
+      if (barcodeText) {
+        const barcodes = barcodeText.split(/[,،\s]+/).filter(Boolean)
+          .map(b => ({ product_id: newProduct.id, barcode: b }));
+        if (barcodes.length > 0) {
+          const { error: bcError } = await supabaseClient.from('product_barcodes').insert(barcodes);
+          if (bcError) errors.push(`صف ${rowNum}: الباركود مكرر أو حدث به خطأ`);
+        }
+      }
+      successCount++;
+    } catch (err) {
+      console.error(err);
+      errors.push(`صف ${rowNum} (${name}): ${err.message || 'حدث خطأ'}`);
+    }
   }
 
+  await loadBoCategories();
+  await loadBoProducts();
+  populateProductCategorySelect();
+  renderProductsTable();
+
+  if (errors.length === 0) {
+    showToast(`تمت إضافة ${successCount} صنف بنجاح`);
+  } else {
+    showToast(`تمت إضافة ${successCount} صنف، وفشلت إضافة ${errors.length}`, errors.length === rowsToImport.length);
+    console.warn('أخطاء الاستيراد:', errors);
+  }
+
+  importBtn.disabled = false;
+  closeImportPreviewModal(true);
+}
+
+// فلترة وترتيب الأصناف بنفس معايير شاشة الأصناف (بدون تقسيم صفحات) — مستخدمة
+// في رسم الجدول وكمان في "طباعة باركود كل النتائج المعروضة" عشان الاتنين
+// يشتغلوا على نفس مجموعة النتائج بالظبط.
+// صفوف/كروت هيكلية (Skeleton) بديل احترافي لنص "جاري التحميل..." — بتتعرض وقت فتح
+// شاشة الأصناف لحد ما يوصل رد المخزون من الشبكة، وبتتبدّل تلقائيًا بالبيانات الحقيقية
+// أول ما renderProductsTable/renderProductsGrid يشتغلوا.
+function productsSkeletonRowHtml() {
+  const bar = (w) => `<span class="bo-skeleton-block" style="width:${w};"></span>`;
+  return `<tr class="is-skeleton">
+    <td>${bar('16px')}</td>
+    <td>${bar('65%')}</td>
+    <td data-col="category">${bar('50%')}</td>
+    <td data-col="sale_price">${bar('44px')}</td>
+    <td class="cost-guard-cell" data-col="cost_price">${bar('44px')}</td>
+    <td data-col="qty">${bar('34px')}</td>
+    <td data-col="barcode">${bar('70%')}</td>
+    <td data-col="status">${bar('54px')}</td>
+    <td data-col="updated_at">${bar('80px')}</td>
+    <td>${bar('26px')} ${bar('26px')} ${bar('26px')}</td>
+  </tr>`;
+}
+function productsSkeletonRowsHtml(count) {
+  return Array.from({ length: count }).map(productsSkeletonRowHtml).join('');
+}
+function productsSkeletonCardHtml() {
+  const bar = (w, h) => `<span class="bo-skeleton-block" style="width:${w}; height:${h || '12px'};"></span>`;
+  return `<div class="bo-product-card is-skeleton">
+    <div class="bo-product-card-top">${bar('16px')} ${bar('54px')}</div>
+    <div class="product-thumb"></div>
+    <div class="bo-product-card-name">${bar('70%')}</div>
+    <div class="bo-product-card-meta">${bar('50%')}</div>
+    <div class="bo-product-card-prices">${bar('60px')} ${bar('60px')}</div>
+    <div class="bo-product-card-meta">${bar('80%')}</div>
+  </div>`;
+}
+function productsSkeletonCardsHtml(count) {
+  return Array.from({ length: count }).map(productsSkeletonCardHtml).join('');
+}
+// بيعرض الـ skeleton فورًا (جدول وشبكة سوا، والـ CSS بيتحكم في أيهما ظاهر فعليًا
+// حسب وضع العرض الحالي) — بينادَى وقت فتح شاشة الأصناف قبل ما بيانات المخزون توصل.
+function showProductsSkeleton(count) {
+  const tbody = document.getElementById('productsTableBody');
+  const gridWrap = document.getElementById('productsGridWrap');
+  if (tbody) tbody.innerHTML = productsSkeletonRowsHtml(count || 8);
+  if (gridWrap) gridWrap.innerHTML = productsSkeletonCardsHtml(count || 8);
+  applyProductsColumnVisibility();
+}
+
+function getFilteredProductsList() {
+  const topLevelProducts = boProducts.filter(p => !p.parent_product_id);
   const q = (document.getElementById('productSearchInput')?.value || '').trim().toLowerCase();
   const categoryId = document.getElementById('productCategoryFilter')?.value || '';
+  const statusFilter = document.getElementById('productStatusFilter')?.value || '';
+  const stockFilter = document.getElementById('productStockFilter')?.value || '';
+  const dataFilter = document.getElementById('productDataFilter')?.value || '';
   const sortBy = document.getElementById('productSortSelect')?.value || 'name_asc';
 
   let filtered = topLevelProducts.filter(p => {
@@ -16043,7 +16602,16 @@ function renderProductsTable() {
       || p.name.toLowerCase().includes(q)
       || (p.product_barcodes || []).some(b => b.barcode.toLowerCase().includes(q));
     const matchesCategory = !categoryId || p.category_id === categoryId;
-    return matchesSearch && matchesCategory;
+    const matchesStatus = !statusFilter || (statusFilter === 'active' ? p.is_active : !p.is_active);
+    const qty = productsStockMap[p.id] || 0;
+    const matchesStock = !stockFilter
+      || (stockFilter === 'out' && qty <= 0)
+      || (stockFilter === 'low' && Number(p.reorder_level) > 0 && qty <= Number(p.reorder_level));
+    const matchesData = !dataFilter
+      || (dataFilter === 'no_barcode' && (p.product_barcodes || []).length === 0)
+      || (dataFilter === 'no_image' && !p.image_url)
+      || (dataFilter === 'no_cost' && !(Number(p.cost_price) > 0));
+    return matchesSearch && matchesCategory && matchesStatus && matchesStock && matchesData;
   });
 
   filtered.sort((a, b) => {
@@ -16058,22 +16626,104 @@ function renderProductsTable() {
     }
   });
 
-  if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" class="bo-empty">لا توجد أصناف مطابقة للبحث أو الفلترة</td></tr>`;
+  return filtered;
+}
+
+// تسمية ديناميكية لاسم الصنف حسب نوع نشاط الفرع — "الموديل" للأحذية، "الصنف/الطبق" للمطاعم... إلخ
+function currentBranchItemNameLabel() {
+  const branchBusinessType = boBusinessTypes.find(bt => bt.id === boBranchesList.find(b => b.id === currentProfile.branch_id)?.business_type_id);
+  return (branchBusinessType?.settings?.item_name_label || '').trim() || 'الصنف';
+}
+
+function applyDynamicItemLabels() {
+  const label = currentBranchItemNameLabel();
+  const fieldLabelEl = document.getElementById('productNameFieldLabel');
+  if (fieldLabelEl) fieldLabelEl.textContent = `اسم ${label}`;
+  const addBtn = document.getElementById('addProductBtn');
+  if (addBtn) addBtn.textContent = `+ ${label} جديد`;
+}
+
+function renderQuickAddTemplatesMenu() {
+  const btn = document.getElementById('quickAddProductBtn');
+  const panel = document.getElementById('quickAddProductPanel');
+  if (!btn || !panel) return;
+  const branchBusinessType = boBusinessTypes.find(bt => bt.id === boBranchesList.find(b => b.id === currentProfile.branch_id)?.business_type_id);
+  const templates = (branchBusinessType?.settings?.templates || []).filter(t => (t.label || '').trim() !== '');
+  if (templates.length === 0) {
+    btn.style.display = 'none';
+    panel.innerHTML = '';
+    return;
+  }
+  btn.style.display = '';
+  panel.innerHTML = '';
+  templates.forEach(t => {
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'bo-menu-item';
+    item.textContent = t.label;
+    item.addEventListener('click', () => applyQuickTemplateToNewProduct(t));
+    panel.appendChild(item);
+  });
+}
+
+// فتح مودال "صنف جديد" مع تعبئة مسبقة من قالب سريع (اسم، طريقة بيع، والتاب اللي يفتح بيه بعد أول حفظ)
+async function applyQuickTemplateToNewProduct(template) {
+  pendingQuickTemplateInitialTab = (template.initial_tab && template.initial_tab !== 'basic') ? template.initial_tab : null;
+  await openProductModal(null, template.initial_tab || 'basic');
+  document.getElementById('productName').value = template.label || '';
+  if (template.sell_by === 'weight' || template.sell_by === 'unit') {
+    document.getElementById('productSellByWeight').checked = template.sell_by === 'weight';
+    document.getElementById('productSellByWeightField').style.display = '';
+  }
+  document.getElementById('productName').focus();
+  document.getElementById('productName').select();
+}
+
+function renderProductsTable() {
+  applyDynamicItemLabels();
+  renderQuickAddTemplatesMenu();
+  const tbody = document.getElementById('productsTableBody');
+  const pagerEl = document.getElementById('productsPager');
+  const gridWrap = document.getElementById('productsGridWrap');
+  // شاشة الأصناف بتعرض الأصناف الأساسية بس (اللي مالهاش parent_product_id)؛
+  // المتغيرات (زي المقاسات/الألوان) بتتعرض جوه مودال "متغيرات" خاص بكل صنف.
+  const topLevelProducts = boProducts.filter(p => !p.parent_product_id);
+  if (topLevelProducts.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="10" class="bo-empty">لا توجد أصناف مضافة حتى الآن</td></tr>`;
+    if (gridWrap) gridWrap.innerHTML = `<div class="bo-empty">لا توجد أصناف مضافة حتى الآن</div>`;
     pagerEl.innerHTML = '';
+    updateProductsBulkActionsBar();
+    applyProductsViewMode();
+    return;
+  }
+
+  const filtered = getFilteredProductsList();
+
+  const filteredCountBtn = document.getElementById('bulkPrintFilteredBarcodeBtn');
+  if (filteredCountBtn) {
+    filteredCountBtn.textContent = `طباعة باركود كل النتائج المعروضة (${filtered.length})`;
+    filteredCountBtn.disabled = filtered.length === 0;
+  }
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="10" class="bo-empty">لا توجد أصناف مطابقة للبحث أو الفلترة</td></tr>`;
+    if (gridWrap) gridWrap.innerHTML = `<div class="bo-empty">لا توجد أصناف مطابقة للبحث أو الفلترة</div>`;
+    pagerEl.innerHTML = '';
+    updateProductsBulkActionsBar();
+    applyProductsViewMode();
     return;
   }
 
   // pagination على النتيجة المفلترة نفسها (الأصناف كلها محمّلة مرة واحدة في الذاكرة
-  // لأنها مستخدمة أيضًا في البحث السريع بفواتير الشراء وتحويل المخزون)، فبنعرض 25 صف بس
-  // في كل صفحة بدل رسم مئات الصفوف في الـ DOM مرة واحدة.
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PRODUCTS_PAGE_SIZE));
+  // لأنها مستخدمة أيضًا في البحث السريع بفواتير الشراء وتحويل المخزون)، فبنعرض عدد
+  // الصفوف اللي المستخدم اختاره بس في كل صفحة بدل رسم مئات الصفوف في الـ DOM مرة واحدة.
+  const totalPages = Math.max(1, Math.ceil(filtered.length / productsPageSize));
   if (productsListPage > totalPages) productsListPage = totalPages;
-  const start = (productsListPage - 1) * PRODUCTS_PAGE_SIZE;
-  const pageRows = filtered.slice(start, start + PRODUCTS_PAGE_SIZE);
+  const start = (productsListPage - 1) * productsPageSize;
+  const pageRows = filtered.slice(start, start + productsPageSize);
 
   renderBoPager(pagerEl, {
-    page: productsListPage, pageSize: PRODUCTS_PAGE_SIZE, totalCount: filtered.length,
+    page: productsListPage, pageSize: productsPageSize, totalCount: filtered.length,
     onChange: (p) => { productsListPage = p; renderProductsTable(); }
   });
 
@@ -16084,27 +16734,47 @@ function renderProductsTable() {
     const tr = document.createElement('tr');
     const pendingChange = bulkPriceEditChanges[p.id] || {};
     const salePriceCell = productsBulkEditMode
-      ? `<td class="num"><input type="number" step="0.01" min="0" class="bulk-price-input" data-field="sale_price" data-product-id="${p.id}" value="${pendingChange.sale_price ?? p.sale_price}" style="width:90px;"></td>`
-      : `<td class="num">${Number(p.sale_price).toFixed(2)}</td>`;
+      ? `<td class="num" data-col="sale_price"><input type="number" step="0.01" min="0" class="bulk-price-input" data-field="sale_price" data-product-id="${p.id}" value="${pendingChange.sale_price ?? p.sale_price}" style="width:90px;"></td>`
+      : `<td class="num" data-col="sale_price">${Number(p.sale_price).toFixed(2)}</td>`;
     const costPriceCell = productsBulkEditMode
-      ? `<td class="num cost-guard-cell"><input type="number" step="0.01" min="0" class="bulk-price-input" data-field="cost_price" data-product-id="${p.id}" value="${pendingChange.cost_price ?? p.cost_price}" style="width:90px;"></td>`
-      : `<td class="num cost-guard-cell">${Number(p.cost_price).toFixed(2)}</td>`;
+      ? `<td class="num cost-guard-cell" data-col="cost_price"><input type="number" step="0.01" min="0" class="bulk-price-input" data-field="cost_price" data-product-id="${p.id}" value="${pendingChange.cost_price ?? p.cost_price}" style="width:90px;"></td>`
+      : `<td class="num cost-guard-cell" data-col="cost_price">${Number(p.cost_price).toFixed(2)}</td>`;
+    const qty = productsStockMap[p.id] || 0;
+    const isOutOfStock = qty <= 0;
+    const isLowStock = !isOutOfStock && Number(p.reorder_level) > 0 && qty <= Number(p.reorder_level);
+    const qtyBadge = isOutOfStock ? '<span class="bo-badge inactive">نافذ</span>' : (isLowStock ? '<span class="bo-badge pending">منخفض</span>' : '');
+    const qtyCell = `<td class="num" data-col="qty">${formatProductQtyCell(p, qty)}${qtyBadge ? ` ${qtyBadge}` : ''}</td>`;
+    const checkboxCell = productsBulkEditMode
+      ? `<td></td>`
+      : `<td><input type="checkbox" class="product-row-checkbox" data-product-id="${p.id}" ${productsSelectedIds.has(p.id) ? 'checked' : ''}></td>`;
+    // تنبيه خطأ تسعير: سعر الشراء >= سعر البيع يعني الصنف بيتباع بخسارة أو بدون هامش —
+    // بنتأكد إن سعر الشراء (وسعر البيع) مُدخلين فعلًا (أكبر من صفر) عشان منحذرش على أصناف لسه من غير تسعير كامل.
+    // العلامة بتتقيّد بصلاحية رؤية التكلفة نفسها (canViewCost) عشان منسربش معلومة عن التكلفة لمين مالوش صلاحية يشوفها.
+    const currentCost = Number(pendingChange.cost_price ?? p.cost_price);
+    const currentSale = Number(pendingChange.sale_price ?? p.sale_price);
+    const hasPricingError = canViewCost() && currentCost > 0 && currentSale > 0 && currentCost >= currentSale;
+    const pricingWarningBadge = hasPricingError
+      ? `<span class="bo-badge inactive" title="سعر الشراء أكبر من أو يساوي سعر البيع — الصنف هيتباع بخسارة">⚠ تسعير خطأ</span>`
+      : '';
+    const lastModifiedText = formatProductLastModified(p);
     tr.innerHTML = `
-      <td>${escapeHtml(p.name)}</td>
-      <td>${escapeHtml(p.categories?.name || '—')}</td>
+      ${checkboxCell}
+      <td><button type="button" class="qv-name-trigger" data-action="quickview">${escapeHtml(p.name)}</button>${pricingWarningBadge ? ` ${pricingWarningBadge}` : ''}</td>
+      <td data-col="category">${escapeHtml(p.categories?.name || '—')}</td>
       ${salePriceCell}
       ${costPriceCell}
-      <td style="font-size:11.5px; color:var(--ink-soft);">${escapeHtml(barcodesText)}</td>
-      <td>
-        <button class="bo-icon-btn" data-action="variants">${variantsCount > 0 ? `⚙ إدارة المتغيرات (${variantsCount})` : '⚙ إضافة متغيرات'}</button>
-      </td>
-      <td><span class="bo-badge ${p.is_active ? 'active' : 'inactive'}">${p.is_active ? 'مفعّل' : 'موقّف'}</span></td>
+      ${qtyCell}
+      <td data-col="barcode" style="font-size:11.5px; color:var(--ink-soft);">${escapeHtml(barcodesText)}</td>
+      <td data-col="status"><span class="bo-badge ${p.is_active ? 'active' : 'inactive'}">${p.is_active ? 'مفعّل' : 'موقّف'}</span></td>
+      <td data-col="updated_at" style="font-size:11.5px; color:var(--ink-soft);">${lastModifiedText}</td>
       <td>
         <div class="bo-row-actions">
           <button class="bo-icon-btn" data-action="edit">تعديل</button>
-          <button class="bo-icon-btn" data-action="barcode">طباعة باركود</button>
-          <button class="bo-icon-btn" data-action="modifiers">⚙ ربط الإضافات</button>
           <button class="bo-icon-btn danger" data-action="toggle">${p.is_active ? 'إيقاف' : 'تفعيل'}</button>
+          <button class="bo-icon-btn icon-only" data-action="duplicate" title="نسخ الصنف">⧉</button>
+          <button class="bo-icon-btn icon-only" data-action="variants" title="${variantsCount > 0 ? `المتغيرات (${variantsCount})` : 'إضافة متغيرات'}" style="position:relative;">⚙${variantsCount > 0 ? `<span class="icon-only-badge">${variantsCount}</span>` : ''}</button>
+          <button class="bo-icon-btn icon-only" data-action="modifiers" title="ربط الإضافات">🔗</button>
+          <button class="bo-icon-btn icon-only" data-action="barcode" title="طباعة باركود">🖶</button>
         </div>
       </td>`;
     if (productsBulkEditMode) {
@@ -16118,16 +16788,497 @@ function renderProductsTable() {
         });
       });
     } else {
+      tr.querySelector('.product-row-checkbox').addEventListener('change', (e) => {
+        if (e.target.checked) productsSelectedIds.add(p.id); else productsSelectedIds.delete(p.id);
+        updateProductsBulkActionsBar();
+      });
       tr.querySelector('[data-action="edit"]').addEventListener('click', () => openProductModal(p));
+      tr.querySelector('[data-action="quickview"]').addEventListener('click', () => openProductQuickView(p));
+      tr.querySelector('[data-action="duplicate"]').addEventListener('click', () => duplicateProduct(p));
       tr.querySelector('[data-action="barcode"]').addEventListener('click', () => openBarcodeLabelModal(p));
       tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleProductActive(p));
-      tr.querySelector('[data-action="variants"]').addEventListener('click', () => openVariantsListModal(p));
-      tr.querySelector('[data-action="modifiers"]').addEventListener('click', () => openProductModifierLinkModal(p));
+      tr.querySelector('[data-action="variants"]').addEventListener('click', () => openProductModal(p, 'variants'));
+      tr.querySelector('[data-action="modifiers"]').addEventListener('click', () => openProductModal(p, 'modifiers'));
       applyRowActionPerm(tr, 'products');
     }
     tbody.appendChild(tr);
   });
+  applyProductsColumnVisibility();
+  renderProductsGrid(pageRows);
+  applyProductsViewMode();
+  updateProductsBulkActionsBar();
+}
+
+// تاريخ آخر تعديل للصنف — بيرجع لـ created_at لو مفيش updated_at مسجّل (أصناف قديمة قبل إضافة الحقل)
+function formatProductLastModified(p) {
+  const raw = p.updated_at || p.created_at;
+  if (!raw) return '—';
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return '—';
+  return `${d.toLocaleDateString('ar-EG')} ${d.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}`;
+}
+
+// ---- لوحة المعاينة السريعة للصنف (Quick View) ----
+
+let qvOpenRequestId = 0; // بيتجاهل نتيجة أي طلب قديم لو المستخدم فتح صنف تاني بسرعة قبل ما يخلص التحميل
+
+function openProductQuickView(product) {
+  const overlay = document.getElementById('productQuickViewOverlay');
+  const requestId = ++qvOpenRequestId;
+
+  document.getElementById('qvProductName').textContent = product.name;
+  document.getElementById('qvProductMeta').textContent =
+    `${product.categories?.name || 'بدون مجموعة'} · ${(product.product_barcodes || []).map(b => b.barcode).join(', ') || 'بدون باركود'}`;
+  document.getElementById('qvThumb').innerHTML = product.image_url
+    ? `<img src="${escapeHtml(product.image_url)}" alt="">` : '🛒';
+  document.getElementById('qvSalePrice').textContent = Number(product.sale_price).toFixed(2);
+  const costBox = document.getElementById('qvCostBox');
+  document.getElementById('qvCostPrice').textContent = Number(product.cost_price).toFixed(2);
+  costBox.style.display = canViewCost() ? '' : 'none';
+  document.getElementById('qvBranchStock').innerHTML = '<div class="qv-empty">جارٍ التحميل...</div>';
+  document.getElementById('qvLastSales').innerHTML = '<div class="qv-empty">جارٍ التحميل...</div>';
+  document.getElementById('qvHistory').innerHTML = '<div class="qv-empty">جارٍ التحميل...</div>';
+  document.getElementById('qvFullEditBtn').onclick = () => { closeProductQuickView(); openProductModal(product); };
+
+  overlay.classList.add('show');
+  loadQvBranchStock(product.id, requestId);
+  loadQvLastSales(product.id, requestId);
+  loadQvHistory(product, requestId);
+}
+
+function closeProductQuickView() {
+  document.getElementById('productQuickViewOverlay').classList.remove('show');
+}
+
+async function loadQvBranchStock(productId, requestId) {
+  const box = document.getElementById('qvBranchStock');
+  try {
+    if (!sessionUsable()) throw new Error('offline');
+    const { data, error } = await supabaseClient
+      .from('stock_balances')
+      .select('quantity, warehouses(name, branches(name))')
+      .eq('product_id', productId);
+    if (error) throw error;
+    if (requestId !== qvOpenRequestId) return;
+    const byBranch = {};
+    (data || []).forEach(row => {
+      const label = row.warehouses?.branches?.name || row.warehouses?.name || 'غير محدد';
+      byBranch[label] = (byBranch[label] || 0) + Number(row.quantity);
+    });
+    const entries = Object.entries(byBranch).filter(([, qty]) => qty !== 0 || Object.keys(byBranch).length <= 6);
+    box.innerHTML = entries.length
+      ? entries.map(([label, qty]) => `
+          <div class="qv-branch-row"><span>${escapeHtml(label)}</span><span class="qv-branch-qty">${formatQty(qty)}</span></div>`).join('')
+      : '<div class="qv-empty">لا توجد أرصدة مخزون مسجّلة لهذا الصنف</div>';
+  } catch (err) {
+    if (requestId !== qvOpenRequestId) return;
+    if (!isNetworkError(err)) console.error(err);
+    box.innerHTML = '<div class="qv-empty">تعذّر تحميل بيانات المخزون (تحقق من الاتصال)</div>';
+  }
+}
+
+async function loadQvLastSales(productId, requestId) {
+  const box = document.getElementById('qvLastSales');
+  try {
+    if (!sessionUsable()) throw new Error('offline');
+    const { data, error } = await supabaseClient
+      .from('sale_items')
+      .select('quantity, total, sales!inner(created_at, branches(name))')
+      .eq('product_id', productId)
+      .order('created_at', { foreignTable: 'sales', ascending: false })
+      .limit(5);
+    if (error) throw error;
+    if (requestId !== qvOpenRequestId) return;
+    box.innerHTML = (data && data.length)
+      ? data.map(row => {
+          const d = new Date(row.sales.created_at);
+          const dateText = `${d.toLocaleDateString('ar-EG')} ${d.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}`;
+          const branchName = row.sales.branches?.name || '—';
+          return `
+            <div class="qv-sale-row">
+              <div class="qv-sale-top"><span>الكمية: ${formatQty(row.quantity)}</span><span class="num">${Number(row.total).toFixed(2)}</span></div>
+              <div class="qv-sale-sub">${dateText} · ${escapeHtml(branchName)}</div>
+            </div>`;
+        }).join('')
+      : '<div class="qv-empty">لم يُباع هذا الصنف بعد</div>';
+  } catch (err) {
+    if (requestId !== qvOpenRequestId) return;
+    if (!isNetworkError(err)) console.error(err);
+    box.innerHTML = '<div class="qv-empty">تعذّر تحميل حركة المبيعات (تحقق من الاتصال)</div>';
+  }
+}
+
+async function loadQvHistory(product, requestId) {
+  const box = document.getElementById('qvHistory');
+  try {
+    if (!sessionUsable()) throw new Error('offline');
+    const entries = await fetchProductHistoryEntries(product.id, 3);
+    if (requestId !== qvOpenRequestId) return;
+    box.innerHTML = renderProductHistoryEntries(entries);
+    if (entries.length) {
+      const viewAllBtn = document.createElement('button');
+      viewAllBtn.type = 'button';
+      viewAllBtn.className = 'bo-icon-btn';
+      viewAllBtn.style.cssText = 'width:100%; margin-top:6px;';
+      viewAllBtn.textContent = 'عرض السجل الكامل';
+      viewAllBtn.addEventListener('click', () => { closeProductQuickView(); openProductModal(product, 'history'); });
+      box.appendChild(viewAllBtn);
+    }
+  } catch (err) {
+    if (requestId !== qvOpenRequestId) return;
+    if (err && (err.code === '42P01' || /relation .* does not exist/i.test(err.message || ''))) {
+      box.innerHTML = '<div class="qv-empty">سجل النشاط غير مُفعّل بعد</div>';
+      return;
+    }
+    if (!isNetworkError(err)) console.error(err);
+    box.innerHTML = '<div class="qv-empty">تعذّر تحميل سجل التعديلات (تحقق من الاتصال)</div>';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('qvCloseBtn').addEventListener('click', closeProductQuickView);
+  document.getElementById('qvCloseBtn2').addEventListener('click', closeProductQuickView);
+  document.getElementById('productQuickViewOverlay').addEventListener('click', closeProductQuickView);
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeProductQuickView(); });
+
+// ---- عرض شبكي بالصور (بديل اختياري لجدول الأصناف) ----
+
+function renderProductsGrid(pageRows) {
+  const gridWrap = document.getElementById('productsGridWrap');
+  if (!gridWrap) return;
+  gridWrap.innerHTML = '';
+  pageRows.forEach(p => {
+    const barcodesText = (p.product_barcodes || []).map(b => b.barcode).join(', ') || '—';
+    const variantsCount = boProducts.filter(v => v.parent_product_id === p.id).length;
+    const qty = productsStockMap[p.id] || 0;
+    const isOutOfStock = qty <= 0;
+    const isLowStock = !isOutOfStock && Number(p.reorder_level) > 0 && qty <= Number(p.reorder_level);
+    const qtyBadge = isOutOfStock ? '<span class="bo-badge inactive">نافذ</span>' : (isLowStock ? '<span class="bo-badge pending">منخفض</span>' : '');
+    const currentCost = Number(p.cost_price);
+    const currentSale = Number(p.sale_price);
+    const hasPricingError = canViewCost() && currentCost > 0 && currentSale > 0 && currentCost >= currentSale;
+    const pricingWarningBadge = hasPricingError
+      ? `<span class="bo-badge inactive" title="سعر الشراء أكبر من أو يساوي سعر البيع — الصنف هيتباع بخسارة">⚠ تسعير خطأ</span>`
+      : '';
+    const card = document.createElement('div');
+    card.className = 'bo-product-card';
+    card.innerHTML = `
+      <div class="bo-product-card-top">
+        <input type="checkbox" class="product-row-checkbox" data-product-id="${p.id}" ${productsSelectedIds.has(p.id) ? 'checked' : ''}>
+        <span class="bo-badge ${p.is_active ? 'active' : 'inactive'}">${p.is_active ? 'مفعّل' : 'موقّف'}</span>
+      </div>
+      <div class="product-thumb">${p.image_url ? `<img src="${escapeHtml(p.image_url)}" alt="">` : '🛒'}</div>
+      <div class="bo-product-card-name"><button type="button" class="qv-name-trigger" data-action="quickview">${escapeHtml(p.name)}</button></div>
+      ${pricingWarningBadge}
+      <div class="bo-product-card-meta">${escapeHtml(p.categories?.name || 'بدون مجموعة')} · ${escapeHtml(barcodesText)}</div>
+      <div class="bo-product-card-prices">
+        <span>سعر البيع: <span class="num">${currentSale.toFixed(2)}</span></span>
+        <span class="cost-guard-cell">سعر الشراء: <span class="num">${currentCost.toFixed(2)}</span></span>
+      </div>
+      <div class="bo-product-card-meta">الكمية: ${formatQty(qty)} ${qtyBadge} · آخر تعديل: ${formatProductLastModified(p)}</div>
+      <div class="bo-product-card-actions">
+        <button class="bo-icon-btn" data-action="edit">تعديل</button>
+        <button class="bo-icon-btn danger" data-action="toggle">${p.is_active ? 'إيقاف' : 'تفعيل'}</button>
+        <button class="bo-icon-btn icon-only" data-action="duplicate" title="نسخ الصنف">⧉</button>
+        <button class="bo-icon-btn icon-only" data-action="variants" title="${variantsCount > 0 ? `المتغيرات (${variantsCount})` : 'إضافة متغيرات'}" style="position:relative;">⚙${variantsCount > 0 ? `<span class="icon-only-badge">${variantsCount}</span>` : ''}</button>
+        <button class="bo-icon-btn icon-only" data-action="modifiers" title="ربط الإضافات">🔗</button>
+        <button class="bo-icon-btn icon-only" data-action="barcode" title="طباعة باركود">🖶</button>
+      </div>`;
+    card.querySelector('.product-row-checkbox').addEventListener('change', (e) => {
+      if (e.target.checked) productsSelectedIds.add(p.id); else productsSelectedIds.delete(p.id);
+      updateProductsBulkActionsBar();
+    });
+    card.querySelector('[data-action="edit"]').addEventListener('click', () => openProductModal(p));
+    card.querySelector('[data-action="quickview"]').addEventListener('click', () => openProductQuickView(p));
+    card.querySelector('[data-action="duplicate"]').addEventListener('click', () => duplicateProduct(p));
+    card.querySelector('[data-action="barcode"]').addEventListener('click', () => openBarcodeLabelModal(p));
+    card.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleProductActive(p));
+    card.querySelector('[data-action="variants"]').addEventListener('click', () => openProductModal(p, 'variants'));
+    card.querySelector('[data-action="modifiers"]').addEventListener('click', () => openProductModal(p, 'modifiers'));
+    applyRowActionPerm(card, 'products');
+    gridWrap.appendChild(card);
+  });
   applyCostGuard();
+}
+
+// إظهار/إخفاء الجدول أو الشبكة حسب productsViewMode، وتحديث حالة زرارات التبديل.
+// وضع "تعديل سريع للأسعار" بيتطلب أعمدة الجدول (حقول إدخال الأسعار)، فبيتم إجبار عرض الجدول أثناءه.
+function applyProductsViewMode() {
+  const tableWrap = document.getElementById('productsTableWrap');
+  const gridWrap = document.getElementById('productsGridWrap');
+  const tableBtn = document.getElementById('productsViewTableBtn');
+  const gridBtn = document.getElementById('productsViewGridBtn');
+  const effectiveMode = productsBulkEditMode ? 'table' : productsViewMode;
+  if (tableWrap) tableWrap.style.display = effectiveMode === 'grid' ? 'none' : '';
+  if (gridWrap) gridWrap.style.display = effectiveMode === 'grid' ? '' : 'none';
+  if (tableBtn) tableBtn.classList.toggle('active', effectiveMode !== 'grid');
+  if (gridBtn) {
+    gridBtn.classList.toggle('active', effectiveMode === 'grid');
+    gridBtn.disabled = productsBulkEditMode;
+  }
+}
+
+function setProductsViewMode(mode) {
+  productsViewMode = mode === 'grid' ? 'grid' : 'table';
+  localStorage.setItem('productsViewMode', productsViewMode);
+  applyProductsViewMode();
+}
+
+// ---- تحديد أعمدة جدول الأصناف الظاهرة (Show/Hide columns) ----
+
+function saveProductsVisibleColumns() {
+  localStorage.setItem('productsVisibleColumns', JSON.stringify(Array.from(productsVisibleColumns)));
+}
+
+// بيطبّق اختيار المستخدم لإظهار/إخفاء كل عمود، وبعدين بيعيد تطبيق applyCostGuard() في الآخر
+// عشان صلاحية رؤية سعر التكلفة تفضل هي الأقوى دايمًا (حتى لو المستخدم اختار يظهر عمود سعر الشراء
+// من قائمة الأعمدة، الصلاحية بتقفله تاني لو مالوش حق يشوفه).
+function applyProductsColumnVisibility() {
+  const scope = document.getElementById('bo-section-products');
+  if (!scope) return;
+  PRODUCT_TABLE_COLUMNS.forEach(col => {
+    const visible = productsVisibleColumns.has(col.key);
+    scope.querySelectorAll(`[data-col="${col.key}"]`).forEach(el => {
+      el.style.display = visible ? '' : 'none';
+    });
+  });
+  applyCostGuard();
+}
+
+let productsColumnsPopupEl = null;
+
+function closeProductsColumnsPopup() {
+  if (productsColumnsPopupEl) { productsColumnsPopupEl.remove(); productsColumnsPopupEl = null; }
+}
+
+function openProductsColumnsPopup(btn) {
+  closeProductsColumnsPopup();
+  const popup = document.createElement('div');
+  popup.className = 'bo-colvis-popup';
+  popup.innerHTML = `
+    <label class="colvis-item colvis-select-all">
+      <input type="checkbox" id="colvisSelectAll">
+      <span>تحديد كل الأعمدة</span>
+    </label>
+    <div class="bo-menu-sep"></div>
+    <div class="colvis-list">
+      ${PRODUCT_TABLE_COLUMNS.map(col => `
+        <label class="colvis-item">
+          <input type="checkbox" data-col-key="${col.key}" ${productsVisibleColumns.has(col.key) ? 'checked' : ''}>
+          <span>${col.label}</span>
+        </label>`).join('')}
+    </div>
+    <div class="colvis-footer">عمود "الصنف" والإجراءات ظاهران دائمًا</div>`;
+  document.body.appendChild(popup);
+  const rect = btn.getBoundingClientRect();
+  const popupWidth = popup.offsetWidth;
+  let left = rect.left + window.scrollX - popupWidth + rect.width;
+  left = Math.max(8, Math.min(left, window.innerWidth - popupWidth - 8 + window.scrollX));
+  popup.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+  popup.style.left = left + 'px';
+  const colCheckboxes = () => Array.from(popup.querySelectorAll('.colvis-list input[type="checkbox"]'));
+  const selectAllCb = popup.querySelector('#colvisSelectAll');
+  const syncSelectAll = () => {
+    const boxes = colCheckboxes();
+    const allChecked = boxes.every(cb => cb.checked);
+    selectAllCb.checked = allChecked;
+    selectAllCb.indeterminate = !allChecked && boxes.some(cb => cb.checked);
+  };
+  selectAllCb.addEventListener('change', () => {
+    colCheckboxes().forEach(cb => {
+      cb.checked = selectAllCb.checked;
+      const key = cb.dataset.colKey;
+      if (cb.checked) productsVisibleColumns.add(key); else productsVisibleColumns.delete(key);
+    });
+    saveProductsVisibleColumns();
+    applyProductsColumnVisibility();
+  });
+  popup.querySelectorAll('input[type="checkbox"][data-col-key]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const key = cb.dataset.colKey;
+      if (cb.checked) productsVisibleColumns.add(key); else productsVisibleColumns.delete(key);
+      saveProductsVisibleColumns();
+      applyProductsColumnVisibility();
+      syncSelectAll();
+    });
+  });
+  syncSelectAll();
+  productsColumnsPopupEl = popup;
+}
+
+document.addEventListener('click', (e) => {
+  if (e.target.closest('#productsColumnsBtn')) return;
+  if (productsColumnsPopupEl && !e.target.closest('.bo-colvis-popup')) closeProductsColumnsPopup();
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeProductsColumnsPopup(); });
+
+// ---- تحديد متعدد للأصناف: عمليات جماعية (تفعيل/توقيف/نقل لمجموعة/طباعة باركود) ----
+
+function updateProductsBulkActionsBar() {
+  const bar = document.getElementById('productsBulkActionsBar');
+  const countLabel = document.getElementById('productsBulkCountLabel');
+  const selectAllCb = document.getElementById('selectAllProductsCheckbox');
+  const exportSelectedBtn = document.getElementById('exportSelectedProductsBtn');
+  if (!bar) return;
+  const count = productsSelectedIds.size;
+  if (productsBulkEditMode || count === 0) {
+    bar.style.display = 'none';
+  } else {
+    bar.style.display = '';
+    countLabel.textContent = `${count} صنف محدد`;
+  }
+  if (exportSelectedBtn) {
+    exportSelectedBtn.style.display = (!productsBulkEditMode && count > 0) ? '' : 'none';
+    exportSelectedBtn.textContent = `⇧ تصدير المحدد (${count})`;
+  }
+  if (selectAllCb) {
+    const visibleCheckboxes = Array.from(document.querySelectorAll('.product-row-checkbox'));
+    selectAllCb.style.display = productsBulkEditMode ? 'none' : '';
+    selectAllCb.disabled = productsBulkEditMode;
+    selectAllCb.checked = visibleCheckboxes.length > 0 && visibleCheckboxes.every(cb => cb.checked);
+  }
+}
+
+function clearProductsSelection() {
+  productsSelectedIds.clear();
+  renderProductsTable();
+}
+
+function populateBulkMoveCategorySelect() {
+  const sel = document.getElementById('bulkMoveCategorySelect');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">نقل لمجموعة...</option><option value="__none__">بدون مجموعة</option>';
+  boCategories.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id; opt.textContent = c.name;
+    sel.appendChild(opt);
+  });
+}
+
+async function bulkSetProductsActive(isActive) {
+  if (productsSelectedIds.size === 0) return;
+  const ids = Array.from(productsSelectedIds);
+  const { error } = await supabaseClient.from('products').update({ is_active: isActive }).in('id', ids);
+  if (error) { console.error(error); showToast('تعذر تحديث حالة الأصناف المحددة', true); return; }
+  showToast(`تم ${isActive ? 'تفعيل' : 'توقيف'} ${ids.length} صنف`);
+  await loadBoProducts();
+  clearProductsSelection();
+}
+
+async function bulkMoveSelectedToCategory() {
+  const sel = document.getElementById('bulkMoveCategorySelect');
+  const value = sel?.value || '';
+  if (!value) { showToast('اختار مجموعة الأول', true); return; }
+  if (productsSelectedIds.size === 0) return;
+  const ids = Array.from(productsSelectedIds);
+  const categoryId = value === '__none__' ? null : value;
+  const { error } = await supabaseClient.from('products').update({ category_id: categoryId }).in('id', ids);
+  if (error) { console.error(error); showToast('تعذر نقل الأصناف المحددة', true); return; }
+  showToast(`تم نقل ${ids.length} صنف`);
+  sel.value = '';
+  await loadBoProducts();
+  clearProductsSelection();
+}
+
+function bulkPrintSelectedBarcodes() {
+  if (productsSelectedIds.size === 0) return;
+  const items = Array.from(productsSelectedIds)
+    .map(id => boProducts.find(p => p.id === id))
+    .filter(Boolean)
+    .map(product => ({ product, quantity: 1 }));
+  openBarcodeLabelModalMulti(items);
+}
+
+// طباعة باركود كل نتائج الفلتر الحالية دفعة واحدة (من غير الحاجة لتحديد كل صنف يدويًا بالـ checkbox)
+function bulkPrintFilteredBarcodes() {
+  const filtered = getFilteredProductsList();
+  if (filtered.length === 0) { showToast('لا توجد أصناف مطابقة للفلترة الحالية لطباعتها', true); return; }
+  const items = filtered.map(product => ({ product, quantity: 1 }));
+  openBarcodeLabelModalMulti(items);
+}
+
+// ---- توليد باركود تلقائي (EAN-13) للأصناف اللي بدون باركود ----
+
+// حساب رقم التحقق (checksum) القياسي لباركود EAN-13 من أول 12 رقم
+function computeEan13CheckDigit(twelveDigits) {
+  const digits = twelveDigits.split('').map(Number);
+  let sum = 0;
+  digits.forEach((d, i) => { sum += d * (i % 2 === 0 ? 1 : 3); });
+  const mod = sum % 10;
+  return mod === 0 ? 0 : 10 - mod;
+}
+
+// بيولّد باركود EAN-13 عشوائي بادئته "2" (النطاق 20-29 محجوز عالميًا للاستخدام الداخلي
+// بمتاجر التجزئة، فمينفعش يتعارض مع باركود منتج حقيقي مسجّل عالميًا)، ويتأكد إنه مش متكرر
+// مع أي باركود موجود بالفعل قبل ما يرجّعه.
+function generateInternalEan13Barcode(existingCodes) {
+  let candidate, attempts = 0;
+  do {
+    const body = '2' + String(Math.floor(Math.random() * 1e11)).padStart(11, '0');
+    candidate = body + computeEan13CheckDigit(body);
+    attempts++;
+  } while (existingCodes.has(candidate) && attempts < 50);
+  return candidate;
+}
+
+// دالة مشتركة: بتستقبل قائمة أصناف، بتفلتر اللي عنده باركود بالفعل (منولّدش له باركود تاني
+// عشان منكررش)، وبتولّد باركود فريد لكل صنف باقي وتحفظهم دفعة واحدة.
+async function generateBarcodesForProducts(products, btn) {
+  const targets = products.filter(p => (p.product_barcodes || []).length === 0);
+  if (targets.length === 0) { showToast('كل الأصناف دي عندها باركود بالفعل', true); return; }
+  if (btn) { btn.disabled = true; }
+  try {
+    const existingCodes = new Set(boProducts.flatMap(p => (p.product_barcodes || []).map(b => b.barcode)));
+    const rows = targets.map(p => {
+      const code = generateInternalEan13Barcode(existingCodes);
+      existingCodes.add(code);
+      return { product_id: p.id, barcode: code };
+    });
+    const { error } = await supabaseClient.from('product_barcodes').insert(rows);
+    if (error) { console.error(error); showToast('تعذّر توليد الباركود', true); return; }
+    showToast(`تم توليد باركود لـ ${rows.length} صنف`);
+    await loadBoProducts();
+    renderProductsTable();
+  } finally {
+    if (btn) { btn.disabled = false; }
+  }
+}
+
+function bulkGenerateBarcodesForSelected() {
+  if (productsSelectedIds.size === 0) return;
+  const products = Array.from(productsSelectedIds).map(id => boProducts.find(p => p.id === id)).filter(Boolean);
+  generateBarcodesForProducts(products, document.getElementById('bulkGenerateBarcodeBtn'));
+}
+
+function bulkGenerateBarcodesForAllMissing() {
+  const btn = document.getElementById('generateBarcodesAllMissingBtn');
+  const targets = boProducts.filter(p => !p.parent_product_id && (p.product_barcodes || []).length === 0);
+  if (targets.length === 0) { showToast('كل الأصناف عندها باركود بالفعل', true); return; }
+  if (!confirm(`هيتم توليد باركود تلقائي جديد لـ ${targets.length} صنف بدون باركود. متابعة؟`)) return;
+  generateBarcodesForProducts(targets, btn);
+}
+
+// تحديث يدوي لأرقام المخزون (الكمية المتاحة) من غير خروج من شاشة الأصناف
+async function refreshProductsStock() {
+  const btn = document.getElementById('refreshStockBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '⟳ جاري التحديث...'; }
+  try {
+    await loadProductsStockMap();
+    renderProductsTable();
+    showToast('تم تحديث أرقام المخزون');
+  } catch (err) {
+    console.error(err);
+    showToast('تعذّر تحديث المخزون', true);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '⟳ تحديث المخزون'; }
+  }
+}
+
+// ---- نسخ صنف موجود كصنف جديد (بدون باركود/وحدات/مكوّنات، تتضاف بعد الحفظ) ----
+function duplicateProduct(p) {
+  const copy = { ...p, product_barcodes: [], product_units: [], product_bundle_items: [] };
+  openProductModal(copy, 'basic', true);
 }
 
 function updateBulkPriceEditSaveLabel() {
@@ -16186,22 +17337,90 @@ async function saveBulkPriceEdits() {
 function filterProductsTableFromStart() {
   productsListPage = 1;
   renderProductsTable();
+  renderProductsFilterChips();
 }
 
-async function openProductModal(product) {
-  currentBarcodes = product ? (product.product_barcodes || []).map(b => ({ id: b.id, barcode: b.barcode })) : [];
-  currentUnits = product ? (product.product_units || []).map(u => ({
+// شرائح الفلاتر النشطة فوق جدول الأصناف — بتقرأ نفس عناصر الفلترة اللي بتقرأها
+// getFilteredProductsList، وكل شريحة بتقدر تلغي فلترها هي بس (تصفير القيمة + إعادة رسم)
+// من غير ما المستخدم يحتاج يفتح قائمة "فلاتر إضافية" تاني عشان يفتكر ايه اللي مفعّل.
+function renderProductsFilterChips() {
+  const wrap = document.getElementById('productsFilterChips');
+  if (!wrap) return;
+
+  const chips = [];
+  const categorySel = document.getElementById('productCategoryFilter');
+  if (categorySel && categorySel.value) {
+    const catName = categorySel.options[categorySel.selectedIndex]?.textContent || '';
+    chips.push({ label: `المجموعة: ${catName}`, clear: () => { categorySel.value = ''; } });
+  }
+  const stockSel = document.getElementById('productStockFilter');
+  if (stockSel && stockSel.value) {
+    const label = stockSel.value === 'low' ? 'مخزون منخفض' : 'نافذ من المخزون';
+    chips.push({ label: `المخزون: ${label}`, clear: () => { stockSel.value = ''; } });
+  }
+  const statusSel = document.getElementById('productStatusFilter');
+  if (statusSel && statusSel.value) {
+    const label = statusSel.value === 'active' ? 'مفعّل' : 'موقّف';
+    chips.push({ label: `الحالة: ${label}`, clear: () => { statusSel.value = ''; } });
+  }
+  const dataSel = document.getElementById('productDataFilter');
+  if (dataSel && dataSel.value) {
+    const labels = { no_barcode: 'بلا باركود', no_image: 'بلا صورة', no_cost: 'بلا سعر شراء' };
+    chips.push({ label: `بيانات ناقصة: ${labels[dataSel.value] || dataSel.value}`, clear: () => { dataSel.value = ''; } });
+  }
+
+  if (chips.length === 0) {
+    wrap.style.display = 'none';
+    wrap.innerHTML = '';
+    return;
+  }
+
+  wrap.style.display = 'flex';
+  wrap.innerHTML = '';
+  chips.forEach(chip => {
+    const el = document.createElement('span');
+    el.className = 'bo-filter-chip';
+    el.innerHTML = `<span>${escapeHtml(chip.label)}</span><button type="button" title="إلغاء هذا الفلتر">✕</button>`;
+    el.querySelector('button').addEventListener('click', () => {
+      chip.clear();
+      filterProductsTableFromStart();
+    });
+    wrap.appendChild(el);
+  });
+
+  if (chips.length > 1) {
+    const clearAllBtn = document.createElement('button');
+    clearAllBtn.type = 'button';
+    clearAllBtn.className = 'bo-filter-chips-clear';
+    clearAllBtn.textContent = 'مسح كل الفلاتر';
+    clearAllBtn.addEventListener('click', () => {
+      if (categorySel) categorySel.value = '';
+      if (stockSel) stockSel.value = '';
+      if (statusSel) statusSel.value = '';
+      if (dataSel) dataSel.value = '';
+      filterProductsTableFromStart();
+    });
+    wrap.appendChild(clearAllBtn);
+  }
+}
+
+async function openProductModal(product, initialTab, isDuplicate) {
+  // وضع "نسخ صنف": بيستخدم بيانات product عشان يعبّي الفورم، لكن بيتعامل معاه
+  // كصنف جديد تمامًا (من غير معرّف، ومن غير باركود/وحدات/مكوّنات/متغيرات الأصل)
+  const isNew = !product || isDuplicate;
+  currentBarcodes = (product && !isDuplicate) ? (product.product_barcodes || []).map(b => ({ id: b.id, barcode: b.barcode })) : [];
+  currentUnits = (product && !isDuplicate) ? (product.product_units || []).map(u => ({
     id: u.id, unit_type_id: u.unit_type_id, factor_to_base: u.factor_to_base, sale_price: u.sale_price, is_active: u.is_active,
   })) : [];
-  currentProductModifierGroupIds = product
+  currentProductModifierGroupIds = (product && !isDuplicate)
     ? boProductModifierLinks.filter(l => l.product_id === product.id).map(l => l.group_id)
     : [];
-  currentBundleItems = product ? (product.product_bundle_items || []).map(b => ({
+  currentBundleItems = (product && !isDuplicate) ? (product.product_bundle_items || []).map(b => ({
     id: b.id, component_product_id: b.component_product_id, quantity: b.quantity,
   })) : [];
   currentProductModifierOptionPrices = {};
   currentProductTierPrices = {};
-  if (product) {
+  if (product && !isDuplicate) {
     const { data: priceRows } = await supabaseClient
       .from('product_modifier_option_prices').select('option_id, price').eq('product_id', product.id);
     (priceRows || []).forEach(r => { currentProductModifierOptionPrices[r.option_id] = r.price; });
@@ -16209,9 +17428,10 @@ async function openProductModal(product) {
       .from('product_prices').select('price_tier_id, price').eq('product_id', product.id);
     (tierPriceRows || []).forEach(r => { if (r.price != null) currentProductTierPrices[r.price_tier_id] = r.price; });
   }
-  document.getElementById('productModalTitle').textContent = product ? 'تعديل صنف' : 'صنف جديد';
-  document.getElementById('productId').value = product ? product.id : '';
-  document.getElementById('productName').value = product ? product.name : '';
+  document.getElementById('productModalTitle').textContent = isDuplicate ? `نسخ ${currentBranchItemNameLabel()} (جديد)` : (product ? `تعديل ${currentBranchItemNameLabel()}` : `${currentBranchItemNameLabel()} جديد`);
+  document.getElementById('productNameFieldLabel').textContent = `اسم ${currentBranchItemNameLabel()}`;
+  document.getElementById('productId').value = (product && !isDuplicate) ? product.id : '';
+  document.getElementById('productName').value = product ? (isDuplicate ? `${product.name} (نسخة)` : product.name) : '';
   document.getElementById('productCategory').value = product ? (product.category_id || '') : '';
   populateProductUnitTypeSelect(product ? product.unit_type : '');
   populateProductTaxRateSelect(product ? (product.tax_rate_id || '') : '');
@@ -16223,21 +17443,451 @@ async function openProductModal(product) {
   document.getElementById('productReorder').value = product ? product.reorder_level : 0;
   setImageUploadFieldValue('productImage', product?.image_url || '', 'productImagePreview', 'productImagePlaceholder', 'productImageRemoveBtn', 'productImageSizeLabel');
   document.getElementById('productActive').checked = product ? product.is_active : true;
-  document.getElementById('productSellByWeight').checked = product ? product.sell_by === 'weight' : false;
+  // تعبئة ذكية حسب نوع نشاط الفرع الحالي — لصنف جديد فاضي فقط (مش عند التعديل أو النسخ)
+  const branchBusinessType = boBusinessTypes.find(bt => bt.id === boBranchesList.find(b => b.id === currentProfile.branch_id)?.business_type_id);
+  document.getElementById('productSellByWeight').checked = product ? product.sell_by === 'weight' : !!branchBusinessType?.uses_weight;
+  // إخفاء خانة "يباع بالوزن" لو نوع نشاط الفرع أصلًا مش بيستخدم البيع بالوزن (زي محل أحذية/صيدلية) —
+  // إلا لو الصنف (عند التعديل) كان أصلًا مسجّل بالوزن، عشان محدش يفقد القدرة على تعديل صنف موجود
+  const showWeightField = !branchBusinessType || branchBusinessType.uses_weight || (product && product.sell_by === 'weight');
+  document.getElementById('productSellByWeightField').style.display = showWeightField ? '' : 'none';
+  const variantsSuggestHintEl = document.getElementById('productVariantsSuggestHint');
+  if (variantsSuggestHintEl) variantsSuggestHintEl.style.display = (!product && branchBusinessType?.uses_variants) ? '' : 'none';
   document.getElementById('productIsBundle').checked = product ? !!product.is_bundle : false;
   document.getElementById('productBundleSection').style.display = (product && product.is_bundle) ? '' : 'none';
   document.getElementById('productModalError').classList.remove('show');
   document.getElementById('newBarcodeInput').value = '';
   renderBarcodeList();
-  document.getElementById('addUnitRowBtn').style.display = product ? '' : 'none';
-  document.getElementById('unitsHint').style.display = product ? 'none' : '';
+  document.getElementById('addUnitRowBtn').style.display = isNew ? 'none' : '';
+  document.getElementById('unitsHint').style.display = isNew ? '' : 'none';
   renderUnitsList();
-  document.getElementById('addBundleItemRowBtn').style.display = product ? '' : 'none';
-  document.getElementById('bundleItemsHint').style.display = product ? 'none' : '';
+  document.getElementById('addBundleItemRowBtn').style.display = isNew ? 'none' : '';
+  document.getElementById('bundleItemsHint').style.display = isNew ? '' : 'none';
   renderBundleItemsList();
-  renderProductModifierGroupsCheckboxes();
   renderProductTierPricesSection();
+  currentPmProduct = (product && !isDuplicate) ? product : null;
+  currentVariantsParent = (product && !isDuplicate) ? product : null;
+  switchPmTab(initialTab || 'basic');
+  refreshPmModifiersTab();
+  refreshPmVariantsTab();
   document.getElementById('productModalOverlay').classList.add('show');
+}
+
+// ---- تابات شاشة الصنف (المتغيرات / الدفعات / الأرقام التسلسلية جوه نفس المودال) ----
+let currentPmProduct = null; // الصنف المفتوح حاليًا في مودال الصنف (لاستخدامه في التابات الإضافية)
+
+function switchPmTab(tabName) {
+  document.querySelectorAll('.pm-tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.pmTab === tabName);
+  });
+  document.getElementById('pmPanelBasic').style.display = tabName === 'basic' ? '' : 'none';
+  document.getElementById('pmPanelModifiers').style.display = tabName === 'modifiers' ? '' : 'none';
+  document.getElementById('pmPanelVariants').style.display = tabName === 'variants' ? '' : 'none';
+  document.getElementById('pmPanelBatches').style.display = tabName === 'batches' ? '' : 'none';
+  document.getElementById('pmPanelSerials').style.display = tabName === 'serials' ? '' : 'none';
+  document.getElementById('pmPanelStock').style.display = tabName === 'stock' ? '' : 'none';
+  document.getElementById('pmPanelHistory').style.display = tabName === 'history' ? '' : 'none';
+  if (tabName === 'modifiers') refreshPmModifiersTab();
+  if (tabName === 'batches') refreshPmBatchesTab();
+  if (tabName === 'serials') refreshPmSerialsTab();
+  if (tabName === 'variants') refreshPmVariantsTab();
+  if (tabName === 'stock') refreshPmStockTab();
+  if (tabName === 'history') refreshPmHistoryTab();
+}
+
+async function ensureBoProductBatchesLoaded() {
+  if (!productBatchesLoadedOnce) { await loadBoProductBatches(); productBatchesLoadedOnce = true; }
+}
+async function ensureBoProductSerialsLoaded() {
+  if (!productSerialsLoadedOnce) { await loadBoProductSerials(); productSerialsLoadedOnce = true; }
+}
+
+function refreshPmModifiersTab() {
+  const hint = document.getElementById('pmModifiersHint');
+  const content = document.getElementById('pmModifiersContent');
+  const countEl = document.getElementById('pmModifiersCount');
+  if (!currentPmProduct) {
+    hint.style.display = ''; content.style.display = 'none';
+    countEl.textContent = '';
+    return;
+  }
+  hint.style.display = 'none'; content.style.display = '';
+  document.getElementById('pmModifiersError').classList.remove('show');
+  renderProductModifierGroupsCheckboxes();
+  countEl.textContent = currentProductModifierGroupIds.length > 0 ? currentProductModifierGroupIds.length : '';
+}
+
+async function saveProductModifierLinksTab() {
+  if (!currentPmProduct) return;
+  const errEl = document.getElementById('pmModifiersError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('pmSaveModifiersBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+  try {
+    await syncProductModifierGroupsAndPrices(currentPmProduct.id);
+    showToast('تم حفظ ربط الإضافات بالصنف');
+    document.getElementById('pmModifiersCount').textContent = currentProductModifierGroupIds.length > 0 ? currentProductModifierGroupIds.length : '';
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'تعذر حفظ ربط الإضافات';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ ربط الإضافات';
+  }
+}
+
+function refreshPmVariantsTab() {
+  const hint = document.getElementById('pmVariantsHint');
+  const actions = document.getElementById('pmVariantsActions');
+  const tableWrap = document.getElementById('pmVariantsTableWrap');
+  const countEl = document.getElementById('pmVariantsCount');
+  if (!currentPmProduct) {
+    hint.style.display = ''; actions.style.display = 'none'; tableWrap.style.display = 'none';
+    countEl.textContent = '';
+    return;
+  }
+  hint.style.display = 'none'; actions.style.display = ''; tableWrap.style.display = '';
+  const variants = getProductVariants(currentPmProduct.id);
+  countEl.textContent = variants.length > 0 ? variants.length : '';
+  const tbody = document.getElementById('pmVariantsTableBody');
+  if (variants.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">لا توجد متغيرات مضافة حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  variants.forEach(v => {
+    const barcodesText = (v.product_barcodes || []).map(b => b.barcode).join(', ') || '—';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(formatVariantAttrs(v.variant_attributes))}</td>
+      <td class="num">${Number(v.sale_price).toFixed(2)}</td>
+      <td style="font-size:11.5px; color:var(--ink-soft);">${escapeHtml(barcodesText)}</td>
+      <td><span class="bo-badge ${v.is_active ? 'active' : 'inactive'}">${v.is_active ? 'مفعّل' : 'موقّف'}</span></td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openVariantFormModal(currentPmProduct, v));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteVariant(v));
+    applyRowActionPerm(tr, 'products');
+    tbody.appendChild(tr);
+  });
+}
+
+async function refreshPmBatchesTab() {
+  const hint = document.getElementById('pmBatchesHint');
+  const actions = document.getElementById('pmBatchesActions');
+  const tableWrap = document.getElementById('pmBatchesTableWrap');
+  const countEl = document.getElementById('pmBatchesCount');
+  if (!currentPmProduct) {
+    hint.style.display = ''; actions.style.display = 'none'; tableWrap.style.display = 'none';
+    countEl.textContent = '';
+    return;
+  }
+  await ensureBoProductBatchesLoaded();
+  hint.style.display = 'none'; actions.style.display = ''; tableWrap.style.display = '';
+  const rows = boProductBatches.filter(b => b.product_id === currentPmProduct.id);
+  countEl.textContent = rows.length > 0 ? rows.length : '';
+  const tbody = document.getElementById('pmBatchesTableBody');
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" class="bo-empty">لا توجد دفعات مضافة حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  rows.forEach(b => {
+    const status = batchExpiryStatus(b.expiry_date);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(b.batch_number || '—')}</td>
+      <td>${escapeHtml(b.warehouses?.name || '—')}</td>
+      <td class="num">${b.production_date || '—'}</td>
+      <td class="num">${b.expiry_date || '—'}</td>
+      <td class="num">${Number(b.quantity || 0)}</td>
+      <td class="num">${Number(b.cost_price || 0).toFixed(2)}</td>
+      <td><span class="bo-badge ${status.cls || (b.is_active ? 'active' : 'inactive')}">${b.is_active ? status.label : 'موقّفة'}</span></td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="toggle">${b.is_active ? 'إيقاف' : 'تفعيل'}</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openProductBatchModal(b, currentPmProduct.id));
+    tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleProductBatchActive(b));
+    applyRowActionPerm(tr, 'product-batches');
+    tbody.appendChild(tr);
+  });
+}
+
+async function refreshPmSerialsTab() {
+  const hint = document.getElementById('pmSerialsHint');
+  const actions = document.getElementById('pmSerialsActions');
+  const tableWrap = document.getElementById('pmSerialsTableWrap');
+  const countEl = document.getElementById('pmSerialsCount');
+  if (!currentPmProduct) {
+    hint.style.display = ''; actions.style.display = 'none'; tableWrap.style.display = 'none';
+    countEl.textContent = '';
+    return;
+  }
+  await ensureBoProductSerialsLoaded();
+  hint.style.display = 'none'; actions.style.display = ''; tableWrap.style.display = '';
+  const rows = boProductSerials.filter(s => s.product_id === currentPmProduct.id);
+  countEl.textContent = rows.length > 0 ? rows.length : '';
+  const tbody = document.getElementById('pmSerialsTableBody');
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">لا توجد أرقام تسلسلية مضافة حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  rows.forEach(s => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="num">${escapeHtml(s.serial_number || '—')}</td>
+      <td>${escapeHtml(s.warehouses?.name || '—')}</td>
+      <td><span class="bo-badge ${SERIAL_STATUS_BADGE[s.status] || ''}">${SERIAL_STATUS_LABELS[s.status] || s.status}</span></td>
+      <td class="num">${s.warranty_start_date || '—'}</td>
+      <td class="num">${s.warranty_end_date || '—'}</td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openProductSerialModal(s, currentPmProduct.id));
+    applyRowActionPerm(tr, 'product-serials');
+    tbody.appendChild(tr);
+  });
+}
+
+// ---- تاب: المخزون بالمخازن (رصيد الصنف الحالي في كل مخزن + تعديل مباشر) ----
+let currentPmStockRows = []; // [{warehouse_id, name, before, after}]
+
+async function refreshPmStockTab() {
+  const hint = document.getElementById('pmStockHint');
+  const content = document.getElementById('pmStockContent');
+  const countEl = document.getElementById('pmStockCount');
+  if (!currentPmProduct) {
+    hint.style.display = ''; content.style.display = 'none';
+    countEl.textContent = '';
+    return;
+  }
+  hint.style.display = 'none'; content.style.display = '';
+  document.getElementById('pmStockError').classList.remove('show');
+  document.getElementById('pmStockNote').value = '';
+
+  const activeWarehouses = boWarehouses.filter(w => w.is_active);
+  const tbody = document.getElementById('pmStockTableBody');
+  tbody.innerHTML = `<tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>`;
+
+  const { data, error } = await supabaseClient
+    .from('stock_balances')
+    .select('warehouse_id, quantity')
+    .eq('product_id', currentPmProduct.id);
+  if (error) {
+    console.error(error);
+    showToast('تعذر تحميل أرصدة المخزون', true);
+    tbody.innerHTML = `<tr><td colspan="4" class="bo-empty">تعذر تحميل الأرصدة</td></tr>`;
+    return;
+  }
+  const balanceMap = {};
+  (data || []).forEach(r => { balanceMap[r.warehouse_id] = Number(r.quantity); });
+
+  currentPmStockRows = activeWarehouses.map(w => ({
+    warehouse_id: w.id, name: warehouseLabel(w),
+    before: balanceMap[w.id] ?? 0, after: balanceMap[w.id] ?? 0,
+  }));
+
+  const totalQty = currentPmStockRows.reduce((sum, r) => sum + r.before, 0);
+  countEl.textContent = totalQty ? Number(totalQty.toFixed(3)) : '';
+
+  if (currentPmStockRows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" class="bo-empty">لا توجد مخازن مفعّلة</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  currentPmStockRows.forEach((row, idx) => {
+    const tr = document.createElement('tr');
+    const diffId = `pmStockDiff-${idx}`;
+    tr.innerHTML = `
+      <td>${escapeHtml(row.name)}</td>
+      <td class="num">${row.before}</td>
+      <td><input type="number" step="0.001" min="0" class="num" style="width:100px; padding:6px 8px;" value="${row.after}" data-idx="${idx}"></td>
+      <td class="num" id="${diffId}">0</td>`;
+    tr.querySelector('input').addEventListener('input', (e) => {
+      const val = e.target.value === '' ? row.before : Number(e.target.value);
+      currentPmStockRows[idx].after = val;
+      document.getElementById(diffId).textContent = (val - row.before).toFixed(3).replace(/\.?0+$/, '') || '0';
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+// ---- سجل تعديلات الصنف (Audit Trail) — مدمج من مصدرين: activity_log (تغييرات
+// حقول الصنف نفسه زي الاسم/السعر/الفئة) و stock_adjustment_items (تغييرات الكمية
+// بالمخزون)، بيتعرض كتايم لاين واحد مرتب بالأحدث أولاً. ====
+async function fetchProductHistoryEntries(productId, limit) {
+  const [fieldChangesRes, stockChangesRes] = await Promise.all([
+    supabaseClient
+      .from('activity_log')
+      .select('id, action, user_id, old_data, new_data, created_at, users_profile(full_name)')
+      .eq('table_name', 'products')
+      .eq('record_id', productId)
+      .order('created_at', { ascending: false })
+      .limit(limit),
+    supabaseClient
+      .from('stock_adjustment_items')
+      .select('quantity_before, quantity_after, difference, stock_adjustments!inner(created_at, note, users_profile(full_name), warehouses(name))')
+      .eq('product_id', productId)
+      .order('created_at', { foreignTable: 'stock_adjustments', ascending: false })
+      .limit(limit),
+  ]);
+  if (fieldChangesRes.error) throw fieldChangesRes.error;
+  if (stockChangesRes.error) throw stockChangesRes.error;
+
+  const entries = [];
+
+  (fieldChangesRes.data || []).forEach(row => {
+    const userName = row.users_profile?.full_name || 'غير معروف';
+    if (row.action === 'insert') {
+      entries.push({ date: row.created_at, userName, kind: 'field', html: `<b>${escapeHtml(userName)}</b> أضاف الصنف` });
+      return;
+    }
+    if (row.action === 'update') {
+      const changed = activityLogChangedFields(row);
+      if (changed.length === 0) return;
+      const diffLines = changed.map(k => {
+        if (k === 'cost_price' && !canViewCost()) return null; // إخفاء تفاصيل التكلفة عن غير المصرّح لهم برؤيتها
+        const label = escapeHtml(ACTIVITY_LOG_FIELD_LABELS[k] || k);
+        return `<div class="history-diff">${label}: ${formatActivityLogValue(k, row.old_data[k])} ← <b>${formatActivityLogValue(k, row.new_data[k])}</b></div>`;
+      }).filter(Boolean);
+      if (diffLines.length === 0) return;
+      entries.push({
+        date: row.created_at, userName, kind: 'field',
+        html: `<b>${escapeHtml(userName)}</b> عدّل ${diffLines.length > 1 ? diffLines.length + ' حقول' : 'بيانات الصنف'}${diffLines.join('')}`,
+      });
+    }
+  });
+
+  (stockChangesRes.data || []).forEach(item => {
+    const adj = item.stock_adjustments;
+    const userName = adj?.users_profile?.full_name || 'غير معروف';
+    const whName = adj?.warehouses?.name || 'مخزن غير محدد';
+    const diff = Number(item.difference);
+    const diffText = diff > 0 ? `+${diff}` : `${diff}`;
+    entries.push({
+      date: adj?.created_at, userName, kind: 'stock',
+      html: `<b>${escapeHtml(userName)}</b> عدّل الكمية بمخزن ${escapeHtml(whName)} — <span class="history-diff">${item.quantity_before} ← <b>${item.quantity_after}</b> (${diffText})</span>${adj?.note ? ` <span class="history-sub">${escapeHtml(adj.note)}</span>` : ''}`,
+    });
+  });
+
+  entries.sort((a, b) => new Date(b.date) - new Date(a.date));
+  return entries.slice(0, limit);
+}
+
+function renderProductHistoryEntries(entries) {
+  if (entries.length === 0) return `<div class="qv-empty">لا توجد تعديلات مسجّلة على هذا الصنف حتى الآن</div>`;
+  return entries.map(e => `
+    <div class="history-item">
+      <div class="history-top">
+        <span>${e.html}${e.kind === 'stock' ? '<span class="history-badge stock">مخزون</span>' : ''}</span>
+      </div>
+      <div class="history-sub">${new Date(e.date).toLocaleString('ar-EG')}</div>
+    </div>`).join('');
+}
+
+async function refreshPmHistoryTab() {
+  const hint = document.getElementById('pmHistoryHint');
+  const content = document.getElementById('pmHistoryContent');
+  const listEl = document.getElementById('pmHistoryList');
+  if (!currentPmProduct) {
+    hint.style.display = ''; content.style.display = 'none';
+    return;
+  }
+  hint.style.display = 'none'; content.style.display = '';
+  listEl.innerHTML = `<div class="qv-empty">جارٍ التحميل...</div>`;
+  try {
+    if (!sessionUsable()) throw new Error('offline');
+    const entries = await fetchProductHistoryEntries(currentPmProduct.id, 30);
+    listEl.innerHTML = renderProductHistoryEntries(entries);
+  } catch (err) {
+    if (err && (err.code === '42P01' || /relation .* does not exist/i.test(err.message || ''))) {
+      listEl.innerHTML = `<div class="qv-empty">سجل النشاط غير مُفعّل على قاعدة البيانات بعد</div>`;
+      return;
+    }
+    if (!isNetworkError(err)) console.error(err);
+    listEl.innerHTML = `<div class="qv-empty">تعذّر تحميل سجل التعديلات (تحقق من الاتصال)</div>`;
+  }
+}
+
+async function saveProductStockTab() {
+  if (!currentPmProduct) return;
+  const errEl = document.getElementById('pmStockError');
+  errEl.classList.remove('show');
+
+  const changed = currentPmStockRows.filter(r => Number(r.after) !== Number(r.before));
+  if (changed.length === 0) { errEl.textContent = 'لا يوجد أي تغيير في الأرصدة لحفظه'; errEl.classList.add('show'); return; }
+
+  const note = document.getElementById('pmStockNote').value.trim() || `تعديل من شاشة الصنف: ${currentPmProduct.name}`;
+  const saveBtn = document.getElementById('pmSaveStockBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  try {
+    // كل مخزن اتغير فيه الرصيد بيتسجل كحركة "جرد" مستقلة (نفس منطق شاشة تسويات
+    // المخزون)، عشان يفضل في سجل تسويات المخزون كأي تعديل تاني.
+    for (const row of changed) {
+      const { data: existing, error: fetchErr } = await supabaseClient
+        .from('stock_balances')
+        .select('product_id')
+        .eq('warehouse_id', row.warehouse_id)
+        .eq('product_id', currentPmProduct.id)
+        .maybeSingle();
+      if (fetchErr) throw fetchErr;
+      if (existing) {
+        const { error } = await supabaseClient
+          .from('stock_balances')
+          .update({ quantity: row.after })
+          .eq('warehouse_id', row.warehouse_id)
+          .eq('product_id', currentPmProduct.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabaseClient
+          .from('stock_balances')
+          .insert({ warehouse_id: row.warehouse_id, product_id: currentPmProduct.id, quantity: row.after });
+        if (error) throw error;
+      }
+
+      const { data: adjustment, error: adjError } = await supabaseClient
+        .from('stock_adjustments')
+        .insert({ warehouse_id: row.warehouse_id, note, created_by: currentProfile.id })
+        .select().single();
+      if (adjError) throw adjError;
+
+      const { error: itemsError } = await supabaseClient.from('stock_adjustment_items').insert({
+        adjustment_id: adjustment.id, product_id: currentPmProduct.id,
+        quantity_before: row.before, quantity_after: row.after, difference: row.after - row.before,
+      });
+      if (itemsError) throw itemsError;
+    }
+
+    showToast('تم حفظ تعديلات المخزون');
+    await refreshPmStockTab();
+    const myMainWarehouse = await getMainWarehouseId(currentProfile?.branch_id);
+    if (myMainWarehouse && changed.some(r => r.warehouse_id === myMainWarehouse)) {
+      await loadStockBalances();
+      renderProducts();
+    }
+    if (typeof loadBoAdjustments === 'function') { await loadBoAdjustments(); renderAdjustmentsTable(); }
+    if (document.getElementById('stockBalanceWarehouseSelect')) renderStockBalancesTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء حفظ التعديلات';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ تعديلات المخزون';
+  }
 }
 
 // بيرسم قسم "أسعار الشرائح" جوه مودال الصنف — صف لكل شريحة مفعّلة، بحقل سعر
@@ -16392,6 +18042,8 @@ function renderBundleItemsList() {
 
 function closeProductModal() {
   document.getElementById('productModalOverlay').classList.remove('show');
+  currentPmProduct = null;
+  pendingQuickTemplateInitialTab = null;
 }
 
 // ---- طباعة ملصقات باركود ----
@@ -16593,6 +18245,48 @@ function addBarcodeToCurrentProduct() {
   renderBarcodeList();
 }
 
+// بيزامن مجموعات الإضافات المرتبطة بصنف معيّن + أسعارها المستقلة (لو فيه)
+// مع القيم الحالية في currentProductModifierGroupIds / currentProductModifierOptionPrices.
+// دالة مشتركة بين حفظ فورم الصنف الأساسي وتاب "ربط الإضافات" جوه نفس المودال.
+async function syncProductModifierGroupsAndPrices(productId) {
+  const { data: existingLinks } = await supabaseClient
+    .from('product_modifier_groups').select('id, group_id').eq('product_id', productId);
+  const existingGroupIds = (existingLinks || []).map(l => l.group_id);
+  const toRemoveLinks = (existingLinks || []).filter(l => !currentProductModifierGroupIds.includes(l.group_id)).map(l => l.id);
+  const toAddLinks = currentProductModifierGroupIds.filter(gid => !existingGroupIds.includes(gid)).map(gid => ({ product_id: productId, group_id: gid }));
+  if (toRemoveLinks.length > 0) {
+    await supabaseClient.from('product_modifier_groups').delete().in('id', toRemoveLinks);
+  }
+  if (toAddLinks.length > 0) {
+    const { error: linkErr } = await supabaseClient.from('product_modifier_groups').insert(toAddLinks);
+    if (linkErr) throw linkErr;
+  }
+  await loadBoProductModifierLinks();
+
+  // مزامنة أسعار خيارات مجموعات "سعر مستقل لكل صنف" (زي الأحجام) الخاصة بالصنف ده
+  const linkedOverrideOptionIds = boModifierGroups
+    .filter(g => currentProductModifierGroupIds.includes(g.id) && g.price_mode === 'override')
+    .flatMap(g => (g.modifier_options || []).map(o => o.id));
+  const { data: existingPrices } = await supabaseClient
+    .from('product_modifier_option_prices').select('id, option_id').eq('product_id', productId);
+  // امسح أي سعر لخيار بقى غير مرتبط أو مالوش قيمة متسجلة
+  const priceIdsToRemove = (existingPrices || [])
+    .filter(p => !linkedOverrideOptionIds.includes(p.option_id) || currentProductModifierOptionPrices[p.option_id] == null)
+    .map(p => p.id);
+  if (priceIdsToRemove.length > 0) {
+    await supabaseClient.from('product_modifier_option_prices').delete().in('id', priceIdsToRemove);
+  }
+  // جهّز upsert لكل خيار متسجل له سعر ومرتبط بالصنف
+  const priceRowsToUpsert = linkedOverrideOptionIds
+    .filter(optId => currentProductModifierOptionPrices[optId] != null)
+    .map(optId => ({ product_id: productId, option_id: optId, price: Number(currentProductModifierOptionPrices[optId]) }));
+  if (priceRowsToUpsert.length > 0) {
+    const { error: priceErr } = await supabaseClient
+      .from('product_modifier_option_prices').upsert(priceRowsToUpsert, { onConflict: 'product_id,option_id' });
+    if (priceErr) throw priceErr;
+  }
+}
+
 async function saveProduct(e) {
   e.preventDefault();
   const errEl = document.getElementById('productModalError');
@@ -16710,44 +18404,9 @@ async function saveProduct(e) {
       }
     }
 
-    // مزامنة مجموعات الإضافات المرتبطة بالصنف
-    const { data: existingLinks } = await supabaseClient
-      .from('product_modifier_groups').select('id, group_id').eq('product_id', productId);
-    const existingGroupIds = (existingLinks || []).map(l => l.group_id);
-    const toRemoveLinks = (existingLinks || []).filter(l => !currentProductModifierGroupIds.includes(l.group_id)).map(l => l.id);
-    const toAddLinks = currentProductModifierGroupIds.filter(gid => !existingGroupIds.includes(gid)).map(gid => ({ product_id: productId, group_id: gid }));
-    if (toRemoveLinks.length > 0) {
-      await supabaseClient.from('product_modifier_groups').delete().in('id', toRemoveLinks);
-    }
-    if (toAddLinks.length > 0) {
-      const { error: linkErr } = await supabaseClient.from('product_modifier_groups').insert(toAddLinks);
-      if (linkErr) throw linkErr;
-    }
-    await loadBoProductModifierLinks();
-
-    // مزامنة أسعار خيارات مجموعات "سعر مستقل لكل صنف" (زي الأحجام) الخاصة بالصنف ده
-    const linkedOverrideOptionIds = boModifierGroups
-      .filter(g => currentProductModifierGroupIds.includes(g.id) && g.price_mode === 'override')
-      .flatMap(g => (g.modifier_options || []).map(o => o.id));
-    const { data: existingPrices } = await supabaseClient
-      .from('product_modifier_option_prices').select('id, option_id').eq('product_id', productId);
-    const existingPriceOptionIds = (existingPrices || []).map(p => p.option_id);
-    // امسح أي سعر لخيار بقى غير مرتبط أو مالوش قيمة متسجلة
-    const priceIdsToRemove = (existingPrices || [])
-      .filter(p => !linkedOverrideOptionIds.includes(p.option_id) || currentProductModifierOptionPrices[p.option_id] == null)
-      .map(p => p.id);
-    if (priceIdsToRemove.length > 0) {
-      await supabaseClient.from('product_modifier_option_prices').delete().in('id', priceIdsToRemove);
-    }
-    // جهّز upsert لكل خيار متسجل له سعر ومرتبط بالصنف
-    const priceRowsToUpsert = linkedOverrideOptionIds
-      .filter(optId => currentProductModifierOptionPrices[optId] != null)
-      .map(optId => ({ product_id: productId, option_id: optId, price: Number(currentProductModifierOptionPrices[optId]) }));
-    if (priceRowsToUpsert.length > 0) {
-      const { error: priceErr } = await supabaseClient
-        .from('product_modifier_option_prices').upsert(priceRowsToUpsert, { onConflict: 'product_id,option_id' });
-      if (priceErr) throw priceErr;
-    }
+    // مزامنة مجموعات الإضافات المرتبطة بالصنف وأسعارها المستقلة (منطق مشترك
+    // مع تاب "ربط الإضافات" جوه مودال الصنف)
+    await syncProductModifierGroupsAndPrices(productId);
 
     // مزامنة أسعار الشرائح الخاصة بالصنف — نقرأ القيم من حقول الإدخال مباشرة
     // عشان تتضمن أي تعديل عمله المستخدم في نفس هذه الجلسة قبل الحفظ
@@ -16773,10 +18432,25 @@ async function saveProduct(e) {
       if (tierPriceErr) throw tierPriceErr;
     }
 
-    showToast(id ? 'تم تحديث الصنف بنجاح' : 'تمت إضافة الصنف بنجاح');
-    closeProductModal();
     await loadBoProducts();
     renderProductsTable();
+    if (id) {
+      showToast('تم تحديث الصنف بنجاح');
+      closeProductModal();
+    } else {
+      // صنف جديد: تفضل في نفس المودال بعد الحفظ (بيتحول لوضع "تعديل" تلقائيًا)
+      // عشان تقدر تكمل باقي بياناته (متغيرات، دفعات، أرقام تسلسلية، إضافات،
+      // مخزون) من التابات فوق من غير ما تحتاج تقفل وتدور عليه تاني.
+      const savedProduct = boProducts.find(p => p.id === productId);
+      if (savedProduct) {
+        showToast('تمت إضافة الصنف بنجاح — كمّل باقي بياناته من التابات فوق، أو اضغط "إلغاء" لو خلصت');
+        await openProductModal(savedProduct, pendingQuickTemplateInitialTab || 'basic');
+        pendingQuickTemplateInitialTab = null;
+      } else {
+        showToast('تمت إضافة الصنف بنجاح');
+        closeProductModal();
+      }
+    }
   } catch (err) {
     console.error(err);
     errEl.textContent = err.message?.includes('duplicate') || err.code === '23505'
@@ -16966,8 +18640,10 @@ async function saveVariant(e) {
     closeVariantFormModal();
     await loadBoProducts();
     currentVariantsParent = boProducts.find(p => p.id === parentId);
+    if (currentPmProduct?.id === parentId) currentPmProduct = currentVariantsParent;
     renderProductsTable();
     renderVariantsListTable();
+    refreshPmVariantsTab();
   } catch (err) {
     console.error(err);
     errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
@@ -16991,8 +18667,10 @@ async function deleteVariant(item) {
   await loadBoProducts();
   const parentId = currentVariantsParent?.id;
   currentVariantsParent = boProducts.find(p => p.id === parentId) || currentVariantsParent;
+  if (currentPmProduct?.id === parentId) currentPmProduct = currentVariantsParent;
   renderProductsTable();
   renderVariantsListTable();
+  refreshPmVariantsTab();
 }
 
 // ---- Categories ----
@@ -18751,11 +20429,12 @@ function renderProductBatchesTable() {
   });
 }
 
-function openProductBatchModal(item) {
+function openProductBatchModal(item, presetProductId) {
   populateProductBatchSelects();
   document.getElementById('productBatchModalTitle').textContent = item ? 'تعديل دفعة' : 'دفعة جديدة';
   document.getElementById('productBatchId').value = item ? item.id : '';
-  document.getElementById('productBatchProduct').value = item ? item.product_id : (boProducts[0]?.id || '');
+  document.getElementById('productBatchProduct').value = item ? item.product_id : (presetProductId || boProducts[0]?.id || '');
+  document.getElementById('productBatchProduct').disabled = !!presetProductId;
   document.getElementById('productBatchWarehouse').value = item ? item.warehouse_id : (boWarehouses.find(w => w.is_active)?.id || '');
   document.getElementById('productBatchNumber').value = item ? (item.batch_number || '') : '';
   document.getElementById('productBatchQuantity').value = item ? item.quantity : 0;
@@ -18810,6 +20489,7 @@ async function saveProductBatch(e) {
     closeProductBatchModal();
     await loadBoProductBatches();
     renderProductBatchesTable();
+    refreshPmBatchesTab();
   } catch (err) {
     console.error(err);
     errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
@@ -18825,6 +20505,7 @@ async function toggleProductBatchActive(item) {
   if (error) { console.error(error); showToast('تعذر تحديث حالة الدفعة', true); return; }
   await loadBoProductBatches();
   renderProductBatchesTable();
+  refreshPmBatchesTab();
 }
 
 // ---- تتبع الأرقام التسلسلية (Product serials) ----
@@ -18902,7 +20583,7 @@ function renderProductSerialsTable() {
   });
 }
 
-function openProductSerialModal(item) {
+function openProductSerialModal(item, presetProductId) {
   populateProductSerialSelects();
   const bulkWrap = document.getElementById('productSerialBulkWrap');
   const singleWrap = document.getElementById('productSerialSingleWrap');
@@ -18910,8 +20591,8 @@ function openProductSerialModal(item) {
 
   document.getElementById('productSerialModalTitle').textContent = item ? 'تعديل رقم تسلسلي' : 'أرقام تسلسلية جديدة';
   document.getElementById('productSerialId').value = item ? item.id : '';
-  document.getElementById('productSerialProduct').value = item ? item.product_id : (boProducts[0]?.id || '');
-  document.getElementById('productSerialProduct').disabled = !!item;
+  document.getElementById('productSerialProduct').value = item ? item.product_id : (presetProductId || boProducts[0]?.id || '');
+  document.getElementById('productSerialProduct').disabled = !!item || !!presetProductId;
   document.getElementById('productSerialWarehouse').value = item ? (item.warehouse_id || '') : (boWarehouses.find(w => w.is_active)?.id || '');
   document.getElementById('productSerialWarrantyStart').value = item ? (item.warranty_start_date || '') : '';
   document.getElementById('productSerialWarrantyEnd').value = item ? (item.warranty_end_date || '') : '';
@@ -18980,6 +20661,7 @@ async function saveProductSerial(e) {
     closeProductSerialModal();
     await loadBoProductSerials();
     renderProductSerialsTable();
+    refreshPmSerialsTab();
   } catch (err) {
     console.error(err);
     errEl.textContent = err.message?.includes('duplicate') ? 'رقم تسلسلي مكرر لنفس الصنف' : (err.message || 'حدث خطأ أثناء الحفظ');
@@ -19752,6 +21434,7 @@ async function deleteBranch(branch) {
 
 // ---- أنواع الأنشطة التجارية (business_types) ----
 let boBusinessTypes = [];
+let currentBusinessTypeTemplates = []; // قوالب الأصناف السريعة الخاصة بنوع النشاط المفتوح حاليًا في مودال التعديل
 
 async function loadBoBusinessTypes() {
   const { data, error } = await supabaseClient.from('business_types').select('*').order('name');
@@ -19759,45 +21442,118 @@ async function loadBoBusinessTypes() {
   boBusinessTypes = data || [];
 }
 
+let businessTypesSearchTerm = '';
+
+function defaultBusinessTypeIcon(x) {
+  if (x.uses_weight) return '⚖';
+  if (x.uses_variants) return '👟';
+  return '🏬';
+}
+
 function renderBusinessTypesTable() {
-  const tbody = document.getElementById('businessTypesTableBody');
-  if (!tbody) return;
+  const grid = document.getElementById('businessTypesGrid');
+  const countLabel = document.getElementById('businessTypesCountLabel');
+  if (!grid) return;
+  const q = businessTypesSearchTerm.trim().toLowerCase();
+  const filtered = boBusinessTypes.filter(x =>
+    !q || x.name.toLowerCase().includes(q) || (x.code || '').toLowerCase().includes(q));
+  if (countLabel) countLabel.textContent = `${filtered.length} من ${boBusinessTypes.length}`;
   if (boBusinessTypes.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">لا توجد أنواع أنشطة مضافة حتى الآن</td></tr>`;
+    grid.innerHTML = `<div class="bo-empty" style="grid-column:1/-1;">لا توجد أنواع أنشطة مضافة حتى الآن — ابدأ بإضافة أول نوع نشاط لفروعك.</div>`;
     return;
   }
-  tbody.innerHTML = '';
-  boBusinessTypes.forEach(x => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${escapeHtml(x.name)}</td>
-      <td class="num">${escapeHtml(x.code)}</td>
-      <td>${x.uses_weight ? '✔' : '—'}</td>
-      <td>${x.uses_variants ? '✔' : '—'}</td>
-      <td><span class="bo-badge ${x.is_active ? 'active' : 'inactive'}">${x.is_active ? 'مفعّل' : 'موقّف'}</span></td>
-      <td>
-        <div class="bo-row-actions">
-          <button class="bo-icon-btn" data-action="edit">تعديل</button>
-          <button class="bo-icon-btn danger" data-action="toggle">${x.is_active ? 'إيقاف' : 'تفعيل'}</button>
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div class="bo-empty" style="grid-column:1/-1;">لا توجد نتائج مطابقة للبحث</div>`;
+    return;
+  }
+  grid.innerHTML = '';
+  filtered.forEach(x => {
+    const branchCount = boBranchesList.filter(b => b.business_type_id === x.id).length;
+    const templatesCount = (x.settings?.templates || []).filter(t => (t.label || '').trim() !== '').length;
+    const badges = [];
+    badges.push(`<span class="bt-mini-badge">${x.uses_weight ? '⚖ بيع بالوزن' : '⚖ بالقطعة'}</span>`);
+    if (x.uses_variants) badges.push(`<span class="bt-mini-badge">🎨 متغيرات</span>`);
+    if (templatesCount > 0) badges.push(`<span class="bt-mini-badge">⚡ ${templatesCount} قوالب</span>`);
+    if (x.settings?.item_name_label) badges.push(`<span class="bt-mini-badge">🏷 ${escapeHtml(x.settings.item_name_label)}</span>`);
+    const card = document.createElement('div');
+    card.className = `bt-card${x.is_active ? '' : ' inactive'}`;
+    card.innerHTML = `
+      <div class="bt-card-top">
+        <div class="bt-card-icon">${escapeHtml(x.settings?.icon || defaultBusinessTypeIcon(x))}</div>
+        <div class="bt-card-titles">
+          <div class="bt-card-name">${escapeHtml(x.name)}</div>
+          <div class="bt-card-code num">${escapeHtml(x.code)}</div>
         </div>
-      </td>`;
-    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openBusinessTypeModal(x));
-    tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleBusinessTypeActive(x));
-    applyRowActionPerm(tr, 'business-types');
-    tbody.appendChild(tr);
+        <span class="bo-badge ${x.is_active ? 'active' : 'inactive'}">${x.is_active ? 'مفعّل' : 'موقّف'}</span>
+      </div>
+      <div class="bt-card-badges">${badges.join('')}</div>
+      <div class="bt-card-stat">مرتبط بـ <span class="num">${branchCount}</span> ${branchCount === 1 ? 'فرع' : 'فروع'}</div>
+      <div class="bt-card-actions bo-row-actions">
+        <button class="bo-icon-btn" data-action="edit">تعديل</button>
+        <button class="bo-icon-btn danger" data-action="toggle">${x.is_active ? 'إيقاف' : 'تفعيل'}</button>
+      </div>`;
+    card.querySelector('[data-action="edit"]').addEventListener('click', () => openBusinessTypeModal(x));
+    card.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleBusinessTypeActive(x));
+    applyRowActionPerm(card, 'business-types');
+    grid.appendChild(card);
   });
 }
 
 function openBusinessTypeModal(item) {
   document.getElementById('businessTypeModalTitle').textContent = item ? 'تعديل نوع نشاط' : 'نوع نشاط جديد';
   document.getElementById('businessTypeId').value = item ? item.id : '';
+  document.getElementById('businessTypeIcon').value = item?.settings?.icon || '';
   document.getElementById('businessTypeName').value = item ? item.name : '';
   document.getElementById('businessTypeCode').value = item ? item.code : '';
+  document.getElementById('businessTypeItemNameLabel').value = item?.settings?.item_name_label || '';
   document.getElementById('businessTypeUsesWeight').checked = item ? !!item.uses_weight : false;
   document.getElementById('businessTypeUsesVariants').checked = item ? !!item.uses_variants : false;
   document.getElementById('businessTypeActive').checked = item ? item.is_active : true;
+  currentBusinessTypeTemplates = (item?.settings?.templates || []).map(t => ({ ...t }));
+  renderBusinessTypeTemplatesList();
+  const branchNoteEl = document.getElementById('businessTypeBranchCountNote');
+  const branchCount = item ? boBranchesList.filter(b => b.business_type_id === item.id).length : 0;
+  if (branchNoteEl) {
+    branchNoteEl.style.display = branchCount > 0 ? '' : 'none';
+    branchNoteEl.textContent = branchCount > 0 ? `⚠ النوع ده مرتبط حاليًا بـ ${branchCount} ${branchCount === 1 ? 'فرع' : 'فروع'} — أي تعديل هنا (زي طريقة البيع) هيتطبّق عليهم كلهم.` : '';
+  }
   document.getElementById('businessTypeModalError').classList.remove('show');
   document.getElementById('businessTypeModalOverlay').classList.add('show');
+}
+
+function renderBusinessTypeTemplatesList() {
+  const wrap = document.getElementById('businessTypeTemplatesList');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  currentBusinessTypeTemplates.forEach((t, idx) => {
+    const row = document.createElement('div');
+    row.className = 'unit-row';
+
+    const labelInput = document.createElement('input');
+    labelInput.type = 'text'; labelInput.placeholder = 'اسم القالب — مثال: لحم بقري';
+    labelInput.value = t.label ?? '';
+    labelInput.addEventListener('input', () => { currentBusinessTypeTemplates[idx].label = labelInput.value; });
+
+    const sellBySelect = document.createElement('select');
+    sellBySelect.innerHTML = `
+      <option value="unit" ${t.sell_by !== 'weight' ? 'selected' : ''}>يباع بالقطعة</option>
+      <option value="weight" ${t.sell_by === 'weight' ? 'selected' : ''}>يباع بالوزن</option>`;
+    sellBySelect.addEventListener('change', () => { currentBusinessTypeTemplates[idx].sell_by = sellBySelect.value; });
+
+    const initialTabSelect = document.createElement('select');
+    initialTabSelect.innerHTML = `
+      <option value="basic" ${!t.initial_tab || t.initial_tab === 'basic' ? 'selected' : ''}>يفتح على البيانات الأساسية</option>
+      <option value="variants" ${t.initial_tab === 'variants' ? 'selected' : ''}>يفتح على تاب المتغيرات</option>
+      <option value="batches" ${t.initial_tab === 'batches' ? 'selected' : ''}>يفتح على تاب الدفعات والصلاحية</option>`;
+    initialTabSelect.addEventListener('change', () => { currentBusinessTypeTemplates[idx].initial_tab = initialTabSelect.value; });
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button'; removeBtn.className = 'remove-unit-btn'; removeBtn.textContent = '×';
+    removeBtn.addEventListener('click', () => { currentBusinessTypeTemplates.splice(idx, 1); renderBusinessTypeTemplatesList(); });
+
+    row.append(labelInput, sellBySelect, initialTabSelect, removeBtn);
+    wrap.appendChild(row);
+  });
 }
 
 function closeBusinessTypeModal() {
@@ -19825,7 +21581,10 @@ async function saveBusinessType(e) {
     is_active: document.getElementById('businessTypeActive').checked,
     settings: {
       default_sell_by: usesWeight ? 'weight' : 'unit',
-      ...(usesVariants ? { variant_attributes: ['size', 'color'] } : {})
+      ...(usesVariants ? { variant_attributes: ['size', 'color'] } : {}),
+      templates: currentBusinessTypeTemplates.filter(t => (t.label || '').trim() !== ''),
+      ...(document.getElementById('businessTypeItemNameLabel').value.trim() ? { item_name_label: document.getElementById('businessTypeItemNameLabel').value.trim() } : {}),
+      ...(document.getElementById('businessTypeIcon').value.trim() ? { icon: document.getElementById('businessTypeIcon').value.trim() } : {})
     }
   };
 
@@ -30188,6 +31947,27 @@ function formatQty(n) {
   return Number(n).toFixed(3).replace(/\.?0+$/, '') || '0';
 }
 
+// عرض الكمية المتاحة في جدول الأصناف بشكل يتكيّف مع طبيعة كل صنف على حِدة (مش نوع نشاط الفرع ككل) —
+// صنف بالوزن يعرض "كجم"، وصنف بالقطعة وليه وحدة بيع أكبر مفعّلة (كرتونة/باليت) يعرض بيها مع توضيح العدد الأساسي.
+function formatProductQtyCell(p, qty) {
+  if (p.sell_by === 'weight') {
+    return `${formatQty(qty)} كجم`;
+  }
+  const baseUnitLabel = escapeHtml(p.unit_type || 'قطعة');
+  const activeUnits = (p.product_units || []).filter(u => u.is_active && u.unit_types?.name && Number(u.factor_to_base) > 1);
+  if (activeUnits.length > 0) {
+    const largestUnit = activeUnits.reduce((a, b) => Number(b.factor_to_base) > Number(a.factor_to_base) ? b : a);
+    const factor = Number(largestUnit.factor_to_base);
+    if (qty >= factor) {
+      const wholeUnits = Math.floor(qty / factor);
+      const remainder = qty - (wholeUnits * factor);
+      const remainderText = remainder > 0 ? ` و${formatQty(remainder)} ${baseUnitLabel}` : '';
+      return `${wholeUnits} ${escapeHtml(largestUnit.unit_types.name)}${remainderText} <span style="color:var(--ink-soft); font-size:10.5px;">(${formatQty(qty)} ${baseUnitLabel})</span>`;
+    }
+  }
+  return `${formatQty(qty)} ${baseUnitLabel}`;
+}
+
 // ---- مستوى المخزون الحالي ----
 async function refreshInventoryLevelsReport() {
   const warehouseId = document.getElementById('invLevelsWarehouseFilter').value || null;
@@ -32121,6 +33901,81 @@ async function rdExecute() {
   colfObserver.observe(colfContainer, { childList: true, subtree: true });
   ensureFilterIcons();
 })();
+</script>
+
+<!-- Modal: معاينة استيراد الإكسل قبل التأكيد -->
+<div class="modal-overlay" id="importPreviewModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title">معاينة استيراد الأصناف</div>
+    <div class="import-preview-stats" id="importPreviewStats"></div>
+    <div class="bo-table-wrap" style="max-height:360px; margin-top:12px;">
+      <table class="bo-table">
+        <thead><tr><th>الصف</th><th>اسم الصنف</th><th>الحالة</th></tr></thead>
+        <tbody id="importPreviewTableBody"></tbody>
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="bo-add-btn" id="importPreviewConfirmBtn">تأكيد الاستيراد</button>
+      <button type="button" class="modal-cancel-btn" id="importPreviewCancelBtn">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- لوحة المعاينة السريعة للصنف -->
+<div class="qv-overlay" id="productQuickViewOverlay">
+  <div class="qv-panel" onclick="event.stopPropagation()">
+    <div class="qv-panel-header">
+      <div>
+        <div class="qv-panel-title" id="qvProductName">—</div>
+        <div class="qv-panel-sub" id="qvProductMeta"></div>
+      </div>
+      <button type="button" class="qv-close-btn" id="qvCloseBtn" title="إغلاق">✕</button>
+    </div>
+    <div class="qv-thumb" id="qvThumb">🛒</div>
+    <div class="qv-price-grid">
+      <div class="qv-price-box">
+        <div class="qv-price-label">سعر البيع</div>
+        <div class="qv-price-value" id="qvSalePrice">—</div>
+      </div>
+      <div class="qv-price-box cost-guard-cell" id="qvCostBox">
+        <div class="qv-price-label">سعر الشراء</div>
+        <div class="qv-price-value" id="qvCostPrice">—</div>
+      </div>
+    </div>
+    <div class="qv-section-title">المخزون حسب الفرع</div>
+    <div id="qvBranchStock"><div class="qv-empty">جارٍ التحميل...</div></div>
+    <div class="qv-section-title">آخر حركة بيع</div>
+    <div id="qvLastSales"><div class="qv-empty">جارٍ التحميل...</div></div>
+    <div class="qv-section-title">آخر التعديلات</div>
+    <div id="qvHistory"><div class="qv-empty">جارٍ التحميل...</div></div>
+    <div class="qv-panel-footer">
+      <button type="button" class="bo-add-btn" id="qvFullEditBtn" style="flex:1;">تعديل كامل</button>
+      <button type="button" class="modal-cancel-btn" id="qvCloseBtn2">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // قائمة منسدلة عامة لتجميع الأزرار الثانوية (إجراءات أخرى / فلاتر إضافية / إجراءات التحديد الجماعي)
+  document.addEventListener('click', function (e) {
+    var openBtn = e.target.closest('.bo-menu-btn');
+    if (openBtn) {
+      var panel = openBtn.nextElementSibling;
+      var wasOpen = panel.classList.contains('open');
+      document.querySelectorAll('.bo-menu-panel.open').forEach(function (p) { p.classList.remove('open'); });
+      if (!wasOpen) panel.classList.add('open');
+      e.stopPropagation();
+      return;
+    }
+    if (e.target.closest('.bo-menu-item')) {
+      var panel2 = e.target.closest('.bo-menu-panel');
+      if (panel2) panel2.classList.remove('open');
+      return;
+    }
+    if (!e.target.closest('.bo-menu-panel')) {
+      document.querySelectorAll('.bo-menu-panel.open').forEach(function (p) { p.classList.remove('open'); });
+    }
+  });
 </script>
 </body>
 </html>
