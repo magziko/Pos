@@ -580,20 +580,27 @@ a { color: inherit; }
 .perm-subgroup-title { font-size: 11.5px; font-weight: 700; color: var(--ink-soft); margin: 10px 0 6px; }
 .perm-subgroup-title:first-child { margin-top: 4px; }
 .perm-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 6px 10px; }
+.perm-items.perm-items-rows { display: flex; flex-direction: column; gap: 5px; }
 .perm-item { display: flex; align-items: center; gap: 8px; padding: 5px 2px; cursor: pointer; font-size: 12.5px; color: var(--ink); border-radius: 6px; }
 .perm-item:hover { background: var(--bg); }
 .perm-item input[type="checkbox"] { appearance: none; width: 16px; height: 16px; border: 2px solid var(--border); border-radius: 4px; flex-shrink: 0; cursor: pointer; position: relative; background: var(--surface); }
 .perm-item input[type="checkbox"]:checked { border-color: var(--teal-700); background: var(--teal-700); }
 .perm-item input[type="checkbox"]:checked::after { content: ""; position: absolute; right: 3.5px; top: -1px; width: 4px; height: 9px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(40deg); }
-.perm-item-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 5px 2px; border-radius: 6px; }
-.perm-item-row:hover { background: var(--bg); }
+
+/* صف كل شاشة: اسم الشاشة + صلاحيات العمليات (إضافة/تعديل/حذف) — مفصولة بوضوح
+   عن بعض وعن شكل تشك بوكس الشاشة نفسها، وأصغر حجمًا عشان تبان كتفاصيل فرعية */
+.perm-item-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 6px 10px; border-radius: var(--radius-sm); background: var(--surface-sunken); border: 1px solid transparent; }
+.perm-item-row:hover { background: var(--bg); border-color: var(--border); }
 .perm-item-row .perm-item { padding: 0; flex: 1 1 160px; }
 .perm-item-row:hover .perm-item { background: none; }
-.perm-item-actions { display: flex; gap: 10px; flex-shrink: 0; }
-.perm-action-chip { display: flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--ink-soft); cursor: pointer; }
-.perm-action-chip input[type="checkbox"] { appearance: none; width: 14px; height: 14px; border: 2px solid var(--border); border-radius: 4px; flex-shrink: 0; cursor: pointer; position: relative; background: var(--surface); }
-.perm-action-chip input[type="checkbox"]:checked { border-color: var(--teal-700); background: var(--teal-700); }
-.perm-action-chip input[type="checkbox"]:checked::after { content: ""; position: absolute; right: 3px; top: -1px; width: 3px; height: 7px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(40deg); }
+.perm-item-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; padding-inline-start: 10px; border-inline-start: 1px dashed var(--border); }
+.perm-action-chip { display: flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 600; color: var(--ink-soft); cursor: pointer; padding: 3px 9px 3px 7px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface); transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease; }
+.perm-action-chip:has(input:checked) { background: var(--teal-700); border-color: var(--teal-700); color: #fff; }
+.perm-action-chip:has(input:disabled) { opacity: 0.45; cursor: not-allowed; }
+.perm-action-chip input[type="checkbox"] { appearance: none; width: 9px; height: 9px; margin: 0; border: 1.5px solid currentColor; border-radius: 50%; flex-shrink: 0; cursor: pointer; position: relative; background: transparent; }
+.perm-action-chip input[type="checkbox"]:checked { border-color: #fff; background: #fff; }
+.perm-action-chip input[type="checkbox"]:checked::after { content: ""; position: absolute; inset: 1.5px; border-radius: 50%; background: var(--teal-700); }
+.perm-action-chip input[type="checkbox"]:disabled { cursor: not-allowed; }
 
 .barcode-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 .barcode-chip { display: flex; align-items: center; gap: 6px; background: var(--surface-sunken); padding: 5px 10px; border-radius: 16px; font-size: 12px; font-family: var(--font-num); direction: ltr; }
@@ -1163,6 +1170,9 @@ a { color: inherit; }
           <input type="text" id="regFullName" required placeholder="مثال: أحمد محمد"></div>
         <div class="field"><label for="regBranchName">اسم الفرع</label>
           <input type="text" id="regBranchName" required placeholder="مثال: الفرع الرئيسي"></div>
+        <div class="field" id="regBusinessTypeWrap"><label for="regBusinessType">نشاط النظام</label>
+          <select id="regBusinessType"><option value="">جاري تحميل الأنشطة...</option></select>
+          <p style="font-size:11.5px; color:var(--ink-soft); margin:6px 0 0;">هيحدد ده طريقة عمل النظام (تسمية الأصناف، البيع بالوزن أو بالقطعة، القوالب السريعة...) حسب طبيعة نشاطك.</p></div>
         <div class="field"><label for="regUsername">اسم المستخدم</label>
           <input type="text" id="regUsername" required autocomplete="username" placeholder="اسم المستخدم" style="direction:ltr; text-align:right;"></div>
         <div class="field"><label for="regPassword">كلمة المرور</label>
@@ -6453,6 +6463,9 @@ a { color: inherit; }
         <div class="field"><label for="biTaxNumber">الرقم الضريبي</label><input type="text" id="biTaxNumber" style="direction:ltr; text-align:right;" placeholder="اختياري"></div>
         <div class="field"><label for="biCommercialRegister">السجل التجاري</label><input type="text" id="biCommercialRegister" style="direction:ltr; text-align:right;" placeholder="اختياري"></div>
         <div class="field field-full"><label for="biActivityType">نوع النشاط</label><input type="text" id="biActivityType" placeholder="مثال: مطاعم وكافيهات، تجارة تجزئة..."></div>
+        <div class="field field-full"><label for="biBusinessType">نشاط النظام</label>
+          <select id="biBusinessType"><option value="">بدون نشاط محدد</option></select>
+          <p style="font-size:11.5px; color:var(--ink-soft); margin:6px 0 0;">يحدد طريقة عمل النظام لهذا الفرع (تسمية الأصناف، البيع بالوزن أو بالقطعة، القوالب السريعة...)</p></div>
       </div>
 
       <div class="ci-section-subtitle">تفاصيل العنوان</div>
@@ -7335,6 +7348,33 @@ a { color: inherit; }
       <div class="field field-full">
         <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
           <input type="checkbox" id="businessTypeUsesVariants" style="width:auto;"> يستخدم متغيرات للصنف (مقاس/لون) زي الأحذية
+        </label>
+      </div>
+
+      <div class="ci-section-subtitle">خصائص إضافية</div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="businessTypeUsesBatches" style="width:auto;"> يستخدم تتبع الدفعات وتواريخ الصلاحية (زي الصيدليات)
+        </label>
+      </div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="businessTypeUsesSerials" style="width:auto;"> يستخدم أرقام تسلسلية للصنف (زي الموبايلات)
+        </label>
+      </div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="businessTypeUsesRecipes" style="width:auto;"> يستخدم مكوّنات المنتج المركّب (زي المطاعم والمخابز)
+        </label>
+      </div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="businessTypeUsesModifiers" style="width:auto;"> يستخدم الإضافات والتعديلات (زي المطاعم والكافيهات)
+        </label>
+      </div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="businessTypeUsesMultipleUnits" style="width:auto;"> يستخدم وحدات بيع متعددة (كرتونة/قطعة) زي مخازن الجملة
         </label>
       </div>
 
@@ -8607,6 +8647,46 @@ function setupDenomToggle(toggleId, wrapId, gridId, prefix, targetInputId) {
 function showView(name) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
+  if (name === 'register') populateRegisterBusinessTypeSelect();
+}
+
+// ------------------------------------------------------------
+// نشاط النظام في شاشة إنشاء الحساب — يحدد نوع النشاط التجاري
+// (business_types) الذي هيتربط بالفرع الجديد وقت الإنشاء، عشان
+// يظهر النظام بشكله المناسب (تسمية الأصناف، البيع بالوزن، القوالب...)
+// ------------------------------------------------------------
+let regBusinessTypesList = [];
+let regBusinessTypesLoaded = false;
+
+async function populateRegisterBusinessTypeSelect() {
+  const sel = document.getElementById('regBusinessType');
+  const wrap = document.getElementById('regBusinessTypeWrap');
+  if (!sel || regBusinessTypesLoaded) return;
+  try {
+    const { data, error } = await supabaseClient
+      .from('business_types').select('*').eq('is_active', true).order('name');
+    if (error) throw error;
+    regBusinessTypesList = data || [];
+  } catch (err) {
+    console.error('تعذر تحميل أنواع الأنشطة التجارية لشاشة التسجيل', err);
+    regBusinessTypesList = [];
+  }
+  regBusinessTypesLoaded = true;
+
+  if (regBusinessTypesList.length === 0) {
+    // لا توجد أنشطة معرّفة بعد (أول تشغيل للنظام قبل أي seed) — نخفي الحقل
+    // بدل ما نمنع التسجيل، ويفضل النشاط فاضي ويتحدد لاحقًا من لوحة التحكم
+    if (wrap) wrap.style.display = 'none';
+    sel.removeAttribute('required');
+    return;
+  }
+
+  sel.innerHTML = '<option value="">اختر نشاط النظام...</option>' +
+    regBusinessTypesList.map(bt =>
+      `<option value="${bt.id}">${escapeHtml(bt.settings?.icon ? bt.settings.icon + ' ' : '')}${escapeHtml(bt.name)}</option>`
+    ).join('');
+  sel.setAttribute('required', 'required');
+  if (wrap) wrap.style.display = '';
 }
 
 function showToast(msg, isError = false) {
@@ -9666,6 +9746,7 @@ registerForm.addEventListener('submit', async (e) => {
   const username = document.getElementById('regUsername').value.trim();
   const email = usernameToEmail(username);
   const password = document.getElementById('regPassword').value;
+  const businessTypeId = document.getElementById('regBusinessType').value || null;
 
   try {
     const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email, password });
@@ -9692,7 +9773,7 @@ registerForm.addEventListener('submit', async (e) => {
       branchId = existingBranch.id;
     } else {
       const { data: newBranch, error: branchError } = await supabaseClient
-        .from('branches').insert({ name: branchName }).select().single();
+        .from('branches').insert({ name: branchName, business_type_id: businessTypeId }).select().single();
       if (branchError) throw branchError;
       branchId = newBranch.id;
     }
@@ -14069,8 +14150,8 @@ const ACTION_CAPABLE_SCREENS = {
   'stock': { add: true, edit: true, delete: true },
   'supplier-prices': { add: true, edit: true, delete: true },
   'stocktake': { add: true, edit: true, delete: true },
-  'product-batches': { add: true, edit: true, delete: true },
-  'product-serials': { add: true, edit: true, delete: true },
+  'product-batches': { add: true, edit: true },
+  'product-serials': { add: true, edit: true },
   'delivery': { edit: true },
   'customers': { add: true, edit: true, delete: true },
   'suppliers': { add: true, edit: true, delete: true },
@@ -17452,6 +17533,16 @@ async function openProductModal(product, initialTab, isDuplicate) {
   document.getElementById('productSellByWeightField').style.display = showWeightField ? '' : 'none';
   const variantsSuggestHintEl = document.getElementById('productVariantsSuggestHint');
   if (variantsSuggestHintEl) variantsSuggestHintEl.style.display = (!product && branchBusinessType?.uses_variants) ? '' : 'none';
+  // إخفاء تابات المتغيرات/الإضافات/الدفعات/الأرقام التسلسلية لصنف جديد لو نوع
+  // نشاط الفرع أصلًا مش بيستخدمها — تبسيط للشاشة حسب النشاط. عند تعديل صنف
+  // موجود بالفعل بنعرض كل التابات دايمًا، عشان محدش يفقد الوصول لبيانات
+  // مسجّلة من قبل (لو النشاط اتغيّر بعد إنشاء الصنف مثلاً).
+  applyBusinessTypeTabVisibility(branchBusinessType, isNew);
+  let effectiveInitialTab = initialTab || 'basic';
+  if (isNew && effectiveInitialTab !== 'basic') {
+    const tabBtn = document.querySelector(`.pm-tab-btn[data-pm-tab="${effectiveInitialTab}"]`);
+    if (tabBtn && tabBtn.style.display === 'none') effectiveInitialTab = 'basic';
+  }
   document.getElementById('productIsBundle').checked = product ? !!product.is_bundle : false;
   document.getElementById('productBundleSection').style.display = (product && product.is_bundle) ? '' : 'none';
   document.getElementById('productModalError').classList.remove('show');
@@ -17466,7 +17557,7 @@ async function openProductModal(product, initialTab, isDuplicate) {
   renderProductTierPricesSection();
   currentPmProduct = (product && !isDuplicate) ? product : null;
   currentVariantsParent = (product && !isDuplicate) ? product : null;
-  switchPmTab(initialTab || 'basic');
+  switchPmTab(effectiveInitialTab);
   refreshPmModifiersTab();
   refreshPmVariantsTab();
   document.getElementById('productModalOverlay').classList.add('show');
@@ -17474,6 +17565,25 @@ async function openProductModal(product, initialTab, isDuplicate) {
 
 // ---- تابات شاشة الصنف (المتغيرات / الدفعات / الأرقام التسلسلية جوه نفس المودال) ----
 let currentPmProduct = null; // الصنف المفتوح حاليًا في مودال الصنف (لاستخدامه في التابات الإضافية)
+
+// إخفاء/إظهار أزرار التابات الفرعية (الإضافات، المتغيرات، الدفعات، الأرقام
+// التسلسلية) حسب أعلام نوع نشاط الفرع الحالي — بتستخدم بس وقت إنشاء صنف
+// جديد؛ تاب "المخزون بالمخازن" و"سجل التعديلات" يفضلوا ظاهرين دايمًا لأنهم
+// مش مرتبطين بنشاط معيّن.
+function applyBusinessTypeTabVisibility(branchBusinessType, isNew) {
+  const tabFlagMap = {
+    modifiers: 'uses_modifiers',
+    variants: 'uses_variants',
+    batches: 'uses_batches',
+    serials: 'uses_serials',
+  };
+  Object.entries(tabFlagMap).forEach(([tabName, flagKey]) => {
+    const btn = document.querySelector(`.pm-tab-btn[data-pm-tab="${tabName}"]`);
+    if (!btn) return;
+    const shouldShow = !isNew || !branchBusinessType || !!branchBusinessType[flagKey];
+    btn.style.display = shouldShow ? '' : 'none';
+  });
+}
 
 function switchPmTab(tabName) {
   document.querySelectorAll('.pm-tab-btn').forEach(btn => {
@@ -21325,6 +21435,7 @@ function openBranchModal(branch) {
   document.getElementById('biTaxNumber').value = branch?.tax_number || '';
   document.getElementById('biCommercialRegister').value = branch?.commercial_register || '';
   document.getElementById('biActivityType').value = branch?.activity_type || '';
+  populateBranchBusinessTypeSelect(branch?.business_type_id || '');
   document.getElementById('biAddress1').value = branch?.address1 || '';
   document.getElementById('biAddress2').value = branch?.address2 || '';
   document.getElementById('biCity').value = branch?.city || '';
@@ -21375,6 +21486,7 @@ async function saveBranch(e) {
     tax_number: document.getElementById('biTaxNumber').value.trim() || null,
     commercial_register: document.getElementById('biCommercialRegister').value.trim() || null,
     activity_type: document.getElementById('biActivityType').value.trim() || null,
+    business_type_id: document.getElementById('biBusinessType').value || null,
     address1: address1 || null,
     address2: address2 || null,
     city: city || null,
@@ -21442,6 +21554,19 @@ async function loadBoBusinessTypes() {
   boBusinessTypes = data || [];
 }
 
+// يملأ قائمة اختيار نشاط النظام في مودال الفرع (تعتمد على boBusinessTypes، لازم تكون
+// اتحمّلت قبل فتح المودال — الفروع بتتحمّل بعد أنواع الأنشطة في تسلسل تحميل لوحة التحكم)
+function populateBranchBusinessTypeSelect(currentBusinessTypeId) {
+  const sel = document.getElementById('biBusinessType');
+  if (!sel) return;
+  const active = boBusinessTypes.filter(bt => bt.is_active || bt.id === currentBusinessTypeId);
+  sel.innerHTML = '<option value="">بدون نشاط محدد</option>' +
+    active.map(bt =>
+      `<option value="${bt.id}">${escapeHtml(bt.settings?.icon ? bt.settings.icon + ' ' : '')}${escapeHtml(bt.name)}</option>`
+    ).join('');
+  sel.value = currentBusinessTypeId || '';
+}
+
 let businessTypesSearchTerm = '';
 
 function defaultBusinessTypeIcon(x) {
@@ -21473,6 +21598,11 @@ function renderBusinessTypesTable() {
     const badges = [];
     badges.push(`<span class="bt-mini-badge">${x.uses_weight ? '⚖ بيع بالوزن' : '⚖ بالقطعة'}</span>`);
     if (x.uses_variants) badges.push(`<span class="bt-mini-badge">🎨 متغيرات</span>`);
+    if (x.uses_batches) badges.push(`<span class="bt-mini-badge">📅 دفعات وصلاحية</span>`);
+    if (x.uses_serials) badges.push(`<span class="bt-mini-badge">🔢 أرقام تسلسلية</span>`);
+    if (x.uses_recipes) badges.push(`<span class="bt-mini-badge">🧾 مكوّنات</span>`);
+    if (x.uses_modifiers) badges.push(`<span class="bt-mini-badge">➕ إضافات</span>`);
+    if (x.uses_multiple_units) badges.push(`<span class="bt-mini-badge">📦 وحدات متعددة</span>`);
     if (templatesCount > 0) badges.push(`<span class="bt-mini-badge">⚡ ${templatesCount} قوالب</span>`);
     if (x.settings?.item_name_label) badges.push(`<span class="bt-mini-badge">🏷 ${escapeHtml(x.settings.item_name_label)}</span>`);
     const card = document.createElement('div');
@@ -21508,6 +21638,11 @@ function openBusinessTypeModal(item) {
   document.getElementById('businessTypeItemNameLabel').value = item?.settings?.item_name_label || '';
   document.getElementById('businessTypeUsesWeight').checked = item ? !!item.uses_weight : false;
   document.getElementById('businessTypeUsesVariants').checked = item ? !!item.uses_variants : false;
+  document.getElementById('businessTypeUsesBatches').checked = item ? !!item.uses_batches : false;
+  document.getElementById('businessTypeUsesSerials').checked = item ? !!item.uses_serials : false;
+  document.getElementById('businessTypeUsesRecipes').checked = item ? !!item.uses_recipes : false;
+  document.getElementById('businessTypeUsesModifiers').checked = item ? !!item.uses_modifiers : false;
+  document.getElementById('businessTypeUsesMultipleUnits').checked = item ? !!item.uses_multiple_units : false;
   document.getElementById('businessTypeActive').checked = item ? item.is_active : true;
   currentBusinessTypeTemplates = (item?.settings?.templates || []).map(t => ({ ...t }));
   renderBusinessTypeTemplatesList();
@@ -21572,12 +21707,22 @@ async function saveBusinessType(e) {
   const code = document.getElementById('businessTypeCode').value.trim().toLowerCase().replace(/\s+/g, '_');
   const usesWeight = document.getElementById('businessTypeUsesWeight').checked;
   const usesVariants = document.getElementById('businessTypeUsesVariants').checked;
+  const usesBatches = document.getElementById('businessTypeUsesBatches').checked;
+  const usesSerials = document.getElementById('businessTypeUsesSerials').checked;
+  const usesRecipes = document.getElementById('businessTypeUsesRecipes').checked;
+  const usesModifiers = document.getElementById('businessTypeUsesModifiers').checked;
+  const usesMultipleUnits = document.getElementById('businessTypeUsesMultipleUnits').checked;
 
   const payload = {
     name: document.getElementById('businessTypeName').value.trim(),
     code,
     uses_weight: usesWeight,
     uses_variants: usesVariants,
+    uses_batches: usesBatches,
+    uses_serials: usesSerials,
+    uses_recipes: usesRecipes,
+    uses_modifiers: usesModifiers,
+    uses_multiple_units: usesMultipleUnits,
     is_active: document.getElementById('businessTypeActive').checked,
     settings: {
       default_sell_by: usesWeight ? 'weight' : 'unit',
@@ -22312,7 +22457,7 @@ function renderPermGrid(selected) {
 
       if (hasChildren) {
         const itemsWrap = document.createElement('div');
-        itemsWrap.className = 'perm-items';
+        itemsWrap.className = 'perm-items perm-items-rows';
         g.children.forEach(child => {
           const fineKey = 'scr:' + child.key;
           const checked = permFineChecked(selected, isAll, moduleChecked, fineKey);
