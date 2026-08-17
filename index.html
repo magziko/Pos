@@ -1071,6 +1071,21 @@ a { color: inherit; }
 .receipt-paper .r-footer { text-align: center; font-size: 11px; color: #555; margin-top: 14px; }
 .receipt-actions { display: flex; gap: 8px; padding: 14px 18px 18px; background: var(--surface-sunken); flex-wrap: wrap; align-items: center; }
 .receipt-print-mode-select { flex: 1 1 100%; padding: 8px 10px; font-size: 12.5px; margin-bottom: 2px; }
+.zone-hint { font-size: 12px; color: var(--ink-soft); margin-top: 4px; min-height: 15px; }
+.zone-hint.warn { color: var(--danger, #c0392b); font-weight: 600; }
+
+/* -------- Delivery receipt (إيصال توصيل للسائق) -------- */
+.delivery-receipt-paper { background: white; padding: 26px 22px; font-family: var(--font-ar); color: #111; border-bottom: 2px dashed #ccc; }
+.delivery-receipt-paper:last-child { border-bottom: none; }
+.dr-order-no { font-size: 14px; color: #666; margin-bottom: 8px; direction: ltr; text-align: right; font-family: var(--font-num); }
+.dr-zone-badge { display: inline-block; background: var(--teal-100); color: var(--teal-900); padding: 5px 14px; border-radius: 20px; font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+.dr-divider { border-top: 2px dashed #999; margin: 14px 0; }
+.dr-label { font-size: 13px; color: #666; margin-bottom: 3px; font-weight: 500; }
+.dr-recipient { font-size: 30px; font-weight: 900; margin-bottom: 16px; line-height: 1.25; word-break: break-word; }
+.dr-phone { font-size: 26px; font-weight: 700; direction: ltr; text-align: right; margin-bottom: 16px; font-family: var(--font-num); }
+.dr-address { font-size: 20px; font-weight: 600; line-height: 1.5; margin-bottom: 16px; word-break: break-word; }
+.dr-fee-row { display: flex; justify-content: space-between; font-size: 18px; font-weight: 700; }
+.dr-notes { font-size: 14px; color: #333; background: #f6f6f6; padding: 10px 12px; border-radius: 8px; margin-top: 12px; line-height: 1.5; }
 
 @media print {
   body * { visibility: hidden; }
@@ -1087,10 +1102,26 @@ a { color: inherit; }
   .receipt-modal-box.paper-thermal58 .r-total-row { font-size: 12.5px; }
   .receipt-modal-box.paper-a5 { page: a5paper; width: 148mm; }
 
+  /* إيصال توصيل: نفس أحجام الورق، بخط أصغر شوية عشان يتناسب مع عرض الحراري */
+  .receipt-modal-box.paper-thermal80 .delivery-receipt-paper { padding: 16px 12px; }
+  .receipt-modal-box.paper-thermal80 .dr-recipient { font-size: 22px; }
+  .receipt-modal-box.paper-thermal80 .dr-phone, .receipt-modal-box.paper-thermal80 .dr-address { font-size: 16px; }
+  .receipt-modal-box.paper-thermal58 .delivery-receipt-paper { padding: 12px 8px; }
+  .receipt-modal-box.paper-thermal58 .dr-recipient { font-size: 18px; }
+  .receipt-modal-box.paper-thermal58 .dr-phone, .receipt-modal-box.paper-thermal58 .dr-address { font-size: 14px; }
+  .receipt-modal-box.paper-thermal58 .dr-fee-row, .receipt-modal-box.paper-thermal58 .dr-notes { font-size: 12px; }
+
   #invoiceDetailModalOverlay.show, #invoiceDetailModalOverlay.show * { visibility: visible; }
   #invoiceDetailModalOverlay.show { position: absolute; inset: 0; background: white; padding: 0; align-items: flex-start; }
   #invoiceDetailModalOverlay.show .modal-box { max-width: 100%; box-shadow: none; border: none; }
   #invoiceDetailModalOverlay.show .invoice-detail-actions { display: none; }
+
+  #deliveryReceiptModalOverlay.show, #deliveryReceiptModalOverlay.show * { visibility: visible; }
+  #deliveryReceiptModalOverlay.show { position: absolute; inset: 0; background: white; padding: 0; align-items: flex-start; }
+  #deliveryReceiptModalOverlay.show .modal-box { max-width: 100%; box-shadow: none; border: none; }
+  #deliveryReceiptModalOverlay.show .receipt-actions { display: none; }
+  #deliveryReceiptModalOverlay.show .delivery-receipt-paper { border-bottom: none; page-break-after: always; }
+  #deliveryReceiptModalOverlay.show .delivery-receipt-paper:last-child { page-break-after: auto; }
 }
 
 @page thermal80 { size: 80mm auto; margin: 2mm; }
@@ -1247,6 +1278,32 @@ a { color: inherit; }
           <div class="discount-row" id="instantNoteRow" style="display:none;"><input type="text" id="instantNoteInput" placeholder="ملاحظة فورية (تُطبع مع الفاتورة)"></div>
           <div class="totals-row" id="taxRow" style="display:none;"><span id="taxRowLabel">الضريبة</span><span class="num" id="taxLabel">0.00</span></div>
           <div class="totals-row grand"><span>الإجمالي</span><span class="num" id="totalLabel">0.00</span></div>
+          <div class="split-toggle-row" id="posDeliveryToggleRow">
+            <label class="split-toggle-label">
+              <input type="checkbox" id="posDeliveryToggle">
+              <span>🚚 طلب توصيل (تسليم على عنوان العميل)</span>
+            </label>
+          </div>
+          <div id="posDeliveryPanel" style="display:none; background:var(--surface-sunken); border-radius:var(--radius-sm); padding:12px; margin-bottom:12px;">
+            <div class="modal-grid">
+              <div class="field field-full"><label>اسم المستلم</label><input type="text" id="posDeliveryRecipientName"></div>
+              <div class="field"><label>رقم الهاتف</label><input type="text" id="posDeliveryPhone" style="direction:ltr; text-align:right;"></div>
+              <div class="field field-full"><label>منطقة التوصيل</label><select id="posDeliveryZone"><option value="">— بدون منطقة (إدخال يدوي) —</option></select><div class="zone-hint" id="posDeliveryZoneHint"></div></div>
+              <div class="field"><label>المدينة</label><input type="text" id="posDeliveryCity"></div>
+              <div class="field field-full"><label>العنوان بالتفصيل</label><input type="text" id="posDeliveryAddress"></div>
+              <div class="field"><label>السائق (من الموظفين)</label><select id="posDeliveryDriverEmployee"><option value="">— بدون —</option></select></div>
+              <div class="field"><label>اسم سائق آخر (اختياري)</label><input type="text" id="posDeliveryDriverName"></div>
+              <div class="field"><label>هاتف السائق</label><input type="text" id="posDeliveryDriverPhone" style="direction:ltr; text-align:right;"></div>
+              <div class="field"><label>رسوم التوصيل</label><input type="number" id="posDeliveryFee" step="0.01" min="0" value="0"></div>
+              <div class="field"><label>موعد التسليم المحدد</label><input type="datetime-local" id="posDeliveryScheduledAt"></div>
+              <div class="field field-full"><label>ملاحظات</label><input type="text" id="posDeliveryNotes" placeholder="اختياري"></div>
+            </div>
+            <div class="error-msg" id="posDeliveryError"></div>
+          </div>
+          <div class="paid-row" id="posChannelRow">
+            <label for="posSalesChannel">قناة البيع</label>
+            <select id="posSalesChannel"><option value="">— بيع مباشر (بدون قناة) —</option></select>
+          </div>
           <div class="paid-row" id="paymentMethodRow">
             <label for="posPaymentMethod">طريقة الدفع</label>
             <select id="posPaymentMethod">
@@ -1256,7 +1313,7 @@ a { color: inherit; }
               <option value="other">أخرى</option>
             </select>
           </div>
-          <div class="split-toggle-row">
+          <div class="split-toggle-row" id="splitToggleRow">
             <label class="split-toggle-label">
               <input type="checkbox" id="splitPaymentToggle">
               <span>دفع بأكثر من طريقة (نقدي + بطاقة...)</span>
@@ -1278,6 +1335,7 @@ a { color: inherit; }
           </div>
           <button class="checkout-btn" id="checkoutBtn" disabled>إتمام البيع</button>
           <button class="btn-secondary" id="saveSaleOrderBtn" disabled style="width:100%; margin-top:8px;" title="حفظ الفاتورة كطلبية بيع مبدئية — لا تؤثر على المخزون أو حساب العميل إلا بعد تأكيدها من شاشة طلبات البيع">حفظ كطلبية بيع (بدون تأثير على الأرصدة)</button>
+          <button class="checkout-btn" id="posSaveDeliveryBtn" style="display:none; background:var(--teal-700);" title="ينشئ طلبية بيع مبدئية مرتبطة ببيانات توصيل — تُتابَع من (تفاصيل التوصيل) في لوحة التحكم">🚚 حفظ طلب التوصيل</button>
           <div id="posReadOnlyBanner" style="display:none; margin-top:8px; padding:8px 10px; background:var(--surface-sunken); border-radius:var(--radius-sm); font-size:12.5px; color:var(--ink-soft); text-align:center;">
             هذا الدور "قراءة فقط" — يمكنك استعراض الشاشات لكن لا يمكن إتمام عمليات بيع
           </div>
@@ -1359,6 +1417,10 @@ a { color: inherit; }
             <button class="bo-nav-sub-item" data-section="sales-list">فواتير البيع</button>
             <button class="bo-nav-sub-item" data-section="sale-orders">طلبات البيع</button>
             <button class="bo-nav-sub-item" data-section="delivery">تفاصيل التوصيل</button>
+            <button class="bo-nav-sub-item" data-section="delivery-zones">مناطق التوصيل</button>
+            <button class="bo-nav-sub-item" data-section="delivery-companies">شركات التوصيل</button>
+            <button class="bo-nav-sub-item" data-section="sales-channels">قنوات البيع</button>
+            <button class="bo-nav-sub-item" data-section="driver-settlements">تحصيل السائقين</button>
             <button class="bo-nav-sub-item" data-section="customers">العملاء</button>
             <button class="bo-nav-sub-item" data-section="customer-types">أنواع العملاء</button>
             <button class="bo-nav-sub-item" data-section="sale-returns">مرتجعات البيع</button>
@@ -1374,7 +1436,7 @@ a { color: inherit; }
           <div class="bo-nav-sub" id="purchasesNavSub">
             <button class="bo-nav-sub-item" data-section="suppliers">الموردون</button>
             <button class="bo-nav-sub-item" data-section="supplier-prices">أسعار الموردين</button>
-            <button class="bo-nav-sub-item" data-section="purchase-requisitions">طلبات الشراء الداخلية</button>
+            <button class="bo-nav-sub-item" data-section="purchase-requisitions">طلبات التوريد</button>
             <button class="bo-nav-sub-item" data-section="purchase-orders">طلبات الشراء</button>
             <button class="bo-nav-sub-item" data-section="purchases">فواتير الشراء</button>
             <button class="bo-nav-sub-item" data-section="purchase-returns">مرتجعات الشراء</button>
@@ -1758,6 +1820,55 @@ a { color: inherit; }
           </div>
         </div>
 
+        <!-- قسم مناطق التوصيل -->
+        <div id="bo-section-delivery-zones" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">مناطق التوصيل</div>
+            <button class="bo-add-btn" id="addDeliveryZoneBtn">+ منطقة جديدة</button>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>اسم المنطقة</th><th>المدينة</th><th>رسوم التوصيل</th><th>الحد الأدنى للطلب</th><th>الوقت المتوقع</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="deliveryZonesTableBody">
+                <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم شركات التوصيل -->
+        <div id="bo-section-delivery-companies" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">شركات التوصيل</div>
+            <button class="bo-add-btn" id="addDeliveryCompanyBtn">+ شركة جديدة</button>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>اسم الشركة</th><th>الشخص المسؤول</th><th>الهاتف</th><th>نوع العمولة</th><th>قيمة العمولة</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="deliveryCompaniesTableBody">
+                <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم قنوات البيع -->
+        <div id="bo-section-sales-channels" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">قنوات البيع</div>
+            <button class="bo-add-btn" id="addSalesChannelBtn">+ قناة جديدة</button>
+          </div>
+          <p style="font-size:12.5px; color:var(--ink-soft); margin:-4px 0 12px;">مصدر الطلب: بيع مباشر بالمحل، أو منصة خارجية زي جاهز وطلبات — كل قناة ممكن تكون لها عمولة مختلفة، وتُختار وقت البيع من شاشة الكاشير.</p>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>اسم القناة</th><th>نوع العمولة</th><th>قيمة العمولة</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="salesChannelsTableBody">
+                <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- قسم الضريبة -->
         <div id="bo-section-tax-rates" style="display:none;">
           <div class="bo-section-header">
@@ -2048,8 +2159,8 @@ a { color: inherit; }
         <!-- قسم طلبات الشراء الداخلية -->
         <div id="bo-section-purchase-requisitions" style="display:none;">
           <div class="bo-section-header">
-            <div class="bo-section-title">طلبات الشراء الداخلية</div>
-            <button class="bo-add-btn" id="addRequisitionBtn">+ طلب شراء جديد</button>
+            <div class="bo-section-title">طلبات التوريد</div>
+            <button class="bo-add-btn" id="addRequisitionBtn">+ طلب توريد جديد</button>
           </div>
           <div style="color:var(--ink-soft); font-size:13px; margin-bottom:14px;">
             طلب داخلي من موظف بفرع معين لصنف محتاج يتشترى، قبل ما يتحول لطلب شراء فعلي من مورد.
@@ -2323,8 +2434,10 @@ a { color: inherit; }
         <div id="bo-section-delivery" style="display:none;">
           <div class="bo-section-header">
             <div class="bo-section-title">تفاصيل التوصيل</div>
+            <button class="bo-add-btn" id="addDeliveryOrderBtn">+ طلب توصيل جديد</button>
           </div>
-          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;">
+          <div id="deliveryStatsRow" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;"></div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:14px;">
             <input type="text" id="deliverySearchInput" placeholder="بحث برقم الطلبية أو اسم العميل أو السائق..." style="flex:1; min-width:200px; padding:9px 12px; font-size:13.5px;">
             <select id="deliveryStatusFilter" style="padding:9px 12px; font-size:13.5px;">
               <option value="all">كل الحالات</option>
@@ -2334,7 +2447,16 @@ a { color: inherit; }
               <option value="delivered">تم التسليم</option>
               <option value="failed">فشل التسليم</option>
               <option value="cancelled">ملغاة</option>
+              <option value="late">⏰ متأخرة عن الموعد</option>
             </select>
+            <select id="deliverySortSelect" style="padding:9px 12px; font-size:13.5px;" title="ترتيب/تجميع القائمة">
+              <option value="recent">الأحدث أولاً</option>
+              <option value="zone">تجميع حسب المنطقة</option>
+            </select>
+            <label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink-soft); white-space:nowrap;">
+              <input type="checkbox" id="deliveryMyOnlyFilter"> توصيلاتي فقط (السائق أنا)
+            </label>
+            <button type="button" class="bo-icon-btn" id="printDeliveryReceiptsBtn" title="يطبع إيصال توصيل منفصل لكل طلب معروض حاليًا">🖨 طباعة إيصالات المعروض</button>
           </div>
           <div class="bo-table-wrap">
             <table class="bo-table">
@@ -2344,6 +2466,7 @@ a { color: inherit; }
                   <th>العميل</th>
                   <th>المستلم</th>
                   <th>العنوان</th>
+                  <th>المنطقة</th>
                   <th>السائق</th>
                   <th>الحالة</th>
                   <th>رسوم التوصيل</th>
@@ -2352,6 +2475,56 @@ a { color: inherit; }
                 </tr>
               </thead>
               <tbody id="deliveriesTableBody">
+                <tr><td colspan="10" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم تحصيل وتسوية حساب السائقين -->
+        <div id="bo-section-driver-settlements" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">تحصيل السائقين</div>
+          </div>
+          <div class="notice" style="margin-bottom:16px;">
+            بيعرض الطلبات المدفوعة نقدًا (كاش عند الاستلام) واللي اتسلّمت للعميل ولسه ماتسوتش مع السائق. لما السائق يسلّم الكاش، افتح "تسوية الحساب" وحدّد الطلبات وسجّل المبلغ المستلم فعليًا.
+          </div>
+          <div id="driverSettlementsStatsRow" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;"></div>
+
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>السائق</th>
+                  <th>عدد الطلبات المعلّقة</th>
+                  <th>إجمالي المطلوب تحصيله</th>
+                  <th>آخر تسوية</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="driverSettlementsPendingTableBody">
+                <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="bo-section-title" style="margin:22px 0 10px;">سجل التسويات السابقة</div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>التاريخ</th>
+                  <th>السائق</th>
+                  <th>عدد الطلبات</th>
+                  <th>المتوقّع</th>
+                  <th>المستلم فعليًا</th>
+                  <th>الفرق</th>
+                  <th>بواسطة</th>
+                  <th>ملاحظات</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="driverSettlementsHistoryTableBody">
                 <tr><td colspan="9" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
@@ -2555,6 +2728,10 @@ a { color: inherit; }
               <div class="report-type-icon">🔀</div>
               <div class="report-type-label">الفواتير متعددة طرق الدفع</div>
             </button>
+            <button type="button" class="report-type-card" data-report="delivery">
+              <div class="report-type-icon">🚚</div>
+              <div class="report-type-label">مبيعات الدليفري</div>
+            </button>
           </div>
 
           <div id="salesReportDetailWrap" style="display:none;">
@@ -2678,6 +2855,102 @@ a { color: inherit; }
                 <table class="bo-table">
                   <thead><tr><th>رقم الفاتورة</th><th>التاريخ</th><th>العميل</th><th>الكاشير</th><th>تفاصيل طرق الدفع</th><th>الإجمالي</th></tr></thead>
                   <tbody id="mixedPaymentReportTableBody">
+                    <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="salesReportDetail-delivery" class="report-detail" style="display:none;">
+              <div class="report-cards">
+                <div class="report-card">
+                  <div class="report-card-label">عدد طلبات التوصيل</div>
+                  <div class="report-card-value num" id="deliveryReportOrderCount">0</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي قيمة البضاعة</div>
+                  <div class="report-card-value num" id="deliveryReportGoodsTotal">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي رسوم التوصيل</div>
+                  <div class="report-card-value num positive" id="deliveryReportFeesTotal">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي المحصّل (بضاعة + توصيل)</div>
+                  <div class="report-card-value num" id="deliveryReportGrandTotal">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">متوسط رسوم التوصيل للطلب</div>
+                  <div class="report-card-value num" id="deliveryReportAvgFee">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">نسبة الطلبات المُسلَّمة فعليًا</div>
+                  <div class="report-card-value num" id="deliveryReportDeliveredPct">0%</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">متوسط وقت التسليم</div>
+                  <div class="report-card-value num" id="deliveryReportAvgTime">—</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">نسبة فشل التسليم</div>
+                  <div class="report-card-value num" id="deliveryReportFailRate">0%</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">مصروفات التوصيل (بنزين/عمولات...)</div>
+                  <div class="report-card-value num negative" id="deliveryReportExpensesTotal">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">صافي التوصيل (رسوم − مصروفات)</div>
+                  <div class="report-card-value num" id="deliveryReportNet">0.00</div>
+                </div>
+              </div>
+
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">مصروفات التوصيل حسب البند</div>
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>البند</th><th>عدد المصروفات</th><th>الإجمالي</th></tr></thead>
+                  <tbody id="deliveryExpensesReportTableBody">
+                    <tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">مبيعات التوصيل حسب المنطقة</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-icon-btn" id="exportDeliveryZoneReportBtn">تصدير إكسل</button>
+                </div>
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>المنطقة</th><th>عدد الطلبات</th><th>قيمة البضاعة</th><th>رسوم التوصيل</th><th>الإجمالي</th><th>متوسط وقت التسليم</th><th>نسبة الفشل</th></tr></thead>
+                  <tbody id="deliveryZoneReportTableBody">
+                    <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">مبيعات التوصيل حسب حالة التسليم</div>
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>الحالة</th><th>عدد الطلبات</th><th>رسوم التوصيل</th></tr></thead>
+                  <tbody id="deliveryStatusReportTableBody">
+                    <tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">مبيعات التوصيل حسب السائق</div>
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>السائق</th><th>عدد الطلبات</th><th>قيمة البضاعة</th><th>رسوم التوصيل</th><th>متوسط وقت التسليم</th><th>نسبة الفشل</th></tr></thead>
+                  <tbody id="deliveryDriverReportTableBody">
                     <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
                   </tbody>
                 </table>
@@ -4989,9 +5262,9 @@ a { color: inherit; }
           </div>
           <div class="bo-table-wrap">
             <table class="bo-table">
-              <thead><tr><th>اسم البند</th><th>الحالة</th><th></th></tr></thead>
+              <thead><tr><th>اسم البند</th><th>مصروف توصيل؟</th><th>الحالة</th><th></th></tr></thead>
               <tbody id="expenseItemsTableBody">
-                <tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>
+                <tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
@@ -6214,6 +6487,7 @@ a { color: inherit; }
           </div>
         </div>
         <div class="field field-full"><label>العنوان</label><input type="text" id="customerAddress"></div>
+        <div class="field field-full"><label>منطقة التوصيل الافتراضية</label><select id="customerDeliveryZone"><option value="">— غير محددة —</option></select></div>
         <div class="field field-full"><label>الرصيد الافتتاحي</label><input type="number" id="customerBalance" step="0.01" value="0"></div>
       </div>
       <div id="customerLoyaltyLedgerWrap" style="display:none; margin-top:10px;">
@@ -6281,10 +6555,10 @@ a { color: inherit; }
   </div>
 </div>
 
-<!-- Modal: طلب شراء داخلي جديد -->
+<!-- Modal: طلب توريد جديد -->
 <div class="modal-overlay" id="requisitionFormModalOverlay">
   <div class="modal-box" style="max-width:640px;">
-    <div class="modal-title">طلب شراء داخلي جديد</div>
+    <div class="modal-title">طلب توريد جديد</div>
     <form id="requisitionForm">
       <div class="modal-grid">
         <div class="field field-full"><label>الفرع</label><select id="requisitionBranch" required></select></div>
@@ -6304,10 +6578,10 @@ a { color: inherit; }
   </div>
 </div>
 
-<!-- Modal: عرض / اعتماد طلب شراء داخلي -->
+<!-- Modal: عرض / اعتماد طلب توريد -->
 <div class="modal-overlay" id="requisitionDetailModalOverlay">
   <div class="modal-box" style="max-width:600px;">
-    <div class="modal-title">تفاصيل طلب الشراء الداخلي</div>
+    <div class="modal-title">تفاصيل طلب التوريد</div>
     <div id="requisitionDetailMeta" style="font-size:13px; color:var(--ink-soft); margin-bottom:12px;"></div>
     <div class="bo-table-wrap">
       <table class="bo-table">
@@ -6316,9 +6590,12 @@ a { color: inherit; }
       </table>
     </div>
     <div id="requisitionDetailNotesWrap" style="margin-top:10px; font-size:13px;"></div>
+    <div id="requisitionDetailConvertedNote" style="margin-top:10px; font-size:13px; color:var(--teal-700); display:none;"></div>
+    <div class="error-msg" id="requisitionDetailModalError"></div>
     <div class="modal-actions" id="requisitionDetailActions">
       <button type="button" class="modal-cancel-btn" id="closeRequisitionDetailBtn">إغلاق</button>
       <button type="button" class="bo-icon-btn danger" id="rejectRequisitionBtn">رفض الطلب</button>
+      <button type="button" class="bo-icon-btn" id="convertRequisitionToPOBtn">تحويل لطلب شراء</button>
       <button type="button" class="submit-btn" id="approveRequisitionBtn">اعتماد الطلب</button>
     </div>
   </div>
@@ -6869,6 +7146,7 @@ a { color: inherit; }
       <div>الإجمالي: <span class="num" id="saleOrderDetailTotal">0.00</span></div>
     </div>
     <div class="error-msg" id="saleOrderDetailModalError"></div>
+    <div class="zone-hint warn" id="saleOrderDetailNoShiftWarning" style="display:none; padding:0 0 8px;">⚠️ لا توجد وردية مفتوحة حاليًا — لو أكّدت الطلبية دلوقتي، الكاش المحصَّل (لعميل نقدي) مش هيتربط بأي وردية للتسوية.</div>
     <div class="modal-actions">
       <button type="button" class="modal-cancel-btn" id="closeSaleOrderDetailBtn">إغلاق</button>
       <button type="button" class="submit-btn" id="cancelSaleOrderBtn" style="background:var(--danger);">إلغاء الطلبية</button>
@@ -6932,6 +7210,10 @@ a { color: inherit; }
         <label>استلام البضاعة في مخزن</label>
         <select id="receivePOWarehouse"></select>
       </div>
+    </div>
+    <div class="field" id="receivePOSourceRequisitionRow" style="display:none; margin-top:-4px;">
+      <span style="font-size:13px; color:var(--ink-soft);">أُنشئ من طلب توريد</span>
+      <button type="button" class="bo-link-btn" id="receivePOSourceRequisitionBtn" style="display:block; font-size:13px; color:var(--teal-700); font-weight:700; background:none; padding:0; text-decoration:underline;">—</button>
     </div>
     <div class="bo-table-wrap" style="margin-top:10px;">
       <table class="bo-table">
@@ -7295,6 +7577,11 @@ a { color: inherit; }
           <input type="checkbox" id="expenseItemActive" checked style="width:auto;"> مفعّل
         </label>
       </div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="expenseItemDeliveryRelated" style="width:auto;"> مصروف يخص التوصيل (بنزين، عمولة سائق...) — يُحسب في التقرير المالي للتوصيل
+        </label>
+      </div>
       <div class="error-msg" id="expenseItemModalError"></div>
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelExpenseItemBtn">إلغاء</button>
@@ -7583,6 +7870,94 @@ a { color: inherit; }
   </div>
 </div>
 
+<!-- Modal: إضافة / تعديل منطقة توصيل -->
+<div class="modal-overlay" id="deliveryZoneModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="deliveryZoneModalTitle">منطقة جديدة</div>
+    <form id="deliveryZoneForm">
+      <input type="hidden" id="deliveryZoneId">
+      <div class="field field-full"><label>اسم المنطقة</label><input type="text" id="deliveryZoneName" required placeholder="مثال: مدينة نصر، المعادي..."></div>
+      <div class="field field-full"><label>المدينة</label><input type="text" id="deliveryZoneCity" placeholder="اختياري"></div>
+      <div class="field"><label>رسوم التوصيل</label><input type="number" id="deliveryZoneFee" step="0.01" min="0" value="0" required></div>
+      <div class="field"><label>الحد الأدنى للطلب</label><input type="number" id="deliveryZoneMinOrder" step="0.01" min="0" value="0" placeholder="0 = بدون حد أدنى"></div>
+      <div class="field field-full"><label>الوقت المتوقع للتوصيل (بالدقائق)</label><input type="number" id="deliveryZoneEta" step="1" min="0" placeholder="اختياري، مثال: 45"></div>
+      <div class="field field-full"><label>ملاحظات</label><input type="text" id="deliveryZoneNotes" placeholder="اختياري"></div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="deliveryZoneActive" checked style="width:auto;"> مفعّلة
+        </label>
+      </div>
+      <div class="error-msg" id="deliveryZoneModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelDeliveryZoneBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveDeliveryZoneBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: إضافة / تعديل شركة توصيل -->
+<div class="modal-overlay" id="deliveryCompanyModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="deliveryCompanyModalTitle">شركة جديدة</div>
+    <form id="deliveryCompanyForm">
+      <input type="hidden" id="deliveryCompanyId">
+      <div class="field field-full"><label>اسم الشركة</label><input type="text" id="deliveryCompanyName" required placeholder="مثال: بوسطة، مرسول..."></div>
+      <div class="field"><label>الشخص المسؤول</label><input type="text" id="deliveryCompanyContactPerson" placeholder="اختياري"></div>
+      <div class="field"><label>رقم الهاتف</label><input type="text" id="deliveryCompanyPhone" style="direction:ltr; text-align:right;"></div>
+      <div class="field"><label>نوع العمولة</label>
+        <select id="deliveryCompanyCommissionType">
+          <option value="">— بدون —</option>
+          <option value="percentage">نسبة %</option>
+          <option value="fixed">مبلغ ثابت</option>
+        </select>
+      </div>
+      <div class="field"><label>قيمة العمولة</label><input type="number" id="deliveryCompanyCommissionValue" step="0.01" min="0" value="0"></div>
+      <div class="field field-full"><label>ملاحظات</label><input type="text" id="deliveryCompanyNotes" placeholder="اختياري"></div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; margin-bottom:0;">
+          <input type="checkbox" id="deliveryCompanyActive" checked style="width:auto;"> مفعّلة
+        </label>
+      </div>
+      <div class="error-msg" id="deliveryCompanyModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelDeliveryCompanyBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveDeliveryCompanyBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: إضافة / تعديل قناة بيع -->
+<div class="modal-overlay" id="salesChannelModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="salesChannelModalTitle">قناة جديدة</div>
+    <form id="salesChannelForm">
+      <input type="hidden" id="salesChannelId">
+      <div class="field field-full"><label>اسم القناة</label><input type="text" id="salesChannelName" required placeholder="مثال: جاهز، طلبات، هنقرستيشن..."></div>
+      <div class="field"><label>نوع العمولة</label>
+        <select id="salesChannelCommissionType">
+          <option value="">— بدون —</option>
+          <option value="percentage">نسبة %</option>
+          <option value="fixed">مبلغ ثابت</option>
+        </select>
+      </div>
+      <div class="field"><label>قيمة العمولة</label><input type="number" id="salesChannelCommissionValue" step="0.01" min="0" value="0"></div>
+      <div class="field field-full"><label>ملاحظات</label><input type="text" id="salesChannelNotes" placeholder="اختياري"></div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; margin-bottom:0;">
+          <input type="checkbox" id="salesChannelActive" checked style="width:auto;"> مفعّلة
+        </label>
+      </div>
+      <div class="error-msg" id="salesChannelModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelSalesChannelBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveSalesChannelBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Modal: إضافة / تعديل شريحة سعر -->
 <div class="modal-overlay" id="priceTierModalOverlay">
   <div class="modal-box">
@@ -7739,13 +8114,17 @@ a { color: inherit; }
       <input type="hidden" id="deliverySaleOrderId">
       <div class="field field-full"><label>اسم المستلم</label><input type="text" id="deliveryRecipientName" required></div>
       <div class="field"><label>رقم الهاتف</label><input type="text" id="deliveryPhone" style="direction:ltr; text-align:right;"></div>
+      <div class="field field-full"><label>منطقة التوصيل</label><select id="deliveryZoneSelect"><option value="">— بدون منطقة (إدخال يدوي) —</option></select><div class="zone-hint" id="deliveryZoneSelectHint"></div></div>
       <div class="field"><label>المدينة</label><input type="text" id="deliveryCity"></div>
       <div class="field field-full"><label>العنوان بالتفصيل</label><input type="text" id="deliveryAddress"></div>
-      <div class="field"><label>السائق (من المستخدمين)</label>
-        <select id="deliveryDriverUser"><option value="">— بدون —</option></select>
+      <div class="field"><label>السائق (من الموظفين)</label>
+        <select id="deliveryDriverEmployee"><option value="">— بدون —</option></select>
       </div>
       <div class="field"><label>اسم سائق آخر (اختياري)</label><input type="text" id="deliveryDriverName"></div>
       <div class="field"><label>هاتف السائق</label><input type="text" id="deliveryDriverPhone" style="direction:ltr; text-align:right;"></div>
+      <div class="field"><label>شركة التوصيل (لو مُسندة لشركة خارجية)</label>
+        <select id="deliveryCompanySelect"><option value="">— بدون —</option></select>
+      </div>
       <div class="field"><label>الحالة</label>
         <select id="deliveryStatus">
           <option value="pending">بانتظار التجهيز</option>
@@ -7763,6 +8142,141 @@ a { color: inherit; }
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelDeliveryBtn">إلغاء</button>
         <button type="submit" class="submit-btn" id="saveDeliveryBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: إيصال توصيل (طباعة للسائق) -->
+<div class="modal-overlay" id="deliveryReceiptModalOverlay">
+  <div class="modal-box receipt-modal-box" style="max-width:420px;">
+    <div id="deliveryReceiptContent"></div>
+    <div class="receipt-actions">
+      <select id="deliveryReceiptPrintMode" class="receipt-print-mode-select">
+        <option value="a4">طباعة عادية (على طابعة ورقية A4)</option>
+        <option value="a5">طباعة A5</option>
+        <option value="thermal80">طباعة حرارية 80مم</option>
+        <option value="thermal58">طباعة حرارية 58مم</option>
+      </select>
+      <button type="button" class="modal-cancel-btn" id="closeDeliveryReceiptBtn">إغلاق</button>
+      <button type="button" class="submit-btn" id="printDeliveryReceiptBtn" style="margin-top:0;">طباعة</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: تسوية حساب سائق -->
+<div class="modal-overlay" id="driverSettleModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title" id="driverSettleModalTitle">تسوية حساب السائق</div>
+    <div class="bo-table-wrap" style="max-height:320px; margin-bottom:14px;">
+      <table class="bo-table">
+        <thead>
+          <tr>
+            <th style="width:34px;"><input type="checkbox" id="driverSettleSelectAll" checked></th>
+            <th>رقم الطلبية</th>
+            <th>المستلم</th>
+            <th>موعد/تاريخ التسليم</th>
+            <th>المبلغ</th>
+          </tr>
+        </thead>
+        <tbody id="driverSettleOrdersTableBody"></tbody>
+      </table>
+    </div>
+    <div class="shift-summary-grid">
+      <div class="shift-summary-box"><div class="shift-summary-box-label">عدد الطلبات المحددة</div><div class="shift-summary-box-value num" id="driverSettleSelectedCount">0</div></div>
+      <div class="shift-summary-box"><div class="shift-summary-box-label">إجمالي المطلوب تحصيله</div><div class="shift-summary-box-value num" id="driverSettleExpected">0.00</div></div>
+    </div>
+    <div class="field field-full">
+      <label for="driverSettleReceivedAmount">المبلغ المستلم فعليًا من السائق</label>
+      <input type="number" id="driverSettleReceivedAmount" step="0.01" min="0">
+    </div>
+    <div class="shift-summary-box" style="margin-bottom:14px;">
+      <div class="shift-summary-box-label">الفرق (المستلم − المطلوب)</div>
+      <div class="shift-summary-box-value num" id="driverSettleDifference">0.00</div>
+    </div>
+    <div class="field field-full"><label for="driverSettleNotes">ملاحظات (اختياري)</label><input type="text" id="driverSettleNotes" placeholder="سبب العجز/الزيادة إن وجد..."></div>
+    <div class="error-msg" id="driverSettleModalError"></div>
+    <div class="modal-actions">
+      <button type="button" class="bo-add-btn" id="driverSettleConfirmBtn">تأكيد التسوية</button>
+      <button type="button" class="modal-cancel-btn" id="driverSettleCancelBtn">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: تفاصيل تسوية سابقة -->
+<div class="modal-overlay" id="driverSettleDetailModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title" id="driverSettleDetailModalTitle">تفاصيل التسوية</div>
+    <div class="bo-table-wrap" style="max-height:360px;">
+      <table class="bo-table">
+        <thead><tr><th>رقم الطلبية</th><th>المستلم</th><th>تاريخ التسليم</th><th>المبلغ</th></tr></thead>
+        <tbody id="driverSettleDetailTableBody"></tbody>
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="driverSettleDetailCloseBtn">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: طلب توصيل جديد (طلبية بيع + بيانات توصيل معًا) -->
+<div class="modal-overlay" id="newDeliveryOrderModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title">طلب توصيل جديد</div>
+    <form id="newDeliveryOrderForm">
+      <div class="modal-grid">
+        <div class="field">
+          <label>العميل (اختياري — اتركه فارغًا لعميل نقدي)</label>
+          <div class="smart-search" id="newDeliveryOrderCustomerWrap">
+            <input type="text" id="newDeliveryOrderCustomerInput" autocomplete="off" placeholder="اكتب اسم العميل أو رقم هاتفه...">
+            <input type="hidden" id="newDeliveryOrderCustomerValue">
+            <div class="smart-search-dropdown" id="newDeliveryOrderCustomerDropdown"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <label style="display:block; font-size:13px; font-weight:500; color:var(--ink-soft); margin-bottom:6px;">الأصناف</label>
+        <div class="purchase-line-row header-row with-unit">
+          <div>الصنف</div><div>الوحدة</div><div>الكمية</div><div>سعر البيع</div><div>الإجمالي</div><div></div>
+        </div>
+        <div class="purchase-lines-wrap" id="newDeliveryOrderLinesWrap"></div>
+        <button type="button" class="add-line-btn" id="addNewDeliveryOrderLineBtn">+ إضافة صنف</button>
+      </div>
+
+      <div class="purchase-totals-row" style="flex-direction:column; align-items:stretch; gap:6px;">
+        <div style="display:flex; justify-content:space-between;"><span>الإجمالي الفرعي:</span><span class="num" id="newDeliveryOrderSubtotalLabel">0.00</span></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+          <span>الخصم:</span>
+          <input type="number" id="newDeliveryOrderDiscount" min="0" step="0.01" value="0" style="width:110px; padding:6px 8px;">
+        </div>
+        <div style="display:flex; justify-content:space-between;"><span>الضريبة:</span><span class="num" id="newDeliveryOrderTaxLabel">0.00</span></div>
+        <div style="display:flex; justify-content:space-between; font-weight:700; font-size:15px;"><span>الإجمالي:</span><span class="num" id="newDeliveryOrderTotalLabel">0.00</span></div>
+      </div>
+
+      <div style="margin-top:16px; border-top:1px dashed var(--surface-sunken); padding-top:12px;">
+        <label style="display:block; font-size:13px; font-weight:500; color:var(--ink-soft); margin-bottom:6px;">بيانات التوصيل</label>
+        <div class="modal-grid">
+          <div class="field field-full"><label>اسم المستلم</label><input type="text" id="newDeliveryOrderRecipientName" required></div>
+          <div class="field"><label>رقم الهاتف</label><input type="text" id="newDeliveryOrderPhone" style="direction:ltr; text-align:right;"></div>
+          <div class="field field-full"><label>منطقة التوصيل</label><select id="newDeliveryOrderZone"><option value="">— بدون منطقة (إدخال يدوي) —</option></select><div class="zone-hint" id="newDeliveryOrderZoneHint"></div></div>
+          <div class="field"><label>المدينة</label><input type="text" id="newDeliveryOrderCity"></div>
+          <div class="field field-full"><label>العنوان بالتفصيل</label><input type="text" id="newDeliveryOrderAddress"></div>
+          <div class="field"><label>السائق (من الموظفين)</label>
+            <select id="newDeliveryOrderDriverEmployee"><option value="">— بدون —</option></select>
+          </div>
+          <div class="field"><label>اسم سائق آخر (اختياري)</label><input type="text" id="newDeliveryOrderDriverName"></div>
+          <div class="field"><label>هاتف السائق</label><input type="text" id="newDeliveryOrderDriverPhone" style="direction:ltr; text-align:right;"></div>
+          <div class="field"><label>رسوم التوصيل</label><input type="number" id="newDeliveryOrderFee" step="0.01" min="0" value="0"></div>
+          <div class="field"><label>موعد التسليم المحدد</label><input type="datetime-local" id="newDeliveryOrderScheduledAt"></div>
+          <div class="field field-full"><label>ملاحظات</label><input type="text" id="newDeliveryOrderNotes" placeholder="اختياري"></div>
+        </div>
+      </div>
+
+      <div class="error-msg" id="newDeliveryOrderModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelNewDeliveryOrderBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveNewDeliveryOrderBtn">حفظ الطلب</button>
       </div>
     </form>
   </div>
@@ -9867,6 +10381,7 @@ function cachePosEls() {
   posEls.paidRow = document.getElementById('paidRow');
   posEls.paidInput = document.getElementById('paidInput');
   posEls.paymentMethodSelect = document.getElementById('posPaymentMethod');
+  posEls.salesChannelSelect = document.getElementById('posSalesChannel');
   posEls.dueRow = document.getElementById('dueRow');
   posEls.dueLabel = document.getElementById('dueLabel');
   posEls.splitToggle = document.getElementById('splitPaymentToggle');
@@ -9936,6 +10451,8 @@ function updateShiftBadge() {
   }
   if (posEls.checkoutBtn) posEls.checkoutBtn.disabled = cart.length === 0 || !currentShift;
   if (posEls.saveSaleOrderBtn) posEls.saveSaleOrderBtn.disabled = cart.length === 0;
+  const posSaveDeliveryBtnEl = document.getElementById('posSaveDeliveryBtn');
+  if (posSaveDeliveryBtnEl) posSaveDeliveryBtnEl.disabled = cart.length === 0;
 }
 
 function requireOpenShift() {
@@ -10672,6 +11189,15 @@ function bindPosEvents() {
     recalcCartPricesForCustomer();
     renderCart();
     renderProducts();
+    const deliveryToggleEl = document.getElementById('posDeliveryToggle');
+    if (deliveryToggleEl && deliveryToggleEl.checked) {
+      const customer = allCustomers.find(c => c.id === posEls.customerSelect.value);
+      const zoneEl = document.getElementById('posDeliveryZone');
+      if (customer && customer.delivery_zone_id && zoneEl && !zoneEl.value) {
+        zoneEl.value = customer.delivery_zone_id;
+        zoneEl.dispatchEvent(new Event('change'));
+      }
+    }
   });
   posEls.customerSearchInput.addEventListener('focus', () => {
     posEls.customerSearchInput.select();
@@ -10749,6 +11275,45 @@ function bindPosEvents() {
 
   posEls.checkoutBtn.addEventListener('click', doCheckout);
   if (posEls.saveSaleOrderBtn) posEls.saveSaleOrderBtn.addEventListener('click', saveSaleOrder);
+
+  // ---- طلب توصيل مباشرة من شاشة الكاشير ----
+  const posDeliveryToggle = document.getElementById('posDeliveryToggle');
+  const posDeliveryPanel = document.getElementById('posDeliveryPanel');
+  const posSaveDeliveryBtn = document.getElementById('posSaveDeliveryBtn');
+  if (posDeliveryToggle) {
+    posDeliveryToggle.addEventListener('change', async (e) => {
+      const on = e.target.checked;
+      posDeliveryPanel.style.display = on ? 'block' : 'none';
+      document.getElementById('paymentMethodRow').style.display = on ? 'none' : 'flex';
+      const splitRow = document.getElementById('splitToggleRow');
+      if (splitRow) splitRow.style.display = on ? 'none' : 'flex';
+      if (posEls.splitBlock) posEls.splitBlock.style.display = 'none';
+      if (posEls.paidRow) posEls.paidRow.style.display = 'none';
+      if (posEls.dueRow) posEls.dueRow.style.display = 'none';
+      posEls.checkoutBtn.style.display = on ? 'none' : '';
+      if (posEls.saveSaleOrderBtn) posEls.saveSaleOrderBtn.style.display = on ? 'none' : '';
+      posSaveDeliveryBtn.style.display = on ? 'block' : 'none';
+      if (on) {
+        if (boEmployees.length === 0) await loadBoEmployees();
+        populateDeliveryDriverSelect('posDeliveryDriverEmployee');
+        if (boDeliveryZones.length === 0) { await loadBoDeliveryZones(); }
+        populateDeliveryZoneSelects();
+        const customer = allCustomers.find(c => c.id === posEls.customerSelect.value);
+        const nameEl = document.getElementById('posDeliveryRecipientName');
+        const phoneEl = document.getElementById('posDeliveryPhone');
+        const addrEl = document.getElementById('posDeliveryAddress');
+        if (customer && !nameEl.value) nameEl.value = customer.name || '';
+        if (customer && !phoneEl.value) phoneEl.value = customer.phone || '';
+        if (customer && !addrEl.value) addrEl.value = customer.address || '';
+        const zoneEl = document.getElementById('posDeliveryZone');
+        if (customer && customer.delivery_zone_id && !zoneEl.value) {
+          zoneEl.value = customer.delivery_zone_id;
+          zoneEl.dispatchEvent(new Event('change'));
+        }
+      }
+    });
+  }
+  if (posSaveDeliveryBtn) posSaveDeliveryBtn.addEventListener('click', savePosDeliveryOrder);
 
   posEls.mobileCartBar.addEventListener('click', openMobileCart);
   posEls.cartMobileClose.addEventListener('click', closeMobileCart);
@@ -10920,7 +11485,7 @@ let allCustomers = [];
 async function loadCustomers() {
   try {
     if (!sessionUsable()) throw new Error('offline');
-    const { data, error } = await supabaseClient.from('customers').select('id, name, balance, price_tier_id, customer_types(default_price_tier_id)').order('name').limit(200);
+    const { data, error } = await supabaseClient.from('customers').select('id, name, balance, price_tier_id, address, delivery_zone_id, customer_types(default_price_tier_id)').order('name').limit(200);
     if (error) throw error;
     allCustomers = data || [];
     offSet(OFF.customers, allCustomers);
@@ -12382,6 +12947,8 @@ function renderCart() {
 
   posEls.checkoutBtn.disabled = cart.length === 0 || !currentShift;
   if (posEls.saveSaleOrderBtn) posEls.saveSaleOrderBtn.disabled = cart.length === 0;
+  const posSaveDeliveryBtnEl2 = document.getElementById('posSaveDeliveryBtn');
+  if (posSaveDeliveryBtnEl2) posSaveDeliveryBtnEl2.disabled = cart.length === 0;
 
   const itemCount = cart.reduce((sum, l) => sum + Number(l.quantity), 0);
   posEls.mobileCartCount.textContent = itemCount;
@@ -12467,7 +13034,7 @@ async function generateSalesCommissions(saleId, userId, items) {
 
 // البيع أونلاين (المسار العادي): يبعت الفاتورة وتفاصيل الدفع لسوباابيز على طول
 async function performOnlineCheckout(ctx) {
-  const { subtotal, discount, tax, total, customerId, customerName, paymentLines, paymentMethod, paidAmount, remaining, saleWarehouseId, instantNote, couponDiscountAmount, loyaltyPointsUsed } = ctx;
+  const { subtotal, discount, tax, total, customerId, customerName, paymentLines, paymentMethod, paidAmount, remaining, saleWarehouseId, instantNote, couponDiscountAmount, loyaltyPointsUsed, channelId } = ctx;
 
   const { data: sale, error: saleError } = await supabaseClient
     .from('sales')
@@ -12475,6 +13042,7 @@ async function performOnlineCheckout(ctx) {
       branch_id: currentProfile.branch_id, user_id: currentProfile.id, customer_id: customerId,
       status: 'completed', subtotal, discount, tax, total, paid_amount: paidAmount, remaining,
       payment_method: paymentMethod, shift_id: (currentShift && !currentShift.pending) ? currentShift.id : null,
+      channel_id: channelId || null,
     }).select().single();
   if (saleError) throw saleError;
 
@@ -12546,7 +13114,7 @@ async function performOnlineCheckout(ctx) {
 // البيع أوفلاين: بيتسجل في طابور الانتظار المحلي (بما فيه سطور الدفع المتعدد
 // وربطه بالوردية المفتوحة)، وبيتزامن تلقائي أول ما النت يرجع
 async function queueOfflineSale(ctx) {
-  const { subtotal, discount, tax, total, customerId, customerName, paymentLines, paymentMethod, paidAmount, remaining, saleWarehouseId, instantNote } = ctx;
+  const { subtotal, discount, tax, total, customerId, customerName, paymentLines, paymentMethod, paidAmount, remaining, saleWarehouseId, instantNote, channelId } = ctx;
 
   const localId = 'loc_' + (crypto.randomUUID ? crypto.randomUUID() : (Date.now() + '_' + Math.random()));
   const invoiceLabel = nextLocalInvoiceLabel();
@@ -12577,6 +13145,7 @@ async function queueOfflineSale(ctx) {
         branch_id: currentProfile.branch_id, user_id: currentProfile.id, customer_id: customerId,
         status: 'completed', subtotal, discount, tax, total, paid_amount: paidAmount, remaining,
         payment_method: paymentMethod, shift_id: (currentShift && !currentShift.pending) ? currentShift.id : null,
+        channel_id: channelId || null,
       },
       // إذا كانت الوردية نفسها لا تزال بانتظار المزامنة، يُسجَّل لها مرجع مؤقت حتى تُربط بالمعرّف
       // الحقيقي تلقائيًا وقت ما الوردية تتزامن (شوف syncQueuedShiftOpen)
@@ -12689,7 +13258,7 @@ async function doCheckout() {
     const instantNote = printSettings.print_instant_note
       ? (document.getElementById('instantNoteInput')?.value || '').trim()
       : '';
-    const ctx = { subtotal, discount: totalDiscountForRecord, tax, total, customerId, customerName, paymentLines, paymentMethod, paidAmount, remaining, saleWarehouseId, instantNote, couponDiscountAmount, loyaltyPointsUsed };
+    const ctx = { subtotal, discount: totalDiscountForRecord, tax, total, customerId, customerName, paymentLines, paymentMethod, paidAmount, remaining, saleWarehouseId, instantNote, couponDiscountAmount, loyaltyPointsUsed, channelId: posEls.salesChannelSelect?.value || null };
 
     let receiptData;
     // إذا كانت الوردية نفسها لا تزال بانتظار المزامنة، يجب أن يُسجَّل البيع دون اتصال أيضًا (حتى لو كان الإنترنت متاحًا)
@@ -12715,6 +13284,7 @@ async function doCheckout() {
     cart = []; posEls.discountInput.value = 0; setCustomerSelection('', { silent: true });
     delete posEls.paidInput.dataset.touched; posEls.paidInput.value = '';
     posEls.paymentMethodSelect.value = 'cash';
+    if (posEls.salesChannelSelect) posEls.salesChannelSelect.value = '';
     splitPaymentLines = [];
     posEls.splitToggle.checked = false;
     posEls.splitBlock.style.display = 'none';
@@ -12785,7 +13355,7 @@ async function saveSaleOrder() {
       .insert({
         branch_id: currentProfile.branch_id, user_id: currentProfile.id, customer_id: customerId,
         status: 'draft', subtotal, discount, tax, total, payment_method: paymentMethod,
-        warehouse_id: saleWarehouseId,
+        warehouse_id: saleWarehouseId, channel_id: posEls.salesChannelSelect?.value || null,
       }).select().single();
     if (orderError) throw orderError;
 
@@ -12818,6 +13388,126 @@ async function saveSaleOrder() {
     showToast(err.message || 'حدث خطأ أثناء حفظ الطلبية', true);
   } finally {
     if (btn) { btn.disabled = cart.length === 0; btn.textContent = 'حفظ كطلبية بيع (بدون تأثير على الأرصدة)'; }
+  }
+}
+
+// ============================================================
+// ---- طلب توصيل مباشرة من شاشة الكاشير (بديل سريع عن الذهاب
+// للمكتب الخلفي) — بينشئ "طلبية بيع" (بدون أي تأثير فوري على
+// المخزون أو حساب العميل) + سجل "تفاصيل توصيل" مرتبط بها في خطوة
+// واحدة، بنفس منطق "طلب توصيل جديد" الموجود في لوحة التحكم.
+// المتابعة والتأكيد بعد كده من شاشة "تفاصيل التوصيل".
+// ============================================================
+async function savePosDeliveryOrder() {
+  if (cart.length === 0) return;
+  if (currentProfile.roles?.permissions?.read_only === true) {
+    showToast('هذا الدور "قراءة فقط" ولا يمكنه إنشاء طلبات توصيل', true);
+    return;
+  }
+  if (!hasBoActionPermission('delivery', 'add')) {
+    showToast('ليس لديك صلاحية إنشاء طلب توصيل جديد', true);
+    return;
+  }
+  if (!sessionUsable()) {
+    showToast('طلب التوصيل يحتاج اتصال بالإنترنت', true);
+    return;
+  }
+  const errEl = document.getElementById('posDeliveryError');
+  if (errEl) errEl.classList.remove('show');
+
+  const recipientName = document.getElementById('posDeliveryRecipientName').value.trim();
+  if (!recipientName) {
+    if (errEl) { errEl.textContent = 'اسم المستلم مطلوب'; errEl.classList.add('show'); }
+    showToast('اسم المستلم مطلوب', true);
+    return;
+  }
+
+  const btn = document.getElementById('posSaveDeliveryBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'جاري الحفظ...'; }
+  try {
+    const subtotal = calcSubtotal();
+    const discount = Number(posEls.discountInput.value) || 0;
+    const zoneCheck = checkDeliveryZoneMinOrder(document.getElementById('posDeliveryZone').value, subtotal);
+    if (!zoneCheck.ok) {
+      throw new Error(zoneCheck.message);
+    }
+    const maxDiscountCheck = checkMaxDiscountAllowed(subtotal, discount);
+    if (!maxDiscountCheck.ok) {
+      const maxPct = getMaxDiscountPercent();
+      const maxAllowed = subtotal * (maxPct / 100);
+      const authResult = await requestDiscountAuthorization(subtotal, discount, maxPct, maxAllowed);
+      if (!authResult.authorized) {
+        throw new Error('لم يتم حفظ طلب التوصيل — الخصم يتجاوز الحد المسموح ولم يتم تفويضه من مدير');
+      }
+      showToast(`تم تفويض تجاوز الخصم بواسطة "${authResult.authorizerName || 'مدير'}"`);
+    }
+    const tax = calcTaxTotal();
+    const total = calcTotal();
+    const customerId = posEls.customerSelect.value || null;
+    const saleWarehouseId = posSelectedWarehouseId() || await getMainWarehouseId(currentProfile.branch_id);
+
+    const { data: order, error: orderError } = await supabaseClient
+      .from('sale_orders')
+      .insert({
+        branch_id: currentProfile.branch_id, user_id: currentProfile.id, customer_id: customerId,
+        status: 'draft', subtotal, discount, tax, total, payment_method: 'cash',
+        warehouse_id: saleWarehouseId, notes: 'طلب توصيل من شاشة الكاشير', channel_id: posEls.salesChannelSelect?.value || null,
+      }).select().single();
+    if (orderError) throw orderError;
+
+    const orderItems = cart.map(l => ({
+      sale_order_id: order.id, product_id: l.product.id, product_unit_id: l.productUnitId || null,
+      quantity: l.quantity, unit_price: l.unitPrice, discount: 0, total: l.quantity * l.unitPrice,
+      warehouse_id: saleWarehouseId,
+    }));
+    const { error: itemsError } = await supabaseClient.from('sale_order_items').insert(orderItems);
+    if (itemsError) throw itemsError;
+
+    const scheduledVal = document.getElementById('posDeliveryScheduledAt').value;
+    const deliveryPayload = {
+      sale_order_id: order.id,
+      recipient_name: recipientName,
+      phone: document.getElementById('posDeliveryPhone').value.trim() || null,
+      delivery_zone_id: document.getElementById('posDeliveryZone').value || null,
+      city: document.getElementById('posDeliveryCity').value.trim() || null,
+      address: document.getElementById('posDeliveryAddress').value.trim() || null,
+      driver_employee_id: document.getElementById('posDeliveryDriverEmployee').value || null,
+      driver_name: document.getElementById('posDeliveryDriverName').value.trim() || null,
+      driver_phone: document.getElementById('posDeliveryDriverPhone').value.trim() || null,
+      status: 'pending',
+      delivery_fee: Number(document.getElementById('posDeliveryFee').value) || 0,
+      scheduled_at: scheduledVal ? new Date(scheduledVal).toISOString() : null,
+      notes: document.getElementById('posDeliveryNotes').value.trim() || null,
+      created_by: currentProfile?.id || null,
+    };
+    const { error: deliveryError } = await supabaseClient.from('delivery_details').insert(deliveryPayload);
+    if (deliveryError) throw deliveryError;
+
+    showToast(`تم إنشاء طلب التوصيل رقم ${order.order_number} — يمكن متابعته من "تفاصيل التوصيل" في لوحة التحكم`);
+
+    // إعادة تصفير شاشة البيع وإخفاء لوحة التوصيل
+    cart = []; posEls.discountInput.value = 0; setCustomerSelection('', { silent: true });
+    const toggle = document.getElementById('posDeliveryToggle');
+    if (toggle) { toggle.checked = false; toggle.dispatchEvent(new Event('change')); }
+    ['posDeliveryRecipientName', 'posDeliveryPhone', 'posDeliveryCity', 'posDeliveryAddress',
+      'posDeliveryDriverName', 'posDeliveryDriverPhone', 'posDeliveryNotes'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+    document.getElementById('posDeliveryFee').value = 0;
+    document.getElementById('posDeliveryScheduledAt').value = '';
+    document.getElementById('posDeliveryDriverEmployee').value = '';
+    document.getElementById('posDeliveryZone').value = '';
+    resetQuickDiscountSelection();
+    resetAutoDiscountsSelection();
+    renderCart();
+    closeMobileCart();
+  } catch (err) {
+    console.error(err);
+    const msg = err.message || 'حدث خطأ أثناء حفظ طلب التوصيل';
+    if (errEl) { errEl.textContent = msg; errEl.classList.add('show'); }
+    showToast(msg, true);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🚚 حفظ طلب التوصيل'; }
   }
 }
 
@@ -13470,6 +14160,9 @@ let productBatchesLoadedOnce = false;
 let boProductSerials = [];
 let productSerialsLoadedOnce = false;
 let boDeliveries = [];
+let boDriverSettlements = [];
+let driverSettlementsSectionLoadedOnce = false;
+let driverSettleModalDriverId = null; // السائق المفتوح حاليًا في مودال التسوية
 let boSupplierPrices = [];
 let supplierPricesLoadedOnce = false;
 let productsListPage = 1;
@@ -13529,7 +14222,7 @@ async function enterBackoffice() {
     loadBoCategories(), loadBoProducts(), loadProductsStockMap(), loadBoCustomers(), loadBoSuppliers(),
     loadBoPurchases(), loadBoWarehouses(), loadBoRoles(), loadBoBranches(),
     loadBoUsers(), loadBoEmployees(), loadBoExpenseItems(), loadBoUnitTypes(),
-    loadBoCustomerTypes(), loadBoTaxRates(), loadBoPriceTiers(), loadBoQuickDiscounts(),
+    loadBoCustomerTypes(), loadBoTaxRates(), loadBoPriceTiers(), loadBoQuickDiscounts(), loadBoDeliveryZones(), loadBoDeliveryCompanies(), loadBoSalesChannels(),
     loadBoPromotions(), loadBoCoupons(), loadLoyaltySettings(),
     loadTaxInclusiveSetting(), loadCompanyInfoGlobal(), loadBranchSettings(),
     loadPrintSettings(), loadDebtReminderSettings(),
@@ -13552,6 +14245,12 @@ async function enterBackoffice() {
   renderTaxRatesTable();
   renderPriceTiersTable();
   renderCustomerTypesTable();
+  renderDeliveryZonesTable();
+  populateDeliveryZoneSelects();
+  renderDeliveryCompaniesTable();
+  populateDeliveryCompanySelects();
+  renderSalesChannelsTable();
+  populateSalesChannelSelects();
   renderQuickDiscountsTable();
   renderPromotionsTable();
   renderCouponsTable();
@@ -13574,14 +14273,14 @@ async function enterBackoffice() {
 }
 
 const boAllSections = ['dashboard','products','categories','unit-types','tax-rates','price-tiers','quick-discounts','customer-types',
-  'sales-list','sale-orders','delivery','customers','suppliers','supplier-prices','payments','purchase-orders','purchases','purchase-returns','sale-returns','purchase-requisitions',
+  'sales-list','sale-orders','delivery','delivery-zones','delivery-companies','sales-channels','driver-settlements','customers','suppliers','supplier-prices','payments','purchase-orders','purchases','purchase-returns','sale-returns','purchase-requisitions',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
   'soon','company-info','permissions','users','branches','business-types','pos-devices','branch-settings','print-settings','stock','stocktake','product-batches','product-serials','backup','reset-data','employees','attendance','leave-requests','expense-items','expenses','salaries','sales-commissions','treasuries','capital','fixed-assets','promotions','coupons','modifier-groups','recipes'];
 
 const boNavGroups = [
   { toggle: 'stockNavToggle', group: 'stockNavGroup', sections: ['products','categories','unit-types','tax-rates','price-tiers','quick-discounts','modifier-groups','recipes','stock','stocktake','product-batches','product-serials'] },
   { toggle: 'marketingNavToggle', group: 'marketingNavGroup', sections: ['promotions','coupons'] },
-  { toggle: 'salesNavToggle', group: 'salesNavGroup', sections: ['sales-list','sale-orders','delivery','customers','customer-types','sale-returns'] },
+  { toggle: 'salesNavToggle', group: 'salesNavGroup', sections: ['sales-list','sale-orders','delivery','delivery-zones','delivery-companies','sales-channels','driver-settlements','customers','customer-types','sale-returns'] },
   { toggle: 'purchasesNavToggle', group: 'purchasesNavGroup', sections: ['suppliers','supplier-prices','purchase-requisitions','purchase-orders','purchases','purchase-returns'] },
   { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
   { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['treasuries','payments','expense-items','expenses','capital','fixed-assets'] },
@@ -13599,7 +14298,7 @@ const SECTION_PERMISSION_MAP = {
   'modifier-groups': 'stock_management',
   'recipes': 'stock_management',
   'promotions': 'admin', 'coupons': 'admin',
-  'sales-list': 'sales_management', 'sale-orders': 'sales_management', 'delivery': 'sales_management', 'customers': 'sales_management', 'customer-types': 'sales_management', 'sale-returns': 'sales_management',
+  'sales-list': 'sales_management', 'sale-orders': 'sales_management', 'delivery': 'sales_management', 'delivery-zones': 'sales_management', 'delivery-companies': 'sales_management', 'sales-channels': 'sales_management', 'driver-settlements': 'sales_management', 'customers': 'sales_management', 'customer-types': 'sales_management', 'sale-returns': 'sales_management',
   'suppliers': 'purchases_management', 'supplier-prices': 'purchases_management', 'purchase-orders': 'purchases_management', 'purchases': 'purchases_management', 'purchase-returns': 'purchases_management', 'purchase-requisitions': 'purchases_management',
   'reports-sales': 'reports', 'reports-purchases': 'reports', 'reports-inventory': 'reports', 'reports-accounting': 'reports', 'reports-other': 'reports',
   'treasuries': 'finance', 'payments': 'finance', 'expense-items': 'finance', 'expenses': 'finance', 'capital': 'admin', 'fixed-assets': 'finance',
@@ -13621,7 +14320,8 @@ const REPORT_TABS = {
     { key: 'branch', title: 'المبيعات حسب الفرع' },
     { key: 'cashier', title: 'المبيعات حسب الكاشير' },
     { key: 'payment', title: 'المبيعات حسب طرق الدفع' },
-    { key: 'mixedpayment', title: 'الفواتير متعددة طرق الدفع' }
+    { key: 'mixedpayment', title: 'الفواتير متعددة طرق الدفع' },
+    { key: 'delivery', title: 'مبيعات الدليفري' }
   ]},
   'reports-purchases': { grid: 'purchasesReportTypeGrid', title: 'تقارير المشتريات', items: [
     { key: 'trend', title: 'اتجاه الشراء اليومي' },
@@ -13683,8 +14383,9 @@ const SCREEN_LABELS = {
   'recipes': 'الوصفات (منتجات مركّبة)',
   'promotions': 'العروض', 'coupons': 'الكوبونات',
   'sales-list': 'فواتير البيع', 'customers': 'العملاء', 'customer-types': 'أنواع العملاء', 'sale-returns': 'مرتجعات البيع',
-  'sale-orders': 'طلبات البيع', 'delivery': 'تفاصيل التوصيل',
-  'suppliers': 'الموردون', 'purchases': 'فواتير الشراء', 'purchase-returns': 'مرتجعات الشراء', 'purchase-requisitions': 'طلبات الشراء الداخلية',
+  'sale-orders': 'طلبات البيع', 'delivery': 'تفاصيل التوصيل', 'delivery-zones': 'مناطق التوصيل', 'delivery-companies': 'شركات التوصيل', 'sales-channels': 'قنوات البيع', 'driver-settlements': 'تحصيل السائقين',
+  'suppliers': 'الموردون', 'purchases': 'فواتير الشراء', 'purchase-returns': 'مرتجعات الشراء', 'purchase-requisitions': 'طلبات التوريد',
+  'purchase-orders': 'طلبات الشراء',
   'supplier-prices': 'أسعار الموردين',
   'treasuries': 'الخزائن والحسابات البنكية', 'payments': 'سجل المدفوعات', 'expense-items': 'بنود المصروفات',
   'expenses': 'المصروفات', 'fixed-assets': 'الأصول الثابتة',
@@ -14143,7 +14844,7 @@ const ACTION_CAPABLE_SCREENS = {
   'tax-rates': { add: true, edit: true },
   'price-tiers': { add: true, edit: true },
   'quick-discounts': { add: true, edit: true },
-  'modifier-groups': { add: true, edit: true },
+  'modifier-groups': { add: true, edit: true, delete: true },
   'recipes': { add: true, edit: true, delete: true },
   'promotions': { add: true, edit: true, delete: true },
   'coupons': { add: true, edit: true, delete: true },
@@ -14152,10 +14853,20 @@ const ACTION_CAPABLE_SCREENS = {
   'stocktake': { add: true, edit: true, delete: true },
   'product-batches': { add: true, edit: true },
   'product-serials': { add: true, edit: true },
-  'delivery': { edit: true },
+  'delivery': { add: true, edit: true },
+  'delivery-zones': { add: true, edit: true, delete: true },
+  'delivery-companies': { add: true, edit: true, delete: true },
+  'sales-channels': { add: true, edit: true, delete: true },
+  'driver-settlements': { edit: true },
   'customers': { add: true, edit: true, delete: true },
   'suppliers': { add: true, edit: true, delete: true },
-  'purchase-requisitions': { add: true },
+  'purchase-requisitions': { add: true, edit: true },
+  'purchase-orders': { add: true, edit: true, delete: true },
+  'sales-list': { edit: true },
+  'purchases': { add: true },
+  'purchase-returns': { add: true },
+  'sale-returns': { add: true },
+  'sale-orders': { edit: true, delete: true },
   'treasuries': { add: true, edit: true, delete: true },
   'payments': { delete: true },
   'expense-items': { add: true, edit: true },
@@ -14174,6 +14885,13 @@ const ACTION_CAPABLE_SCREENS = {
 };
 
 const ACTION_LABELS = { add: 'إضافة', edit: 'تعديل', delete: 'حذف' };
+// تخصيص اسم صلاحية معيّنة لشاشة معيّنة في شاشة الصلاحيات فقط (من غير ما يتغيّر
+// الاسم الافتراضي في باقي الشاشات). شاشة "الأصناف": صلاحية "حذف" بقت "تعطيل"
+// لأنها بتتحكم في تعطيل/تفعيل الصنف مش حذفه فعليًا.
+const SCREEN_ACTION_LABEL_OVERRIDES = { products: { delete: 'تعطيل' }, 'purchase-orders': { edit: 'استلام', delete: 'إلغاء' }, 'sale-orders': { edit: 'تحويل', delete: 'إلغاء' }, 'driver-settlements': { edit: 'تسوية الحساب' } };
+function actionLabelFor(screenKey, action) {
+  return SCREEN_ACTION_LABEL_OVERRIDES[screenKey]?.[action] || ACTION_LABELS[action];
+}
 
 // أزرار "+ إضافة" الرئيسية لكل شاشة، عشان نقدر نخفيها تلقائيًا لو المستخدم
 // مالوش صلاحية "إضافة" في الشاشة دي.
@@ -14184,7 +14902,9 @@ const ADD_BUTTON_MAP = {
   'recipes': 'addRecipeBtn',
   'promotions': 'addPromotionBtn', 'coupons': 'addCouponBtn',
   'stock': 'addWarehouseBtn', 'customers': 'addCustomerBtn', 'suppliers': 'addSupplierBtn', 'purchase-requisitions': 'addRequisitionBtn', 'supplier-prices': 'addSupplierPriceBtn',
+  'purchase-orders': 'addPurchaseOrderBtn', 'purchases': 'addPurchaseBtn', 'purchase-returns': 'addPurchaseReturnBtn', 'sale-returns': 'addSaleReturnFromBoBtn',
   'stocktake': 'addStocktakeSessionBtn', 'product-batches': 'addProductBatchBtn', 'product-serials': 'addProductSerialBtn',
+  'delivery': 'addDeliveryOrderBtn', 'delivery-zones': 'addDeliveryZoneBtn', 'delivery-companies': 'addDeliveryCompanyBtn', 'sales-channels': 'addSalesChannelBtn',
   'treasuries': 'addTreasuryBtn', 'expense-items': 'addExpenseItemBtn', 'expenses': 'addExpenseBtn',
   'fixed-assets': 'addFixedAssetBtn', 'employees': 'addEmployeeBtn', 'attendance': 'addAttendanceBtn', 'leave-requests': 'addLeaveRequestBtn', 'salaries': 'addSalaryBtn',
   'users': 'addUserBtn', 'branches': 'addBranchBtn', 'permissions': 'addPermissionBtn',
@@ -14217,14 +14937,22 @@ function applyBoActionButtonPermissions() {
 // [data-action="edit"] / [data-action="delete"] / [data-action="toggle"]
 // جوه الصف لو مفيش صلاحية "تعديل" أو "حذف" مسجّلة لصاحب الدور الحالي.
 // عملية "toggle" (تفعيل/إيقاف) بتتحكم فيها صلاحية "تعديل" لأنها عمليًا
-// تعديل لحالة السجل مش حذف فعلي له.
+// تعديل لحالة السجل مش حذف فعلي له — ماعدا شاشة "الأصناف" اللي فيها
+// خيار الحذف اتحول لـ"تعطيل" وبقى هو نفسه اللي بيتحكم في تفعيل/إيقاف الصنف.
 function applyRowActionPerm(tr, section) {
   if (!tr) return;
   if (!hasBoActionPermission(section, 'edit')) {
-    tr.querySelectorAll('[data-action="edit"], [data-action="toggle"]').forEach(el => el.style.display = 'none');
+    tr.querySelectorAll('[data-action="edit"]').forEach(el => el.style.display = 'none');
+    tr.querySelectorAll('[data-action="checkout"], [data-action="approve"], [data-action="reject"]').forEach(el => el.style.display = 'none');
+    if (section !== 'products') {
+      tr.querySelectorAll('[data-action="toggle"]').forEach(el => el.style.display = 'none');
+    }
   }
   if (!hasBoActionPermission(section, 'delete')) {
     tr.querySelectorAll('[data-action="delete"]').forEach(el => el.style.display = 'none');
+    if (section === 'products') {
+      tr.querySelectorAll('[data-action="toggle"]').forEach(el => el.style.display = 'none');
+    }
   }
   if (!hasBoActionPermission(section, 'add')) {
     tr.querySelectorAll('[data-action="duplicate"]').forEach(el => el.style.display = 'none');
@@ -14274,6 +15002,19 @@ function applyReadOnlyGuard() {
   }
   const readOnlyBanner = document.getElementById('posReadOnlyBanner');
   if (readOnlyBanner) readOnlyBanner.style.display = readOnly ? 'block' : 'none';
+
+  // إخفاء خيار "طلب توصيل" بالكامل من شاشة الكاشير لو الدور الحالي
+  // مالوش صلاحية إضافة طلبات توصيل (نفس الصلاحية المستخدمة لإخفاء زر
+  // "+ طلب توصيل جديد" في لوحة التحكم) — بنفس منطق applyBoActionButtonPermissions.
+  const deliveryToggleRow = document.getElementById('posDeliveryToggleRow');
+  if (deliveryToggleRow) {
+    const canAddDelivery = !readOnly && hasBoActionPermission('delivery', 'add');
+    deliveryToggleRow.style.display = canAddDelivery ? 'flex' : 'none';
+    if (!canAddDelivery) {
+      const toggle = document.getElementById('posDeliveryToggle');
+      if (toggle && toggle.checked) { toggle.checked = false; toggle.dispatchEvent(new Event('change')); }
+    }
+  }
 }
 
 // إخفاء كروت التقارير الفردية (جوه شاشات التقارير الخمسة) اللي مش مسموح
@@ -14331,6 +15072,7 @@ function activateBoSection(section, btn) {
   if (section === 'sales-list' && !boSalesListLoadedOnce) { loadBoSalesList().then(renderSalesListTable); boSalesListLoadedOnce = true; }
   if (section === 'sale-orders') { loadBoSaleOrders().then(renderSaleOrdersTable); }
   if (section === 'delivery') { loadBoDeliveries().then(renderDeliveriesTable); }
+  if (section === 'driver-settlements') { loadDriverSettlementsSectionData(); }
   if (section === 'supplier-prices' && !supplierPricesLoadedOnce) { initSupplierPricesSection(); supplierPricesLoadedOnce = true; }
   if (section === 'purchase-orders') { loadBoPurchaseOrders().then(renderPurchaseOrdersTable); }
   if (section === 'purchase-requisitions') { loadBoRequisitions().then(renderRequisitionsTable); }
@@ -15654,6 +16396,12 @@ function bindBackofficeEvents() {
   });
   document.getElementById('approveRequisitionBtn').addEventListener('click', () => decideRequisition('approved'));
   document.getElementById('rejectRequisitionBtn').addEventListener('click', () => decideRequisition('rejected'));
+  document.getElementById('convertRequisitionToPOBtn').addEventListener('click', () => {
+    if (!hasBoActionPermission('purchase-orders', 'add')) { showToast('ليس لديك صلاحية إضافة طلب شراء', true); return; }
+    const req = currentRequisitionDetail;
+    closeRequisitionDetailModal();
+    openPurchaseOrderModal(req);
+  });
 
   // ---- Purchase modal ----
   document.getElementById('addPurchaseBtn').addEventListener('click', openPurchaseModal);
@@ -15682,7 +16430,7 @@ function bindBackofficeEvents() {
   });
 
   // ---- Purchase order modal ----
-  document.getElementById('addPurchaseOrderBtn').addEventListener('click', openPurchaseOrderModal);
+  document.getElementById('addPurchaseOrderBtn').addEventListener('click', () => openPurchaseOrderModal());
   document.getElementById('cancelPurchaseOrderBtn').addEventListener('click', closePurchaseOrderModal);
   document.getElementById('saleOrderDetailModalOverlay').addEventListener('click', (e) => {
     if (e.target.id === 'saleOrderDetailModalOverlay') closeSaleOrderDetailModal();
@@ -15963,6 +16711,59 @@ function bindBackofficeEvents() {
   document.getElementById('deliveryForm').addEventListener('submit', saveDelivery);
   document.getElementById('deliverySearchInput')?.addEventListener('input', renderDeliveriesTable);
   document.getElementById('deliveryStatusFilter')?.addEventListener('change', renderDeliveriesTable);
+  document.getElementById('deliveryMyOnlyFilter')?.addEventListener('change', renderDeliveriesTable);
+  document.getElementById('deliverySortSelect')?.addEventListener('change', renderDeliveriesTable);
+  document.getElementById('printDeliveryReceiptsBtn')?.addEventListener('click', () => {
+    const entries = lastRenderedDeliveryRows.map(so => ({ so, d: so.delivery_details || null }));
+    openDeliveryReceiptModal(entries);
+  });
+  document.getElementById('closeDeliveryReceiptBtn')?.addEventListener('click', () => {
+    document.getElementById('deliveryReceiptModalOverlay').classList.remove('show');
+  });
+  const deliveryReceiptPrintModeSelect = document.getElementById('deliveryReceiptPrintMode');
+  if (deliveryReceiptPrintModeSelect) {
+    deliveryReceiptPrintModeSelect.value = localStorage.getItem('posDeliveryReceiptPrintMode') || 'a4';
+    deliveryReceiptPrintModeSelect.addEventListener('change', () => {
+      localStorage.setItem('posDeliveryReceiptPrintMode', deliveryReceiptPrintModeSelect.value);
+    });
+  }
+  document.getElementById('printDeliveryReceiptBtn')?.addEventListener('click', () => {
+    const box = document.querySelector('#deliveryReceiptModalOverlay .receipt-modal-box');
+    const mode = deliveryReceiptPrintModeSelect ? deliveryReceiptPrintModeSelect.value : 'a4';
+    box.classList.remove('paper-thermal80', 'paper-thermal58', 'paper-a5');
+    if (mode === 'thermal80') box.classList.add('paper-thermal80');
+    else if (mode === 'thermal58') box.classList.add('paper-thermal58');
+    else if (mode === 'a5') box.classList.add('paper-a5');
+    window.print();
+  });
+
+  // ---- تحصيل وتسوية حساب السائقين ----
+  document.getElementById('driverSettleSelectAll')?.addEventListener('change', (e) => {
+    document.querySelectorAll('#driverSettleOrdersTableBody input[type="checkbox"]').forEach(cb => { cb.checked = e.target.checked; });
+    updateDriverSettleTotals();
+  });
+  document.getElementById('driverSettleReceivedAmount')?.addEventListener('input', updateDriverSettleTotals);
+  document.getElementById('driverSettleCancelBtn')?.addEventListener('click', closeDriverSettleModal);
+  document.getElementById('driverSettleModalOverlay')?.addEventListener('click', (e) => {
+    if (e.target.id === 'driverSettleModalOverlay') closeDriverSettleModal();
+  });
+  document.getElementById('driverSettleConfirmBtn')?.addEventListener('click', submitDriverSettlement);
+  document.getElementById('driverSettleDetailCloseBtn')?.addEventListener('click', () => {
+    document.getElementById('driverSettleDetailModalOverlay').classList.remove('show');
+  });
+  document.getElementById('driverSettleDetailModalOverlay')?.addEventListener('click', (e) => {
+    if (e.target.id === 'driverSettleDetailModalOverlay') document.getElementById('driverSettleDetailModalOverlay').classList.remove('show');
+  });
+
+  // ---- طلب توصيل جديد ----
+  document.getElementById('addDeliveryOrderBtn').addEventListener('click', () => openNewDeliveryOrderModal());
+  document.getElementById('cancelNewDeliveryOrderBtn').addEventListener('click', closeNewDeliveryOrderModal);
+  document.getElementById('newDeliveryOrderModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'newDeliveryOrderModalOverlay') closeNewDeliveryOrderModal();
+  });
+  document.getElementById('addNewDeliveryOrderLineBtn').addEventListener('click', () => addDeliveryOrderLine());
+  document.getElementById('newDeliveryOrderDiscount').addEventListener('input', updateDeliveryOrderTotals);
+  document.getElementById('newDeliveryOrderForm').addEventListener('submit', saveNewDeliveryOrder);
 
   // ---- أسعار الموردين ----
   document.getElementById('addSupplierPriceBtn').addEventListener('click', () => openSupplierPriceModal(null));
@@ -16012,6 +16813,34 @@ function bindBackofficeEvents() {
     if (e.target.id === 'customerTypeModalOverlay') closeCustomerTypeModal();
   });
   document.getElementById('customerTypeForm').addEventListener('submit', saveCustomerType);
+
+  // ---- Delivery zones ----
+  document.getElementById('addDeliveryZoneBtn').addEventListener('click', () => openDeliveryZoneModal(null));
+  document.getElementById('cancelDeliveryZoneBtn').addEventListener('click', closeDeliveryZoneModal);
+  document.getElementById('deliveryZoneModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'deliveryZoneModalOverlay') closeDeliveryZoneModal();
+  });
+  document.getElementById('deliveryZoneForm').addEventListener('submit', saveDeliveryZone);
+
+  // ---- Delivery companies ----
+  document.getElementById('addDeliveryCompanyBtn').addEventListener('click', () => openDeliveryCompanyModal(null));
+  document.getElementById('cancelDeliveryCompanyBtn').addEventListener('click', closeDeliveryCompanyModal);
+  document.getElementById('deliveryCompanyModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'deliveryCompanyModalOverlay') closeDeliveryCompanyModal();
+  });
+  document.getElementById('deliveryCompanyForm').addEventListener('submit', saveDeliveryCompany);
+
+  // ---- Sales channels ----
+  document.getElementById('addSalesChannelBtn').addEventListener('click', () => openSalesChannelModal(null));
+  document.getElementById('cancelSalesChannelBtn').addEventListener('click', closeSalesChannelModal);
+  document.getElementById('salesChannelModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'salesChannelModalOverlay') closeSalesChannelModal();
+  });
+  document.getElementById('salesChannelForm').addEventListener('submit', saveSalesChannel);
+
+  wireDeliveryZoneAutofill('posDeliveryZone', 'posDeliveryCity', 'posDeliveryFee');
+  wireDeliveryZoneAutofill('newDeliveryOrderZone', 'newDeliveryOrderCity', 'newDeliveryOrderFee');
+  wireDeliveryZoneAutofill('deliveryZoneSelect', 'deliveryCity', 'deliveryFee');
 
   // ---- Price tiers ----
   document.getElementById('addPriceTierBtn').addEventListener('click', () => openPriceTierModal(null));
@@ -16208,6 +17037,7 @@ function bindBackofficeEvents() {
   document.getElementById('exportMixedPaymentReportBtn').addEventListener('click', () => exportMixedPaymentReportToExcel());
   document.getElementById('exportDailyTrendReportBtn').addEventListener('click', () => exportDailyTrendReportToExcel());
   document.getElementById('exportBranchReportBtn').addEventListener('click', () => exportBranchReportToExcel());
+  document.getElementById('exportDeliveryZoneReportBtn').addEventListener('click', () => exportDeliveryZoneReportToExcel());
   document.getElementById('exportCategoryReportBtn').addEventListener('click', () => exportCategoryReportToExcel());
 
   // ---- تقارير المخزون ----
@@ -18574,6 +19404,7 @@ async function saveProduct(e) {
 }
 
 async function toggleProductActive(product) {
+  if (!hasBoActionPermission('products', 'delete')) { showToast('ليس لديك صلاحية تعطيل/تنشيط الأصناف', true); return; }
   const { error } = await supabaseClient.from('products').update({ is_active: !product.is_active }).eq('id', product.id);
   if (error) { console.error(error); showToast('تعذر تحديث حالة الصنف', true); return; }
   showToast(product.is_active ? 'تم إيقاف الصنف' : 'تم تفعيل الصنف');
@@ -18923,6 +19754,8 @@ function openCustomerModal(customer) {
   document.getElementById('customerPhone').value = customer?.phone || '';
   populateCustomerTypeSelect(customer?.customer_type_id || '');
   document.getElementById('customerAddress').value = customer?.address || '';
+  populateDeliveryZoneSelects();
+  document.getElementById('customerDeliveryZone').value = customer?.delivery_zone_id || '';
   document.getElementById('customerLoyalty').value = customer ? customer.loyalty_points : 0;
   document.getElementById('customerLoyalty').readOnly = !!customer;
   document.getElementById('customerBalance').value = customer ? customer.balance : 0;
@@ -19044,6 +19877,7 @@ async function saveCustomer(e) {
     phone: document.getElementById('customerPhone').value.trim() || null,
     customer_type_id: document.getElementById('customerType').value || null,
     address: document.getElementById('customerAddress').value.trim() || null,
+    delivery_zone_id: document.getElementById('customerDeliveryZone').value || null,
     loyalty_points: Number(document.getElementById('customerLoyalty').value) || 0,
     balance: Number(document.getElementById('customerBalance').value) || 0,
   };
@@ -19842,7 +20676,7 @@ async function loadBoExpenseItems() {
 function renderExpenseItemsTable() {
   const tbody = document.getElementById('expenseItemsTableBody');
   if (boExpenseItems.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">لا توجد بنود مصروفات مضافة حتى الآن</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="4" class="bo-empty">لا توجد بنود مصروفات مضافة حتى الآن</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
@@ -19850,6 +20684,7 @@ function renderExpenseItemsTable() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${escapeHtml(x.name)}</td>
+      <td>${x.is_delivery_related ? '<span class="bo-badge active">🚚 نعم</span>' : '—'}</td>
       <td><span class="bo-badge ${x.is_active ? 'active' : 'inactive'}">${x.is_active ? 'مفعّل' : 'موقّف'}</span></td>
       <td>
         <div class="bo-row-actions">
@@ -19869,6 +20704,7 @@ function openExpenseItemModal(item) {
   document.getElementById('expenseItemId').value = item ? item.id : '';
   document.getElementById('expenseItemName').value = item ? item.name : '';
   document.getElementById('expenseItemActive').checked = item ? item.is_active : true;
+  document.getElementById('expenseItemDeliveryRelated').checked = item ? !!item.is_delivery_related : false;
   document.getElementById('expenseItemModalError').classList.remove('show');
   document.getElementById('expenseItemModalOverlay').classList.add('show');
 }
@@ -19889,6 +20725,7 @@ async function saveExpenseItem(e) {
   const payload = {
     name: document.getElementById('expenseItemName').value.trim(),
     is_active: document.getElementById('expenseItemActive').checked,
+    is_delivery_related: document.getElementById('expenseItemDeliveryRelated').checked,
   };
 
   try {
@@ -20103,6 +20940,441 @@ async function toggleCustomerTypeActive(item) {
   if (error) { console.error(error); showToast('تعذر تحديث حالة النوع', true); return; }
   await loadBoCustomerTypes();
   renderCustomerTypesTable();
+}
+
+// ---- مناطق التوصيل (Delivery Zones) ----
+let boDeliveryZones = [];
+let boDeliveryCompanies = [];
+let boSalesChannels = [];
+
+async function loadBoDeliveryZones() {
+  const { data, error } = await supabaseClient.from('delivery_zones').select('*').order('name');
+  if (error) { console.error(error); showToast('تعذر تحميل مناطق التوصيل', true); return; }
+  boDeliveryZones = data || [];
+}
+
+function renderDeliveryZonesTable() {
+  const tbody = document.getElementById('deliveryZonesTableBody');
+  if (!tbody) return;
+  if (boDeliveryZones.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لا توجد مناطق توصيل مضافة حتى الآن</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boDeliveryZones.forEach(x => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(x.name)}</td>
+      <td>${escapeHtml(x.city || '—')}</td>
+      <td class="num">${Number(x.delivery_fee || 0).toFixed(2)}</td>
+      <td class="num">${Number(x.min_order_amount || 0) > 0 ? Number(x.min_order_amount).toFixed(2) : '—'}</td>
+      <td class="num">${x.estimated_delivery_minutes ? x.estimated_delivery_minutes + ' د' : '—'}</td>
+      <td><span class="bo-badge ${x.is_active ? 'active' : 'inactive'}">${x.is_active ? 'مفعّلة' : 'موقّفة'}</span></td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="toggle">${x.is_active ? 'إيقاف' : 'تفعيل'}</button>
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openDeliveryZoneModal(x));
+    tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleDeliveryZoneActive(x));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteDeliveryZone(x));
+    applyRowActionPerm(tr, 'delivery-zones');
+    tbody.appendChild(tr);
+  });
+}
+
+function openDeliveryZoneModal(item) {
+  document.getElementById('deliveryZoneModalTitle').textContent = item ? 'تعديل منطقة' : 'منطقة جديدة';
+  document.getElementById('deliveryZoneId').value = item ? item.id : '';
+  document.getElementById('deliveryZoneName').value = item ? item.name : '';
+  document.getElementById('deliveryZoneCity').value = item ? (item.city || '') : '';
+  document.getElementById('deliveryZoneFee').value = item ? item.delivery_fee : 0;
+  document.getElementById('deliveryZoneMinOrder').value = item ? (item.min_order_amount || 0) : 0;
+  document.getElementById('deliveryZoneEta').value = item ? (item.estimated_delivery_minutes ?? '') : '';
+  document.getElementById('deliveryZoneNotes').value = item ? (item.notes || '') : '';
+  document.getElementById('deliveryZoneActive').checked = item ? item.is_active : true;
+  document.getElementById('deliveryZoneModalError').classList.remove('show');
+  document.getElementById('deliveryZoneModalOverlay').classList.add('show');
+}
+
+function closeDeliveryZoneModal() {
+  document.getElementById('deliveryZoneModalOverlay').classList.remove('show');
+}
+
+async function saveDeliveryZone(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('deliveryZoneModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveDeliveryZoneBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('deliveryZoneId').value || null;
+  const payload = {
+    name: document.getElementById('deliveryZoneName').value.trim(),
+    city: document.getElementById('deliveryZoneCity').value.trim() || null,
+    delivery_fee: Number(document.getElementById('deliveryZoneFee').value) || 0,
+    min_order_amount: Number(document.getElementById('deliveryZoneMinOrder').value) || 0,
+    estimated_delivery_minutes: document.getElementById('deliveryZoneEta').value ? Number(document.getElementById('deliveryZoneEta').value) : null,
+    notes: document.getElementById('deliveryZoneNotes').value.trim() || null,
+    is_active: document.getElementById('deliveryZoneActive').checked,
+  };
+
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('delivery_zones').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('delivery_zones').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث المنطقة' : 'تمت إضافة المنطقة بنجاح');
+    closeDeliveryZoneModal();
+    await loadBoDeliveryZones();
+    renderDeliveryZonesTable();
+    populateDeliveryZoneSelects();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function toggleDeliveryZoneActive(item) {
+  const { error } = await supabaseClient.from('delivery_zones').update({ is_active: !item.is_active }).eq('id', item.id);
+  if (error) { console.error(error); showToast('تعذر تحديث حالة المنطقة', true); return; }
+  await loadBoDeliveryZones();
+  renderDeliveryZonesTable();
+  populateDeliveryZoneSelects();
+}
+
+async function deleteDeliveryZone(item) {
+  if (!confirm(`حذف منطقة "${item.name}"؟ الطلبات السابقة المرتبطة بيها هتفضل موجودة بدون منطقة.`)) return;
+  const { error } = await supabaseClient.from('delivery_zones').delete().eq('id', item.id);
+  if (error) { console.error(error); showToast('تعذر حذف المنطقة', true); return; }
+  showToast('تم حذف المنطقة');
+  await loadBoDeliveryZones();
+  renderDeliveryZonesTable();
+  populateDeliveryZoneSelects();
+}
+
+// بيملى كل الـ Selects بتاعة "اختر المنطقة" الموجودة في شاشة الكاشير ومودالات
+// التوصيل بلوحة التحكم، وبيربط كل واحد بحدث تغيير يملى المدينة والرسوم تلقائيًا.
+function populateDeliveryZoneSelects() {
+  const activeZones = boDeliveryZones.filter(z => z.is_active);
+  const selectIds = ['posDeliveryZone', 'newDeliveryOrderZone', 'deliveryZoneSelect', 'customerDeliveryZone'];
+  selectIds.forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const current = sel.value;
+    sel.innerHTML = '<option value="">— بدون منطقة (إدخال يدوي) —</option>' +
+      activeZones.map(z => `<option value="${z.id}">${escapeHtml(z.name)}${z.city ? ' — ' + escapeHtml(z.city) : ''} (${Number(z.delivery_fee).toFixed(2)})</option>`).join('');
+    if (current && activeZones.some(z => z.id === current)) sel.value = current;
+  });
+}
+
+// ================== شركات التوصيل ==================
+async function loadBoDeliveryCompanies() {
+  const { data, error } = await supabaseClient.from('delivery_companies').select('*').order('name');
+  if (error) { console.error(error); showToast('تعذر تحميل شركات التوصيل', true); return; }
+  boDeliveryCompanies = data || [];
+}
+
+function renderDeliveryCompaniesTable() {
+  const tbody = document.getElementById('deliveryCompaniesTableBody');
+  if (!tbody) return;
+  if (boDeliveryCompanies.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لا توجد شركات توصيل مضافة حتى الآن</td></tr>`;
+    return;
+  }
+  const commissionTypeLabel = (t) => t === 'percentage' ? 'نسبة %' : (t === 'fixed' ? 'مبلغ ثابت' : '—');
+  tbody.innerHTML = '';
+  boDeliveryCompanies.forEach(x => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(x.name)}</td>
+      <td>${escapeHtml(x.contact_person || '—')}</td>
+      <td class="num">${escapeHtml(x.phone || '—')}</td>
+      <td>${commissionTypeLabel(x.commission_type)}</td>
+      <td class="num">${x.commission_type ? Number(x.commission_value || 0).toFixed(2) : '—'}</td>
+      <td><span class="bo-badge ${x.is_active ? 'active' : 'inactive'}">${x.is_active ? 'مفعّلة' : 'موقّفة'}</span></td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="toggle">${x.is_active ? 'إيقاف' : 'تفعيل'}</button>
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openDeliveryCompanyModal(x));
+    tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleDeliveryCompanyActive(x));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteDeliveryCompany(x));
+    applyRowActionPerm(tr, 'delivery-companies');
+    tbody.appendChild(tr);
+  });
+}
+
+function openDeliveryCompanyModal(item) {
+  document.getElementById('deliveryCompanyModalTitle').textContent = item ? 'تعديل شركة' : 'شركة جديدة';
+  document.getElementById('deliveryCompanyId').value = item ? item.id : '';
+  document.getElementById('deliveryCompanyName').value = item ? item.name : '';
+  document.getElementById('deliveryCompanyContactPerson').value = item ? (item.contact_person || '') : '';
+  document.getElementById('deliveryCompanyPhone').value = item ? (item.phone || '') : '';
+  document.getElementById('deliveryCompanyCommissionType').value = item ? (item.commission_type || '') : '';
+  document.getElementById('deliveryCompanyCommissionValue').value = item ? (item.commission_value || 0) : 0;
+  document.getElementById('deliveryCompanyNotes').value = item ? (item.notes || '') : '';
+  document.getElementById('deliveryCompanyActive').checked = item ? item.is_active : true;
+  document.getElementById('deliveryCompanyModalError').classList.remove('show');
+  document.getElementById('deliveryCompanyModalOverlay').classList.add('show');
+}
+
+function closeDeliveryCompanyModal() {
+  document.getElementById('deliveryCompanyModalOverlay').classList.remove('show');
+}
+
+async function saveDeliveryCompany(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('deliveryCompanyModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveDeliveryCompanyBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('deliveryCompanyId').value || null;
+  const payload = {
+    name: document.getElementById('deliveryCompanyName').value.trim(),
+    contact_person: document.getElementById('deliveryCompanyContactPerson').value.trim() || null,
+    phone: document.getElementById('deliveryCompanyPhone').value.trim() || null,
+    commission_type: document.getElementById('deliveryCompanyCommissionType').value || null,
+    commission_value: Number(document.getElementById('deliveryCompanyCommissionValue').value) || 0,
+    notes: document.getElementById('deliveryCompanyNotes').value.trim() || null,
+    is_active: document.getElementById('deliveryCompanyActive').checked,
+  };
+
+  try {
+    if (!payload.name) throw new Error('اسم الشركة مطلوب');
+    if (id) {
+      const { error } = await supabaseClient.from('delivery_companies').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('delivery_companies').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث الشركة' : 'تمت إضافة الشركة بنجاح');
+    closeDeliveryCompanyModal();
+    await loadBoDeliveryCompanies();
+    renderDeliveryCompaniesTable();
+    populateDeliveryCompanySelects();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function toggleDeliveryCompanyActive(item) {
+  const { error } = await supabaseClient.from('delivery_companies').update({ is_active: !item.is_active }).eq('id', item.id);
+  if (error) { console.error(error); showToast('تعذر تحديث حالة الشركة', true); return; }
+  await loadBoDeliveryCompanies();
+  renderDeliveryCompaniesTable();
+  populateDeliveryCompanySelects();
+}
+
+async function deleteDeliveryCompany(item) {
+  if (!confirm(`حذف شركة "${item.name}"؟ الطلبات السابقة المرتبطة بيها هتفضل موجودة بدون شركة توصيل.`)) return;
+  const { error } = await supabaseClient.from('delivery_companies').delete().eq('id', item.id);
+  if (error) { console.error(error); showToast('تعذر حذف الشركة', true); return; }
+  showToast('تم حذف الشركة');
+  await loadBoDeliveryCompanies();
+  renderDeliveryCompaniesTable();
+  populateDeliveryCompanySelects();
+}
+
+// بيملى select "شركة التوصيل" الموجود في مودال تفاصيل التوصيل بلوحة التحكم
+function populateDeliveryCompanySelects() {
+  const activeCompanies = boDeliveryCompanies.filter(c => c.is_active);
+  const selectIds = ['deliveryCompanySelect'];
+  selectIds.forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const current = sel.value;
+    sel.innerHTML = '<option value="">— بدون —</option>' +
+      activeCompanies.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+    if (current && activeCompanies.some(c => c.id === current)) sel.value = current;
+  });
+}
+
+// ================== قنوات البيع ==================
+async function loadBoSalesChannels() {
+  const { data, error } = await supabaseClient.from('sales_channels').select('*').order('name');
+  if (error) { console.error(error); showToast('تعذر تحميل قنوات البيع', true); return; }
+  boSalesChannels = data || [];
+}
+
+function renderSalesChannelsTable() {
+  const tbody = document.getElementById('salesChannelsTableBody');
+  if (!tbody) return;
+  if (boSalesChannels.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">لا توجد قنوات بيع مضافة حتى الآن</td></tr>`;
+    return;
+  }
+  const commissionTypeLabel = (t) => t === 'percentage' ? 'نسبة %' : (t === 'fixed' ? 'مبلغ ثابت' : '—');
+  tbody.innerHTML = '';
+  boSalesChannels.forEach(x => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(x.name)}</td>
+      <td>${commissionTypeLabel(x.commission_type)}</td>
+      <td class="num">${x.commission_type ? Number(x.commission_value || 0).toFixed(2) : '—'}</td>
+      <td><span class="bo-badge ${x.is_active ? 'active' : 'inactive'}">${x.is_active ? 'مفعّلة' : 'موقّفة'}</span></td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="toggle">${x.is_active ? 'إيقاف' : 'تفعيل'}</button>
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openSalesChannelModal(x));
+    tr.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleSalesChannelActive(x));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteSalesChannel(x));
+    applyRowActionPerm(tr, 'sales-channels');
+    tbody.appendChild(tr);
+  });
+}
+
+function openSalesChannelModal(item) {
+  document.getElementById('salesChannelModalTitle').textContent = item ? 'تعديل قناة' : 'قناة جديدة';
+  document.getElementById('salesChannelId').value = item ? item.id : '';
+  document.getElementById('salesChannelName').value = item ? item.name : '';
+  document.getElementById('salesChannelCommissionType').value = item ? (item.commission_type || '') : '';
+  document.getElementById('salesChannelCommissionValue').value = item ? (item.commission_value || 0) : 0;
+  document.getElementById('salesChannelNotes').value = item ? (item.notes || '') : '';
+  document.getElementById('salesChannelActive').checked = item ? item.is_active : true;
+  document.getElementById('salesChannelModalError').classList.remove('show');
+  document.getElementById('salesChannelModalOverlay').classList.add('show');
+}
+
+function closeSalesChannelModal() {
+  document.getElementById('salesChannelModalOverlay').classList.remove('show');
+}
+
+async function saveSalesChannel(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('salesChannelModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveSalesChannelBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('salesChannelId').value || null;
+  const payload = {
+    name: document.getElementById('salesChannelName').value.trim(),
+    commission_type: document.getElementById('salesChannelCommissionType').value || null,
+    commission_value: Number(document.getElementById('salesChannelCommissionValue').value) || 0,
+    notes: document.getElementById('salesChannelNotes').value.trim() || null,
+    is_active: document.getElementById('salesChannelActive').checked,
+  };
+
+  try {
+    if (!payload.name) throw new Error('اسم القناة مطلوب');
+    if (id) {
+      const { error } = await supabaseClient.from('sales_channels').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('sales_channels').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث القناة' : 'تمت إضافة القناة بنجاح');
+    closeSalesChannelModal();
+    await loadBoSalesChannels();
+    renderSalesChannelsTable();
+    populateSalesChannelSelects();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function toggleSalesChannelActive(item) {
+  const { error } = await supabaseClient.from('sales_channels').update({ is_active: !item.is_active }).eq('id', item.id);
+  if (error) { console.error(error); showToast('تعذر تحديث حالة القناة', true); return; }
+  await loadBoSalesChannels();
+  renderSalesChannelsTable();
+  populateSalesChannelSelects();
+}
+
+async function deleteSalesChannel(item) {
+  if (!confirm(`حذف قناة "${item.name}"؟ الفواتير/الطلبات السابقة المرتبطة بيها هتفضل موجودة بدون قناة.`)) return;
+  const { error } = await supabaseClient.from('sales_channels').delete().eq('id', item.id);
+  if (error) { console.error(error); showToast('تعذر حذف القناة', true); return; }
+  showToast('تم حذف القناة');
+  await loadBoSalesChannels();
+  renderSalesChannelsTable();
+  populateSalesChannelSelects();
+}
+
+// بيملى select "قناة البيع" في شاشة الكاشير بكل القنوات المفعّلة
+function populateSalesChannelSelects() {
+  const activeChannels = boSalesChannels.filter(c => c.is_active);
+  const selectIds = ['posSalesChannel'];
+  selectIds.forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const current = sel.value;
+    sel.innerHTML = '<option value="">— بيع مباشر (بدون قناة) —</option>' +
+      activeChannels.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+    if (current && activeChannels.some(c => c.id === current)) sel.value = current;
+  });
+}
+
+// عند اختيار منطقة من الـ Dropdown، بيملى حقول المدينة والرسوم تلقائيًا (وتفضل قابلة للتعديل اليدوي بعد كده)،
+// وبيعرض تحت الـ select الحد الأدنى للطلب والوقت المتوقع للتوصيل الخاصين بالمنطقة (لو موجودين).
+function wireDeliveryZoneAutofill(zoneSelectId, cityInputId, feeInputId) {
+  const zoneSel = document.getElementById(zoneSelectId);
+  if (!zoneSel) return;
+  const hintEl = document.getElementById(zoneSelectId + 'Hint');
+  const updateHint = () => {
+    if (!hintEl) return;
+    const zone = boDeliveryZones.find(z => z.id === zoneSel.value);
+    if (!zone) { hintEl.textContent = ''; hintEl.classList.remove('warn'); return; }
+    const parts = [];
+    if (Number(zone.min_order_amount) > 0) parts.push(`⚠️ الحد الأدنى للطلب في هذه المنطقة: ${Number(zone.min_order_amount).toFixed(2)}`);
+    if (zone.estimated_delivery_minutes) parts.push(`🕒 الوقت المتوقع للتوصيل: ~${zone.estimated_delivery_minutes} دقيقة`);
+    hintEl.textContent = parts.join(' — ');
+    hintEl.classList.toggle('warn', Number(zone.min_order_amount) > 0);
+  };
+  zoneSel.addEventListener('change', () => {
+    const zone = boDeliveryZones.find(z => z.id === zoneSel.value);
+    updateHint();
+    if (!zone) return;
+    const cityEl = document.getElementById(cityInputId);
+    const feeEl = document.getElementById(feeInputId);
+    if (cityEl && zone.city) cityEl.value = zone.city;
+    if (feeEl) feeEl.value = zone.delivery_fee;
+  });
+}
+
+// بيتأكد إن قيمة الطلب (قبل رسوم التوصيل) وصلت للحد الأدنى المطلوب في منطقة التوصيل المختارة، لو فيه حد أدنى مُحدَّد.
+// بيرجّع { ok: true } أو { ok: false, message } جاهزة للعرض.
+function checkDeliveryZoneMinOrder(zoneId, orderSubtotal) {
+  if (!zoneId) return { ok: true };
+  const zone = boDeliveryZones.find(z => z.id === zoneId);
+  if (!zone || !(Number(zone.min_order_amount) > 0)) return { ok: true };
+  if (Number(orderSubtotal) < Number(zone.min_order_amount)) {
+    return { ok: false, message: `الحد الأدنى للطلب في منطقة "${zone.name}" هو ${Number(zone.min_order_amount).toFixed(2)} — قيمة الطلب الحالية ${Number(orderSubtotal).toFixed(2)}` };
+  }
+  return { ok: true };
 }
 
 // ---- Price tiers (شرائح الأسعار) ----
@@ -20785,12 +22057,17 @@ async function saveProductSerial(e) {
 // ---- تفاصيل التوصيل (Delivery details) ----
 const DELIVERY_STATUS_LABELS = { pending: 'بانتظار التجهيز', preparing: 'جاري التجهيز', out_for_delivery: 'في الطريق', delivered: 'تم التسليم', failed: 'فشل التسليم', cancelled: 'ملغاة' };
 const DELIVERY_STATUS_BADGE = { pending: 'info', preparing: 'pending', out_for_delivery: 'pending', delivered: 'active', failed: 'inactive', cancelled: 'inactive' };
+// تدفق تقدّم الحالة الطبيعي (لزر "التالي" السريع في لوحة السائقين). الحالتان
+// "فشل التسليم" و"ملغاة" مستثناتان من التقدّم السريع ولازم تتحدّدوا يدويًا
+// من نموذج التعديل الكامل.
+const DELIVERY_NEXT_STATUS = { pending: 'preparing', preparing: 'out_for_delivery', out_for_delivery: 'delivered' };
+const DELIVERY_NEXT_STATUS_BTN_LABEL = { pending: '▶ بدء التجهيز', preparing: '🚚 خرجت للتوصيل', out_for_delivery: '✔ تم التسليم' };
 
 async function loadBoDeliveries() {
   try {
     const { data, error } = await supabaseClient
       .from('sale_orders')
-      .select('*, customers(name), delivery_details(*)')
+      .select('*, customers(name, phone, address, delivery_zone_id), delivery_details(*)')
       .order('created_at', { ascending: false })
       .limit(200);
     if (error) throw error;
@@ -20802,64 +22079,210 @@ async function loadBoDeliveries() {
   }
 }
 
+// اسم السائق المعروض: يفضّل الاسم الحر المكتوب يدويًا، وإلا يرجع لاسم
+// الموظف المرتبط (driver_employee_id) من قائمة الموظفين.
+function deliveryDriverDisplayName(d) {
+  if (!d) return '—';
+  if (d.driver_name) return d.driver_name;
+  if (d.driver_employee_id) {
+    const emp = boEmployees.find(e => e.id === d.driver_employee_id);
+    if (emp) return emp.full_name;
+  }
+  return '—';
+}
+
+// طلب "متأخر" = لسه في الطريق (out_for_delivery) وعدّى موعد التسليم المحدد له.
+function isDeliveryLate(d) {
+  return !!(d && d.status === 'out_for_delivery' && d.scheduled_at && new Date(d.scheduled_at).getTime() < Date.now());
+}
+
+function renderDeliveryStatsBar() {
+  const row = document.getElementById('deliveryStatsRow');
+  if (!row) return;
+  const withDelivery = boDeliveries.filter(so => so.delivery_details);
+  const counts = { pending: 0, preparing: 0, out_for_delivery: 0, delivered: 0, failed: 0, cancelled: 0 };
+  withDelivery.forEach(so => {
+    const s = so.delivery_details.status || 'pending';
+    counts[s] = (counts[s] || 0) + 1;
+  });
+  const lateCount = withDelivery.filter(so => isDeliveryLate(so.delivery_details)).length;
+  const order = ['pending', 'preparing', 'out_for_delivery', 'delivered', 'failed', 'cancelled'];
+  row.innerHTML = order.map(s => `
+    <button type="button" class="bo-badge ${DELIVERY_STATUS_BADGE[s] || ''}" data-stat-status="${s}" style="cursor:pointer; border:none;">
+      ${DELIVERY_STATUS_LABELS[s]}: ${counts[s]}
+    </button>`).join('')
+    + (lateCount > 0 ? `<button type="button" class="bo-badge inactive" data-stat-status="late" style="cursor:pointer; border:none; font-weight:700;">⏰ متأخرة عن الموعد: ${lateCount}</button>` : '');
+  row.querySelectorAll('[data-stat-status]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('deliveryStatusFilter').value = btn.dataset.statStatus;
+      renderDeliveriesTable();
+    });
+  });
+}
+
+// آخر قائمة طلبات ظهرت فعليًا في الجدول (بعد البحث/الفلترة)، بترتيبها الحالي —
+// تُستخدم زر "طباعة إيصالات المعروض" عشان يطبع بالظبط اللي شايفه المستخدم دلوقتي.
+let lastRenderedDeliveryRows = [];
+
 function renderDeliveriesTable() {
+  renderDeliveryStatsBar();
   const tbody = document.getElementById('deliveriesTableBody');
   const q = normalizeArabicSearch(document.getElementById('deliverySearchInput')?.value || '');
   const statusFilter = document.getElementById('deliveryStatusFilter')?.value || 'all';
+  const myOnly = document.getElementById('deliveryMyOnlyFilter')?.checked;
+  const sortMode = document.getElementById('deliverySortSelect')?.value || 'recent';
 
   let rows = boDeliveries.slice();
   if (q) {
     rows = rows.filter(so => normalizeArabicSearch(String(so.order_number)).includes(q)
       || normalizeArabicSearch(so.customers?.name || '').includes(q)
-      || normalizeArabicSearch(so.delivery_details?.driver_name || '').includes(q));
+      || normalizeArabicSearch(deliveryDriverDisplayName(so.delivery_details)).includes(q));
   }
-  if (statusFilter !== 'all') {
+  if (statusFilter === 'late') {
+    rows = rows.filter(so => isDeliveryLate(so.delivery_details));
+  } else if (statusFilter !== 'all') {
     rows = rows.filter(so => (so.delivery_details?.status || 'pending') === statusFilter);
   }
+  if (myOnly) {
+    rows = rows.filter(so => {
+      const d = so.delivery_details;
+      return d?.driver_employee_id === currentProfile?.employee_id;
+    });
+  }
+
+  const zoneNameOf = so => boDeliveryZones.find(z => z.id === so.delivery_details?.delivery_zone_id)?.name || 'بدون منطقة';
+  if (sortMode === 'zone') {
+    rows.sort((a, b) => zoneNameOf(a).localeCompare(zoneNameOf(b), 'ar'));
+  }
+
+  lastRenderedDeliveryRows = rows;
 
   if (rows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="9" class="bo-empty">لا توجد طلبات مطابقة</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" class="bo-empty">لا توجد طلبات مطابقة</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
+  let lastZoneHeader = null;
   rows.forEach(so => {
     const d = so.delivery_details || null;
     const status = d ? d.status : null;
+    const nextStatus = d ? DELIVERY_NEXT_STATUS[d.status] : null;
+
+    if (sortMode === 'zone') {
+      const zoneName = zoneNameOf(so);
+      if (zoneName !== lastZoneHeader) {
+        lastZoneHeader = zoneName;
+        const countInZone = rows.filter(r => zoneNameOf(r) === zoneName).length;
+        const headerTr = document.createElement('tr');
+        headerTr.innerHTML = `<td colspan="10" style="background:var(--surface-sunken); font-weight:700; font-size:13px; padding:8px 12px;">📍 ${escapeHtml(zoneName)} <span style="font-weight:400; color:var(--ink-soft);">(${countInZone} طلب)</span></td>`;
+        tbody.appendChild(headerTr);
+      }
+    }
+
     const tr = document.createElement('tr');
+    if (isDeliveryLate(d)) tr.style.background = '#FDEDEC';
     tr.innerHTML = `
       <td class="num">#${so.order_number}</td>
       <td>${escapeHtml(so.customers?.name || 'عميل نقدي')}</td>
       <td>${escapeHtml(d?.recipient_name || '—')}</td>
       <td>${escapeHtml(d?.address || '—')}</td>
-      <td>${escapeHtml(d?.driver_name || '—')}</td>
-      <td>${status ? `<span class="bo-badge ${DELIVERY_STATUS_BADGE[status] || ''}">${DELIVERY_STATUS_LABELS[status]}</span>` : `<span class="bo-badge">لم تُحدَّد بعد</span>`}</td>
+      <td>${escapeHtml(boDeliveryZones.find(z => z.id === d?.delivery_zone_id)?.name || '—')}</td>
+      <td>${escapeHtml(deliveryDriverDisplayName(d))}</td>
+      <td>${status ? `<span class="bo-badge ${DELIVERY_STATUS_BADGE[status] || ''}">${DELIVERY_STATUS_LABELS[status]}</span>${isDeliveryLate(d) ? ' <span class="bo-badge inactive" title="تعدّت موعد التسليم المحدد">⏰ متأخرة</span>' : ''}${isPendingDriverCollectionOrder(so) ? ' <span class="bo-badge pending" title="كاش عند الاستلام — لسه ماتسواش مع السائق">💰 غير محصّل</span>' : ''}` : `<span class="bo-badge">لم تُحدَّد بعد</span>`}</td>
       <td class="num">${d?.delivery_fee != null ? Number(d.delivery_fee).toFixed(2) : '—'}</td>
       <td class="num">${d?.scheduled_at ? new Date(d.scheduled_at).toLocaleString('ar-EG') : '—'}</td>
-      <td><button class="bo-icon-btn" data-action="edit">${d ? 'تعديل' : '+ تحديد التوصيل'}</button></td>`;
+      <td style="display:flex; gap:6px; flex-wrap:wrap;">
+        ${nextStatus ? `<button class="bo-icon-btn" data-action="next">${DELIVERY_NEXT_STATUS_BTN_LABEL[d.status]}</button>` : ''}
+        <button class="bo-icon-btn" data-action="edit">${d ? 'تعديل' : '+ تحديد التوصيل'}</button>
+        ${d ? `<button class="bo-icon-btn" data-action="print" title="طباعة إيصال توصيل">🖨</button>` : ''}
+      </td>`;
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openDeliveryModal(so, d));
+    const nextBtn = tr.querySelector('[data-action="next"]');
+    if (nextBtn) nextBtn.addEventListener('click', () => quickAdvanceDeliveryStatus(d, nextStatus));
+    const printBtn = tr.querySelector('[data-action="print"]');
+    if (printBtn) printBtn.addEventListener('click', () => openDeliveryReceiptModal([{ so, d }]));
     applyRowActionPerm(tr, 'delivery');
     tbody.appendChild(tr);
   });
 }
 
-function populateDeliveryDriverSelect() {
-  const sel = document.getElementById('deliveryDriverUser');
+// بناء إيصال توصيل واحد بخط كبير وواضح للسائق: اسم المستلم، العنوان، الهاتف.
+function buildDeliveryReceiptHtml(so, d) {
+  const zoneName = boDeliveryZones.find(z => z.id === d?.delivery_zone_id)?.name || '';
+  return `
+    <div class="delivery-receipt-paper">
+      <div class="dr-order-no">طلبية <span class="num">#${so.order_number}</span></div>
+      ${zoneName ? `<div class="dr-zone-badge">📍 ${escapeHtml(zoneName)}</div>` : ''}
+      <div class="dr-divider"></div>
+      <div class="dr-label">المستلم</div>
+      <div class="dr-recipient">${escapeHtml(d?.recipient_name || so.customers?.name || '—')}</div>
+      <div class="dr-label">رقم الهاتف</div>
+      <div class="dr-phone num">${escapeHtml(d?.phone || so.customers?.phone || '—')}</div>
+      <div class="dr-label">العنوان</div>
+      <div class="dr-address">${escapeHtml(d?.address || '—')}${d?.city ? '، ' + escapeHtml(d.city) : ''}</div>
+      <div class="dr-divider"></div>
+      <div class="dr-fee-row"><span>رسوم التوصيل</span><span class="num">${d?.delivery_fee != null ? Number(d.delivery_fee).toFixed(2) : '0.00'}</span></div>
+      ${d?.notes ? `<div class="dr-notes">${escapeHtml(d.notes)}</div>` : ''}
+    </div>`;
+}
+
+// يفتح مودال الطباعة بإيصال واحد أو أكتر (كل إيصال في صفحة طباعة منفصلة).
+function openDeliveryReceiptModal(entries) {
+  const validEntries = entries.filter(e => e.d);
+  const content = document.getElementById('deliveryReceiptContent');
+  if (validEntries.length === 0) {
+    showToast('لا توجد طلبات توصيل ببيانات كافية للطباعة', true);
+    return;
+  }
+  content.innerHTML = validEntries.map(e => buildDeliveryReceiptHtml(e.so, e.d)).join('');
+  document.getElementById('deliveryReceiptModalOverlay').classList.add('show');
+}
+
+// تقدّم سريع لحالة التوصيل بضغطة واحدة من الجدول، من غير فتح نموذج التعديل
+// الكامل — مخصص لتسريع شغل السائقين/المسؤولين عن متابعة الشحن.
+async function quickAdvanceDeliveryStatus(delivery, nextStatus) {
+  if (!delivery || !nextStatus) return;
+  if (!hasBoActionPermission('delivery', 'edit')) { showToast('ليس لديك صلاحية تعديل حالة التوصيل', true); return; }
+  try {
+    const payload = { status: nextStatus };
+    if (nextStatus === 'delivered') payload.delivered_at = new Date().toISOString();
+    const { error } = await supabaseClient.from('delivery_details').update(payload).eq('id', delivery.id);
+    if (error) throw error;
+    showToast(`تم تحديث الحالة إلى "${DELIVERY_STATUS_LABELS[nextStatus]}"`);
+    await loadBoDeliveries();
+    renderDeliveriesTable();
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحديث حالة التوصيل', true);
+  }
+}
+
+function populateDeliveryDriverSelect(selectId) {
+  const sel = document.getElementById(selectId || 'deliveryDriverEmployee');
   if (!sel) return;
-  sel.innerHTML = '<option value="">— بدون —</option>' + boUsers.filter(u => u.is_active).map(u => `<option value="${u.id}">${escapeHtml(u.full_name)}</option>`).join('');
+  sel.innerHTML = '<option value="">— بدون —</option>' + boEmployees.filter(e => e.is_active).map(e => `<option value="${e.id}">${escapeHtml(e.full_name)}${e.job_title ? ' — ' + escapeHtml(e.job_title) : ''}</option>`).join('');
 }
 
 function openDeliveryModal(saleOrder, delivery) {
   populateDeliveryDriverSelect();
+  populateDeliveryZoneSelects();
+  populateDeliveryCompanySelects();
+  currentDeliveryModalSubtotal = Number(saleOrder.subtotal) || 0;
   document.getElementById('deliveryModalTitle').textContent = `تفاصيل توصيل الطلبية #${saleOrder.order_number}`;
   document.getElementById('deliveryId').value = delivery ? delivery.id : '';
   document.getElementById('deliverySaleOrderId').value = saleOrder.id;
   document.getElementById('deliveryRecipientName').value = delivery ? (delivery.recipient_name || '') : (saleOrder.customers?.name || '');
-  document.getElementById('deliveryPhone').value = delivery ? (delivery.phone || '') : '';
+  document.getElementById('deliveryPhone').value = delivery ? (delivery.phone || '') : (saleOrder.customers?.phone || '');
+  document.getElementById('deliveryZoneSelect').value = delivery ? (delivery.delivery_zone_id || '') : (saleOrder.customers?.delivery_zone_id || '');
   document.getElementById('deliveryCity').value = delivery ? (delivery.city || '') : '';
-  document.getElementById('deliveryAddress').value = delivery ? (delivery.address || '') : '';
-  document.getElementById('deliveryDriverUser').value = delivery ? (delivery.driver_user_id || '') : '';
+  document.getElementById('deliveryAddress').value = delivery ? (delivery.address || '') : (saleOrder.customers?.address || '');
+  document.getElementById('deliveryDriverEmployee').value = delivery ? (delivery.driver_employee_id || '') : '';
   document.getElementById('deliveryDriverName').value = delivery ? (delivery.driver_name || '') : '';
   document.getElementById('deliveryDriverPhone').value = delivery ? (delivery.driver_phone || '') : '';
+  document.getElementById('deliveryCompanySelect').value = delivery ? (delivery.delivery_company_id || '') : '';
+  if (!delivery && saleOrder.customers?.delivery_zone_id) {
+    document.getElementById('deliveryZoneSelect').dispatchEvent(new Event('change'));
+  }
   document.getElementById('deliveryStatus').value = delivery ? delivery.status : 'pending';
   document.getElementById('deliveryFee').value = delivery ? (delivery.delivery_fee ?? 0) : 0;
   document.getElementById('deliveryScheduledAt').value = delivery?.scheduled_at ? delivery.scheduled_at.slice(0, 16) : '';
@@ -20872,10 +22295,15 @@ function closeDeliveryModal() {
   document.getElementById('deliveryModalOverlay').classList.remove('show');
 }
 
+// بيانات إضافية للطلبية المفتوحة حاليًا في مودال "تفاصيل التوصيل" (مش موجودة كحقل فورم مباشر)
+let currentDeliveryModalSubtotal = 0;
+
 async function saveDelivery(e) {
   e.preventDefault();
   const errEl = document.getElementById('deliveryModalError');
   errEl.classList.remove('show');
+  const zoneCheck = checkDeliveryZoneMinOrder(document.getElementById('deliveryZoneSelect').value, currentDeliveryModalSubtotal);
+  if (!zoneCheck.ok) { errEl.textContent = zoneCheck.message; errEl.classList.add('show'); return; }
   const saveBtn = document.getElementById('saveDeliveryBtn');
   saveBtn.disabled = true;
   saveBtn.textContent = 'جاري الحفظ...';
@@ -20887,11 +22315,13 @@ async function saveDelivery(e) {
     sale_order_id: document.getElementById('deliverySaleOrderId').value,
     recipient_name: document.getElementById('deliveryRecipientName').value.trim(),
     phone: document.getElementById('deliveryPhone').value.trim() || null,
+    delivery_zone_id: document.getElementById('deliveryZoneSelect').value || null,
     city: document.getElementById('deliveryCity').value.trim() || null,
     address: document.getElementById('deliveryAddress').value.trim() || null,
-    driver_user_id: document.getElementById('deliveryDriverUser').value || null,
+    driver_employee_id: document.getElementById('deliveryDriverEmployee').value || null,
     driver_name: document.getElementById('deliveryDriverName').value.trim() || null,
     driver_phone: document.getElementById('deliveryDriverPhone').value.trim() || null,
+    delivery_company_id: document.getElementById('deliveryCompanySelect').value || null,
     status,
     delivery_fee: Number(document.getElementById('deliveryFee').value) || 0,
     scheduled_at: scheduledVal ? new Date(scheduledVal).toISOString() : null,
@@ -20920,6 +22350,551 @@ async function saveDelivery(e) {
   } finally {
     saveBtn.disabled = false;
     saveBtn.textContent = 'حفظ';
+  }
+}
+
+// ================== تحصيل وتسوية حساب السائقين ==================
+// المبدأ: أي طلبية توصيل "تم التسليم" ودُفعت "كاش" (payment_method = cash)
+// معناها إن السائق قبض ثمنها كاش من العميل ولازم يسلّمه للمحل. طالما
+// delivery_details.settlement_id فاضي، الطلبية تُعتبر "لسه معلّقة" على
+// حساب السائق. السائق هنا هو سجل من شاشة "الموظفين" (driver_employee_id)
+// مش بالضرورة مستخدم له حساب دخول للوحة التحكم. التسوية بتربط مجموعة
+// طلبات بسجل تسوية واحد (driver_settlements) وتسجّل المتوقع مقابل
+// المستلم فعليًا (زي منطق إغلاق الوردية بالظبط).
+
+async function loadBoDriverSettlements() {
+  try {
+    const { data, error } = await supabaseClient
+      .from('driver_settlements')
+      .select('*, driver:employees!driver_settlements_driver_employee_id_fkey(full_name), settler:users_profile!driver_settlements_settled_by_fkey(full_name)')
+      .order('settled_at', { ascending: false })
+      .limit(200);
+    if (error) throw error;
+    boDriverSettlements = data || [];
+  } catch (err) {
+    console.error(err);
+    // لو الجدول لسه ماتعملوش (قبل تشغيل الـ migration) منوقفش الشاشة كلها
+    boDriverSettlements = [];
+  }
+}
+
+async function loadDriverSettlementsSectionData() {
+  if (boEmployees.length === 0) await loadBoEmployees();
+  await Promise.all([loadBoDeliveries(), loadBoDriverSettlements()]);
+  renderDriverSettlementsSection();
+}
+
+// طلبية "معلّقة" على حساب سائق = اتسلّمت، مدفوعة كاش بالكامل، مرتبطة
+// بموظف فعلي (driver_employee_id لازم يكون موجود عشان نقدر نربطها
+// بسجل تسوية)، ولسه ماتسوتش (settlement_id فاضي).
+function isPendingDriverCollectionOrder(so) {
+  const d = so.delivery_details;
+  return !!(d && d.status === 'delivered' && !d.settlement_id && d.driver_employee_id && so.payment_method === 'cash');
+}
+
+function pendingDriverCollectionOrders(driverId) {
+  return boDeliveries.filter(so => isPendingDriverCollectionOrder(so) && so.delivery_details.driver_employee_id === driverId);
+}
+
+// تجميع الطلبات المعلّقة حسب السائق: [{driverId, driverName, orders:[so...], total}]
+function buildPendingDriverGroups() {
+  const map = new Map();
+  boDeliveries.filter(isPendingDriverCollectionOrder).forEach(so => {
+    const d = so.delivery_details;
+    const id = d.driver_employee_id;
+    if (!map.has(id)) {
+      map.set(id, { driverId: id, driverName: deliveryDriverDisplayName(d), orders: [], total: 0 });
+    }
+    const g = map.get(id);
+    g.orders.push(so);
+    g.total += Number(so.total) || 0;
+  });
+  return Array.from(map.values()).sort((a, b) => b.total - a.total);
+}
+
+function lastSettlementForDriver(driverId) {
+  return boDriverSettlements.find(s => s.driver_employee_id === driverId) || null;
+}
+
+function renderDriverSettlementsSection() {
+  renderDriverSettlementsStats();
+  renderDriverSettlementsPendingTable();
+  renderDriverSettlementsHistoryTable();
+}
+
+function renderDriverSettlementsStats() {
+  const row = document.getElementById('driverSettlementsStatsRow');
+  if (!row) return;
+  const groups = buildPendingDriverGroups();
+  const totalDrivers = groups.length;
+  const totalAmount = groups.reduce((s, g) => s + g.total, 0);
+  const totalOrders = groups.reduce((s, g) => s + g.orders.length, 0);
+  row.innerHTML = `
+    <span class="bo-badge info">عدد السائقين عليهم مبالغ معلّقة: ${totalDrivers}</span>
+    <span class="bo-badge pending">إجمالي الطلبات المعلّقة: ${totalOrders}</span>
+    <span class="bo-badge inactive">إجمالي المبلغ المطلوب تحصيله: <span class="num">${totalAmount.toFixed(2)}</span></span>
+  `;
+}
+
+function renderDriverSettlementsPendingTable() {
+  const tbody = document.getElementById('driverSettlementsPendingTableBody');
+  if (!tbody) return;
+  const groups = buildPendingDriverGroups();
+  if (groups.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">لا توجد مبالغ معلّقة على أي سائق حاليًا</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  groups.forEach(g => {
+    const last = lastSettlementForDriver(g.driverId);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(g.driverName)}</td>
+      <td class="num">${g.orders.length}</td>
+      <td class="num">${g.total.toFixed(2)}</td>
+      <td>${last ? new Date(last.settled_at).toLocaleString('ar-EG') : '—'}</td>
+      <td><button type="button" class="bo-icon-btn" data-action="settle">💰 تسوية الحساب</button></td>`;
+    const btn = tr.querySelector('[data-action="settle"]');
+    if (!hasBoActionPermission('driver-settlements', 'edit')) {
+      btn.style.display = 'none';
+    } else {
+      btn.addEventListener('click', () => openDriverSettleModal(g.driverId));
+    }
+    tbody.appendChild(tr);
+  });
+}
+
+function renderDriverSettlementsHistoryTable() {
+  const tbody = document.getElementById('driverSettlementsHistoryTableBody');
+  if (!tbody) return;
+  if (boDriverSettlements.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" class="bo-empty">لا يوجد سجل تسويات بعد</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boDriverSettlements.forEach(s => {
+    const diff = Number(s.difference) || 0;
+    const diffClass = diff === 0 ? '' : (diff > 0 ? 'positive' : 'negative');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${new Date(s.settled_at).toLocaleString('ar-EG')}</td>
+      <td>${escapeHtml(s.driver?.full_name || '—')}</td>
+      <td class="num">${s.orders_count}</td>
+      <td class="num">${Number(s.expected_amount).toFixed(2)}</td>
+      <td class="num">${Number(s.received_amount).toFixed(2)}</td>
+      <td class="num ${diffClass}">${diff.toFixed(2)}</td>
+      <td>${escapeHtml(s.settler?.full_name || '—')}</td>
+      <td>${escapeHtml(s.notes || '—')}</td>
+      <td><button type="button" class="bo-icon-btn" data-action="view">عرض الطلبات</button></td>`;
+    tr.querySelector('[data-action="view"]').addEventListener('click', () => openDriverSettlementDetail(s));
+    tbody.appendChild(tr);
+  });
+}
+
+function openDriverSettleModal(driverId) {
+  const group = buildPendingDriverGroups().find(g => g.driverId === driverId);
+  if (!group || group.orders.length === 0) {
+    showToast('لا توجد طلبات معلّقة لهذا السائق', true);
+    return;
+  }
+  driverSettleModalDriverId = driverId;
+  document.getElementById('driverSettleModalTitle').textContent = `تسوية حساب السائق: ${group.driverName}`;
+  const tbody = document.getElementById('driverSettleOrdersTableBody');
+  tbody.innerHTML = group.orders.map(so => {
+    const d = so.delivery_details;
+    return `
+      <tr>
+        <td><input type="checkbox" class="driver-settle-order-cb" data-order-id="${so.id}" data-amount="${Number(so.total) || 0}" checked></td>
+        <td class="num">#${so.order_number}</td>
+        <td>${escapeHtml(d?.recipient_name || so.customers?.name || '—')}</td>
+        <td>${d?.delivered_at ? new Date(d.delivered_at).toLocaleString('ar-EG') : '—'}</td>
+        <td class="num">${(Number(so.total) || 0).toFixed(2)}</td>
+      </tr>`;
+  }).join('');
+  tbody.querySelectorAll('.driver-settle-order-cb').forEach(cb => cb.addEventListener('change', updateDriverSettleTotals));
+  document.getElementById('driverSettleSelectAll').checked = true;
+  document.getElementById('driverSettleNotes').value = '';
+  document.getElementById('driverSettleModalError').classList.remove('show');
+  updateDriverSettleTotals();
+  document.getElementById('driverSettleModalOverlay').classList.add('show');
+}
+
+function closeDriverSettleModal() {
+  document.getElementById('driverSettleModalOverlay').classList.remove('show');
+  driverSettleModalDriverId = null;
+}
+
+function updateDriverSettleTotals() {
+  const checked = Array.from(document.querySelectorAll('.driver-settle-order-cb:checked'));
+  const expected = checked.reduce((s, cb) => s + Number(cb.dataset.amount || 0), 0);
+  document.getElementById('driverSettleSelectedCount').textContent = checked.length;
+  document.getElementById('driverSettleExpected').textContent = expected.toFixed(2);
+  const receivedInput = document.getElementById('driverSettleReceivedAmount');
+  // أول مرة (لسه المستخدم مادخلش رقم) نقترح المتوقع كقيمة افتراضية
+  if (receivedInput.dataset.touched !== '1') receivedInput.value = expected.toFixed(2);
+  const received = Number(receivedInput.value) || 0;
+  const diff = received - expected;
+  const diffEl = document.getElementById('driverSettleDifference');
+  diffEl.textContent = diff.toFixed(2);
+  diffEl.className = 'shift-summary-box-value num' + (diff > 0 ? ' positive' : diff < 0 ? ' negative' : '');
+}
+document.addEventListener('input', (e) => {
+  if (e.target && e.target.id === 'driverSettleReceivedAmount') e.target.dataset.touched = '1';
+});
+
+async function submitDriverSettlement() {
+  const errEl = document.getElementById('driverSettleModalError');
+  errEl.classList.remove('show');
+  if (!hasBoActionPermission('driver-settlements', 'edit')) {
+    errEl.textContent = 'ليس لديك صلاحية تسوية حساب السائقين';
+    errEl.classList.add('show');
+    return;
+  }
+  const checked = Array.from(document.querySelectorAll('.driver-settle-order-cb:checked'));
+  if (checked.length === 0) {
+    errEl.textContent = 'اختر طلبية واحدة على الأقل لتسويتها';
+    errEl.classList.add('show');
+    return;
+  }
+  const expected = checked.reduce((s, cb) => s + Number(cb.dataset.amount || 0), 0);
+  const received = Number(document.getElementById('driverSettleReceivedAmount').value) || 0;
+  const difference = Math.round((received - expected) * 100) / 100;
+  const notes = document.getElementById('driverSettleNotes').value.trim() || null;
+  const orderIds = checked.map(cb => cb.dataset.orderId);
+  const deliveryIds = boDeliveries
+    .filter(so => orderIds.includes(so.id))
+    .map(so => so.delivery_details.id);
+
+  const confirmBtn = document.getElementById('driverSettleConfirmBtn');
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = 'جاري الحفظ...';
+  try {
+    const { data: settlement, error: insErr } = await supabaseClient
+      .from('driver_settlements')
+      .insert({
+        driver_employee_id: driverSettleModalDriverId,
+        branch_id: currentProfile?.branch_id || null,
+        orders_count: deliveryIds.length,
+        expected_amount: Math.round(expected * 100) / 100,
+        received_amount: Math.round(received * 100) / 100,
+        difference,
+        notes,
+        settled_by: currentProfile?.id || null,
+      })
+      .select()
+      .single();
+    if (insErr) throw insErr;
+
+    const { error: updErr } = await supabaseClient
+      .from('delivery_details')
+      .update({ settlement_id: settlement.id })
+      .in('id', deliveryIds);
+    if (updErr) throw updErr;
+
+    showToast(difference === 0 ? 'تمت تسوية الحساب بالكامل' : `تمت التسوية — فرق ${difference > 0 ? 'زيادة' : 'عجز'} قدره ${Math.abs(difference).toFixed(2)}`);
+    closeDriverSettleModal();
+    await loadDriverSettlementsSectionData();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message?.includes('driver_settlements')
+      ? 'جدول تسويات السائقين غير موجود بعد — راجع تعليمات تفعيل الميزة (SQL) أولاً'
+      : (err.message || 'حدث خطأ أثناء حفظ التسوية');
+    errEl.classList.add('show');
+  } finally {
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = 'تأكيد التسوية';
+  }
+}
+
+async function openDriverSettlementDetail(settlement) {
+  document.getElementById('driverSettleDetailModalTitle').textContent =
+    `تفاصيل تسوية ${escapeHtml(settlement.driver?.full_name || '')} — ${new Date(settlement.settled_at).toLocaleString('ar-EG')}`;
+  const tbody = document.getElementById('driverSettleDetailTableBody');
+  tbody.innerHTML = `<tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>`;
+  document.getElementById('driverSettleDetailModalOverlay').classList.add('show');
+  try {
+    const { data, error } = await supabaseClient
+      .from('delivery_details')
+      .select('id, recipient_name, delivered_at, sale_orders(order_number, total, customers(name))')
+      .eq('settlement_id', settlement.id);
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" class="bo-empty">لا توجد طلبات مرتبطة</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = data.map(d => `
+      <tr>
+        <td class="num">#${d.sale_orders?.order_number ?? '—'}</td>
+        <td>${escapeHtml(d.recipient_name || d.sale_orders?.customers?.name || '—')}</td>
+        <td>${d.delivered_at ? new Date(d.delivered_at).toLocaleString('ar-EG') : '—'}</td>
+        <td class="num">${d.sale_orders ? Number(d.sale_orders.total).toFixed(2) : '—'}</td>
+      </tr>`).join('');
+  } catch (err) {
+    console.error(err);
+    tbody.innerHTML = `<tr><td colspan="4" class="bo-empty">تعذر تحميل تفاصيل التسوية</td></tr>`;
+  }
+}
+
+// ---- طلب توصيل جديد (إنشاء طلبية بيع + بيانات توصيل في خطوة واحدة) ----
+let deliveryOrderLines = []; // [{ productId, quantity, unitPrice, productUnitId, unitFactor, unitLabel }]
+let deliveryOrderCustomerSearch = null;
+
+function openNewDeliveryOrderModal() {
+  if (!deliveryOrderCustomerSearch) {
+    deliveryOrderCustomerSearch = createSmartSearch({
+      input: document.getElementById('newDeliveryOrderCustomerInput'),
+      hidden: document.getElementById('newDeliveryOrderCustomerValue'),
+      dropdown: document.getElementById('newDeliveryOrderCustomerDropdown'),
+      getItems: () => boCustomers.map(c => ({ value: c.id, label: c.name, sublabel: c.phone || '', search: `${c.name} ${c.phone || ''}` })),
+      onChange: (item) => {
+        const customer = boCustomers.find(c => c.id === item.value);
+        const nameField = document.getElementById('newDeliveryOrderRecipientName');
+        const phoneField = document.getElementById('newDeliveryOrderPhone');
+        const addrField = document.getElementById('newDeliveryOrderAddress');
+        if (customer && !nameField.value) nameField.value = customer.name || '';
+        if (customer && !phoneField.value) phoneField.value = customer.phone || '';
+        if (customer && !addrField.value) addrField.value = customer.address || '';
+        const zoneField = document.getElementById('newDeliveryOrderZone');
+        if (customer && customer.delivery_zone_id && zoneField && !zoneField.value) {
+          zoneField.value = customer.delivery_zone_id;
+          zoneField.dispatchEvent(new Event('change'));
+        }
+      },
+    });
+  }
+  deliveryOrderCustomerSearch.clear();
+  populateDeliveryDriverSelect('newDeliveryOrderDriverEmployee');
+  populateDeliveryZoneSelects();
+  document.getElementById('newDeliveryOrderZone').value = '';
+  deliveryOrderLines = [];
+  addDeliveryOrderLine();
+  document.getElementById('newDeliveryOrderDiscount').value = 0;
+  document.getElementById('newDeliveryOrderRecipientName').value = '';
+  document.getElementById('newDeliveryOrderPhone').value = '';
+  document.getElementById('newDeliveryOrderCity').value = '';
+  document.getElementById('newDeliveryOrderAddress').value = '';
+  document.getElementById('newDeliveryOrderDriverEmployee').value = '';
+  document.getElementById('newDeliveryOrderDriverName').value = '';
+  document.getElementById('newDeliveryOrderDriverPhone').value = '';
+  document.getElementById('newDeliveryOrderFee').value = 0;
+  document.getElementById('newDeliveryOrderScheduledAt').value = '';
+  document.getElementById('newDeliveryOrderNotes').value = '';
+  document.getElementById('newDeliveryOrderModalError').classList.remove('show');
+  document.getElementById('newDeliveryOrderModalOverlay').classList.add('show');
+}
+
+function closeNewDeliveryOrderModal() {
+  document.getElementById('newDeliveryOrderModalOverlay').classList.remove('show');
+}
+
+function addDeliveryOrderLine() {
+  deliveryOrderLines.push({ productId: '', quantity: 1, unitPrice: 0, productUnitId: null, unitFactor: 1, unitLabel: null });
+  renderDeliveryOrderLines();
+}
+
+function removeDeliveryOrderLine(idx) {
+  deliveryOrderLines.splice(idx, 1);
+  renderDeliveryOrderLines();
+}
+
+function renderDeliveryOrderLines() {
+  const wrap = document.getElementById('newDeliveryOrderLinesWrap');
+  wrap.innerHTML = '';
+  deliveryOrderLines.forEach((line, idx) => {
+    const row = document.createElement('div');
+    row.className = 'purchase-line-row with-unit';
+
+    const productWrap = document.createElement('div');
+    productWrap.className = 'smart-search';
+    const productInput = document.createElement('input');
+    productInput.type = 'text'; productInput.autocomplete = 'off'; productInput.placeholder = 'اكتب اسم الصنف...';
+    const productHidden = document.createElement('input');
+    productHidden.type = 'hidden';
+    const productDropdown = document.createElement('div');
+    productDropdown.className = 'smart-search-dropdown';
+    productWrap.appendChild(productInput);
+    productWrap.appendChild(productHidden);
+    productWrap.appendChild(productDropdown);
+
+    const productSearch = createSmartSearch({
+      input: productInput,
+      hidden: productHidden,
+      dropdown: productDropdown,
+      getItems: () => boProducts.filter(p => p.is_active !== false).map(p => ({ value: p.id, label: p.name })),
+      onChange: (item) => {
+        line.productId = item.value;
+        const prod = boProducts.find(p => p.id === line.productId);
+        line.productUnitId = null;
+        line.unitFactor = 1;
+        line.unitLabel = prod ? (prod.unit_type || null) : null;
+        if (prod) line.unitPrice = Number(prod.sale_price) || 0;
+        renderDeliveryOrderLines();
+      },
+    });
+    if (line.productId) productSearch.setValue(line.productId);
+
+    const product = boProducts.find(p => p.id === line.productId);
+    const extraUnits = product ? (product.product_units || []).filter(u => u.is_active) : [];
+
+    const unitSelect = document.createElement('select');
+    if (!product) {
+      unitSelect.innerHTML = '<option value="">—</option>';
+      unitSelect.disabled = true;
+    } else if (extraUnits.length === 0) {
+      unitSelect.innerHTML = `<option value="">${escapeHtml(product.unit_type || 'الوحدة الأساسية')}</option>`;
+      unitSelect.disabled = true;
+    } else {
+      const baseLabel = product.unit_type || 'الوحدة الأساسية';
+      unitSelect.innerHTML =
+        `<option value="">${escapeHtml(baseLabel)}</option>` +
+        extraUnits.map(u => `<option value="${u.id}">${escapeHtml(u.unit_types?.name || 'وحدة')}</option>`).join('');
+      unitSelect.value = line.productUnitId || '';
+      unitSelect.addEventListener('change', () => {
+        const chosen = extraUnits.find(u => u.id === unitSelect.value);
+        line.productUnitId = chosen ? chosen.id : null;
+        line.unitFactor = chosen ? Number(chosen.factor_to_base) || 1 : 1;
+        line.unitLabel = chosen ? (chosen.unit_types?.name || null) : (product.unit_type || null);
+        line.unitPrice = chosen ? (Number(chosen.sale_price) || 0) : (Number(product.sale_price) || 0);
+        updateDOLineTotal(row, line);
+        updateDeliveryOrderTotals();
+      });
+    }
+
+    const qtyInput = document.createElement('input');
+    qtyInput.type = 'number'; qtyInput.min = '0.001'; qtyInput.step = '0.001'; qtyInput.value = line.quantity;
+    qtyInput.addEventListener('input', () => { line.quantity = Number(qtyInput.value) || 0; updateDOLineTotal(row, line); updateDeliveryOrderTotals(); });
+
+    const priceInput = document.createElement('input');
+    priceInput.type = 'number'; priceInput.min = '0'; priceInput.step = '0.01'; priceInput.value = line.unitPrice;
+    priceInput.addEventListener('input', () => { line.unitPrice = Number(priceInput.value) || 0; updateDOLineTotal(row, line); updateDeliveryOrderTotals(); });
+
+    const totalDiv = document.createElement('div');
+    totalDiv.className = 'purchase-line-total num';
+    totalDiv.textContent = (line.quantity * line.unitPrice).toFixed(2);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button'; removeBtn.className = 'purchase-line-remove'; removeBtn.textContent = '×';
+    removeBtn.addEventListener('click', () => removeDeliveryOrderLine(idx));
+
+    row.appendChild(productWrap);
+    row.appendChild(unitSelect);
+    row.appendChild(qtyInput);
+    row.appendChild(priceInput);
+    row.appendChild(totalDiv);
+    row.appendChild(removeBtn);
+    wrap.appendChild(row);
+  });
+  updateDeliveryOrderTotals();
+}
+
+function updateDOLineTotal(row, line) {
+  row.querySelector('.purchase-line-total').textContent = (line.quantity * line.unitPrice).toFixed(2);
+}
+
+function calcDeliveryOrderSubtotal() {
+  return deliveryOrderLines.reduce((sum, l) => sum + (Number(l.quantity) || 0) * (Number(l.unitPrice) || 0), 0);
+}
+
+function calcDeliveryOrderTax() {
+  return deliveryOrderLines.reduce((sum, l) => {
+    const prod = boProducts.find(p => p.id === l.productId);
+    const rate = Number(prod?.tax_rates?.rate) || 0;
+    if (!rate) return sum;
+    const lineTotal = (Number(l.quantity) || 0) * (Number(l.unitPrice) || 0);
+    if (typeof taxInclusive !== 'undefined' && taxInclusive) return sum + lineTotal * (rate / (100 + rate));
+    return sum + lineTotal * (rate / 100);
+  }, 0);
+}
+
+function calcDeliveryOrderTotal() {
+  const subtotal = calcDeliveryOrderSubtotal();
+  const discount = Number(document.getElementById('newDeliveryOrderDiscount').value) || 0;
+  const tax = calcDeliveryOrderTax();
+  if (typeof taxInclusive !== 'undefined' && taxInclusive) return Math.max(0, subtotal - discount);
+  return Math.max(0, subtotal - discount + tax);
+}
+
+function updateDeliveryOrderTotals() {
+  document.getElementById('newDeliveryOrderSubtotalLabel').textContent = calcDeliveryOrderSubtotal().toFixed(2);
+  document.getElementById('newDeliveryOrderTaxLabel').textContent = calcDeliveryOrderTax().toFixed(2);
+  document.getElementById('newDeliveryOrderTotalLabel').textContent = calcDeliveryOrderTotal().toFixed(2);
+}
+
+async function saveNewDeliveryOrder(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('newDeliveryOrderModalError');
+  errEl.classList.remove('show');
+  if (!hasBoActionPermission('delivery', 'add')) { errEl.textContent = 'ليس لديك صلاحية إنشاء طلب توصيل جديد'; errEl.classList.add('show'); return; }
+
+  const validLines = deliveryOrderLines.filter(l => l.productId && l.quantity > 0);
+  if (validLines.length === 0) { errEl.textContent = 'أضف صنفًا واحدًا على الأقل بكمية صحيحة'; errEl.classList.add('show'); return; }
+
+  const recipientName = document.getElementById('newDeliveryOrderRecipientName').value.trim();
+  if (!recipientName) { errEl.textContent = 'اسم المستلم مطلوب'; errEl.classList.add('show'); return; }
+
+  const zoneCheck = checkDeliveryZoneMinOrder(document.getElementById('newDeliveryOrderZone').value, calcDeliveryOrderSubtotal());
+  if (!zoneCheck.ok) { errEl.textContent = zoneCheck.message; errEl.classList.add('show'); return; }
+
+  const saveBtn = document.getElementById('saveNewDeliveryOrderBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  try {
+    const customerId = document.getElementById('newDeliveryOrderCustomerValue').value || null;
+    const subtotal = calcDeliveryOrderSubtotal();
+    const discount = Number(document.getElementById('newDeliveryOrderDiscount').value) || 0;
+    const tax = calcDeliveryOrderTax();
+    const total = calcDeliveryOrderTotal();
+    const warehouseId = await getMainWarehouseId(currentProfile.branch_id);
+
+    const { data: order, error: orderError } = await supabaseClient
+      .from('sale_orders')
+      .insert({
+        branch_id: currentProfile.branch_id, user_id: currentProfile.id, customer_id: customerId,
+        status: 'draft', subtotal, discount, tax, total, payment_method: 'cash',
+        warehouse_id: warehouseId, notes: 'طلب توصيل',
+      }).select().single();
+    if (orderError) throw orderError;
+
+    const orderItems = validLines.map(l => ({
+      sale_order_id: order.id, product_id: l.productId, product_unit_id: l.productUnitId || null,
+      quantity: l.quantity, unit_price: l.unitPrice, discount: 0, total: l.quantity * l.unitPrice,
+      warehouse_id: warehouseId,
+    }));
+    const { error: itemsError } = await supabaseClient.from('sale_order_items').insert(orderItems);
+    if (itemsError) throw itemsError;
+
+    const scheduledVal = document.getElementById('newDeliveryOrderScheduledAt').value;
+    const deliveryPayload = {
+      sale_order_id: order.id,
+      recipient_name: recipientName,
+      phone: document.getElementById('newDeliveryOrderPhone').value.trim() || null,
+      delivery_zone_id: document.getElementById('newDeliveryOrderZone').value || null,
+      city: document.getElementById('newDeliveryOrderCity').value.trim() || null,
+      address: document.getElementById('newDeliveryOrderAddress').value.trim() || null,
+      driver_employee_id: document.getElementById('newDeliveryOrderDriverEmployee').value || null,
+      driver_name: document.getElementById('newDeliveryOrderDriverName').value.trim() || null,
+      driver_phone: document.getElementById('newDeliveryOrderDriverPhone').value.trim() || null,
+      status: 'pending',
+      delivery_fee: Number(document.getElementById('newDeliveryOrderFee').value) || 0,
+      scheduled_at: scheduledVal ? new Date(scheduledVal).toISOString() : null,
+      notes: document.getElementById('newDeliveryOrderNotes').value.trim() || null,
+      created_by: currentProfile?.id || null,
+    };
+    const { error: deliveryError } = await supabaseClient.from('delivery_details').insert(deliveryPayload);
+    if (deliveryError) throw deliveryError;
+
+    showToast(`تم إنشاء طلب التوصيل رقم ${order.order_number} — بانتظار التأكيد من "طلبات البيع"`);
+    closeNewDeliveryOrderModal();
+    await loadBoDeliveries();
+    renderDeliveriesTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء حفظ طلب التوصيل';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ الطلب';
   }
 }
 
@@ -22181,6 +24156,7 @@ async function deleteRecipe(product) {
 function openModifierOptionsListModal(group) {
   currentModifierGroup = group;
   document.getElementById('modifierOptionsGroupName').textContent = group.name;
+  document.getElementById('addModifierOptionBtn').style.display = hasBoActionPermission('modifier-groups', 'add') ? '' : 'none';
   renderModifierOptionsTable();
   document.getElementById('modifierOptionsListModalOverlay').classList.add('show');
 }
@@ -22215,6 +24191,7 @@ function renderModifierOptionsTable() {
       </td>`;
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openModifierOptionFormModal(currentModifierGroup, o));
     tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteModifierOption(o));
+    applyRowActionPerm(tr, 'modifier-groups');
     tbody.appendChild(tr);
   });
 }
@@ -22248,6 +24225,12 @@ async function saveModifierOption(e) {
   e.preventDefault();
   const errEl = document.getElementById('modifierOptionFormModalError');
   errEl.classList.remove('show');
+  const id0 = document.getElementById('modifierOptionId').value || null;
+  if (!hasBoActionPermission('modifier-groups', id0 ? 'edit' : 'add')) {
+    errEl.textContent = id0 ? 'ليس لديك صلاحية التعديل في هذه الشاشة' : 'ليس لديك صلاحية إضافة خيار جديد';
+    errEl.classList.add('show');
+    return;
+  }
   const saveBtn = document.getElementById('saveModifierOptionBtn');
   saveBtn.disabled = true;
   saveBtn.textContent = 'جاري الحفظ...';
@@ -22286,6 +24269,7 @@ async function saveModifierOption(e) {
 }
 
 async function deleteModifierOption(item) {
+  if (!hasBoActionPermission('modifier-groups', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
   if (!confirm(`هل أنت متأكد من حذف "${item.name}"؟`)) return;
   const { error } = await supabaseClient.from('modifier_options').delete().eq('id', item.id);
   if (error) { console.error(error); showToast('تعذر حذف الخيار', true); return; }
@@ -22471,7 +24455,7 @@ function renderPermGrid(selected) {
                 const actChecked = permFineChecked(selected, isAll, checked, actKey);
                 return `<label class="perm-action-chip">
                   <input type="checkbox" class="perm-cb-action" data-perm-key="${actKey}" data-module="${g.key}" data-screen="${child.key}" ${actChecked ? 'checked' : ''} ${checked ? '' : 'disabled'}>
-                  ${ACTION_LABELS[action]}
+                  ${actionLabelFor(child.key, action)}
                 </label>`;
               }).join('') + '</div>';
           }
@@ -25025,11 +27009,15 @@ async function saveAttendance(e) {
   e.preventDefault();
   const errEl = document.getElementById('attendanceModalError');
   errEl.classList.remove('show');
+  const id = document.getElementById('attendanceId').value || null;
+  if (!hasBoActionPermission('attendance', id ? 'edit' : 'add')) {
+    errEl.textContent = id ? 'ليس لديك صلاحية التعديل في هذه الشاشة' : 'ليس لديك صلاحية الإضافة في هذه الشاشة';
+    errEl.classList.add('show');
+    return;
+  }
   const saveBtn = document.getElementById('saveAttendanceBtn');
   saveBtn.disabled = true;
   saveBtn.textContent = 'جاري الحفظ...';
-
-  const id = document.getElementById('attendanceId').value || null;
   const workDate = document.getElementById('attendanceWorkDate').value;
   const payload = {
     employee_id: document.getElementById('attendanceEmployee').value,
@@ -25076,6 +27064,7 @@ async function deleteAttendance(record) {
 }
 
 async function quickAttendanceCheckOut(record) {
+  if (!hasBoActionPermission('attendance', 'edit')) { showToast('ليس لديك صلاحية التعديل في هذه الشاشة', true); return; }
   const { error } = await supabaseClient.from('attendance').update({ check_out: new Date().toISOString() }).eq('id', record.id);
   if (error) { console.error(error); showToast('تعذر تسجيل الانصراف', true); return; }
   showToast('تم تسجيل الانصراف بنجاح');
@@ -25144,7 +27133,7 @@ function renderLeaveRequestsTable() {
       <td><span class="bo-badge ${LEAVE_STATUS_BADGE[r.status] || 'info'}">${LEAVE_STATUS_LABELS[r.status] || r.status}</span></td>
       <td>
         <div class="bo-row-actions">
-          ${r.status === 'pending' ? '<button class="bo-icon-btn" data-action="approve">موافقة</button><button class="bo-icon-btn danger" data-action="reject">رفض</button>' : ''}
+          ${r.status === 'pending' && hasBoActionPermission('leave-requests', 'edit') ? '<button class="bo-icon-btn" data-action="approve">موافقة</button><button class="bo-icon-btn danger" data-action="reject">رفض</button>' : ''}
           <button class="bo-icon-btn" data-action="edit">تعديل</button>
           <button class="bo-icon-btn danger" data-action="delete">حذف</button>
         </div>
@@ -25215,11 +27204,15 @@ async function saveLeaveRequest(e) {
   e.preventDefault();
   const errEl = document.getElementById('leaveRequestModalError');
   errEl.classList.remove('show');
+  const id = document.getElementById('leaveRequestId').value || null;
+  if (!hasBoActionPermission('leave-requests', id ? 'edit' : 'add')) {
+    errEl.textContent = id ? 'ليس لديك صلاحية التعديل في هذه الشاشة' : 'ليس لديك صلاحية الإضافة في هذه الشاشة';
+    errEl.classList.add('show');
+    return;
+  }
   const saveBtn = document.getElementById('saveLeaveRequestBtn');
   saveBtn.disabled = true;
   saveBtn.textContent = 'جاري الحفظ...';
-
-  const id = document.getElementById('leaveRequestId').value || null;
   const startDate = document.getElementById('leaveRequestStartDate').value;
   const endDate = document.getElementById('leaveRequestEndDate').value;
   const payload = {
@@ -25702,7 +27695,7 @@ let requisitionLines = []; // [{productId, quantity, notes}] في مودال إ�
 async function loadBoRequisitions() {
   const { data, error } = await supabaseClient
     .from('purchase_requisitions')
-    .select('*, branches(name), purchase_requisition_items(id, product_id, quantity_requested, notes, products(name)), requested_by_profile:users_profile!purchase_requisitions_requested_by_fkey(full_name), approved_by_profile:users_profile!purchase_requisitions_approved_by_fkey(full_name)')
+    .select('*, branches(name), purchase_requisition_items(id, product_id, quantity_requested, notes, products(name)), requested_by_profile:users_profile!purchase_requisitions_requested_by_fkey(full_name), approved_by_profile:users_profile!purchase_requisitions_approved_by_fkey(full_name), purchase_orders(order_number)')
     .order('created_at', { ascending: false });
   if (error) {
     // بعض قواعد البيانات ممكن يكون اسم الـ foreign key مختلف؛ نرجع لاستعلام مبسط لو فشل
@@ -25711,7 +27704,7 @@ async function loadBoRequisitions() {
       .from('purchase_requisitions')
       .select('*, branches(name), purchase_requisition_items(id, product_id, quantity_requested, notes, products(name))')
       .order('created_at', { ascending: false });
-    if (fallback.error) { console.error(fallback.error); showToast('تعذر تحميل طلبات الشراء الداخلية', true); return; }
+    if (fallback.error) { console.error(fallback.error); showToast('تعذر تحميل طلبات التوريد', true); return; }
     boRequisitions = fallback.data || [];
     return;
   }
@@ -25724,7 +27717,7 @@ function renderRequisitionsTable() {
   const statusFilter = document.getElementById('requisitionStatusFilter')?.value || '';
   const filtered = statusFilter ? boRequisitions.filter(r => r.status === statusFilter) : boRequisitions;
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لا توجد طلبات شراء داخلية</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لا توجد طلبات توريد</td></tr>`;
     return;
   }
   const statusLabels = { pending: 'قيد الانتظار', approved: 'تمت الموافقة', rejected: 'مرفوض' };
@@ -25733,19 +27726,29 @@ function renderRequisitionsTable() {
   filtered.forEach(r => {
     const tr = document.createElement('tr');
     const itemsCount = (r.purchase_requisition_items || []).length;
+    const statusCell = r.purchase_order_id
+      ? `<span class="bo-badge active">${statusLabels[r.status] || r.status}</span> <button type="button" class="bo-link-btn req-target-po-btn" data-po-id="${r.purchase_order_id}" style="font-size:11px; color:var(--teal-700); font-weight:600; background:none; padding:0; text-decoration:underline;">→ طلب شراء #${r.purchase_orders?.order_number ?? ''}</button>`
+      : `<span class="bo-badge ${statusClass[r.status] || ''}">${statusLabels[r.status] || r.status}</span>`;
     tr.innerHTML = `
       <td>${new Date(r.created_at).toLocaleDateString('ar-EG')}</td>
       <td>${escapeHtml(r.branches?.name || '—')}</td>
       <td class="num">${itemsCount}</td>
       <td>${escapeHtml(r.requested_by_profile?.full_name || '—')}</td>
       <td style="font-size:12px; color:var(--ink-soft);">${escapeHtml(r.notes || '—')}</td>
-      <td><span class="bo-badge ${statusClass[r.status] || ''}">${statusLabels[r.status] || r.status}</span></td>
+      <td>${statusCell}</td>
       <td>
         <div class="bo-row-actions">
           <button class="bo-icon-btn" data-action="view">عرض</button>
         </div>
       </td>`;
     tr.querySelector('[data-action="view"]').addEventListener('click', () => openRequisitionDetailModal(r));
+    const targetPoBtn = tr.querySelector('.req-target-po-btn');
+    if (targetPoBtn) {
+      targetPoBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openTargetPurchaseOrderFromRequisition(targetPoBtn.dataset.poId);
+      });
+    }
     tbody.appendChild(tr);
   });
 }
@@ -25797,6 +27800,7 @@ async function saveRequisition(e) {
   e.preventDefault();
   const errEl = document.getElementById('requisitionFormModalError');
   errEl.classList.remove('show');
+  if (!hasBoActionPermission('purchase-requisitions', 'add')) { errEl.textContent = 'ليس لديك صلاحية إضافة طلب شراء'; errEl.classList.add('show'); return; }
 
   const branchId = document.getElementById('requisitionBranch').value;
   const validLines = requisitionLines.filter(l => l.productId && l.quantity > 0);
@@ -25856,9 +27860,23 @@ function openRequisitionDetailModal(req) {
   document.getElementById('requisitionDetailNotesWrap').innerHTML = req.notes
     ? `<strong>ملاحظات الطلب:</strong> ${escapeHtml(req.notes)}` : '';
 
-  const canApprove = hasBoScreenPermission('purchase-requisitions') && req.status === 'pending';
+  const canApprove = hasBoActionPermission('purchase-requisitions', 'edit') && req.status === 'pending';
   document.getElementById('approveRequisitionBtn').style.display = canApprove ? '' : 'none';
   document.getElementById('rejectRequisitionBtn').style.display = canApprove ? '' : 'none';
+
+  document.getElementById('requisitionDetailModalError').classList.remove('show');
+  const convertedNote = document.getElementById('requisitionDetailConvertedNote');
+  const convertBtn = document.getElementById('convertRequisitionToPOBtn');
+  if (req.purchase_order_id) {
+    convertedNote.innerHTML = `تم تحويل الطلب لأمر شراء رقم #${escapeHtml(String(req.purchase_orders?.order_number ?? '—'))} — <button type="button" class="bo-link-btn" id="requisitionDetailOpenPOBtn" style="font-size:12px; color:var(--teal-700); font-weight:700; background:none; padding:0; text-decoration:underline;">فتح طلب الشراء</button>`;
+    convertedNote.style.display = '';
+    convertBtn.style.display = 'none';
+    const openPOBtn = document.getElementById('requisitionDetailOpenPOBtn');
+    if (openPOBtn) openPOBtn.addEventListener('click', () => openTargetPurchaseOrderFromRequisition(req.purchase_order_id));
+  } else {
+    convertedNote.style.display = 'none';
+    convertBtn.style.display = (req.status === 'approved' && hasBoActionPermission('purchase-orders', 'add')) ? '' : 'none';
+  }
 
   document.getElementById('requisitionDetailModalOverlay').classList.add('show');
 }
@@ -25870,6 +27888,7 @@ function closeRequisitionDetailModal() {
 
 async function decideRequisition(newStatus) {
   if (!currentRequisitionDetail) return;
+  if (!hasBoActionPermission('purchase-requisitions', 'edit')) { showToast('ليس لديك صلاحية اعتماد أو رفض طلبات الشراء', true); return; }
   const confirmMsg = newStatus === 'approved' ? 'هل تريد اعتماد هذا الطلب؟' : 'هل تريد رفض هذا الطلب؟';
   if (!confirm(confirmMsg)) return;
   const { error } = await supabaseClient
@@ -26181,7 +28200,7 @@ async function openSaleDetailModal(sale) {
 
   // تصحيح طريقة الدفع متاح بس للأدمن ولفواتير البيع المكتملة (الفواتير المعلّقة/الملغاة مالهاش معنى هنا)
   const editBtn = document.getElementById('editSalePaymentBtn');
-  if (hasBoPermission('admin') && sale.status === 'completed') {
+  if (hasBoPermission('admin') && hasBoActionPermission('sales-list', 'edit') && sale.status === 'completed') {
     editBtn.style.display = 'inline-block';
     editBtn.onclick = () => openEditSalePaymentModal(sale, salePayments || []);
   } else {
@@ -26260,6 +28279,11 @@ async function saveEditSalePayment() {
   const errEl = document.getElementById('editSalePaymentError');
   errEl.classList.remove('show');
   if (!editSalePaymentSale) return;
+  if (!(hasBoPermission('admin') && hasBoActionPermission('sales-list', 'edit'))) {
+    errEl.textContent = 'ليس لديك صلاحية تصحيح طريقة الدفع';
+    errEl.classList.add('show');
+    return;
+  }
 
   const lines = editSalePaymentLines
     .map(l => ({ method: l.method || 'cash', amount: Math.round((Number(l.amount) || 0) * 100) / 100 }))
@@ -26315,6 +28339,7 @@ let boPurchases = [];
 let boPurchaseOrders = [];
 let purchaseOrderLines = []; // [{ productId, quantity, unitCost, productUnitId, unitFactor, unitLabel }]
 let purchaseOrderSupplierSearch = null;
+let convertingRequisitionId = null; // لو الطلب اتفتح من "تحويل لطلب شراء" جوه طلب توريد معتمد
 let currentReceivingPO = null; // طلب الشراء المفتوح حاليًا في شاشة الاستلام
 let poReceiveLines = []; // [{ poItemId, productId, name, unitLabel, ordered, received, remaining, qtyNow, unitCost }]
 let purchaseLines = []; // [{ productId, quantity, unitCost }]
@@ -26522,6 +28547,7 @@ async function savePurchase(e) {
   e.preventDefault();
   const errEl = document.getElementById('purchaseModalError');
   errEl.classList.remove('show');
+  if (!hasBoActionPermission('purchases', 'add')) { errEl.textContent = 'ليس لديك صلاحية إضافة فاتورة شراء'; errEl.classList.add('show'); return; }
 
   const supplierId = document.getElementById('purchaseSupplierValue').value;
   if (!supplierId) { errEl.textContent = 'يرجى اختيار المورد أولاً'; errEl.classList.add('show'); return; }
@@ -26714,8 +28740,14 @@ function openSaleOrderDetailModal(so) {
   document.getElementById('saleOrderDetailTotal').textContent = Number(so.total).toFixed(2);
 
   const isDraft = so.status === 'draft';
-  document.getElementById('confirmSaleOrderBtn').style.display = isDraft ? '' : 'none';
-  document.getElementById('cancelSaleOrderBtn').style.display = isDraft ? '' : 'none';
+  document.getElementById('confirmSaleOrderBtn').style.display = (isDraft && hasBoActionPermission('sale-orders', 'edit')) ? '' : 'none';
+  document.getElementById('cancelSaleOrderBtn').style.display = (isDraft && hasBoActionPermission('sale-orders', 'delete')) ? '' : 'none';
+  const noShiftWarning = document.getElementById('saleOrderDetailNoShiftWarning');
+  if (noShiftWarning) {
+    const willBeCashNow = isDraft && !so.customer_id; // عميل نقدي = هيتحصّل كامل المبلغ فورًا عند التأكيد
+    const noOpenShift = !currentShift || currentShift.pending;
+    noShiftWarning.style.display = (willBeCashNow && noOpenShift) ? '' : 'none';
+  }
 
   document.getElementById('saleOrderDetailModalOverlay').classList.add('show');
 }
@@ -26729,12 +28761,17 @@ async function confirmSaleOrder() {
   if (!currentViewingSaleOrder) return;
   const errEl = document.getElementById('saleOrderDetailModalError');
   errEl.classList.remove('show');
+  if (!hasBoActionPermission('sale-orders', 'edit')) { errEl.textContent = 'ليس لديك صلاحية التعديل في هذه الشاشة'; errEl.classList.add('show'); return; }
   const btn = document.getElementById('confirmSaleOrderBtn');
   btn.disabled = true;
   btn.textContent = 'جاري التحويل...';
   try {
     const { data, error } = await supabaseClient.rpc('fn_confirm_sale_order', {
       p_sale_order_id: currentViewingSaleOrder.id,
+      // بنبعت الوردية المفتوحة دلوقتي (وقت التأكيد/التحصيل الفعلي)، مش وقت إنشاء
+      // الطلبية أصلًا — عشان لو الطلبية اتسجّلت في وردية قفلت وبتتأكّد/تتحصّل في
+      // وردية تانية، الكاش يتسجّل في الوردية الصح اللي هيتقفّل عليها فعلًا.
+      p_shift_id: (currentShift && !currentShift.pending) ? currentShift.id : null,
     });
     if (error) throw error;
     showToast(`تم تأكيد الطلبية وتحويلها إلى فاتورة بيع رقم ${data?.invoice_number ?? ''} بنجاح`);
@@ -26754,6 +28791,7 @@ async function confirmSaleOrder() {
 
 async function cancelSaleOrder() {
   if (!currentViewingSaleOrder) return;
+  if (!hasBoActionPermission('sale-orders', 'delete')) { showToast('ليس لديك صلاحية إلغاء طلبيات البيع', true); return; }
   if (!confirm(`هل أنت متأكد من إلغاء طلبية البيع رقم #${currentViewingSaleOrder.order_number}؟`)) return;
   try {
     const { error } = await supabaseClient
@@ -26787,6 +28825,44 @@ async function loadBoPurchaseOrders() {
     .limit(100);
   if (error) { console.error(error); showToast('تعذر تحميل طلبات الشراء', true); return; }
   boPurchaseOrders = data || [];
+
+  // تتبّع ثنائي الاتجاه: إذا كان الطلب قد تحوّل أصلاً من طلب توريد داخلي، يُجلب رقمه هنا
+  // حتى تبقى الإشارة المرجعية ظاهرة في الاتجاهين، وليس فقط داخل طلب التوريد
+  const poIds = boPurchaseOrders.map(po => po.id);
+  if (poIds.length > 0) {
+    const { data: reqLinks, error: reqLinksError } = await supabaseClient
+      .from('purchase_requisitions')
+      .select('id, purchase_order_id')
+      .in('purchase_order_id', poIds);
+    if (reqLinksError) {
+      console.error(reqLinksError);
+    } else {
+      const reqMap = new Map((reqLinks || []).map(r => [r.purchase_order_id, r.id]));
+      boPurchaseOrders.forEach(po => { po.source_requisition_id = reqMap.get(po.id) || null; });
+    }
+  }
+}
+
+// يفتح تفاصيل طلب التوريد المصدر من شاشة طلبات الشراء (الاتجاه العكسي للإشارة المرجعية)
+async function openSourceRequisitionFromPO(requisitionId) {
+  const { data, error } = await supabaseClient
+    .from('purchase_requisitions')
+    .select('*, branches(name), purchase_requisition_items(id, product_id, quantity_requested, notes, products(name)), requested_by_profile:users_profile!purchase_requisitions_requested_by_fkey(full_name), approved_by_profile:users_profile!purchase_requisitions_approved_by_fkey(full_name), purchase_orders(order_number)')
+    .eq('id', requisitionId)
+    .single();
+  if (error) { console.error(error); showToast('تعذر تحميل طلب التوريد المصدر', true); return; }
+  openRequisitionDetailModal(data);
+}
+
+// يفتح شاشة طلب الشراء الناتج من شاشة طلبات التوريد (الاتجاه العكسي للإشارة المرجعية)
+async function openTargetPurchaseOrderFromRequisition(purchaseOrderId) {
+  const { data, error } = await supabaseClient
+    .from('purchase_orders')
+    .select('*, suppliers(name)')
+    .eq('id', purchaseOrderId)
+    .single();
+  if (error) { console.error(error); showToast('تعذر تحميل طلب الشراء المرتبط', true); return; }
+  openReceivePOModal(data);
 }
 
 function purchaseOrderStatusInfo(status) {
@@ -26813,8 +28889,11 @@ function renderPurchaseOrdersTable() {
     const createdDate = new Date(po.created_at).toLocaleDateString('ar-EG');
     const expectedDate = po.expected_date ? new Date(po.expected_date).toLocaleDateString('ar-EG') : '—';
     const st = purchaseOrderStatusInfo(po.status);
+    const sourceNote = po.source_requisition_id
+      ? `<br><button type="button" class="bo-link-btn po-source-req-btn" data-req-id="${po.source_requisition_id}" style="font-size:11px; color:var(--teal-700); font-weight:600; background:none; padding:0; text-decoration:underline;">أُنشئ من طلب توريد #${po.source_requisition_id.slice(0, 8)}</button>`
+      : '';
     tr.innerHTML = `
-      <td class="num">#${po.order_number}</td>
+      <td class="num">#${po.order_number}${sourceNote}</td>
       <td>${escapeHtml(po.suppliers?.name || '—')}</td>
       <td class="num">${Number(po.total).toFixed(2)}</td>
       <td><span class="bo-badge ${st.cls}">${escapeHtml(st.label)}</span></td>
@@ -26822,22 +28901,41 @@ function renderPurchaseOrdersTable() {
       <td class="num">${createdDate}</td>
       <td><button class="bo-icon-btn" data-action="open">فتح</button></td>`;
     tr.querySelector('[data-action="open"]').addEventListener('click', () => openReceivePOModal(po));
+    const sourceReqBtn = tr.querySelector('.po-source-req-btn');
+    if (sourceReqBtn) {
+      sourceReqBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openSourceRequisitionFromPO(sourceReqBtn.dataset.reqId);
+      });
+    }
     tbody.appendChild(tr);
   });
 }
 
-function openPurchaseOrderModal() {
+function openPurchaseOrderModal(fromRequisition) {
   purchaseOrderSupplierSearch.clear();
-  purchaseOrderLines = [];
-  addPurchaseOrderLine();
+  convertingRequisitionId = fromRequisition ? fromRequisition.id : null;
+  if (fromRequisition) {
+    const items = (fromRequisition.purchase_requisition_items || []).filter(it => it.product_id);
+    purchaseOrderLines = items.map(it => {
+      const prod = boProducts.find(p => p.id === it.product_id);
+      return { productId: it.product_id, quantity: Number(it.quantity_requested) || 1, unitCost: prod ? (Number(prod.cost_price) || 0) : 0, productUnitId: null, unitFactor: 1, unitLabel: prod ? (prod.unit_type || null) : null };
+    });
+    if (purchaseOrderLines.length === 0) addPurchaseOrderLine(); else renderPurchaseOrderLines();
+    document.getElementById('purchaseOrderNotes').value = `تحويل من طلب توريد #${fromRequisition.id.slice(0, 8)}`;
+  } else {
+    purchaseOrderLines = [];
+    addPurchaseOrderLine();
+    document.getElementById('purchaseOrderNotes').value = '';
+  }
   document.getElementById('purchaseOrderExpectedDate').value = '';
-  document.getElementById('purchaseOrderNotes').value = '';
   document.getElementById('purchaseOrderModalError').classList.remove('show');
   document.getElementById('purchaseOrderModalOverlay').classList.add('show');
 }
 
 function closePurchaseOrderModal() {
   document.getElementById('purchaseOrderModalOverlay').classList.remove('show');
+  convertingRequisitionId = null;
 }
 
 function addPurchaseOrderLine() {
@@ -26957,6 +29055,7 @@ async function savePurchaseOrder(e) {
   e.preventDefault();
   const errEl = document.getElementById('purchaseOrderModalError');
   errEl.classList.remove('show');
+  if (!hasBoActionPermission('purchase-orders', 'add')) { errEl.textContent = 'ليس لديك صلاحية إضافة طلب شراء'; errEl.classList.add('show'); return; }
 
   const supplierId = document.getElementById('purchaseOrderSupplierValue').value;
   if (!supplierId) { errEl.textContent = 'يرجى اختيار المورد أولاً'; errEl.classList.add('show'); return; }
@@ -26988,6 +29087,17 @@ async function savePurchaseOrder(e) {
     const { error: itemsError } = await supabaseClient.from('purchase_order_items').insert(poItems);
     if (itemsError) throw itemsError;
 
+    if (convertingRequisitionId) {
+      const { error: linkError } = await supabaseClient
+        .from('purchase_requisitions')
+        .update({ purchase_order_id: po.id })
+        .eq('id', convertingRequisitionId);
+      if (linkError) console.error(linkError);
+      convertingRequisitionId = null;
+      await loadBoRequisitions();
+      renderRequisitionsTable();
+    }
+
     showToast(`تم إنشاء طلب الشراء رقم ${po.order_number}`);
     closePurchaseOrderModal();
     await loadBoPurchaseOrders();
@@ -27010,9 +29120,22 @@ async function openReceivePOModal(po) {
   document.getElementById('receivePOSupplierLabel').textContent = po.suppliers?.name || '—';
   document.getElementById('receivePOModalError').classList.remove('show');
 
+  // إشارة مرجعية ثنائية الاتجاه: إذا كان هذا الطلب قد أُنشئ من طلب توريد داخلي، يُعرض رابط يفتحه مباشرة
+  const sourceReqRow = document.getElementById('receivePOSourceRequisitionRow');
+  const sourceReqBtn = document.getElementById('receivePOSourceRequisitionBtn');
+  if (po.source_requisition_id) {
+    sourceReqBtn.textContent = `طلب توريد #${po.source_requisition_id.slice(0, 8)}`;
+    sourceReqBtn.onclick = () => openSourceRequisitionFromPO(po.source_requisition_id);
+    sourceReqRow.style.display = '';
+  } else {
+    sourceReqRow.style.display = 'none';
+  }
+
   const readOnly = po.status === 'received' || po.status === 'cancelled';
-  document.getElementById('saveReceivePOBtn').style.display = readOnly ? 'none' : '';
-  document.getElementById('cancelPOFromReceiveBtn').style.display = readOnly ? 'none' : '';
+  const canEdit = !readOnly && hasBoActionPermission('purchase-orders', 'edit');
+  const canCancel = !readOnly && hasBoActionPermission('purchase-orders', 'delete');
+  document.getElementById('saveReceivePOBtn').style.display = canEdit ? '' : 'none';
+  document.getElementById('cancelPOFromReceiveBtn').style.display = canCancel ? '' : 'none';
 
   const whField = document.getElementById('receivePOWarehouseField');
   const whSel = document.getElementById('receivePOWarehouse');
@@ -27100,6 +29223,7 @@ async function saveReceivePO() {
   const errEl = document.getElementById('receivePOModalError');
   errEl.classList.remove('show');
   if (!currentReceivingPO) return;
+  if (!hasBoActionPermission('purchase-orders', 'edit')) { showToast('ليس لديك صلاحية التعديل في هذه الشاشة', true); return; }
 
   const linesToReceive = poReceiveLines.filter(l => l.qtyNow > 0);
   if (linesToReceive.length === 0) {
@@ -27147,6 +29271,7 @@ async function saveReceivePO() {
 
 async function cancelPurchaseOrderFromReceive() {
   if (!currentReceivingPO) return;
+  if (!hasBoActionPermission('purchase-orders', 'delete')) { showToast('ليس لديك صلاحية إلغاء طلبات الشراء', true); return; }
   if (!confirm(`هل أنت متأكد من إلغاء طلب الشراء رقم #${currentReceivingPO.order_number}؟`)) return;
   try {
     const { error } = await supabaseClient
@@ -27496,6 +29621,7 @@ async function savePurchaseReturn(e) {
   e.preventDefault();
   const errEl = document.getElementById('purchaseReturnModalError');
   errEl.classList.remove('show');
+  if (!hasBoActionPermission('purchase-returns', 'add')) { errEl.textContent = 'ليس لديك صلاحية إضافة مرتجع شراء'; errEl.classList.add('show'); return; }
 
   if (!purchaseReturnPurchase) { errEl.textContent = 'يرجى البحث عن فاتورة الشراء أولاً'; errEl.classList.add('show'); return; }
 
@@ -27878,6 +30004,7 @@ let lastDailyTrendReportRows = [];
 let lastBranchReportRows = [];
 let lastCategoryReportRows = [];
 let lastMixedPaymentReportRows = [];
+let lastDeliveryZoneReportRows = [];
 let lastReportSalesForFilter = [];
 let lastReportSalePaymentsForFilter = [];
 let purchasesReportsLoadedOnce = false;
@@ -28033,6 +30160,16 @@ function renderBreakdownTable(tbodyId, rows, colspan, rowHtmlFn) {
     tr.innerHTML = rowHtmlFn(row);
     tbody.appendChild(tr);
   });
+}
+
+// بيحوّل مدة بالدقائق لصيغة مقروءة "س د" (مثلاً 95 دقيقة → "1 س 35 د")، أو "—" لو مفيش بيانات كفاية
+function formatMinutesDuration(mins) {
+  if (mins === null || mins === undefined || isNaN(mins)) return '—';
+  const total = Math.round(mins);
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  if (h > 0) return `${h} س ${m} د`;
+  return `${m} د`;
 }
 
 function buildDateRangeDays(fromDate, toDate) {
@@ -28351,6 +30488,164 @@ async function runReport() {
         tbody.appendChild(tr);
       });
     }
+
+    // ---- مبيعات الدليفري ----
+    // بنعتمد على طلبيات البيع (sale_orders) المؤكدة (status=confirmed) واللي
+    // ليها سجل "تفاصيل توصيل" مرتبط بيها؛ التاريخ المرجعي هو تاريخ التأكيد
+    // (confirmed_at) لأنه بيمثل لحظة تحوّل الطلبية لفاتورة بيع فعلية.
+    let deliveryQuery = supabaseClient
+      .from('sale_orders')
+      .select('id, order_number, total, branch_id, confirmed_at, customers(name), delivery_details!inner(delivery_fee, status, driver_employee_id, driver_name, delivery_zone_id, created_at, delivered_at)')
+      .eq('status', 'confirmed')
+      .gte('confirmed_at', fromISO)
+      .lte('confirmed_at', toISO);
+    deliveryQuery = applyBranchScope(deliveryQuery, branchId, 'branch_id');
+    const { data: deliveryOrders, error: deliveryError } = await deliveryQuery;
+    if (deliveryError) throw deliveryError;
+
+    const dOrders = deliveryOrders || [];
+    const deliveryOrderCount = dOrders.length;
+    const deliveryGoodsTotal = dOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
+    const deliveryFeesTotal = dOrders.reduce((sum, o) => sum + Number(o.delivery_details?.delivery_fee || 0), 0);
+    const deliveryGrandTotal = deliveryGoodsTotal + deliveryFeesTotal;
+    const deliveredOrders = dOrders.filter(o => o.delivery_details?.status === 'delivered');
+    const failedOrders = dOrders.filter(o => o.delivery_details?.status === 'failed');
+    const deliveredCount = deliveredOrders.length;
+    const failedCount = failedOrders.length;
+    // مدة التسليم = الوقت من إنشاء تفاصيل التوصيل (created_at) لحد وقت التسليم الفعلي (delivered_at)، بالدقائق
+    const deliveryDurationMinutes = o => {
+      const dd = o.delivery_details;
+      if (!dd?.delivered_at || !dd?.created_at) return null;
+      return (new Date(dd.delivered_at).getTime() - new Date(dd.created_at).getTime()) / 60000;
+    };
+    const durations = deliveredOrders.map(deliveryDurationMinutes).filter(m => m !== null && m >= 0);
+    const avgDeliveryMinutes = durations.length > 0 ? durations.reduce((a, b) => a + b, 0) / durations.length : null;
+    // نسبة الفشل = فشل ÷ (تسليم فعلي + فشل) — أي من بين الطلبات اللي اتحاول توصيلها فعلًا
+    const attemptedCount = deliveredCount + failedCount;
+    const failRate = attemptedCount > 0 ? (failedCount / attemptedCount * 100) : 0;
+
+    document.getElementById('deliveryReportOrderCount').textContent = deliveryOrderCount;
+    document.getElementById('deliveryReportGoodsTotal').textContent = deliveryGoodsTotal.toFixed(2);
+    document.getElementById('deliveryReportFeesTotal').textContent = deliveryFeesTotal.toFixed(2);
+    document.getElementById('deliveryReportGrandTotal').textContent = deliveryGrandTotal.toFixed(2);
+    document.getElementById('deliveryReportAvgFee').textContent = (deliveryOrderCount > 0 ? deliveryFeesTotal / deliveryOrderCount : 0).toFixed(2);
+    document.getElementById('deliveryReportDeliveredPct').textContent = (deliveryOrderCount > 0 ? (deliveredCount / deliveryOrderCount * 100) : 0).toFixed(1) + '%';
+    document.getElementById('deliveryReportAvgTime').textContent = formatMinutesDuration(avgDeliveryMinutes);
+    document.getElementById('deliveryReportFailRate').textContent = failRate.toFixed(1) + '%';
+
+    // ---- مصروفات التوصيل (بنود المصروفات المعلَّمة كـ "مصروف يخص التوصيل") ----
+    let deliveryExpensesQuery = supabaseClient
+      .from('expenses')
+      .select('amount, expense_item_id, branch_id, expense_items!inner(name, is_delivery_related)')
+      .eq('expense_items.is_delivery_related', true)
+      .gte('expense_date', fromDate)
+      .lte('expense_date', toDate);
+    deliveryExpensesQuery = applyBranchScope(deliveryExpensesQuery, branchId, 'branch_id');
+    const { data: deliveryExpensesRows, error: deliveryExpensesError } = await deliveryExpensesQuery;
+    if (deliveryExpensesError) throw deliveryExpensesError;
+
+    const dExpenses = deliveryExpensesRows || [];
+    const deliveryExpensesTotal = dExpenses.reduce((sum, x) => sum + Number(x.amount || 0), 0);
+    const deliveryNet = deliveryFeesTotal - deliveryExpensesTotal;
+
+    document.getElementById('deliveryReportExpensesTotal').textContent = deliveryExpensesTotal.toFixed(2);
+    const deliveryNetEl = document.getElementById('deliveryReportNet');
+    deliveryNetEl.textContent = deliveryNet.toFixed(2);
+    deliveryNetEl.classList.toggle('positive', deliveryNet >= 0);
+    deliveryNetEl.classList.toggle('negative', deliveryNet < 0);
+
+    const expenseItemGrouped = {};
+    dExpenses.forEach(x => {
+      const itemName = x.expense_items?.name || 'بند محذوف';
+      if (!expenseItemGrouped[itemName]) expenseItemGrouped[itemName] = { name: itemName, count: 0, total: 0 };
+      expenseItemGrouped[itemName].count += 1;
+      expenseItemGrouped[itemName].total += Number(x.amount || 0);
+    });
+    const expenseItemRows = Object.values(expenseItemGrouped).sort((a, b) => b.total - a.total);
+    renderBreakdownTable('deliveryExpensesReportTableBody', expenseItemRows, 3, row =>
+      `<td>${escapeHtml(row.name)}</td>
+       <td class="num">${row.count}</td>
+       <td class="num">${row.total.toFixed(2)}</td>`);
+
+    // حسب المنطقة
+    const zoneGrouped = {};
+    dOrders.forEach(o => {
+      const dd = o.delivery_details;
+      const zoneId = dd?.delivery_zone_id || 'none';
+      const zoneName = zoneId === 'none' ? 'بدون منطقة محددة' : (boDeliveryZones.find(z => z.id === zoneId)?.name || 'منطقة محذوفة');
+      if (!zoneGrouped[zoneId]) zoneGrouped[zoneId] = { name: zoneName, count: 0, goods: 0, fees: 0, delivered: 0, failed: 0, durationSum: 0, durationCount: 0 };
+      const g = zoneGrouped[zoneId];
+      g.count += 1;
+      g.goods += Number(o.total || 0);
+      g.fees += Number(dd?.delivery_fee || 0);
+      if (dd?.status === 'delivered') {
+        g.delivered += 1;
+        const dur = deliveryDurationMinutes(o);
+        if (dur !== null && dur >= 0) { g.durationSum += dur; g.durationCount += 1; }
+      } else if (dd?.status === 'failed') {
+        g.failed += 1;
+      }
+    });
+    const zoneRows = Object.values(zoneGrouped).sort((a, b) => (b.goods + b.fees) - (a.goods + a.fees));
+    renderBreakdownTable('deliveryZoneReportTableBody', zoneRows, 7, row => {
+      const attempted = row.delivered + row.failed;
+      const rowFailRate = attempted > 0 ? (row.failed / attempted * 100) : 0;
+      const rowAvgTime = row.durationCount > 0 ? row.durationSum / row.durationCount : null;
+      return `<td>${escapeHtml(row.name)}</td>
+       <td class="num">${row.count}</td>
+       <td class="num">${row.goods.toFixed(2)}</td>
+       <td class="num">${row.fees.toFixed(2)}</td>
+       <td class="num">${(row.goods + row.fees).toFixed(2)}</td>
+       <td class="num">${formatMinutesDuration(rowAvgTime)}</td>
+       <td class="num">${attempted > 0 ? rowFailRate.toFixed(1) + '%' : '—'}</td>`;
+    });
+    lastDeliveryZoneReportRows = zoneRows;
+
+    // حسب حالة التسليم
+    const statusGrouped = {};
+    dOrders.forEach(o => {
+      const st = o.delivery_details?.status || 'pending';
+      if (!statusGrouped[st]) statusGrouped[st] = { name: DELIVERY_STATUS_LABELS[st] || st, count: 0, fees: 0 };
+      statusGrouped[st].count += 1;
+      statusGrouped[st].fees += Number(o.delivery_details?.delivery_fee || 0);
+    });
+    const statusRows = Object.values(statusGrouped).sort((a, b) => b.count - a.count);
+    renderBreakdownTable('deliveryStatusReportTableBody', statusRows, 3, row =>
+      `<td>${escapeHtml(row.name)}</td>
+       <td class="num">${row.count}</td>
+       <td class="num">${row.fees.toFixed(2)}</td>`);
+
+    // حسب السائق
+    const driverGrouped = {};
+    dOrders.forEach(o => {
+      const dd = o.delivery_details;
+      const key = dd?.driver_employee_id || dd?.driver_name || 'none';
+      const name = key === 'none' ? 'بدون سائق محدد' : deliveryDriverDisplayName(dd);
+      if (!driverGrouped[key]) driverGrouped[key] = { name, count: 0, goods: 0, fees: 0, delivered: 0, failed: 0, durationSum: 0, durationCount: 0 };
+      const g = driverGrouped[key];
+      g.count += 1;
+      g.goods += Number(o.total || 0);
+      g.fees += Number(dd?.delivery_fee || 0);
+      if (dd?.status === 'delivered') {
+        g.delivered += 1;
+        const dur = deliveryDurationMinutes(o);
+        if (dur !== null && dur >= 0) { g.durationSum += dur; g.durationCount += 1; }
+      } else if (dd?.status === 'failed') {
+        g.failed += 1;
+      }
+    });
+    const driverRows = Object.values(driverGrouped).sort((a, b) => b.count - a.count);
+    renderBreakdownTable('deliveryDriverReportTableBody', driverRows, 6, row => {
+      const attempted = row.delivered + row.failed;
+      const rowFailRate = attempted > 0 ? (row.failed / attempted * 100) : 0;
+      const rowAvgTime = row.durationCount > 0 ? row.durationSum / row.durationCount : null;
+      return `<td>${escapeHtml(row.name)}</td>
+       <td class="num">${row.count}</td>
+       <td class="num">${row.goods.toFixed(2)}</td>
+       <td class="num">${row.fees.toFixed(2)}</td>
+       <td class="num">${formatMinutesDuration(rowAvgTime)}</td>
+       <td class="num">${attempted > 0 ? rowFailRate.toFixed(1) + '%' : '—'}</td>`;
+    });
   } catch (err) {
     console.error(err);
     showToast('تعذر تحميل التقرير', true);
@@ -29152,6 +31447,9 @@ const ACTIVITY_LOG_TABLE_LABELS = {
   quick_discounts: 'الخصومات السريعة', tax_rates: 'نسب الضريبة', unit_types: 'أنواع الوحدات', customer_types: 'أنواع العملاء',
   cash_accounts: 'حسابات الخزينة/البنك', cash_account_transactions: 'حركات الخزينة', cash_transfers: 'التحويلات بين الخزائن',
   capital_transactions: 'حركات رأس المال', fixed_assets: 'الأصول الثابتة', financial_position_snapshots: 'لقطات المركز المالي',
+  purchase_requisitions: 'طلبات التوريد', purchase_requisition_items: 'أصناف طلب التوريد',
+  purchase_orders: 'طلبات الشراء', purchase_order_items: 'أصناف طلب الشراء',
+  stock_transfers: 'التحويلات بين المخازن', stock_transfer_items: 'أصناف التحويل',
 };
 const ACTIVITY_LOG_ACTION_LABELS = { insert: 'إضافة', update: 'تعديل', delete: 'حذف' };
 const ACTIVITY_LOG_ACTION_BADGE = { insert: 'active', update: 'info', delete: 'inactive' };
@@ -29174,6 +31472,11 @@ const ACTIVITY_LOG_FIELD_LABELS = {
   disposed_at: 'تاريخ الاستبعاد', disposal_value: 'قيمة الاستبعاد', cash_account_id: 'حساب الخزينة',
   disposal_cash_account_id: 'حساب استبعاد الأصل', warehouse_id: 'المخزن', supplier_id: 'المورد', customer_id: 'العميل',
   employee_id: 'الموظف',
+  status: 'الحالة', order_number: 'رقم الطلب', total: 'الإجمالي', expected_date: 'تاريخ التوريد المتوقع',
+  quantity: 'الكمية', quantity_requested: 'الكمية المطلوبة', unit_cost: 'سعر الوحدة', received_quantity: 'الكمية المستلمة',
+  product_id: 'الصنف', product_unit_id: 'وحدة الصنف', requisition_id: 'طلب التوريد', purchase_order_id: 'طلب الشراء',
+  requested_by: 'مقدّم الطلب', approved_by: 'مُعتمِد الطلب', approved_at: 'تاريخ الاعتماد',
+  from_warehouse_id: 'من مخزن', to_warehouse_id: 'إلى مخزن', note: 'ملاحظة',
 };
 // حقول تقنية بحتة لا تفيد المستخدم عند عرض الفروقات (ونخفي رقم الـ PIN لأسباب أمنية)
 const ACTIVITY_LOG_HIDDEN_FIELDS = new Set(['id', 'created_at', 'updated_at', 'pin']);
@@ -29193,7 +31496,7 @@ function getPermKeyLabels() {
       const caps = ACTION_CAPABLE_SCREENS[child.key];
       if (caps) {
         Object.keys(ACTION_LABELS).filter(a => caps[a]).forEach(a => {
-          map['act:' + child.key + ':' + a] = `${g.title} — ${child.title} — ${ACTION_LABELS[a]}`;
+          map['act:' + child.key + ':' + a] = `${g.title} — ${child.title} — ${actionLabelFor(child.key, a)}`;
         });
       }
     });
@@ -29276,6 +31579,8 @@ const ACTIVITY_LOG_REF_LOOKUPS = {
   cash_account_id: () => boTreasuries, disposal_cash_account_id: () => boTreasuries,
   supplier_id: () => boSuppliers, customer_id: () => boCustomers, employee_id: () => boEmployees,
   user_id: () => boUsers, created_by: () => boUsers, closed_by: () => boUsers, disposed_by: () => boUsers,
+  product_id: () => boProducts, from_warehouse_id: () => boWarehouses, to_warehouse_id: () => boWarehouses,
+  requested_by: () => boUsers, approved_by: () => boUsers,
 };
 const activityLogRowsMap = {};
 let activityLogAllRows = [];
@@ -31957,6 +34262,23 @@ function exportMixedPaymentReportToExcel() {
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'فواتير الدفع المتعدد');
   const dateStr = new Date().toISOString().split('T')[0];
   XLSX.writeFile(wb, `تقرير-فواتير-الدفع-المتعدد-${dateStr}.xlsx`);
+}
+
+function exportDeliveryZoneReportToExcel() {
+  if (lastDeliveryZoneReportRows.length === 0) { showToast('لا توجد بيانات لتصديرها', true); return; }
+  const rows = lastDeliveryZoneReportRows.map(r => {
+    const attempted = r.delivered + r.failed;
+    return {
+      'المنطقة': r.name, 'عدد الطلبات': r.count, 'قيمة البضاعة': r.goods,
+      'رسوم التوصيل': r.fees, 'الإجمالي': r.goods + r.fees,
+      'متوسط وقت التسليم (دقيقة)': r.durationCount > 0 ? Number((r.durationSum / r.durationCount).toFixed(1)) : '',
+      'نسبة الفشل %': attempted > 0 ? Number((r.failed / attempted * 100).toFixed(1)) : '',
+    };
+  });
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'مبيعات الدليفري حسب المنطقة');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `تقرير-مبيعات-الدليفري-${dateStr}.xlsx`);
 }
 
 function exportBranchReportToExcel() {
