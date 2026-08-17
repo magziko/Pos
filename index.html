@@ -13372,6 +13372,7 @@ async function saveSaleOrder() {
     cart = []; posEls.discountInput.value = 0; setCustomerSelection('', { silent: true });
     delete posEls.paidInput.dataset.touched; posEls.paidInput.value = '';
     posEls.paymentMethodSelect.value = 'cash';
+    if (posEls.salesChannelSelect) posEls.salesChannelSelect.value = '';
     splitPaymentLines = [];
     posEls.splitToggle.checked = false;
     posEls.splitBlock.style.display = 'none';
@@ -13487,6 +13488,7 @@ async function savePosDeliveryOrder() {
 
     // إعادة تصفير شاشة البيع وإخفاء لوحة التوصيل
     cart = []; posEls.discountInput.value = 0; setCustomerSelection('', { silent: true });
+    if (posEls.salesChannelSelect) posEls.salesChannelSelect.value = '';
     const toggle = document.getElementById('posDeliveryToggle');
     if (toggle) { toggle.checked = false; toggle.dispatchEvent(new Event('change')); }
     ['posDeliveryRecipientName', 'posDeliveryPhone', 'posDeliveryCity', 'posDeliveryAddress',
