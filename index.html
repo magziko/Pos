@@ -107,10 +107,13 @@ a { color: inherit; }
 .shift-badge-dot { width: 8px; height: 8px; border-radius: 50%; background: #6FE3B8; flex-shrink: 0; }
 .shift-badge.closed .shift-badge-dot { background: #E0A94E; }
 .close-shift-btn { background: var(--amber-100); color: var(--amber-600); padding: 7px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; }
+.close-shift-btn, .logout-btn { display: flex; align-items: center; gap: 6px; }
+.topbar-btn-icon { font-size: 14px; line-height: 1; }
 .close-shift-btn:hover { background: #F5DCB0; }
 .return-topbar-btn { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.12); color: white; padding: 7px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; }
 .return-topbar-btn:hover { background: rgba(255,255,255,0.22); }
 .return-topbar-icon { font-size: 14px; line-height: 1; }
+.topbar-break { display: none; }
 /* -------- جرس التنبيهات (notifications) -------- */
 .notif-bell-btn { position: relative; display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; background: rgba(255,255,255,0.12); color: white; border-radius: 50%; font-size: 16px; flex: none; }
 .notif-bell-btn:hover { background: rgba(255,255,255,0.22); }
@@ -219,7 +222,9 @@ a { color: inherit; }
 .customer-option:hover, .customer-option.active { background: var(--teal-100); color: var(--teal-900); }
 .customer-option-empty { color: var(--ink-soft); cursor: default; }
 .customer-option-empty:hover { background: none; color: var(--ink-soft); }
-.cart-items { flex: 1; overflow-y: auto; padding: 8px 14px; }
+.cart-scroll-area { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; }
+.cart-items { padding: 8px 14px 2px; }
+.cart-extras { padding: 0 14px 10px; }
 .cart-empty { text-align: center; color: var(--ink-soft); font-size: 13px; padding: 40px 10px; }
 .cart-line { position: relative; overflow: hidden; border-bottom: 1px solid var(--surface-sunken); }
 .cart-line-swipe-bg { position: absolute; inset: 0; background: var(--danger); color: #fff; display: flex; align-items: center; font-size: 13px; font-weight: 700; padding: 0 18px; opacity: 0; }
@@ -266,6 +271,50 @@ a { color: inherit; }
 .checkout-btn { width: 100%; background: var(--teal-700); color: white; padding: 14px; border-radius: var(--radius-sm); font-size: 15.5px; font-weight: 700; margin-top: 10px; }
 .checkout-btn:hover { background: var(--teal-900); }
 .checkout-btn:disabled { background: #A9B5AF; cursor: not-allowed; }
+
+/* -------- POS cart footer v2: grouped / collapsible layout -------- */
+.cart-line { border-bottom: 1px solid var(--surface-sunken); }
+.cart-line-content { padding: 12px 6px; }
+.cart-line-content:hover { background: var(--surface-sunken); }
+.qty-btn { width: 27px; height: 27px; }
+.pos-note-row { margin: 10px 0 4px; }
+.pos-note-row input { width: 100%; }
+.pos-acc { border: 1px solid var(--border); border-radius: var(--radius-md); margin: 10px 0; overflow: hidden; background: var(--surface); }
+.pos-acc summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 11px 14px; font-size: 13px; font-weight: 700; color: var(--ink); user-select: none; }
+.pos-acc summary::-webkit-details-marker { display: none; }
+.pos-acc summary::marker { content: ''; }
+.pos-acc summary:hover { background: var(--surface-sunken); }
+.pos-acc-icon { font-size: 14px; line-height: 1; }
+.pos-acc-title { flex: 1; }
+.pos-acc-badge { background: var(--surface-sunken); color: var(--ink-soft); font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; white-space: nowrap; max-width: 34vw; overflow: hidden; text-overflow: ellipsis; }
+.pos-acc-badge.active { background: var(--teal-100); color: var(--teal-700); }
+.pos-acc-chev { font-size: 11px; color: var(--ink-soft); transition: transform 0.18s ease; flex-shrink: 0; }
+.pos-acc[open] > summary .pos-acc-chev { transform: rotate(90deg); }
+.pos-acc[open] > summary { border-bottom: 1px solid var(--border); background: var(--surface-sunken); }
+.pos-acc-body { padding: 12px 14px 4px; }
+.pos-acc-body .discount-row:first-child, .pos-acc-body .quick-discount-row:first-child { margin-top: 0; }
+.pos-delivery-card { border: 1px solid var(--border); border-radius: var(--radius-md); margin: 10px 0; overflow: hidden; background: var(--surface); }
+.pos-delivery-head { padding: 11px 14px; margin: 0; }
+.pos-delivery-head .split-toggle-label { font-weight: 700; color: var(--ink); font-size: 13px; }
+.pos-section { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px 2px; margin: 10px 0; background: var(--surface); }
+.pos-section-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; margin-bottom: 8px; color: var(--ink); }
+.pos-payment-method-row { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 9px 12px; background: var(--surface); }
+.pos-payment-method-row label { font-weight: 700; color: var(--ink); }
+.action-row-icons { display: flex; gap: 6px; margin-top: 12px; }
+.action-row-icons .btn-secondary { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 8px 4px; font-size: 12px; }
+.pos-secondary-btn { background: transparent; color: var(--teal-700); border: 1px dashed var(--border); font-weight: 600; }
+.pos-secondary-btn:hover { background: var(--teal-100); border-color: var(--teal-500); }
+.held-order-card { display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 10px; cursor: pointer; transition: border-color 0.12s ease, background 0.12s ease; }
+.held-order-card:hover { border-color: var(--teal-500); background: var(--teal-100); }
+.held-order-main { flex: 1; min-width: 0; }
+.held-order-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }
+.held-order-customer { font-size: 13.5px; font-weight: 700; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.held-order-time { font-size: 11.5px; color: var(--ink-soft); font-family: var(--font-num); direction: ltr; flex-shrink: 0; }
+.held-order-sub { font-size: 12px; color: var(--ink-soft); display: flex; gap: 10px; }
+.held-order-total { font-family: var(--font-num); direction: ltr; font-weight: 700; color: var(--teal-700); font-size: 14px; }
+.held-order-remove { flex-shrink: 0; background: none; color: var(--danger); font-size: 15px; padding: 6px 8px; border-radius: 6px; }
+.held-order-remove:hover { background: var(--danger-100); }
+.held-orders-empty { text-align: center; color: var(--ink-soft); font-size: 13px; padding: 20px 10px; }
 .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: white; padding: 12px 20px; border-radius: var(--radius-sm); font-size: 13.5px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease; z-index: 50; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 .toast.error { background: var(--danger); }
@@ -306,16 +355,27 @@ a { color: inherit; }
   }
   .cart-drawer-backdrop.show { opacity: 1; pointer-events: auto; }
 
-  .cart-header { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px 12px; }
+  .cart-header { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px 10px; }
+  .cart-header-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .cart-title { margin-bottom: 0; }
   .cart-mobile-close {
-    display: flex; align-items: center; gap: 6px; align-self: flex-start;
-    background: var(--surface-sunken); color: var(--ink); padding: 8px 14px 8px 10px;
-    border-radius: 20px; font-size: 13px; font-weight: 600;
+    display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+    background: var(--surface-sunken); color: var(--ink); padding: 7px 12px 7px 8px;
+    border-radius: 20px; font-size: 12.5px; font-weight: 600;
   }
   .cart-mobile-close:hover { background: var(--teal-100); color: var(--teal-700); }
 
-  .cart-items { padding: 6px 16px; }
-  .cart-footer { padding: 14px 16px calc(18px + env(safe-area-inset-bottom)); }
+  .cart-items { padding: 6px 16px 2px; }
+  .cart-extras { padding: 0 16px 10px; }
+  .cart-footer { padding: 12px 16px calc(14px + env(safe-area-inset-bottom)); box-shadow: 0 -4px 12px rgba(16, 30, 25, 0.06); position: relative; z-index: 2; }
+
+  /* أقسام الخصم/التوصيل/الدفع: لمسات أوضح ومساحة لمس أكبر على الموبايل */
+  .pos-acc summary { padding: 13px 14px; font-size: 13.5px; }
+  .pos-acc-badge { max-width: 40vw; font-size: 11.5px; }
+  .pos-section { padding: 13px 14px 3px; }
+  .pos-delivery-head { padding: 13px 14px; }
+  .checkout-btn, .pos-secondary-btn { padding-top: 13px; padding-bottom: 13px; }
+  .action-row-icons .btn-secondary { padding-top: 9px; padding-bottom: 9px; }
 
   /* Floating summary bar that opens the cart drawer */
   .mobile-cart-bar {
@@ -342,25 +402,37 @@ a { color: inherit; }
 
 /* -------- POS topbar: fit small phone widths -------- */
 @media (max-width: 860px) {
-  .topbar { flex-wrap: wrap; row-gap: 6px; padding: 8px 12px; }
+  .topbar { flex-wrap: wrap; gap: 8px; padding: 8px 12px; align-items: center; justify-content: flex-start; }
   .topbar-left { gap: 8px; min-width: 0; }
   .topbar-brand { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40vw; }
   .topbar-branch { font-size: 11px; padding: 3px 9px; white-space: nowrap; }
-  .topbar-right { flex: 1 1 auto; justify-content: flex-end; flex-wrap: wrap; gap: 6px; font-size: 11.5px; row-gap: 6px; }
+
+  /* دمج عناصر topbar-right كأبناء مباشرين لـ topbar عشان نتحكم بالسطرين بدقة */
+  .topbar-right { display: contents; }
+  .topbar-break { display: block; flex-basis: 100%; height: 0; }
+
+  /* السطر الأول: اسم الفرع (يمين) + شارة الوردية والوقت (يسار) */
+  .shift-badge { margin-inline-start: auto; font-size: 11px; padding: 5px 9px; max-width: 56vw; }
+  .shift-badge span:not(.shift-badge-dot) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* السطر الثاني: باقي الأزرار */
   #cashierLabel { display: none; }
-  .shift-badge { font-size: 11px; padding: 5px 9px; }
   .topbar-clock { font-size: 11.5px; }
   .close-shift-btn, .logout-btn, .return-topbar-btn { padding: 6px 10px; font-size: 11.5px; }
 }
 
 @media (max-width: 480px) {
+  .action-row-icons { gap: 5px; }
+  .action-row-icons .btn-secondary { padding: 7px 2px; font-size: 11px; gap: 3px; }
   .topbar-brand { display: none; }
   .topbar-clock { display: none; }
-  .close-shift-btn { padding: 6px 8px; }
-  .logout-btn { padding: 6px 8px; }
-  .return-topbar-btn { padding: 6px 8px; }
-  .return-topbar-label { display: none; }
-  .return-topbar-icon { font-size: 16px; }
+  .close-shift-btn, .logout-btn, .return-topbar-btn {
+    width: 34px; height: 34px; padding: 0; border-radius: 50%;
+    justify-content: center;
+  }
+  .return-topbar-label, .topbar-btn-label { display: none; }
+  .return-topbar-icon, .topbar-btn-icon { font-size: 15px; }
+  .shift-badge { max-width: 40vw; }
 }
 
 /* -------- Back office -------- */
@@ -1228,13 +1300,15 @@ a { color: inherit; }
       <div class="topbar-right">
         <span id="cashierLabel">—</span>
         <div class="shift-badge closed" id="shiftBadge"><span class="shift-badge-dot"></span><span id="shiftStatusLabel">لا توجد وردية مفتوحة</span></div>
+        <div class="topbar-break"></div>
         <span class="topbar-clock" id="clockLabel">--:--</span>
         <button class="notif-bell-btn" id="notifBellPos" type="button" title="التنبيهات">🔔<span class="notif-bell-badge" id="notifBadgePos">0</span></button>
         <button class="return-topbar-btn" id="saleReturnBtn" title="مرتجع بيع"><span class="return-topbar-icon">↩</span><span class="return-topbar-label">مرتجع بيع</span></button>
         <button class="return-topbar-btn" id="cashDropBtn" style="display:none;" title="سحب نقدي من الدرج لخزنة الفرع"><span class="return-topbar-icon">💵</span><span class="return-topbar-label">سحب نقدي</span></button>
-        <button class="close-shift-btn" id="closeShiftBtn" style="display:none;">إغلاق الوردية</button>
-        <button class="logout-btn" id="backofficeBtn" style="display:none;">لوحة التحكم</button>
-        <button class="logout-btn" id="logoutBtn">تسجيل الخروج</button>
+        <button class="close-shift-btn" id="closeShiftBtn" style="display:none;" title="إغلاق الوردية"><span class="topbar-btn-icon">🔒</span><span class="topbar-btn-label">إغلاق الوردية</span></button>
+        <button class="return-topbar-btn" id="myAttendanceBtn" style="display:none;" title="حضور وانصرافي"><span class="return-topbar-icon">🕒</span><span class="return-topbar-label">بصمتي</span></button>
+        <button class="logout-btn" id="backofficeBtn" style="display:none;" title="لوحة التحكم"><span class="topbar-btn-icon">🖥️</span><span class="topbar-btn-label">لوحة التحكم</span></button>
+        <button class="logout-btn" id="logoutBtn" title="تسجيل الخروج"><span class="topbar-btn-icon">⏻</span><span class="topbar-btn-label">تسجيل الخروج</span></button>
       </div>
     </div>
     <div class="main">
@@ -1246,8 +1320,10 @@ a { color: inherit; }
       <div class="cart-drawer-backdrop" id="cartDrawerBackdrop"></div>
       <div class="cart-side" id="cartSide">
         <div class="cart-header">
-          <button class="cart-mobile-close" id="cartMobileClose" type="button">‹ رجوع للأصناف</button>
-          <div class="cart-title">الفاتورة الحالية</div>
+          <div class="cart-header-row">
+            <button class="cart-mobile-close" id="cartMobileClose" type="button">‹ رجوع للأصناف</button>
+            <div class="cart-title">الفاتورة الحالية</div>
+          </div>
           <select class="customer-select" id="posWarehouseSelect" style="display:none; margin-inline-start:8px;"></select>
           <div class="customer-combo" id="customerCombo">
             <input type="text" class="customer-select" id="customerSearchInput" placeholder="عميل نقدي (بدون تسجيل)" autocomplete="off">
@@ -1255,57 +1331,104 @@ a { color: inherit; }
             <select id="customerSelect" style="display:none;"><option value="">عميل نقدي (بدون تسجيل)</option></select>
           </div>
         </div>
-        <div class="cart-items" id="cartItems"><div class="cart-empty">لا توجد أصناف مضافة للفاتورة حتى الآن</div></div>
+        <div class="cart-scroll-area">
+          <div class="cart-items" id="cartItems"><div class="cart-empty">لا توجد أصناف مضافة للفاتورة حتى الآن</div></div>
+
+          <div class="cart-extras">
+            <!-- الخصومات: خصم يدوي / كوبون / نقاط ولاء — مجمّعة في قسم قابل للطي -->
+            <details class="pos-acc" id="posDiscountAcc">
+              <summary>
+                <span class="pos-acc-icon">🏷️</span>
+                <span class="pos-acc-title">خصم / كوبون / نقاط ولاء</span>
+                <span class="pos-acc-badge" id="posDiscountBadge">بدون خصم</span>
+                <span class="pos-acc-chev">›</span>
+              </summary>
+              <div class="pos-acc-body">
+                <div class="quick-discount-row" id="quickDiscountRow"></div>
+                <div class="discount-row"><input type="number" id="discountInput" placeholder="خصم (قيمة)" min="0" value="0"></div>
+                <div class="discount-hint" id="discountMaxHint" style="display:none; font-size:11px; color:var(--danger); margin-top:-6px;"></div>
+                <div class="discount-row" id="couponRow" style="display:flex; gap:6px;">
+                  <input type="text" id="couponCodeInput" placeholder="كود الكوبون" style="direction:ltr; text-align:right; flex:1;">
+                  <button type="button" class="btn-secondary" id="applyCouponBtn" style="white-space:nowrap;">تطبيق</button>
+                </div>
+                <div class="discount-hint" id="couponAppliedNote" style="display:none; font-size:12px; color:var(--success, green); margin-top:-6px; display:flex; justify-content:space-between; align-items:center;">
+                  <span id="couponAppliedText"></span>
+                  <button type="button" id="removeCouponBtn" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:12px;">إلغاء</button>
+                </div>
+                <div class="discount-row" id="loyaltyRedeemRow" style="display:none; gap:6px; align-items:center;">
+                  <span id="loyaltyBalanceLabel" style="font-size:12px; color:var(--ink-soft); white-space:nowrap;"></span>
+                  <input type="number" id="loyaltyPointsInput" placeholder="نقاط للاسترداد" min="0" value="0" style="flex:1;">
+                  <button type="button" class="btn-secondary" id="maxLoyaltyBtn" style="white-space:nowrap;">أقصى</button>
+                </div>
+              </div>
+            </details>
+
+            <!-- طلب التوصيل: مفتاح تفعيل + نموذج بيانات يظهر عند التفعيل فقط -->
+            <div class="pos-delivery-card">
+              <div class="split-toggle-row pos-delivery-head" id="posDeliveryToggleRow">
+                <label class="split-toggle-label">
+                  <input type="checkbox" id="posDeliveryToggle">
+                  <span>🚚 طلب توصيل (تسليم على عنوان العميل)</span>
+                </label>
+              </div>
+              <div id="posDeliveryPanel" style="display:none; background:var(--surface-sunken); border-top:1px solid var(--border); padding:12px 14px 14px;">
+                <div class="modal-grid">
+                  <div class="field field-full"><label>اسم المستلم</label><input type="text" id="posDeliveryRecipientName"></div>
+                  <div class="field"><label>رقم الهاتف</label><input type="text" id="posDeliveryPhone" style="direction:ltr; text-align:right;"></div>
+                  <div class="field field-full"><label>منطقة التوصيل</label><select id="posDeliveryZone"><option value="">— بدون منطقة (إدخال يدوي) —</option></select><div class="zone-hint" id="posDeliveryZoneHint"></div></div>
+                  <div class="field"><label>المدينة</label><input type="text" id="posDeliveryCity"></div>
+                  <div class="field field-full"><label>العنوان بالتفصيل</label><input type="text" id="posDeliveryAddress"></div>
+                  <div class="field"><label>السائق (من الموظفين)</label><select id="posDeliveryDriverEmployee"><option value="">— بدون —</option></select></div>
+                  <div class="field"><label>اسم سائق آخر (اختياري)</label><input type="text" id="posDeliveryDriverName"></div>
+                  <div class="field"><label>هاتف السائق</label><input type="text" id="posDeliveryDriverPhone" style="direction:ltr; text-align:right;"></div>
+                  <div class="field"><label>رسوم التوصيل</label><input type="number" id="posDeliveryFee" step="0.01" min="0" value="0"></div>
+                  <div class="field"><label>موعد التسليم المحدد</label><input type="datetime-local" id="posDeliveryScheduledAt"></div>
+                  <div class="field field-full"><label>ملاحظات</label><input type="text" id="posDeliveryNotes" placeholder="اختياري"></div>
+                </div>
+                <div class="error-msg" id="posDeliveryError"></div>
+              </div>
+            </div>
+
+            <!-- قناة البيع + الدفع المُجزّأ: قسم قابل للطي (يُفتح فقط عند الحاجة) -->
+            <details class="pos-acc" id="posPaymentOptionsAcc">
+              <summary>
+                <span class="pos-acc-icon">⚙️</span>
+                <span class="pos-acc-title">خيارات دفع إضافية (قناة البيع / دفع مُجزّأ)</span>
+                <span class="pos-acc-badge" id="posPaymentOptionsBadge">قياسي</span>
+                <span class="pos-acc-chev">›</span>
+              </summary>
+              <div class="pos-acc-body">
+                <div class="paid-row" id="posChannelRow">
+                  <label for="posSalesChannel">قناة البيع</label>
+                  <select id="posSalesChannel"><option value="">— بيع مباشر (بدون قناة) —</option></select>
+                </div>
+                <div class="split-toggle-row" id="splitToggleRow">
+                  <label class="split-toggle-label">
+                    <input type="checkbox" id="splitPaymentToggle">
+                    <span>دفع بأكثر من طريقة (نقدي + بطاقة...)</span>
+                  </label>
+                </div>
+                <div id="splitPaymentBlock" style="display:none;">
+                  <div id="splitPaymentRows"></div>
+                  <button type="button" class="btn-secondary split-add-btn" id="splitAddRowBtn">+ إضافة طريقة دفع</button>
+                  <div id="splitDiffRow" class="split-diff-row balanced"><span id="splitDiffLabel">إجمالي المدخل</span><span class="num" id="splitDiffValue">0.00</span></div>
+                </div>
+              </div>
+            </details>
+          </div>
+        </div>
+
         <div class="cart-footer">
           <div class="totals-row"><span>الإجمالي الفرعي</span><span class="num" id="subtotalLabel">0.00</span></div>
-          <div class="quick-discount-row" id="quickDiscountRow"></div>
-          <div class="discount-row"><input type="number" id="discountInput" placeholder="خصم (قيمة)" min="0" value="0"></div>
-          <div class="discount-hint" id="discountMaxHint" style="display:none; font-size:11px; color:var(--danger); margin-top:-6px;"></div>
-          <div class="discount-row" id="couponRow" style="display:flex; gap:6px;">
-            <input type="text" id="couponCodeInput" placeholder="كود الكوبون" style="direction:ltr; text-align:right; flex:1;">
-            <button type="button" class="btn-secondary" id="applyCouponBtn" style="white-space:nowrap;">تطبيق</button>
-          </div>
-          <div class="discount-hint" id="couponAppliedNote" style="display:none; font-size:12px; color:var(--success, green); margin-top:-6px; display:flex; justify-content:space-between; align-items:center;">
-            <span id="couponAppliedText"></span>
-            <button type="button" id="removeCouponBtn" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:12px;">إلغاء</button>
-          </div>
-          <div class="discount-row" id="loyaltyRedeemRow" style="display:none; gap:6px; align-items:center;">
-            <span id="loyaltyBalanceLabel" style="font-size:12px; color:var(--ink-soft); white-space:nowrap;"></span>
-            <input type="number" id="loyaltyPointsInput" placeholder="نقاط للاسترداد" min="0" value="0" style="flex:1;">
-            <button type="button" class="btn-secondary" id="maxLoyaltyBtn" style="white-space:nowrap;">أقصى</button>
-          </div>
           <div class="totals-row" id="autoDiscountRow" style="display:none;"><span>خصومات تلقائية (عروض/كوبون/نقاط)</span><span class="num" id="autoDiscountLabel">0.00</span></div>
-          <div class="discount-row" id="instantNoteRow" style="display:none;"><input type="text" id="instantNoteInput" placeholder="ملاحظة فورية (تُطبع مع الفاتورة)"></div>
           <div class="totals-row" id="taxRow" style="display:none;"><span id="taxRowLabel">الضريبة</span><span class="num" id="taxLabel">0.00</span></div>
           <div class="totals-row grand"><span>الإجمالي</span><span class="num" id="totalLabel">0.00</span></div>
-          <div class="split-toggle-row" id="posDeliveryToggleRow">
-            <label class="split-toggle-label">
-              <input type="checkbox" id="posDeliveryToggle">
-              <span>🚚 طلب توصيل (تسليم على عنوان العميل)</span>
-            </label>
-          </div>
-          <div id="posDeliveryPanel" style="display:none; background:var(--surface-sunken); border-radius:var(--radius-sm); padding:12px; margin-bottom:12px;">
-            <div class="modal-grid">
-              <div class="field field-full"><label>اسم المستلم</label><input type="text" id="posDeliveryRecipientName"></div>
-              <div class="field"><label>رقم الهاتف</label><input type="text" id="posDeliveryPhone" style="direction:ltr; text-align:right;"></div>
-              <div class="field field-full"><label>منطقة التوصيل</label><select id="posDeliveryZone"><option value="">— بدون منطقة (إدخال يدوي) —</option></select><div class="zone-hint" id="posDeliveryZoneHint"></div></div>
-              <div class="field"><label>المدينة</label><input type="text" id="posDeliveryCity"></div>
-              <div class="field field-full"><label>العنوان بالتفصيل</label><input type="text" id="posDeliveryAddress"></div>
-              <div class="field"><label>السائق (من الموظفين)</label><select id="posDeliveryDriverEmployee"><option value="">— بدون —</option></select></div>
-              <div class="field"><label>اسم سائق آخر (اختياري)</label><input type="text" id="posDeliveryDriverName"></div>
-              <div class="field"><label>هاتف السائق</label><input type="text" id="posDeliveryDriverPhone" style="direction:ltr; text-align:right;"></div>
-              <div class="field"><label>رسوم التوصيل</label><input type="number" id="posDeliveryFee" step="0.01" min="0" value="0"></div>
-              <div class="field"><label>موعد التسليم المحدد</label><input type="datetime-local" id="posDeliveryScheduledAt"></div>
-              <div class="field field-full"><label>ملاحظات</label><input type="text" id="posDeliveryNotes" placeholder="اختياري"></div>
-            </div>
-            <div class="error-msg" id="posDeliveryError"></div>
-          </div>
-          <div class="paid-row" id="posChannelRow">
-            <label for="posSalesChannel">قناة البيع</label>
-            <select id="posSalesChannel"><option value="">— بيع مباشر (بدون قناة) —</option></select>
-          </div>
-          <div class="paid-row" id="paymentMethodRow">
-            <label for="posPaymentMethod">طريقة الدفع</label>
+
+          <div class="discount-row pos-note-row" id="instantNoteRow" style="display:none;"><input type="text" id="instantNoteInput" placeholder="✎ ملاحظة فورية (تُطبع مع الفاتورة)"></div>
+
+          <!-- طريقة الدفع: صف واحد مضغوط دائم الظهور (أكثر حقل بيُستخدم كل عملية بيع) -->
+          <div class="paid-row pos-payment-method-row" id="paymentMethodRow">
+            <label for="posPaymentMethod">💳 طريقة الدفع</label>
             <select id="posPaymentMethod">
               <option value="cash">نقدي</option>
               <option value="card">بطاقة</option>
@@ -1313,28 +1436,19 @@ a { color: inherit; }
               <option value="other">أخرى</option>
             </select>
           </div>
-          <div class="split-toggle-row" id="splitToggleRow">
-            <label class="split-toggle-label">
-              <input type="checkbox" id="splitPaymentToggle">
-              <span>دفع بأكثر من طريقة (نقدي + بطاقة...)</span>
-            </label>
-          </div>
-          <div id="splitPaymentBlock" style="display:none;">
-            <div id="splitPaymentRows"></div>
-            <button type="button" class="btn-secondary split-add-btn" id="splitAddRowBtn">+ إضافة طريقة دفع</button>
-            <div id="splitDiffRow" class="split-diff-row balanced"><span id="splitDiffLabel">إجمالي المدخل</span><span class="num" id="splitDiffValue">0.00</span></div>
-          </div>
+
           <div class="paid-row" id="paidRow" style="display:none;">
             <label for="paidInput">المدفوع الآن</label>
             <input type="number" id="paidInput" min="0" step="0.01">
           </div>
           <div class="totals-row due" id="dueRow" style="display:none;"><span>آجل على حساب العميل</span><span class="num" id="dueLabel">0.00</span></div>
-          <div class="action-row">
-            <button class="btn-secondary" id="holdBtn">تعليق</button>
-            <button class="btn-secondary" id="recallBtn">استرجاع (<span id="heldCount">0</span>)</button>
+
+          <div class="action-row-icons">
+            <button class="btn-secondary" id="holdBtn" title="تعليق الفاتورة الحالية مؤقتًا للرجوع إليها لاحقًا">⏸ تعليق</button>
+            <button class="btn-secondary" id="recallBtn" title="استرجاع فاتورة معلّقة سابقًا">↺ استرجاع (<span id="heldCount">0</span>)</button>
+            <button class="btn-secondary pos-secondary-btn" id="saveSaleOrderBtn" disabled title="حفظ الفاتورة كطلبية بيع مبدئية — لا تؤثر على المخزون أو حساب العميل إلا بعد تأكيدها من شاشة طلبات البيع">📝 طلبية</button>
           </div>
           <button class="checkout-btn" id="checkoutBtn" disabled>إتمام البيع</button>
-          <button class="btn-secondary" id="saveSaleOrderBtn" disabled style="width:100%; margin-top:8px;" title="حفظ الفاتورة كطلبية بيع مبدئية — لا تؤثر على المخزون أو حساب العميل إلا بعد تأكيدها من شاشة طلبات البيع">حفظ كطلبية بيع (بدون تأثير على الأرصدة)</button>
           <button class="checkout-btn" id="posSaveDeliveryBtn" style="display:none; background:var(--teal-700);" title="ينشئ طلبية بيع مبدئية مرتبطة ببيانات توصيل — تُتابَع من (تفاصيل التوصيل) في لوحة التحكم">🚚 حفظ طلب التوصيل</button>
           <div id="posReadOnlyBanner" style="display:none; margin-top:8px; padding:8px 10px; background:var(--surface-sunken); border-radius:var(--radius-sm); font-size:12.5px; color:var(--ink-soft); text-align:center;">
             هذا الدور "قراءة فقط" — يمكنك استعراض الشاشات لكن لا يمكن إتمام عمليات بيع
@@ -4708,6 +4822,10 @@ a { color: inherit; }
               <div class="report-type-icon">🕒</div>
               <div class="report-type-label">الورديات وإغلاق الخزينة</div>
             </button>
+            <button type="button" class="report-type-card" data-report="overtime">
+              <div class="report-type-icon">⏱️</div>
+              <div class="report-type-label">الأوفر تايم</div>
+            </button>
             <button type="button" class="report-type-card" data-report="cashier-performance">
               <div class="report-type-icon">🧑‍💼</div>
               <div class="report-type-label">أداء الكاشير الشامل</div>
@@ -4781,6 +4899,56 @@ a { color: inherit; }
                   </thead>
                   <tbody id="shiftsTableBody">
                     <tr><td colspan="10" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- الأوفر تايم -->
+            <div id="otherReportDetail-overtime" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">الأوفر تايم</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-icon-btn" id="exportOvertimeReportBtn">تصدير إكسل</button>
+                </div>
+              </div>
+              <div class="quick-range-row" id="overtimeQuickRange" style="margin-bottom:12px;">
+                <button class="quick-range-btn active" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+                <button class="quick-range-btn" data-invqr="30days">آخر 30 يوم</button>
+              </div>
+              <div class="report-filters" style="margin-bottom:14px;">
+                <div class="field"><label>من تاريخ</label><input type="date" id="overtimeFromDate"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="overtimeToDate"></div>
+                <div class="field"><label>الموظف</label><select id="overtimeEmployeeFilter"><option value="">كل الموظفين</option></select></div>
+                <div class="field" id="overtimeBranchField"><label>الفرع</label><select id="overtimeBranchFilter"><option value="">كل الفروع</option></select></div>
+              </div>
+              <div class="report-cards">
+                <div class="report-card">
+                  <div class="report-card-label">عدد أيام فيها أوفر تايم</div>
+                  <div class="report-card-value num" id="overtimeDaysLabel">0</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي ساعات الأوفر تايم</div>
+                  <div class="report-card-value num" id="overtimeTotalHoursLabel">0.00</div>
+                </div>
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead>
+                    <tr>
+                      <th>الموظف</th>
+                      <th>الفرع</th>
+                      <th>التاريخ</th>
+                      <th>اليوم</th>
+                      <th>الموعد المحدد</th>
+                      <th>وقت الانصراف الفعلي</th>
+                      <th>مدة الأوفر تايم</th>
+                    </tr>
+                  </thead>
+                  <tbody id="overtimeTableBody">
+                    <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -5510,13 +5678,39 @@ a { color: inherit; }
                   <th>التاريخ</th>
                   <th>وقت الحضور</th>
                   <th>وقت الانصراف</th>
+                  <th>الساعات الفعلية</th>
+                  <th>العجز/الزيادة</th>
                   <th>الحالة</th>
                   <th>ملاحظات</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody id="attendanceTableBody">
-                <tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr>
+                <tr><td colspan="10" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="bo-section-header" style="margin-top:24px;">
+            <div class="bo-section-title" style="font-size:15px;">سجلات المهام الخارجية</div>
+            <div class="bo-section-actions">
+              <button class="bo-outline-btn" id="refreshFieldVisitsBtn">تحديث</button>
+            </div>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>الموظف</th>
+                  <th>الفرع</th>
+                  <th>وقت الخروج</th>
+                  <th>وقت الرجوع</th>
+                  <th>السبب</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="fieldVisitsTableBody">
+                <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
@@ -7316,6 +7510,17 @@ a { color: inherit; }
   </div>
 </div>
 
+<!-- Modal: اختيار الفاتورة المعلّقة للاسترجاع -->
+<div class="modal-overlay" id="heldOrdersModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">الفواتير المعلّقة — اختر فاتورة للاسترجاع</div>
+    <div id="heldOrdersList"></div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="heldOrdersCancelBtn">إغلاق</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: مرتجع بيع -->
 <div class="modal-overlay" id="saleReturnModalOverlay">
   <div class="modal-box wide">
@@ -7489,6 +7694,10 @@ a { color: inherit; }
         <div class="field field-full"><label>الموظف</label><select id="salaryEmployeeSelect" required></select></div>
         <div class="field"><label>الراتب الأساسي</label><input type="text" id="salaryBaseDisplay" class="num" value="0.00" disabled></div>
         <div class="field"><label>التاريخ</label><input type="date" id="salaryDate" required></div>
+        <div class="field field-full" style="background:var(--teal-100); border-radius:var(--radius-sm); padding:10px 12px;">
+          <div id="salaryOvertimeInfo" style="font-size:12.5px; color:var(--ink-soft); margin-bottom:6px;">اختر الموظف والتاريخ لحساب أوفر تايم الشهر</div>
+          <button type="button" class="bo-outline-btn" id="calcSalaryOvertimeBtn" style="font-size:12.5px; padding:6px 12px;">حساب أوفر تايم الشهر وإضافته للمكافأة</button>
+        </div>
         <div class="field"><label>مكافأة (اختياري)</label><input type="number" id="salaryBonus" step="0.01" min="0" value="0"></div>
         <div class="field"><label>خصم (اختياري)</label><input type="number" id="salaryDeduction" step="0.01" min="0" value="0"></div>
         <div class="field field-full"><label>الصافي المدفوع</label><input type="number" id="salaryNetAmount" step="0.01" min="0" required value="0"></div>
@@ -8495,6 +8704,7 @@ a { color: inherit; }
         <div class="field"><label>رقم هاتف العمل</label><input type="tel" id="employeeWorkPhone" style="direction:ltr; text-align:right;"></div>
         <div class="field"><label>تاريخ التعيين</label><input type="date" id="employeeHireDate"></div>
         <div class="field"><label>الراتب الأساسي</label><input type="number" id="employeeBaseSalary" step="0.01" min="0" value="0"></div>
+        <div class="field"><label>سعر ساعة الأوفر تايم</label><input type="number" id="employeeOvertimeRate" step="0.01" min="0" value="0"></div>
         <div class="field field-full">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
             <input type="checkbox" id="employeeActive" checked style="width:auto;"> الموظف على رأس العمل حاليًا
@@ -8514,6 +8724,14 @@ a { color: inherit; }
           </select>
         </div>
         <div class="field field-full"><label>العنوان</label><input type="text" id="employeeAddress"></div>
+      </div>
+
+      <div class="ci-section-subtitle">مواعيد العمل الأسبوعية (لحساب الأوفر تايم)</div>
+      <div class="bo-table-wrap">
+        <table class="bo-table" id="employeeScheduleTable">
+          <thead><tr><th>اليوم</th><th>إجازة أسبوعية</th><th>من</th><th>إلى</th></tr></thead>
+          <tbody id="employeeScheduleTableBody"></tbody>
+        </table>
       </div>
 
       <div class="error-msg" id="employeeModalError"></div>
@@ -8547,6 +8765,10 @@ a { color: inherit; }
             <option value="on_leave">إجازة</option>
           </select>
         </div>
+        <div class="field field-full" id="attendanceCheckOutReasonField" style="display:none;">
+          <label>سبب تعديل وقت الانصراف يدويًا (إجباري)</label>
+          <input type="text" id="attendanceCheckOutReason" placeholder="مثلاً: انقطاع كهرباء، نسي يسجل انصراف، مهمة عمل خارجية...">
+        </div>
         <div class="field field-full"><label>ملاحظات</label><input type="text" id="attendanceNotes"></div>
       </div>
       <div class="error-msg" id="attendanceModalError"></div>
@@ -8555,6 +8777,54 @@ a { color: inherit; }
         <button type="submit" class="submit-btn" id="saveAttendanceBtn">حفظ</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Modal: تعديل سجل مهمة خارجية -->
+<div class="modal-overlay" id="fieldVisitModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">تعديل سجل مهمة خارجية</div>
+    <form id="fieldVisitForm">
+      <input type="hidden" id="fieldVisitId">
+      <div class="modal-grid">
+        <div class="field"><label>تاريخ ووقت الخروج</label><input type="datetime-local" id="fieldVisitLeftAt" required></div>
+        <div class="field"><label>تاريخ ووقت الرجوع (اتركه فارغًا لو لسه ما رجعش)</label><input type="datetime-local" id="fieldVisitReturnedAt"></div>
+        <div class="field field-full"><label>السبب</label><input type="text" id="fieldVisitReason"></div>
+        <div class="field field-full"><label>ملاحظات</label><input type="text" id="fieldVisitNotes"></div>
+      </div>
+      <div class="error-msg" id="fieldVisitModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelFieldVisitBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveFieldVisitBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: بصمتي (تسجيل حضور/انصراف ذاتي + خروج/رجوع من مهمة عمل خارجية) -->
+<div class="modal-overlay" id="myAttendanceModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">حضور وانصرافي</div>
+    <div id="myAttendanceStatusText" style="font-size:14px; margin-bottom:14px; color:var(--ink-soft);">جاري التحميل...</div>
+    <div class="modal-actions" style="margin-bottom:6px;">
+      <button type="button" class="submit-btn" id="myCheckInBtn" style="display:none;">تسجيل حضور الآن</button>
+      <button type="button" class="submit-btn" id="myCheckOutBtn" style="display:none;">تسجيل انصراف الآن</button>
+    </div>
+    <div style="border-top:1px solid var(--border); margin:14px 0; padding-top:14px;">
+      <div style="font-size:13px; font-weight:600; margin-bottom:8px;">مهمة عمل خارجية (زيارة عميل، توصيل...)</div>
+      <div id="myFieldVisitStatusText" style="display:none; font-size:13px; color:var(--ink-soft); margin-bottom:8px;"></div>
+      <div class="field field-full" id="myFieldVisitReasonWrap" style="display:none; margin-bottom:8px;">
+        <label>سبب الخروج (اختياري)</label>
+        <input type="text" id="myFieldVisitReason" placeholder="مثلاً: زيارة عميل، توصيل طلب...">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="myFieldVisitOutBtn" style="display:none;">خروج لمهمة</button>
+        <button type="button" class="submit-btn" id="myFieldVisitInBtn" style="display:none;">تسجيل الرجوع من المهمة</button>
+      </div>
+    </div>
+    <div class="modal-actions" style="margin-top:14px;">
+      <button type="button" class="modal-cancel-btn" id="closeMyAttendanceBtn">إغلاق</button>
+    </div>
   </div>
 </div>
 
@@ -10346,6 +10616,7 @@ function cachePosEls() {
   posEls.cashierLabel = document.getElementById('cashierLabel');
   posEls.clockLabel = document.getElementById('clockLabel');
   posEls.logoutBtn = document.getElementById('logoutBtn');
+  posEls.myAttendanceBtn = document.getElementById('myAttendanceBtn');
   posEls.searchInput = document.getElementById('searchInput');
   posEls.categoriesRow = document.getElementById('categoriesRow');
   posEls.productGrid = document.getElementById('productGrid');
@@ -11075,6 +11346,7 @@ async function enterPos() {
   posEls.cashierLabel.textContent = currentProfile.full_name;
   const canAccessBackoffice = boAllSections.some(s => hasBoScreenPermission(s));
   document.getElementById('backofficeBtn').style.display = canAccessBackoffice ? 'inline-block' : 'none';
+  posEls.myAttendanceBtn.style.display = currentProfile.employee_id ? 'flex' : 'none';
   startClock();
   updateHeldCount();
   renderCart();
@@ -11160,6 +11432,15 @@ function startClock() {
 
 function bindPosEvents() {
   posEls.logoutBtn.addEventListener('click', doLogout);
+  posEls.myAttendanceBtn.addEventListener('click', openMyAttendanceModal);
+  document.getElementById('closeMyAttendanceBtn').addEventListener('click', closeMyAttendanceModal);
+  document.getElementById('myAttendanceModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'myAttendanceModalOverlay') closeMyAttendanceModal();
+  });
+  document.getElementById('myCheckInBtn').addEventListener('click', myCheckIn);
+  document.getElementById('myCheckOutBtn').addEventListener('click', myCheckOut);
+  document.getElementById('myFieldVisitOutBtn').addEventListener('click', myFieldVisitOut);
+  document.getElementById('myFieldVisitInBtn').addEventListener('click', myFieldVisitIn);
   document.getElementById('backofficeBtn').addEventListener('click', enterBackoffice);
 
   posEls.searchInput.addEventListener('keydown', (e) => {
@@ -11242,20 +11523,16 @@ function bindPosEvents() {
 
   posEls.recallBtn.addEventListener('click', () => {
     if (heldOrders.length === 0) return showToast('لا توجد فواتير معلّقة', true);
-    const last = heldOrders.pop();
-    localStorage.setItem('pos_held_orders', JSON.stringify(heldOrders));
-    cart = last.cart.map(l => ({
-      product: allProducts.find(p => p.id === l.productId) || { id: l.productId, name: l.name, sale_price: l.unitPrice },
-      quantity: l.quantity, unitPrice: l.unitPrice,
-      productUnitId: l.productUnitId || null, unitLabel: l.unitLabel || null, factor: l.factor || 1,
-    }));
-    posEls.discountInput.value = last.discount || 0;
-    resetQuickDiscountSelection();
-    resetAutoDiscountsSelection();
-    posEls.paymentMethodSelect.value = last.paymentMethod || 'cash';
-    setCustomerSelection(last.customerId || '', { silent: true });
-    renderCart(); updateHeldCount();
-    showToast('تم استرجاع آخر فاتورة معلّقة');
+    if (heldOrders.length === 1) {
+      recallHeldOrder(0);
+    } else {
+      openHeldOrdersModal();
+    }
+  });
+
+  document.getElementById('heldOrdersCancelBtn').addEventListener('click', closeHeldOrdersModal);
+  document.getElementById('heldOrdersModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'heldOrdersModalOverlay') closeHeldOrdersModal();
   });
 
   posEls.splitToggle.addEventListener('change', (e) => {
@@ -12959,6 +13236,85 @@ function renderCart() {
 
 function updateHeldCount() { posEls.heldCount.textContent = heldOrders.length; }
 
+// ------------------------------------------------------------
+// استرجاع فاتورة معلّقة محددة (باختيار الكاشير من قائمة) بدل آخر فاتورة فقط
+// ------------------------------------------------------------
+function recallHeldOrder(index) {
+  const order = heldOrders[index];
+  if (!order) return;
+  heldOrders.splice(index, 1);
+  localStorage.setItem('pos_held_orders', JSON.stringify(heldOrders));
+  cart = order.cart.map(l => ({
+    product: allProducts.find(p => p.id === l.productId) || { id: l.productId, name: l.name, sale_price: l.unitPrice },
+    quantity: l.quantity, unitPrice: l.unitPrice,
+    productUnitId: l.productUnitId || null, unitLabel: l.unitLabel || null, factor: l.factor || 1,
+  }));
+  posEls.discountInput.value = order.discount || 0;
+  resetQuickDiscountSelection();
+  resetAutoDiscountsSelection();
+  posEls.paymentMethodSelect.value = order.paymentMethod || 'cash';
+  setCustomerSelection(order.customerId || '', { silent: true });
+  renderCart(); updateHeldCount();
+  closeHeldOrdersModal();
+  showToast('تم استرجاع الفاتورة المعلّقة');
+}
+
+function heldOrderTotal(order) {
+  const subtotal = (order.cart || []).reduce((sum, l) => sum + (Number(l.quantity) * Number(l.unitPrice)), 0);
+  return Math.max(0, subtotal - (Number(order.discount) || 0));
+}
+
+function renderHeldOrdersList() {
+  const list = document.getElementById('heldOrdersList');
+  if (!list) return;
+  if (heldOrders.length === 0) {
+    list.innerHTML = '<div class="held-orders-empty">لا توجد فواتير معلّقة</div>';
+    return;
+  }
+  list.innerHTML = '';
+  // نعرض الأحدث أولًا
+  heldOrders.slice().reverse().forEach((order, revIdx) => {
+    const index = heldOrders.length - 1 - revIdx;
+    const customer = order.customerId ? (allCustomers.find(c => c.id === order.customerId) || {}).name : null;
+    const itemCount = (order.cart || []).reduce((sum, l) => sum + Number(l.quantity), 0);
+    const timeLabel = order.time ? new Date(order.time).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '';
+    const card = document.createElement('div');
+    card.className = 'held-order-card';
+    card.innerHTML = `
+      <div class="held-order-main">
+        <div class="held-order-top">
+          <span class="held-order-customer">${escapeHtml(customer || 'عميل نقدي')}</span>
+          <span class="held-order-time num">${timeLabel}</span>
+        </div>
+        <div class="held-order-sub">
+          <span>${itemCount} صنف</span>
+          <span class="held-order-total num">${heldOrderTotal(order).toFixed(2)}</span>
+        </div>
+      </div>
+      <button type="button" class="held-order-remove" title="حذف بدون استرجاع">✕</button>`;
+    card.querySelector('.held-order-main').addEventListener('click', () => recallHeldOrder(index));
+    card.querySelector('.held-order-remove').addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!confirm('حذف هذه الفاتورة المعلّقة نهائيًا بدون استرجاعها؟')) return;
+      heldOrders.splice(index, 1);
+      localStorage.setItem('pos_held_orders', JSON.stringify(heldOrders));
+      updateHeldCount();
+      renderHeldOrdersList();
+      if (heldOrders.length === 0) closeHeldOrdersModal();
+    });
+    list.appendChild(card);
+  });
+}
+
+function openHeldOrdersModal() {
+  renderHeldOrdersList();
+  document.getElementById('heldOrdersModalOverlay').classList.add('show');
+}
+
+function closeHeldOrdersModal() {
+  document.getElementById('heldOrdersModalOverlay').classList.remove('show');
+}
+
 async function doLogout(forcePasswordLogin) {
   if (pendingCount() > 0) {
     const ok = confirm(`يوجد ${pendingCount()} عملية بانتظار المزامنة على هذا الجهاز. في حال الخروج الآن، ستبقى محفوظة وسيتم مزامنتها تلقائيًا عند تسجيل الدخول بنفس الحساب على هذا الجهاز مع توفر الاتصال بالإنترنت. هل أنت متأكد من الخروج؟`);
@@ -14362,6 +14718,7 @@ const REPORT_TABS = {
   ]},
   'reports-other': { grid: 'otherReportTypeGrid', title: 'تقارير أخرى', items: [
     { key: 'shifts', title: 'الورديات وإغلاق الخزينة' },
+    { key: 'overtime', title: 'الأوفر تايم' },
     { key: 'cashier-performance', title: 'أداء الكاشير الشامل' },
     { key: 'discounts', title: 'الخصومات الممنوحة' },
     { key: 'activity-log', title: 'سجل نشاط المستخدمين' },
@@ -16027,6 +16384,7 @@ function bindBackofficeEvents() {
       if (target) target.style.display = 'block';
       document.getElementById('otherReportsCrumbCurrent').textContent = card.querySelector('.report-type-label').textContent;
       if (key === 'shifts') { initShiftsSection(); }
+      if (key === 'overtime') { populateOvertimeFilters(); runOvertimeReport(); }
       if (key === 'cashier-performance') { setInventoryDateRange('today', 'otherCashierPerfFromDate', 'otherCashierPerfToDate'); runCashierPerfReport(); }
       if (key === 'discounts') { populateDiscountsBranchFilter(); setInventoryDateRange('today', 'otherDiscountsFromDate', 'otherDiscountsToDate'); runDiscountsReport(); }
       if (key === 'activity-log') { populateActivityLogFilters(); setInventoryDateRange('today', 'activityLogFromDate', 'activityLogToDate'); refreshActivityLogReport(); }
@@ -16047,6 +16405,9 @@ function bindBackofficeEvents() {
   document.getElementById('etaLogSearchInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); runEtaLogReport(); } });
   document.getElementById('cancelEtaStatusBtn').addEventListener('click', () => document.getElementById('etaStatusModalOverlay').classList.remove('show'));
   document.getElementById('etaStatusForm').addEventListener('submit', submitEtaStatusUpdate);
+  document.getElementById('exportOvertimeReportBtn').addEventListener('click', exportOvertimeReportToExcel);
+  document.getElementById('overtimeEmployeeFilter').addEventListener('change', runOvertimeReport);
+  document.getElementById('overtimeBranchFilter').addEventListener('change', runOvertimeReport);
   document.getElementById('otherReportBackBtn').addEventListener('click', () => {
     document.getElementById('otherReportDetailWrap').style.display = 'none';
     document.getElementById('otherReportTypeGrid').style.display = 'grid';
@@ -16541,6 +16902,7 @@ function bindBackofficeEvents() {
   });
   document.getElementById('salaryForm').addEventListener('submit', saveSalaryPayment);
   document.getElementById('salaryEmployeeSelect').addEventListener('change', updateSalaryBaseDisplay);
+  document.getElementById('calcSalaryOvertimeBtn').addEventListener('click', calcSalaryOvertimeForPayment);
   document.getElementById('salaryBranchSelect').addEventListener('change', populateSalaryCashAccountOptions);
   document.getElementById('salaryBonus').addEventListener('input', updateSalaryBaseDisplay);
   document.getElementById('salaryDeduction').addEventListener('input', updateSalaryBaseDisplay);
@@ -16898,6 +17260,20 @@ function bindBackofficeEvents() {
     if (e.target.id === 'attendanceModalOverlay') closeAttendanceModal();
   });
   document.getElementById('attendanceForm').addEventListener('submit', saveAttendance);
+  document.getElementById('refreshFieldVisitsBtn').addEventListener('click', () => loadBoFieldVisits(document.getElementById('attendanceFromDate').value, document.getElementById('attendanceToDate').value));
+  document.getElementById('cancelFieldVisitBtn').addEventListener('click', closeFieldVisitModal);
+  document.getElementById('fieldVisitModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'fieldVisitModalOverlay') closeFieldVisitModal();
+  });
+  document.getElementById('fieldVisitForm').addEventListener('submit', saveFieldVisit);
+  // إظهار حقل "سبب تعديل الانصراف" فورًا أول ما المستخدم يغيّر وقت الانصراف
+  // يدويًا لسجل موجود، حتى لو أصلًا كان مسجل انصراف قبل كده
+  document.getElementById('attendanceCheckOut').addEventListener('input', () => {
+    const id = document.getElementById('attendanceId').value;
+    const newCheckOut = combineDateAndTime(document.getElementById('attendanceWorkDate').value, document.getElementById('attendanceCheckOut').value);
+    const changed = id && newCheckOut !== attendanceModalOriginalCheckOut;
+    document.getElementById('attendanceCheckOutReasonField').style.display = changed ? '' : 'none';
+  });
 
   // ---- Leave requests ----
   document.getElementById('addLeaveRequestBtn').addEventListener('click', () => openLeaveRequestModal(null));
@@ -20062,6 +20438,71 @@ function updateSalaryBaseDisplay() {
   }
 }
 
+// بتحسب إجمالي ساعات ودقايق الأوفر تايم لشهر تاريخ دفعة الراتب المحدد
+// (بنفس منطق تقرير الأوفر تايم)، وتضرب في سعر ساعة الأوفر تايم الخاص
+// بالموظف، وتضيف الناتج على حقل "مكافأة" بدل ما يتحسب يدويًا كل مرة.
+async function calcSalaryOvertimeForPayment() {
+  const btn = document.getElementById('calcSalaryOvertimeBtn');
+  const infoEl = document.getElementById('salaryOvertimeInfo');
+  const employeeId = document.getElementById('salaryEmployeeSelect').value;
+  const salaryDate = document.getElementById('salaryDate').value;
+  if (!employeeId || !salaryDate) { showToast('اختر الموظف والتاريخ الأول', true); return; }
+  const employee = boEmployees.find(e => e.id === employeeId);
+  const rate = Number(employee?.overtime_hourly_rate || 0);
+  if (!rate) { infoEl.textContent = 'سعر ساعة الأوفر تايم غير محدد لهذا الموظف (من شاشة بيانات الموظفين)'; return; }
+
+  btn.disabled = true;
+  infoEl.textContent = 'جاري الحساب...';
+  try {
+    const d = new Date(salaryDate + 'T00:00:00');
+    const monthStart = toDateInputValue(new Date(d.getFullYear(), d.getMonth(), 1));
+    const monthEnd = toDateInputValue(new Date(d.getFullYear(), d.getMonth() + 1, 0));
+
+    const { data: attRows, error: attErr } = await supabaseClient
+      .from('attendance')
+      .select('id, employee_id, work_date, check_in, check_out')
+      .eq('employee_id', employeeId)
+      .gte('work_date', monthStart)
+      .lte('work_date', monthEnd)
+      .not('check_out', 'is', null);
+    if (attErr) throw attErr;
+
+    const { data: scheduleRows, error: schedErr } = await supabaseClient
+      .from('employee_work_schedules')
+      .select('*')
+      .eq('employee_id', employeeId);
+    if (schedErr) throw schedErr;
+    const scheduleByWeekday = {};
+    (scheduleRows || []).forEach(r => { scheduleByWeekday[r.weekday] = r; });
+
+    let totalMinutes = 0;
+    (attRows || []).forEach(a => {
+      const weekday = new Date(a.work_date + 'T00:00:00').getDay();
+      const schedule = scheduleByWeekday[weekday] || null;
+      const minutes = calcOvertimeMinutes(a, schedule);
+      if (minutes && minutes > 0) totalMinutes += minutes;
+    });
+
+    const totalHours = totalMinutes / 60;
+    const amount = Math.round(totalHours * rate * 100) / 100;
+
+    infoEl.textContent = `إجمالي أوفر تايم الشهر: ${formatMinutesAsHM(totalMinutes)} × ${rate.toFixed(2)} ج/ساعة = ${amount.toFixed(2)} ج`;
+
+    const bonusInput = document.getElementById('salaryBonus');
+    bonusInput.value = (Number(bonusInput.value) || 0) === Number(employee._lastAppliedOvertime || 0)
+      ? amount // لو آخر قيمة مضافة كانت من نفس الزرار، نستبدلها بدل ما نضاعفها
+      : (Number(bonusInput.value) || 0) + amount;
+    employee._lastAppliedOvertime = amount;
+    updateSalaryBaseDisplay();
+  } catch (err) {
+    console.error(err);
+    infoEl.textContent = 'تعذر حساب الأوفر تايم';
+    showToast('تعذر حساب الأوفر تايم', true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 async function populateSalaryBranchSelect(selectedBranchId) {
   const sel = document.getElementById('salaryBranchSelect');
   sel.innerHTML = boBranchesList.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
@@ -20164,6 +20605,8 @@ function openSalaryModal(payment) {
     if (payment?.cash_account_id) document.getElementById('salaryCashAccount').value = payment.cash_account_id;
   });
   document.getElementById('salaryModalError').classList.remove('show');
+  document.getElementById('salaryOvertimeInfo').textContent = 'اختر الموظف والتاريخ لحساب أوفر تايم الشهر';
+  boEmployees.forEach(e => { delete e._lastAppliedOvertime; });
   document.getElementById('salaryModalOverlay').classList.add('show');
 }
 
@@ -26719,7 +27162,51 @@ function populateEmployeeBranchSelect(currentValue) {
   sel.value = currentValue || '';
 }
 
-function openEmployeeModal(employee) {
+// أيام الأسبوع بترتيب JS: getDay() بيرجع 0 للأحد لحد 6 للسبت
+const WEEKDAY_LABELS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+
+function renderEmployeeScheduleTable(scheduleByWeekday) {
+  const tbody = document.getElementById('employeeScheduleTableBody');
+  tbody.innerHTML = '';
+  WEEKDAY_LABELS.forEach((label, weekday) => {
+    const row = scheduleByWeekday?.[weekday] || null;
+    // الافتراضي: الجمعة إجازة أسبوعية وباقي الأيام 09:00 - 17:00، إلا لو الموظف عنده مواعيد محفوظة بالفعل
+    const isOff = row ? row.is_day_off : (weekday === 5);
+    const startTime = row?.start_time ? row.start_time.slice(0, 5) : '09:00';
+    const endTime = row?.end_time ? row.end_time.slice(0, 5) : '17:00';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${label}</td>
+      <td><input type="checkbox" class="emp-sched-off" data-weekday="${weekday}" ${isOff ? 'checked' : ''} style="width:auto;"></td>
+      <td><input type="time" class="emp-sched-start" data-weekday="${weekday}" value="${startTime}" ${isOff ? 'disabled' : ''}></td>
+      <td><input type="time" class="emp-sched-end" data-weekday="${weekday}" value="${endTime}" ${isOff ? 'disabled' : ''}></td>
+    `;
+    tbody.appendChild(tr);
+    const offCheckbox = tr.querySelector('.emp-sched-off');
+    const startInput = tr.querySelector('.emp-sched-start');
+    const endInput = tr.querySelector('.emp-sched-end');
+    offCheckbox.addEventListener('change', () => {
+      startInput.disabled = offCheckbox.checked;
+      endInput.disabled = offCheckbox.checked;
+    });
+  });
+}
+
+function getEmployeeScheduleFromForm() {
+  return WEEKDAY_LABELS.map((_, weekday) => {
+    const isOff = document.querySelector(`.emp-sched-off[data-weekday="${weekday}"]`).checked;
+    const start = document.querySelector(`.emp-sched-start[data-weekday="${weekday}"]`).value;
+    const end = document.querySelector(`.emp-sched-end[data-weekday="${weekday}"]`).value;
+    return {
+      weekday,
+      is_day_off: isOff,
+      start_time: isOff ? null : (start || null),
+      end_time: isOff ? null : (end || null),
+    };
+  });
+}
+
+async function openEmployeeModal(employee) {
   document.getElementById('employeeModalTitle').textContent = employee ? 'تعديل بيانات موظف' : 'موظف جديد';
   document.getElementById('employeeId').value = employee ? employee.id : '';
   document.getElementById('employeeFullName').value = employee ? employee.full_name : '';
@@ -26731,12 +27218,25 @@ function openEmployeeModal(employee) {
   document.getElementById('employeeWorkPhone').value = employee?.work_phone || '';
   document.getElementById('employeeHireDate').value = employee?.hire_date || '';
   document.getElementById('employeeBaseSalary').value = employee ? (employee.base_salary || 0) : 0;
+  document.getElementById('employeeOvertimeRate').value = employee ? (employee.overtime_hourly_rate || 0) : 0;
   document.getElementById('employeeActive').checked = employee ? employee.is_active !== false : true;
   document.getElementById('employeeNationalId').value = employee?.national_id || '';
   document.getElementById('employeePassportNumber').value = employee?.passport_number || '';
   document.getElementById('employeeGender').value = employee?.gender || '';
   document.getElementById('employeeAddress').value = employee?.address || '';
   document.getElementById('employeeModalError').classList.remove('show');
+
+  let scheduleByWeekday = {};
+  if (employee?.id) {
+    const { data: scheduleRows, error } = await supabaseClient
+      .from('employee_work_schedules')
+      .select('*')
+      .eq('employee_id', employee.id);
+    if (error) console.error(error);
+    (scheduleRows || []).forEach(r => { scheduleByWeekday[r.weekday] = r; });
+  }
+  renderEmployeeScheduleTable(scheduleByWeekday);
+
   document.getElementById('employeeModalOverlay').classList.add('show');
 }
 
@@ -26766,6 +27266,7 @@ async function saveEmployee(e) {
     gender: document.getElementById('employeeGender').value || null,
     hire_date: document.getElementById('employeeHireDate').value || null,
     base_salary: Number(document.getElementById('employeeBaseSalary').value) || 0,
+    overtime_hourly_rate: Number(document.getElementById('employeeOvertimeRate').value) || 0,
     is_active: document.getElementById('employeeActive').checked,
     address: document.getElementById('employeeAddress').value.trim() || null,
   };
@@ -26773,13 +27274,22 @@ async function saveEmployee(e) {
   try {
     if (!payload.full_name) throw new Error('اكتب اسم الموظف');
 
+    let employeeId = id;
     if (id) {
       const { error } = await supabaseClient.from('employees').update(payload).eq('id', id);
       if (error) throw error;
     } else {
-      const { error } = await supabaseClient.from('employees').insert(payload);
+      const { data: inserted, error } = await supabaseClient.from('employees').insert(payload).select('id').single();
       if (error) throw error;
+      employeeId = inserted.id;
     }
+
+    const scheduleRows = getEmployeeScheduleFromForm().map(r => ({ ...r, employee_id: employeeId }));
+    const { error: schedDeleteErr } = await supabaseClient.from('employee_work_schedules').delete().eq('employee_id', employeeId);
+    if (schedDeleteErr) throw schedDeleteErr;
+    const { error: schedInsertErr } = await supabaseClient.from('employee_work_schedules').insert(scheduleRows);
+    if (schedInsertErr) throw schedInsertErr;
+
     showToast(id ? 'تم تحديث بيانات الموظف بنجاح' : 'تمت إضافة الموظف بنجاح');
     closeEmployeeModal();
     await loadBoEmployees();
@@ -26864,23 +27374,224 @@ async function runAttendanceFilter() {
   if (!fromDate || !toDate) return;
   await loadBoAttendance(fromDate, toDate);
   renderAttendanceTable();
+  await loadBoFieldVisits(fromDate, toDate);
 }
 
 async function loadBoAttendance(fromDate, toDate) {
+  // بنقرا من v_attendance_daily_hours (مش الجدول مباشرة) عشان تجيبلنا كمان
+  // الساعات الفعلية + الفرق عن الساعات المتوقعة + علامة "لم يُسجَّل انصراف"
+  // محسوبين جاهزين من القاعدة (نفس صلاحيات RLS على attendance تتطبق برضه
+  // لأن الـview معمولة security_invoker).
   const { data, error } = await supabaseClient
-    .from('attendance')
+    .from('v_attendance_daily_hours')
     .select('*, employees(full_name), branches(name)')
     .gte('work_date', fromDate)
     .lte('work_date', toDate)
     .order('work_date', { ascending: false });
   if (error) { console.error(error); showToast('تعذر تحميل بيانات الحضور والانصراف', true); return; }
   boAttendance = data || [];
+  await appendVirtualAbsentRows(fromDate, toDate);
+}
+
+// بتضيف صفوف "غياب" افتراضية (مش محفوظة في القاعدة) لأي موظف كان مفروض
+// يشتغل يوم معيّن حسب مواعيد عمله الأسبوعية ومفيش سجل حضور ليه خالص —
+// بيومات ماضية بس (مش النهاردة ولا المستقبل)، وبس للموظفين اللي ليهم
+// مواعيد عمل محددة أصلاً (من غير مواعيد محفوظة مينفعش نحكم إنه غايب).
+async function appendVirtualAbsentRows(fromDate, toDate) {
+  if (boEmployees.length === 0) await loadBoEmployees();
+  const { data: scheduleRows, error } = await supabaseClient.from('employee_work_schedules').select('*');
+  if (error) { console.error(error); return; }
+  const scheduleMap = {};
+  (scheduleRows || []).forEach(r => {
+    if (!scheduleMap[r.employee_id]) scheduleMap[r.employee_id] = {};
+    scheduleMap[r.employee_id][r.weekday] = r;
+  });
+
+  const existingKeys = new Set(boAttendance.map(a => a.employee_id + '_' + a.work_date));
+  const todayStr = toDateInputValue(new Date());
+  const start = new Date(fromDate + 'T00:00:00');
+  const rangeEnd = new Date(toDate + 'T00:00:00');
+  const yesterday = new Date(todayStr + 'T00:00:00');
+  yesterday.setDate(yesterday.getDate() - 1);
+  const cappedEnd = rangeEnd < yesterday ? rangeEnd : yesterday;
+  if (cappedEnd < start) return;
+
+  const virtualRows = [];
+  boEmployees.filter(e => e.is_active !== false).forEach(emp => {
+    const empSchedule = scheduleMap[emp.id];
+    if (!empSchedule) return;
+    for (let d = new Date(start); d <= cappedEnd; d.setDate(d.getDate() + 1)) {
+      const dateStr = toDateInputValue(d);
+      const sched = empSchedule[d.getDay()];
+      if (!sched || sched.is_day_off) continue;
+      const key = emp.id + '_' + dateStr;
+      if (existingKeys.has(key)) continue;
+      virtualRows.push({
+        id: null,
+        employee_id: emp.id,
+        branch_id: emp.branch_id,
+        work_date: dateStr,
+        check_in: null,
+        check_out: null,
+        status: 'absent',
+        notes: null,
+        worked_hours: null,
+        variance_hours: null,
+        late_minutes: null,
+        is_missing_checkout: false,
+        employees: { full_name: emp.full_name },
+        branches: boBranchesList.find(b => b.id === emp.branch_id) || null,
+        is_virtual_absent: true,
+      });
+    }
+  });
+  boAttendance = boAttendance.concat(virtualRows);
 }
 
 function formatAttendanceTime(ts) {
   if (!ts) return '—';
   const d = new Date(ts);
   return d.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+}
+
+// ---- تقرير الأوفر تايم ----
+let lastOvertimeRows = [];
+let overtimeFiltersPopulated = false;
+
+function populateOvertimeFilters() {
+  if (overtimeFiltersPopulated) return;
+  const empSel = document.getElementById('overtimeEmployeeFilter');
+  empSel.innerHTML = '<option value="">كل الموظفين</option>' +
+    boEmployees.map(e => `<option value="${e.id}">${escapeHtml(e.full_name)}</option>`).join('');
+
+  const brField = document.getElementById('overtimeBranchField');
+  const brSel = document.getElementById('overtimeBranchFilter');
+  if (boBranchesList.length > 1) {
+    brField.style.display = '';
+    brSel.innerHTML = '<option value="">كل الفروع</option>' +
+      boBranchesList.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+  } else {
+    brField.style.display = 'none';
+  }
+  overtimeFiltersPopulated = true;
+}
+
+// بيحسب مدة الأوفر تايم ليوم عمل واحد: لو يوم إجازة أسبوعية واشتغل فيه، كل
+// وقت الشغل بيُحتسب أوفر تايم. غير كده، الأوفر تايم هو الفرق بين وقت
+// الانصراف الفعلي وموعد الانصراف المحدد في مواعيد العمل الأسبوعية (لو
+// وقت الانصراف كان بعد الموعد بس).
+function calcOvertimeMinutes(attendanceRow, schedule) {
+  if (!attendanceRow.check_out) return null;
+  const checkOut = new Date(attendanceRow.check_out);
+  const checkIn = attendanceRow.check_in ? new Date(attendanceRow.check_in) : null;
+
+  if (!schedule) return null; // مفيش مواعيد عمل متحددة للموظف أصلاً
+
+  if (schedule.is_day_off) {
+    if (!checkIn) return null;
+    return Math.max(0, Math.round((checkOut - checkIn) / 60000));
+  }
+
+  if (!schedule.end_time) return null;
+  const [h, m] = schedule.end_time.split(':').map(Number);
+  const scheduledEnd = new Date(attendanceRow.work_date + 'T00:00:00');
+  scheduledEnd.setHours(h, m, 0, 0);
+
+  const diffMinutes = Math.round((checkOut - scheduledEnd) / 60000);
+  return diffMinutes > 0 ? diffMinutes : 0;
+}
+
+function formatMinutesAsHM(minutes) {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return `${h} س ${m} د`;
+}
+
+async function runOvertimeReport() {
+  const fromDate = document.getElementById('overtimeFromDate').value;
+  const toDate = document.getElementById('overtimeToDate').value;
+  if (!fromDate || !toDate) return;
+  const employeeId = document.getElementById('overtimeEmployeeFilter').value;
+  const branchId = document.getElementById('overtimeBranchFilter')?.value || '';
+  const tbody = document.getElementById('overtimeTableBody');
+  tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>`;
+  try {
+    let attQuery = supabaseClient
+      .from('attendance')
+      .select('id, employee_id, branch_id, work_date, check_in, check_out, employees(full_name), branches(name)')
+      .gte('work_date', fromDate)
+      .lte('work_date', toDate)
+      .not('check_out', 'is', null)
+      .order('work_date', { ascending: false });
+    if (employeeId) attQuery = attQuery.eq('employee_id', employeeId);
+    attQuery = applyBranchScope(attQuery, branchId, 'branch_id');
+    const { data: attRows, error: attErr } = await attQuery;
+    if (attErr) throw attErr;
+
+    const { data: scheduleRows, error: schedErr } = await supabaseClient
+      .from('employee_work_schedules')
+      .select('*');
+    if (schedErr) throw schedErr;
+    const scheduleMap = {}; // employee_id -> { weekday -> row }
+    (scheduleRows || []).forEach(r => {
+      if (!scheduleMap[r.employee_id]) scheduleMap[r.employee_id] = {};
+      scheduleMap[r.employee_id][r.weekday] = r;
+    });
+
+    const rows = [];
+    (attRows || []).forEach(a => {
+      const weekday = new Date(a.work_date + 'T00:00:00').getDay();
+      const schedule = scheduleMap[a.employee_id]?.[weekday] || null;
+      const overtimeMinutes = calcOvertimeMinutes(a, schedule);
+      if (overtimeMinutes && overtimeMinutes > 0) {
+        rows.push({
+          employeeName: a.employees?.full_name || 'موظف محذوف',
+          branchName: a.branches?.name || '—',
+          workDate: a.work_date,
+          weekdayLabel: WEEKDAY_LABELS[weekday],
+          scheduledEnd: schedule.is_day_off ? 'يوم إجازة أسبوعية' : (schedule.end_time ? schedule.end_time.slice(0, 5) : '—'),
+          checkOut: formatAttendanceTime(a.check_out),
+          overtimeMinutes,
+        });
+      }
+    });
+    rows.sort((x, y) => (x.workDate < y.workDate ? 1 : -1));
+    lastOvertimeRows = rows;
+
+    document.getElementById('overtimeDaysLabel').textContent = rows.length;
+    const totalMinutes = rows.reduce((s, r) => s + r.overtimeMinutes, 0);
+    document.getElementById('overtimeTotalHoursLabel').textContent = (totalMinutes / 60).toFixed(2);
+
+    renderBreakdownTable('overtimeTableBody', rows, 7, row => `
+      <td>${escapeHtml(row.employeeName)}</td>
+      <td>${escapeHtml(row.branchName)}</td>
+      <td class="num">${row.workDate}</td>
+      <td>${row.weekdayLabel}</td>
+      <td class="num">${row.scheduledEnd}</td>
+      <td class="num">${row.checkOut}</td>
+      <td class="num">${formatMinutesAsHM(row.overtimeMinutes)}</td>`);
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحميل تقرير الأوفر تايم', true);
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">تعذر تحميل البيانات</td></tr>`;
+  }
+}
+
+function exportOvertimeReportToExcel() {
+  if (lastOvertimeRows.length === 0) { showToast('لا توجد بيانات لتصديرها', true); return; }
+  const rows = lastOvertimeRows.map(r => ({
+    'الموظف': r.employeeName,
+    'الفرع': r.branchName,
+    'التاريخ': r.workDate,
+    'اليوم': r.weekdayLabel,
+    'الموعد المحدد': r.scheduledEnd,
+    'وقت الانصراف الفعلي': r.checkOut,
+    'مدة الأوفر تايم (دقيقة)': r.overtimeMinutes,
+  }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'الأوفر تايم');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `الأوفر-تايم-${dateStr}.xlsx`);
 }
 
 function renderAttendanceTable() {
@@ -26903,31 +27614,50 @@ function renderAttendanceTable() {
   document.getElementById('attendanceLeaveLabel').textContent = filtered.filter(a => a.status === 'on_leave').length;
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" class="bo-empty">${boAttendance.length === 0 ? 'لا توجد سجلات حضور في الفترة المحددة' : 'لا توجد سجلات مطابقة للفلتر'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" class="bo-empty">${boAttendance.length === 0 ? 'لا توجد سجلات حضور في الفترة المحددة' : 'لا توجد سجلات مطابقة للفلتر'}</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
   filtered.forEach(a => {
     const tr = document.createElement('tr');
+    // السجل اللي فاته يومه من غير انصراف مسجل بيتلوّن عشان يلفت نظر HR —
+    // ده اللي بيحصل مثلاً لما ينقطع الكهرباء أو الموظف ينسى، وييجي يتحل
+    // بتعديل يدوي (زرار "تحديد وقت الانصراف") بدل "تسجيل انصراف الآن" اللي
+    // بيثبت الوقت اللحظي فقط.
+    if (a.is_missing_checkout) tr.style.background = 'rgba(239,68,68,0.08)';
+    if (a.is_virtual_absent) tr.style.background = 'rgba(193,59,59,0.05)';
+    const varianceLabel = a.variance_hours == null ? '—'
+      : (a.variance_hours > 0 ? `+${a.variance_hours} ساعة` : `${a.variance_hours} ساعة`);
+    const varianceColor = a.variance_hours == null ? '' : (a.variance_hours < 0 ? 'color:var(--danger);' : (a.variance_hours > 0 ? 'color:var(--teal-700);' : ''));
     tr.innerHTML = `
       <td>${escapeHtml(a.employees?.full_name || '—')}</td>
       <td>${escapeHtml(a.branches?.name || '—')}</td>
       <td class="num">${escapeHtml(a.work_date || '—')}</td>
-      <td class="num">${formatAttendanceTime(a.check_in)}</td>
-      <td class="num">${formatAttendanceTime(a.check_out)}</td>
-      <td><span class="bo-badge ${ATTENDANCE_STATUS_BADGE[a.status] || 'info'}">${ATTENDANCE_STATUS_LABELS[a.status] || a.status}</span></td>
-      <td class="wrap-cell">${escapeHtml(a.notes || '—')}</td>
+      <td class="num">${formatAttendanceTime(a.check_in)}${a.late_minutes > 0 ? `<br><span style="color:var(--amber-600); font-size:11px;">متأخر ${a.late_minutes} د</span>` : ''}</td>
+      <td class="num">${a.check_out ? formatAttendanceTime(a.check_out) : (a.is_missing_checkout ? '<span class="bo-badge inactive">⚠ لم يُسجَّل</span>' : '—')}</td>
+      <td class="num">${a.worked_hours != null ? a.worked_hours : '—'}</td>
+      <td class="num" style="${varianceColor}">${varianceLabel}</td>
+      <td><span class="bo-badge ${ATTENDANCE_STATUS_BADGE[a.status] || 'info'}">${ATTENDANCE_STATUS_LABELS[a.status] || a.status}</span>${a.is_virtual_absent ? '<br><span style="color:var(--ink-soft); font-size:11px;">غياب محسوب تلقائيًا</span>' : ''}</td>
+      <td class="wrap-cell">${escapeHtml(a.notes || '—')}${a.check_out_reason ? `<br><span style="color:var(--ink-soft); font-size:11.5px;">سبب تعديل الانصراف: ${escapeHtml(a.check_out_reason)}</span>` : ''}</td>
       <td>
         <div class="bo-row-actions">
-          ${a.check_in && !a.check_out ? '<button class="bo-icon-btn" data-action="checkout">تسجيل انصراف الآن</button>' : ''}
+          ${a.is_virtual_absent ? '<button class="bo-icon-btn" data-action="record-absence">تسجيل الغياب</button>' : `
+          ${a.check_in && !a.check_out && !a.is_missing_checkout ? '<button class="bo-icon-btn" data-action="checkout">تسجيل انصراف الآن</button>' : ''}
+          ${a.is_missing_checkout ? '<button class="bo-icon-btn" data-action="resolve">تحديد وقت الانصراف</button>' : ''}
           <button class="bo-icon-btn" data-action="edit">تعديل</button>
-          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>`}
         </div>
       </td>`;
+    const recordAbsenceBtn = tr.querySelector('[data-action="record-absence"]');
+    if (recordAbsenceBtn) recordAbsenceBtn.addEventListener('click', () => openAttendanceModal(a));
     const checkoutBtn = tr.querySelector('[data-action="checkout"]');
     if (checkoutBtn) checkoutBtn.addEventListener('click', () => quickAttendanceCheckOut(a));
-    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openAttendanceModal(a));
-    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteAttendance(a));
+    const resolveBtn = tr.querySelector('[data-action="resolve"]');
+    if (resolveBtn) resolveBtn.addEventListener('click', () => openAttendanceModal(a));
+    if (!a.is_virtual_absent) {
+      tr.querySelector('[data-action="edit"]').addEventListener('click', () => openAttendanceModal(a));
+      tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteAttendance(a));
+    }
     applyRowActionPerm(tr, 'attendance');
     tbody.appendChild(tr);
   });
@@ -26944,11 +27674,14 @@ function exportAttendanceToExcel() {
     'التاريخ': a.work_date || '',
     'وقت الحضور': formatAttendanceTime(a.check_in),
     'وقت الانصراف': formatAttendanceTime(a.check_out),
+    'الساعات الفعلية': a.worked_hours != null ? a.worked_hours : '',
+    'العجز/الزيادة': a.variance_hours != null ? a.variance_hours : '',
     'الحالة': ATTENDANCE_STATUS_LABELS[a.status] || a.status || '',
     'ملاحظات': a.notes || '',
+    'سبب تعديل الانصراف': a.check_out_reason || '',
   }));
   const ws = XLSX.utils.json_to_sheet(rows);
-  ws['!cols'] = [{ wch: 22 }, { wch: 16 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 26 }];
+  ws['!cols'] = [{ wch: 22 }, { wch: 16 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 26 }, { wch: 26 }];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'الحضور والانصراف');
   const dateStr = new Date().toISOString().slice(0, 10);
@@ -26984,6 +27717,15 @@ function toTimeInputValue(ts) {
   return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
 }
 
+function toDatetimeLocalInputValue(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+let attendanceModalOriginalCheckOut = null; // وقت الانصراف الأصلي وقت الفتح — للمقارنة عند الحفظ
+
 function openAttendanceModal(record) {
   document.getElementById('attendanceModalTitle').textContent = record ? 'تعديل سجل حضور' : 'تسجيل حضور';
   document.getElementById('attendanceId').value = record ? record.id : '';
@@ -26994,6 +27736,12 @@ function openAttendanceModal(record) {
   document.getElementById('attendanceCheckOut').value = record ? toTimeInputValue(record.check_out) : '';
   document.getElementById('attendanceStatus').value = record?.status || 'present';
   document.getElementById('attendanceNotes').value = record?.notes || '';
+  document.getElementById('attendanceCheckOutReason').value = record?.check_out_reason || '';
+  attendanceModalOriginalCheckOut = record?.check_out || null;
+  // الحقل بيظهر بس لو السجل أصلًا كان ناقص انصراف (تصحيح يدوي) — أول فتح
+  // للمودال مع سجل موجود من غيره لسه من غير حقل، هيظهر تلقائي أول ما
+  // المستخدم يغيّر وقت الانصراف (اتربط في bindAttendanceEvents تحت)
+  document.getElementById('attendanceCheckOutReasonField').style.display = (record && !record.check_out) ? '' : 'none';
   document.getElementById('attendanceModalError').classList.remove('show');
   document.getElementById('attendanceModalOverlay').classList.add('show');
 }
@@ -27021,15 +27769,31 @@ async function saveAttendance(e) {
   saveBtn.disabled = true;
   saveBtn.textContent = 'جاري الحفظ...';
   const workDate = document.getElementById('attendanceWorkDate').value;
+  const newCheckOut = combineDateAndTime(workDate, document.getElementById('attendanceCheckOut').value);
+  const checkOutReason = document.getElementById('attendanceCheckOutReason').value.trim();
   const payload = {
     employee_id: document.getElementById('attendanceEmployee').value,
     branch_id: document.getElementById('attendanceBranch').value || null,
     work_date: workDate,
     check_in: combineDateAndTime(workDate, document.getElementById('attendanceCheckIn').value),
-    check_out: combineDateAndTime(workDate, document.getElementById('attendanceCheckOut').value),
+    check_out: newCheckOut,
     status: document.getElementById('attendanceStatus').value,
     notes: document.getElementById('attendanceNotes').value.trim() || null,
   };
+  // سبب إجباري لو ده تعديل يدوي لوقت انصراف (مش تسجيل أول مرة)، وقيمته
+  // اتغيرت عن اللي كان محفوظ وقت فتح المودال — ده بيوثّق سبب التصحيح
+  // (زي انقطاع كهرباء أو نسيان تسجيل) بدل ما الوقت يتغيّر بصمت.
+  const isManualCheckOutEdit = id && newCheckOut !== attendanceModalOriginalCheckOut;
+  if (isManualCheckOutEdit) {
+    if (!checkOutReason) {
+      errEl.textContent = 'لازم تكتب سبب تعديل وقت الانصراف يدويًا';
+      errEl.classList.add('show');
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'حفظ';
+      return;
+    }
+    payload.check_out_reason = checkOutReason;
+  }
 
   try {
     if (!payload.employee_id) throw new Error('اختر الموظف');
@@ -27071,6 +27835,297 @@ async function quickAttendanceCheckOut(record) {
   if (error) { console.error(error); showToast('تعذر تسجيل الانصراف', true); return; }
   showToast('تم تسجيل الانصراف بنجاح');
   await runAttendanceFilter();
+}
+
+// ---- سجلات المهام الخارجية (تعديل يدوي من شاشة الأدمن) ----
+let boFieldVisits = [];
+
+async function loadBoFieldVisits(fromDate, toDate) {
+  const tbody = document.getElementById('fieldVisitsTableBody');
+  tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>`;
+  let query = supabaseClient
+    .from('attendance_field_visits')
+    .select('*, employees(full_name), branches(name)')
+    .order('left_at', { ascending: false });
+  if (fromDate) query = query.gte('left_at', `${fromDate}T00:00:00`);
+  if (toDate) query = query.lte('left_at', `${toDate}T23:59:59`);
+  const { data, error } = await query;
+  if (error) { console.error(error); showToast('تعذر تحميل سجلات المهام الخارجية', true); return; }
+  boFieldVisits = data || [];
+  renderFieldVisitsTable();
+}
+
+function renderFieldVisitsTable() {
+  const tbody = document.getElementById('fieldVisitsTableBody');
+  if (boFieldVisits.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">لا توجد سجلات مهام خارجية في الفترة المحددة</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boFieldVisits.forEach(v => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(v.employees?.full_name || '—')}</td>
+      <td>${escapeHtml(v.branches?.name || '—')}</td>
+      <td class="num">${v.left_at ? new Date(v.left_at).toLocaleString('ar-EG') : '—'}</td>
+      <td class="num">${v.returned_at ? new Date(v.returned_at).toLocaleString('ar-EG') : '<span class="bo-badge info">لسه طالع</span>'}</td>
+      <td class="wrap-cell">${escapeHtml(v.reason || '—')}</td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openFieldVisitModal(v));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteFieldVisit(v));
+    applyRowActionPerm(tr, 'attendance');
+    tbody.appendChild(tr);
+  });
+}
+
+function openFieldVisitModal(visit) {
+  document.getElementById('fieldVisitId').value = visit.id;
+  document.getElementById('fieldVisitLeftAt').value = toDatetimeLocalInputValue(visit.left_at);
+  document.getElementById('fieldVisitReturnedAt').value = toDatetimeLocalInputValue(visit.returned_at);
+  document.getElementById('fieldVisitReason').value = visit.reason || '';
+  document.getElementById('fieldVisitNotes').value = visit.notes || '';
+  document.getElementById('fieldVisitModalError').classList.remove('show');
+  document.getElementById('fieldVisitModalOverlay').classList.add('show');
+}
+
+function closeFieldVisitModal() {
+  document.getElementById('fieldVisitModalOverlay').classList.remove('show');
+}
+
+async function saveFieldVisit(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('fieldVisitModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveFieldVisitBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+  const id = document.getElementById('fieldVisitId').value;
+  const leftAtVal = document.getElementById('fieldVisitLeftAt').value;
+  const returnedAtVal = document.getElementById('fieldVisitReturnedAt').value;
+  try {
+    if (!leftAtVal) throw new Error('حدد تاريخ ووقت الخروج');
+    const payload = {
+      left_at: new Date(leftAtVal).toISOString(),
+      returned_at: returnedAtVal ? new Date(returnedAtVal).toISOString() : null,
+      reason: document.getElementById('fieldVisitReason').value.trim() || null,
+      notes: document.getElementById('fieldVisitNotes').value.trim() || null,
+      updated_by: currentProfile?.id || null,
+    };
+    const { error } = await supabaseClient.from('attendance_field_visits').update(payload).eq('id', id);
+    if (error) throw error;
+    showToast('تم تحديث سجل المهمة الخارجية');
+    closeFieldVisitModal();
+    await loadBoFieldVisits(document.getElementById('attendanceFromDate').value, document.getElementById('attendanceToDate').value);
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function deleteFieldVisit(visit) {
+  if (!hasBoActionPermission('attendance', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm('هل أنت متأكد أنك تريد حذف سجل المهمة الخارجية هذا؟')) return;
+  const { error } = await supabaseClient.from('attendance_field_visits').delete().eq('id', visit.id);
+  if (error) { console.error(error); showToast('تعذر حذف السجل', true); return; }
+  showToast('تم حذف السجل بنجاح');
+  await loadBoFieldVisits(document.getElementById('attendanceFromDate').value, document.getElementById('attendanceToDate').value);
+}
+
+
+// ---- بصمتي (تسجيل حضور/انصراف ذاتي من شاشة المبيعات + خروج/رجوع من مهمة
+// عمل خارجية). الأوقات بتتفرض من ساعة السيرفر مباشرة (مش من المتصفح) على
+// مستوى القاعدة، فمفيش مجال للتلاعب — ده أساس الإثبات المطلوب. ----
+let myAttendanceToday = null;
+let myOpenFieldVisit = null;
+
+async function openMyAttendanceModal() {
+  if (!currentProfile?.employee_id) {
+    showToast('حسابك غير مربوط ببيانات موظف — راجع الأدمن لربط حسابك بسجل الموظف', true);
+    return;
+  }
+  document.getElementById('myAttendanceModalOverlay').classList.add('show');
+  document.getElementById('myAttendanceStatusText').textContent = 'جاري التحميل...';
+  await refreshMyAttendanceStatus();
+}
+
+function closeMyAttendanceModal() {
+  document.getElementById('myAttendanceModalOverlay').classList.remove('show');
+}
+
+async function refreshMyAttendanceStatus() {
+  const today = toDateInputValue(new Date());
+  const { data, error } = await supabaseClient
+    .from('attendance')
+    .select('*')
+    .eq('employee_id', currentProfile.employee_id)
+    .eq('work_date', today)
+    .maybeSingle();
+  if (error) console.error(error);
+  myAttendanceToday = data || null;
+
+  const { data: visitData, error: visitErr } = await supabaseClient
+    .from('attendance_field_visits')
+    .select('*')
+    .eq('employee_id', currentProfile.employee_id)
+    .is('returned_at', null)
+    .order('left_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (visitErr) console.error(visitErr);
+  myOpenFieldVisit = visitData || null;
+
+  renderMyAttendanceModal();
+}
+
+function renderMyAttendanceModal() {
+  const statusEl = document.getElementById('myAttendanceStatusText');
+  const checkInBtn = document.getElementById('myCheckInBtn');
+  const checkOutBtn = document.getElementById('myCheckOutBtn');
+  const fieldVisitOutBtn = document.getElementById('myFieldVisitOutBtn');
+  const fieldVisitInBtn = document.getElementById('myFieldVisitInBtn');
+  const fieldVisitReasonWrap = document.getElementById('myFieldVisitReasonWrap');
+  const fieldVisitStatusText = document.getElementById('myFieldVisitStatusText');
+
+  if (!myAttendanceToday) {
+    statusEl.textContent = 'لسه ما سجلتش حضور النهارده';
+    checkInBtn.style.display = '';
+    checkOutBtn.style.display = 'none';
+  } else if (!myAttendanceToday.check_out) {
+    statusEl.textContent = `سجلت حضور الساعة ${formatAttendanceTime(myAttendanceToday.check_in)}`;
+    checkInBtn.style.display = 'none';
+    checkOutBtn.style.display = '';
+  } else {
+    statusEl.textContent = `تم تسجيل انصرافك الساعة ${formatAttendanceTime(myAttendanceToday.check_out)}. لو عندك مهمة خارجية بعد كده تقدر تسجلها تحت.`;
+    checkInBtn.style.display = 'none';
+    checkOutBtn.style.display = 'none';
+  }
+
+  const canFieldVisit = !!myAttendanceToday;
+  if (myOpenFieldVisit) {
+    fieldVisitOutBtn.style.display = 'none';
+    fieldVisitInBtn.style.display = '';
+    fieldVisitReasonWrap.style.display = 'none';
+    fieldVisitStatusText.textContent = `طالع لمهمة من الساعة ${formatAttendanceTime(myOpenFieldVisit.left_at)}${myOpenFieldVisit.reason ? ' — ' + myOpenFieldVisit.reason : ''}`;
+    fieldVisitStatusText.style.display = '';
+  } else {
+    fieldVisitOutBtn.style.display = canFieldVisit ? '' : 'none';
+    fieldVisitInBtn.style.display = 'none';
+    fieldVisitReasonWrap.style.display = canFieldVisit ? '' : 'none';
+    fieldVisitStatusText.style.display = 'none';
+  }
+}
+
+async function myCheckIn() {
+  const btn = document.getElementById('myCheckInBtn');
+  btn.disabled = true;
+  try {
+    const now = new Date();
+    // نحدد حالة "متأخر" تلقائيًا عن طريق مقارنة وقت الحضور الفعلي بموعد
+    // بداية الدوام المحدد للموظف في مواعيد العمل الأسبوعية (لو محددة)
+    let status = 'present';
+    const weekday = now.getDay();
+    const { data: schedule } = await supabaseClient
+      .from('employee_work_schedules')
+      .select('is_day_off, start_time')
+      .eq('employee_id', currentProfile.employee_id)
+      .eq('weekday', weekday)
+      .maybeSingle();
+    if (schedule && !schedule.is_day_off && schedule.start_time) {
+      const [h, m] = schedule.start_time.split(':').map(Number);
+      const scheduledStart = new Date(now);
+      scheduledStart.setHours(h, m, 0, 0);
+      if (now > scheduledStart) status = 'late';
+    }
+
+    const { error } = await supabaseClient.from('attendance').insert({
+      employee_id: currentProfile.employee_id,
+      branch_id: currentProfile.branch_id || null,
+      work_date: toDateInputValue(now),
+      check_in: now.toISOString(),
+      status,
+    });
+    if (error) throw error;
+    showToast(status === 'late' ? 'تم تسجيل حضورك (متأخر عن الموعد)' : 'تم تسجيل حضورك');
+    await refreshMyAttendanceStatus();
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || 'تعذر تسجيل الحضور', true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function myCheckOut() {
+  if (!myAttendanceToday) return;
+  const btn = document.getElementById('myCheckOutBtn');
+  btn.disabled = true;
+  try {
+    const { error } = await supabaseClient
+      .from('attendance')
+      .update({ check_out: new Date().toISOString() })
+      .eq('id', myAttendanceToday.id);
+    if (error) throw error;
+    showToast('تم تسجيل انصرافك');
+    await refreshMyAttendanceStatus();
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || 'تعذر تسجيل الانصراف', true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function myFieldVisitOut() {
+  if (!myAttendanceToday) { showToast('سجّل حضورك الأول', true); return; }
+  const reason = document.getElementById('myFieldVisitReason').value.trim();
+  const btn = document.getElementById('myFieldVisitOutBtn');
+  btn.disabled = true;
+  try {
+    const { error } = await supabaseClient.from('attendance_field_visits').insert({
+      attendance_id: myAttendanceToday.id,
+      employee_id: currentProfile.employee_id,
+      branch_id: currentProfile.branch_id || null,
+      reason: reason || null,
+    });
+    if (error) throw error;
+    document.getElementById('myFieldVisitReason').value = '';
+    showToast('تم تسجيل خروجك للمهمة');
+    await refreshMyAttendanceStatus();
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || 'تعذر تسجيل الخروج للمهمة', true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function myFieldVisitIn() {
+  if (!myOpenFieldVisit) return;
+  const btn = document.getElementById('myFieldVisitInBtn');
+  btn.disabled = true;
+  try {
+    const { error } = await supabaseClient
+      .from('attendance_field_visits')
+      .update({ returned_at: new Date().toISOString() })
+      .eq('id', myOpenFieldVisit.id);
+    if (error) throw error;
+    showToast('تم تسجيل رجوعك من المهمة');
+    await refreshMyAttendanceStatus();
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || 'تعذر تسجيل الرجوع', true);
+  } finally {
+    btn.disabled = false;
+  }
 }
 
 // ---- Leave requests (طلبات الإجازات) ----
@@ -34372,6 +35427,7 @@ const INVENTORY_QUICK_RANGE_CONFIGS = [
   { rowId: 'expensesAnalysisQuickRange', fromId: 'expensesAnalysisFromDate', toId: 'expensesAnalysisToDate', refresh: () => refreshExpensesAnalysisReport() },
   { rowId: 'otherReturnsQuickRange', fromId: 'otherReturnsFromDate', toId: 'otherReturnsToDate', refresh: () => refreshReturnsAnalysisReport() },
   { rowId: 'etaLogQuickRange', fromId: 'etaLogFromDate', toId: 'etaLogToDate', refresh: () => runEtaLogReport() },
+  { rowId: 'overtimeQuickRange', fromId: 'overtimeFromDate', toId: 'overtimeToDate', refresh: () => runOvertimeReport() },
 ];
 
 function initInventoryQuickRanges() {
@@ -36445,6 +37501,84 @@ async function rdExecute() {
       document.querySelectorAll('.bo-menu-panel.open').forEach(function (p) { p.classList.remove('open'); });
     }
   });
+</script>
+<!-- تحديث شارة قسم "الخصومات" في شاشة البيع بشكل تجميلي فقط (لا يغيّر أي حسابات) -->
+<script>
+(function () {
+  function updateDiscountBadge() {
+    var badge = document.getElementById('posDiscountBadge');
+    if (!badge) return;
+    var discountVal = parseFloat(document.getElementById('discountInput') && document.getElementById('discountInput').value) || 0;
+    var couponNote = document.getElementById('couponAppliedNote');
+    var couponActive = couponNote && couponNote.style.display === 'flex';
+    var loyaltyRow = document.getElementById('loyaltyRedeemRow');
+    var loyaltyPoints = parseFloat(document.getElementById('loyaltyPointsInput') && document.getElementById('loyaltyPointsInput').value) || 0;
+    var loyaltyActive = loyaltyRow && loyaltyRow.style.display === 'flex' && loyaltyPoints > 0;
+    var parts = [];
+    if (discountVal > 0) parts.push('خصم ' + discountVal.toFixed(2));
+    if (couponActive) parts.push('كوبون مُفعّل');
+    if (loyaltyActive) parts.push('نقاط مُستخدمة');
+    if (parts.length) {
+      badge.textContent = parts.join(' + ');
+      badge.classList.add('active');
+    } else {
+      badge.textContent = 'بدون خصم';
+      badge.classList.remove('active');
+    }
+  }
+  document.addEventListener('input', function (e) {
+    if (e.target && ['discountInput', 'loyaltyPointsInput', 'couponCodeInput'].indexOf(e.target.id) !== -1) updateDiscountBadge();
+  });
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (!t) return;
+    if (['applyCouponBtn', 'removeCouponBtn', 'maxLoyaltyBtn'].indexOf(t.id) !== -1 || t.closest('.quick-discount-btn')) {
+      setTimeout(updateDiscountBadge, 30);
+    }
+  });
+  var accBody = document.querySelector('#posDiscountAcc .pos-acc-body');
+  if (accBody && window.MutationObserver) {
+    new MutationObserver(function () { updateDiscountBadge(); })
+      .observe(accBody, { attributes: true, attributeFilter: ['style'], subtree: true, childList: true });
+  }
+  document.addEventListener('DOMContentLoaded', updateDiscountBadge);
+  updateDiscountBadge();
+})();
+</script>
+
+<!-- تحديث شارة قسم "خيارات دفع إضافية" (قناة البيع / دفع مُجزّأ) بشكل تجميلي فقط -->
+<script>
+(function () {
+  function updatePaymentOptionsBadge() {
+    var badge = document.getElementById('posPaymentOptionsBadge');
+    if (!badge) return;
+    var channelSel = document.getElementById('posSalesChannel');
+    var channelActive = channelSel && channelSel.value;
+    var channelLabel = channelActive ? (channelSel.options[channelSel.selectedIndex] || {}).text : '';
+    var splitToggle = document.getElementById('splitPaymentToggle');
+    var splitActive = splitToggle && splitToggle.checked;
+    var parts = [];
+    if (channelActive && channelLabel) parts.push(channelLabel);
+    if (splitActive) parts.push('دفع مُجزّأ');
+    if (parts.length) {
+      badge.textContent = parts.join(' + ');
+      badge.classList.add('active');
+    } else {
+      badge.textContent = 'قياسي';
+      badge.classList.remove('active');
+    }
+  }
+  document.addEventListener('change', function (e) {
+    if (e.target && (e.target.id === 'posSalesChannel' || e.target.id === 'splitPaymentToggle')) updatePaymentOptionsBadge();
+  });
+  var accBody = document.querySelector('#posPaymentOptionsAcc .pos-acc-body');
+  if (accBody && window.MutationObserver) {
+    new MutationObserver(function () { updatePaymentOptionsBadge(); })
+      .observe(accBody, { attributes: true, attributeFilter: ['style'], subtree: true, childList: true });
+  }
+  document.addEventListener('DOMContentLoaded', updatePaymentOptionsBadge);
+  updatePaymentOptionsBadge();
+})();
 </script>
 </body>
 </html>
