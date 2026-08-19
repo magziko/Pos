@@ -1306,7 +1306,7 @@ a { color: inherit; }
         <button class="return-topbar-btn" id="saleReturnBtn" title="مرتجع بيع"><span class="return-topbar-icon">↩</span><span class="return-topbar-label">مرتجع بيع</span></button>
         <button class="return-topbar-btn" id="cashDropBtn" style="display:none;" title="سحب نقدي من الدرج لخزنة الفرع"><span class="return-topbar-icon">💵</span><span class="return-topbar-label">سحب نقدي</span></button>
         <button class="close-shift-btn" id="closeShiftBtn" style="display:none;" title="إغلاق الوردية"><span class="topbar-btn-icon">🔒</span><span class="topbar-btn-label">إغلاق الوردية</span></button>
-        <button class="return-topbar-btn" id="myAttendanceBtn" style="display:none;" title="حضور وانصرافي"><span class="return-topbar-icon">🕒</span><span class="return-topbar-label">بصمتي</span></button>
+        <button class="return-topbar-btn" id="myAttendanceBtn" style="display:none;" title="الحضور والانصراف"><span class="return-topbar-icon">🕒</span><span class="return-topbar-label">الحضور والانصراف</span></button>
         <button class="logout-btn" id="backofficeBtn" style="display:none;" title="لوحة التحكم"><span class="topbar-btn-icon">🖥️</span><span class="topbar-btn-label">لوحة التحكم</span></button>
         <button class="logout-btn" id="logoutBtn" title="تسجيل الخروج"><span class="topbar-btn-icon">⏻</span><span class="topbar-btn-label">تسجيل الخروج</span></button>
       </div>
@@ -4826,6 +4826,14 @@ a { color: inherit; }
               <div class="report-type-icon">⏱️</div>
               <div class="report-type-label">الأوفر تايم</div>
             </button>
+            <button type="button" class="report-type-card" data-report="field-visits">
+              <div class="report-type-icon">🧭</div>
+              <div class="report-type-label">المهام الخارجية حسب النشاط</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="hr-kpi">
+              <div class="report-type-icon">📊</div>
+              <div class="report-type-label">لوحة KPI الموارد البشرية</div>
+            </button>
             <button type="button" class="report-type-card" data-report="cashier-performance">
               <div class="report-type-icon">🧑‍💼</div>
               <div class="report-type-label">أداء الكاشير الشامل</div>
@@ -4949,6 +4957,129 @@ a { color: inherit; }
                   </thead>
                   <tbody id="overtimeTableBody">
                     <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- المهام الخارجية حسب النشاط -->
+            <div id="otherReportDetail-field-visits" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">المهام الخارجية حسب النشاط</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-outline-btn" id="manageActivityTypesBtn">إدارة الأنشطة الخدمية</button>
+                  <button class="bo-icon-btn" id="exportFieldVisitsReportBtn">تصدير إكسل</button>
+                </div>
+              </div>
+              <div class="quick-range-row" id="fieldVisitsReportQuickRange" style="margin-bottom:12px;">
+                <button class="quick-range-btn active" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+                <button class="quick-range-btn" data-invqr="30days">آخر 30 يوم</button>
+              </div>
+              <div class="report-filters" style="margin-bottom:14px;">
+                <div class="field"><label>من تاريخ</label><input type="date" id="fieldVisitsReportFromDate"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="fieldVisitsReportToDate"></div>
+                <div class="field"><label>الموظف</label><select id="fieldVisitsReportEmployeeFilter"><option value="">كل الموظفين</option></select></div>
+                <div class="field"><label>النشاط الخدمي</label><select id="fieldVisitsReportActivityFilter"><option value="">كل الأنشطة</option></select></div>
+                <div class="field" id="fieldVisitsReportBranchField"><label>الفرع</label><select id="fieldVisitsReportBranchFilter"><option value="">كل الفروع</option></select></div>
+              </div>
+
+              <div class="report-subtitle" style="font-size:13px; margin-bottom:8px;">ملخص حسب النشاط</div>
+              <div class="bo-table-wrap" style="margin-bottom:20px;">
+                <table class="bo-table">
+                  <thead>
+                    <tr>
+                      <th>النشاط الخدمي</th>
+                      <th>عدد الزيارات</th>
+                      <th>إجمالي المدة</th>
+                      <th>متوسط مدة الزيارة</th>
+                      <th>تمت بنجاح</th>
+                      <th>لم تتم</th>
+                      <th>مؤجلة</th>
+                    </tr>
+                  </thead>
+                  <tbody id="fieldVisitsActivitySummaryBody">
+                    <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="report-subtitle" style="font-size:13px; margin-bottom:8px;">تفاصيل الزيارات</div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead>
+                    <tr>
+                      <th>الموظف</th>
+                      <th>النشاط</th>
+                      <th>العميل / الموقع</th>
+                      <th>وقت الخروج</th>
+                      <th>وقت الرجوع</th>
+                      <th>المدة</th>
+                      <th>النتيجة</th>
+                    </tr>
+                  </thead>
+                  <tbody id="fieldVisitsReportDetailBody">
+                    <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- لوحة KPI الموارد البشرية -->
+            <div id="otherReportDetail-hr-kpi" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">لوحة KPI الموارد البشرية</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-icon-btn" id="exportHrKpiReportBtn">تصدير إكسل</button>
+                </div>
+              </div>
+              <div class="quick-range-row" id="hrKpiQuickRange" style="margin-bottom:12px;">
+                <button class="quick-range-btn" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn active" data-invqr="month">الشهر الحالي</button>
+                <button class="quick-range-btn" data-invqr="30days">آخر 30 يوم</button>
+              </div>
+              <div class="report-filters" style="margin-bottom:14px;">
+                <div class="field"><label>من تاريخ</label><input type="date" id="hrKpiFromDate"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="hrKpiToDate"></div>
+                <div class="field" id="hrKpiBranchField"><label>الفرع</label><select id="hrKpiBranchFilter"><option value="">كل الفروع</option></select></div>
+              </div>
+              <div class="report-cards">
+                <div class="report-card">
+                  <div class="report-card-label">نسبة الحضور</div>
+                  <div class="report-card-value num" id="hrKpiAttendanceRateLabel">0%</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">متوسط التأخير (لأيام التأخير)</div>
+                  <div class="report-card-value num" id="hrKpiAvgLateLabel">0 د</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي الأوفر تايم</div>
+                  <div class="report-card-value num" id="hrKpiOvertimeLabel">0 س</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي أيام الغياب</div>
+                  <div class="report-card-value num" id="hrKpiAbsenceLabel">0</div>
+                </div>
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead>
+                    <tr>
+                      <th>الموظف</th>
+                      <th>الفرع</th>
+                      <th>أيام العمل المتوقعة</th>
+                      <th>أيام الحضور</th>
+                      <th>نسبة الحضور</th>
+                      <th>أيام الغياب</th>
+                      <th>أيام إجازة معتمدة</th>
+                      <th>متوسط التأخير</th>
+                      <th>إجمالي الأوفر تايم</th>
+                    </tr>
+                  </thead>
+                  <tbody id="hrKpiTableBody">
+                    <tr><td colspan="9" class="bo-empty">جاري التحميل...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -5616,6 +5747,7 @@ a { color: inherit; }
           <div class="bo-section-header">
             <div class="bo-section-title">الحضور والانصراف</div>
             <div class="bo-section-actions">
+              <button class="bo-outline-btn" id="printMonthlySheetBtn">كشف حضور شهري (PDF)</button>
               <button class="bo-outline-btn" id="exportAttendanceBtn">تصدير إكسل</button>
               <button class="bo-add-btn" id="addAttendanceBtn">+ تسجيل حضور</button>
             </div>
@@ -5703,14 +5835,16 @@ a { color: inherit; }
                 <tr>
                   <th>الموظف</th>
                   <th>الفرع</th>
+                  <th>النشاط</th>
+                  <th>العميل / الموقع</th>
                   <th>وقت الخروج</th>
                   <th>وقت الرجوع</th>
-                  <th>السبب</th>
+                  <th>النتيجة</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody id="fieldVisitsTableBody">
-                <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+                <tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
@@ -5775,6 +5909,28 @@ a { color: inherit; }
               </thead>
               <tbody id="leaveRequestsTableBody">
                 <tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="bo-section-header" style="margin-top:24px;">
+            <div class="bo-section-title" style="font-size:15px;">أرصدة الإجازة السنوية (<span id="leaveBalancesYearLabel"></span>)</div>
+            <div class="bo-section-actions">
+              <button class="bo-outline-btn" id="refreshLeaveBalancesBtn">تحديث</button>
+            </div>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>الموظف</th>
+                  <th>الرصيد السنوي</th>
+                  <th>المستخدم هذا العام</th>
+                  <th>المتبقي</th>
+                </tr>
+              </thead>
+              <tbody id="leaveBalancesTableBody">
+                <tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
@@ -8705,6 +8861,7 @@ a { color: inherit; }
         <div class="field"><label>تاريخ التعيين</label><input type="date" id="employeeHireDate"></div>
         <div class="field"><label>الراتب الأساسي</label><input type="number" id="employeeBaseSalary" step="0.01" min="0" value="0"></div>
         <div class="field"><label>سعر ساعة الأوفر تايم</label><input type="number" id="employeeOvertimeRate" step="0.01" min="0" value="0"></div>
+        <div class="field"><label>رصيد الإجازة السنوية (يوم)</label><input type="number" id="employeeAnnualLeaveDays" step="0.5" min="0" value="21"></div>
         <div class="field field-full">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
             <input type="checkbox" id="employeeActive" checked style="width:auto;"> الموظف على رأس العمل حاليًا
@@ -8732,6 +8889,14 @@ a { color: inherit; }
           <thead><tr><th>اليوم</th><th>إجازة أسبوعية</th><th>من</th><th>إلى</th></tr></thead>
           <tbody id="employeeScheduleTableBody"></tbody>
         </table>
+      </div>
+
+      <div class="ci-section-subtitle">الرقم السري لتسجيل الحضور من جهاز الكاشير</div>
+      <div class="modal-grid">
+        <div class="field field-full">
+          <label>رقم سري جديد (4 أرقام على الأقل، اتركه فارغًا لو مش عايز تغييره)</label>
+          <input type="text" id="employeeAttendancePin" inputmode="numeric" maxlength="8" placeholder="••••">
+        </div>
       </div>
 
       <div class="error-msg" id="employeeModalError"></div>
@@ -8789,7 +8954,26 @@ a { color: inherit; }
       <div class="modal-grid">
         <div class="field"><label>تاريخ ووقت الخروج</label><input type="datetime-local" id="fieldVisitLeftAt" required></div>
         <div class="field"><label>تاريخ ووقت الرجوع (اتركه فارغًا لو لسه ما رجعش)</label><input type="datetime-local" id="fieldVisitReturnedAt"></div>
-        <div class="field field-full"><label>السبب</label><input type="text" id="fieldVisitReason"></div>
+        <div class="field"><label>النشاط الخدمي</label><select id="fieldVisitActivityType"><option value="">اختر النشاط...</option></select></div>
+        <div class="field">
+          <label>العميل</label>
+          <div class="smart-search" id="fieldVisitCustomerWrap">
+            <input type="text" id="fieldVisitCustomerInput" autocomplete="off" placeholder="اكتب اسم العميل أو رقم هاتفه، أو اضغط للعرض...">
+            <input type="hidden" id="fieldVisitCustomer">
+            <div class="smart-search-dropdown" id="fieldVisitCustomerDropdown"></div>
+          </div>
+        </div>
+        <div class="field field-full"><label>الموقع/العنوان</label><input type="text" id="fieldVisitLocation"></div>
+        <div class="field field-full"><label>السبب / تفاصيل إضافية</label><input type="text" id="fieldVisitReason"></div>
+        <div class="field"><label>نتيجة الزيارة</label>
+          <select id="fieldVisitResult">
+            <option value="">بدون تحديد</option>
+            <option value="completed">تمت المهمة بنجاح</option>
+            <option value="not_completed">لم تتم المهمة</option>
+            <option value="postponed">تم تأجيلها</option>
+          </select>
+        </div>
+        <div class="field"><label>ملاحظات النتيجة</label><input type="text" id="fieldVisitResultNotes"></div>
         <div class="field field-full"><label>ملاحظات</label><input type="text" id="fieldVisitNotes"></div>
       </div>
       <div class="error-msg" id="fieldVisitModalError"></div>
@@ -8801,27 +8985,131 @@ a { color: inherit; }
   </div>
 </div>
 
+<!-- Modal: إدارة الأنشطة الخدمية للمهام الخارجية -->
+<div class="modal-overlay" id="activityTypesModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">إدارة الأنشطة الخدمية</div>
+    <div class="bo-table-wrap" style="margin-bottom:14px;">
+      <table class="bo-table">
+        <thead><tr><th>الاسم</th><th>مفعّل</th><th></th></tr></thead>
+        <tbody id="activityTypesTableBody"></tbody>
+      </table>
+    </div>
+    <div class="modal-grid">
+      <div class="field field-full"><label>نشاط جديد</label><input type="text" id="newActivityTypeName" placeholder="مثلاً: صيانة أجهزة"></div>
+    </div>
+    <div class="error-msg" id="activityTypesModalError"></div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="closeActivityTypesBtn">إغلاق</button>
+      <button type="button" class="submit-btn" id="addActivityTypeBtn">إضافة</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: كشف حضور شهري (لموظف أو جماعي) -->
+<div class="modal-overlay" id="monthlySheetModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">كشف حضور شهري</div>
+    <div class="modal-grid">
+      <div class="field field-full">
+        <label>النطاق</label>
+        <select id="monthlySheetScope">
+          <option value="employee">موظف واحد</option>
+          <option value="branch">كل موظفي فرع</option>
+          <option value="all">كل الموظفين (الشركة)</option>
+        </select>
+      </div>
+      <div class="field field-full" id="monthlySheetEmployeeField"><label>الموظف</label><select id="monthlySheetEmployeeSelect"></select></div>
+      <div class="field field-full" id="monthlySheetBranchField" style="display:none;"><label>الفرع</label><select id="monthlySheetBranchSelect"></select></div>
+      <div class="field field-full"><label>الشهر</label><input type="month" id="monthlySheetMonth"></div>
+    </div>
+    <div class="error-msg" id="monthlySheetModalError"></div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="cancelMonthlySheetBtn">إلغاء</button>
+      <button type="button" class="submit-btn" id="generateMonthlySheetBtn">معاينة وطباعة</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: بصمتي (تسجيل حضور/انصراف ذاتي + خروج/رجوع من مهمة عمل خارجية) -->
 <div class="modal-overlay" id="myAttendanceModalOverlay">
   <div class="modal-box">
-    <div class="modal-title">حضور وانصرافي</div>
-    <div id="myAttendanceStatusText" style="font-size:14px; margin-bottom:14px; color:var(--ink-soft);">جاري التحميل...</div>
-    <div class="modal-actions" style="margin-bottom:6px;">
-      <button type="button" class="submit-btn" id="myCheckInBtn" style="display:none;">تسجيل حضور الآن</button>
-      <button type="button" class="submit-btn" id="myCheckOutBtn" style="display:none;">تسجيل انصراف الآن</button>
+    <div class="modal-title">الحضور والانصراف</div>
+
+    <div class="quick-range-row" id="myAttendanceTabs" style="margin-bottom:14px;">
+      <button type="button" class="quick-range-btn active" data-att-tab="self">حضوري أنا</button>
+      <button type="button" class="quick-range-btn" data-att-tab="team" id="shiftTeamTabBtn" style="display:none;">حضور زميل</button>
     </div>
-    <div style="border-top:1px solid var(--border); margin:14px 0; padding-top:14px;">
-      <div style="font-size:13px; font-weight:600; margin-bottom:8px;">مهمة عمل خارجية (زيارة عميل، توصيل...)</div>
-      <div id="myFieldVisitStatusText" style="display:none; font-size:13px; color:var(--ink-soft); margin-bottom:8px;"></div>
-      <div class="field field-full" id="myFieldVisitReasonWrap" style="display:none; margin-bottom:8px;">
-        <label>سبب الخروج (اختياري)</label>
-        <input type="text" id="myFieldVisitReason" placeholder="مثلاً: زيارة عميل، توصيل طلب...">
+
+    <div id="myAttendanceSelfPanel">
+      <div id="myAttendanceStatusText" style="font-size:14px; margin-bottom:14px; color:var(--ink-soft);">جاري التحميل...</div>
+      <div class="modal-actions" style="margin-bottom:6px;">
+        <button type="button" class="submit-btn" id="myCheckInBtn" style="display:none;">تسجيل حضور الآن</button>
+        <button type="button" class="submit-btn" id="myCheckOutBtn" style="display:none;">تسجيل انصراف الآن</button>
       </div>
+      <div style="border-top:1px solid var(--border); margin:14px 0; padding-top:14px;">
+        <div style="font-size:13px; font-weight:600; margin-bottom:8px;">مهمة عمل خارجية (زيارة عميل، توصيل...)</div>
+        <div id="myFieldVisitStatusText" style="display:none; font-size:13px; color:var(--ink-soft); margin-bottom:8px;"></div>
+
+        <div id="myFieldVisitOutFields" style="display:none;">
+          <div class="field field-full" style="margin-bottom:8px;">
+            <label>النشاط الخدمي</label>
+            <select id="myFieldVisitActivityType"><option value="">اختر النشاط...</option></select>
+          </div>
+          <div class="field field-full" style="margin-bottom:8px;">
+            <label>العميل (اختياري)</label>
+            <div class="smart-search" id="myFieldVisitCustomerWrap">
+              <input type="text" id="myFieldVisitCustomerInput" autocomplete="off" placeholder="اكتب اسم العميل أو رقم هاتفه، أو اضغط للعرض...">
+              <input type="hidden" id="myFieldVisitCustomer">
+              <div class="smart-search-dropdown" id="myFieldVisitCustomerDropdown"></div>
+            </div>
+          </div>
+          <div class="field field-full" style="margin-bottom:8px;">
+            <label>الموقع/العنوان (اختياري)</label>
+            <input type="text" id="myFieldVisitLocation" placeholder="مثلاً: فرع المعادي، شارع 9...">
+          </div>
+          <div class="field field-full" id="myFieldVisitReasonWrap" style="margin-bottom:8px;">
+            <label>تفاصيل إضافية (اختياري)</label>
+            <input type="text" id="myFieldVisitReason" placeholder="مثلاً: توصيل طلب رقم...">
+          </div>
+        </div>
+
+        <div id="myFieldVisitInFields" style="display:none;">
+          <div class="field field-full" style="margin-bottom:8px;">
+            <label>نتيجة الزيارة (اختياري)</label>
+            <select id="myFieldVisitResult">
+              <option value="">بدون تحديد</option>
+              <option value="completed">تمت المهمة بنجاح</option>
+              <option value="not_completed">لم تتم المهمة</option>
+              <option value="postponed">تم تأجيلها</option>
+            </select>
+          </div>
+          <div class="field field-full" style="margin-bottom:8px;">
+            <label>ملاحظات النتيجة (اختياري)</label>
+            <input type="text" id="myFieldVisitResultNotes">
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="modal-cancel-btn" id="myFieldVisitOutBtn" style="display:none;">خروج لمهمة</button>
+          <button type="button" class="submit-btn" id="myFieldVisitInBtn" style="display:none;">تسجيل الرجوع من المهمة</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="myAttendanceTeamPanel" style="display:none;">
+      <div style="font-size:12.5px; color:var(--ink-soft); margin-bottom:12px;">كل موظف يختار اسمه ويدخل رقمه السري، والنظام بيسجله حاضر أو منصرف تلقائيًا حسب حالته اليوم.</div>
+      <div class="modal-grid">
+        <div class="field field-full"><label>الموظف</label><select id="shiftAttendanceEmployeeSelect"></select></div>
+        <div class="field field-full"><label>الرقم السري</label><input type="password" id="shiftAttendancePin" inputmode="numeric" maxlength="8" autocomplete="off"></div>
+      </div>
+      <div id="shiftAttendanceResult" style="display:none; margin:10px 0; padding:10px 12px; border-radius:var(--radius-sm); background:var(--teal-100); color:var(--teal-900); font-size:13.5px;"></div>
+      <div class="error-msg" id="shiftAttendanceError"></div>
       <div class="modal-actions">
-        <button type="button" class="modal-cancel-btn" id="myFieldVisitOutBtn" style="display:none;">خروج لمهمة</button>
-        <button type="button" class="submit-btn" id="myFieldVisitInBtn" style="display:none;">تسجيل الرجوع من المهمة</button>
+        <button type="button" class="submit-btn" id="submitShiftAttendanceBtn">تسجيل</button>
       </div>
     </div>
+
     <div class="modal-actions" style="margin-top:14px;">
       <button type="button" class="modal-cancel-btn" id="closeMyAttendanceBtn">إغلاق</button>
     </div>
@@ -11433,6 +11721,13 @@ function startClock() {
 function bindPosEvents() {
   posEls.logoutBtn.addEventListener('click', doLogout);
   posEls.myAttendanceBtn.addEventListener('click', openMyAttendanceModal);
+  document.querySelectorAll('#myAttendanceTabs [data-att-tab]').forEach(btn => {
+    btn.addEventListener('click', () => switchMyAttendanceTab(btn.dataset.attTab));
+  });
+  document.getElementById('submitShiftAttendanceBtn').addEventListener('click', submitShiftAttendance);
+  document.getElementById('shiftAttendancePin').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); submitShiftAttendance(); }
+  });
   document.getElementById('closeMyAttendanceBtn').addEventListener('click', closeMyAttendanceModal);
   document.getElementById('myAttendanceModalOverlay').addEventListener('click', (e) => {
     if (e.target.id === 'myAttendanceModalOverlay') closeMyAttendanceModal();
@@ -14719,6 +15014,8 @@ const REPORT_TABS = {
   'reports-other': { grid: 'otherReportTypeGrid', title: 'تقارير أخرى', items: [
     { key: 'shifts', title: 'الورديات وإغلاق الخزينة' },
     { key: 'overtime', title: 'الأوفر تايم' },
+    { key: 'field-visits', title: 'المهام الخارجية حسب النشاط' },
+    { key: 'hr-kpi', title: 'لوحة KPI الموارد البشرية' },
     { key: 'cashier-performance', title: 'أداء الكاشير الشامل' },
     { key: 'discounts', title: 'الخصومات الممنوحة' },
     { key: 'activity-log', title: 'سجل نشاط المستخدمين' },
@@ -15452,7 +15749,15 @@ function activateBoSection(section, btn) {
   if (section === 'salaries' && !salariesLoadedOnce) { setSalaryQuickRange('month'); runSalaryFilter(); salariesLoadedOnce = true; }
   if (section === 'sales-commissions' && !salesCommissionsLoadedOnce) { setCommissionsQuickRange('month'); populateCommissionsEmployeeFilter(); runCommissionsFilter(); salesCommissionsLoadedOnce = true; }
   if (section === 'attendance' && !attendanceLoadedOnce) { populateAttendanceFilterSelects(); setAttendanceQuickRange('month'); runAttendanceFilter(); attendanceLoadedOnce = true; }
-  if (section === 'leave-requests' && !leaveRequestsLoadedOnce) { loadBoLeaveRequests().then(renderLeaveRequestsTable); leaveRequestsLoadedOnce = true; }
+  if (section === 'leave-requests' && !leaveRequestsLoadedOnce) {
+    (async () => {
+      if (boEmployees.length === 0) await loadBoEmployees();
+      await loadBoLeaveRequests();
+      renderLeaveRequestsTable();
+      renderLeaveBalancesTable();
+    })();
+    leaveRequestsLoadedOnce = true;
+  }
   if (section === 'stocktake') { initStocktakeSection(); }
   if (section === 'product-batches' && !productBatchesLoadedOnce) { initProductBatchesSection(); productBatchesLoadedOnce = true; }
   if (section === 'product-serials' && !productSerialsLoadedOnce) { initProductSerialsSection(); productSerialsLoadedOnce = true; }
@@ -16385,6 +16690,8 @@ function bindBackofficeEvents() {
       document.getElementById('otherReportsCrumbCurrent').textContent = card.querySelector('.report-type-label').textContent;
       if (key === 'shifts') { initShiftsSection(); }
       if (key === 'overtime') { populateOvertimeFilters(); runOvertimeReport(); }
+      if (key === 'field-visits') { populateFieldVisitsReportFilters(); runFieldVisitsReport(); }
+      if (key === 'hr-kpi') { populateHrKpiFilters(); runHrKpiReport(); }
       if (key === 'cashier-performance') { setInventoryDateRange('today', 'otherCashierPerfFromDate', 'otherCashierPerfToDate'); runCashierPerfReport(); }
       if (key === 'discounts') { populateDiscountsBranchFilter(); setInventoryDateRange('today', 'otherDiscountsFromDate', 'otherDiscountsToDate'); runDiscountsReport(); }
       if (key === 'activity-log') { populateActivityLogFilters(); setInventoryDateRange('today', 'activityLogFromDate', 'activityLogToDate'); refreshActivityLogReport(); }
@@ -16408,6 +16715,18 @@ function bindBackofficeEvents() {
   document.getElementById('exportOvertimeReportBtn').addEventListener('click', exportOvertimeReportToExcel);
   document.getElementById('overtimeEmployeeFilter').addEventListener('change', runOvertimeReport);
   document.getElementById('overtimeBranchFilter').addEventListener('change', runOvertimeReport);
+  document.getElementById('exportFieldVisitsReportBtn').addEventListener('click', exportFieldVisitsReportToExcel);
+  document.getElementById('fieldVisitsReportEmployeeFilter').addEventListener('change', runFieldVisitsReport);
+  document.getElementById('fieldVisitsReportActivityFilter').addEventListener('change', runFieldVisitsReport);
+  document.getElementById('fieldVisitsReportBranchFilter').addEventListener('change', runFieldVisitsReport);
+  document.getElementById('manageActivityTypesBtn').addEventListener('click', openActivityTypesModal);
+  document.getElementById('closeActivityTypesBtn').addEventListener('click', closeActivityTypesModal);
+  document.getElementById('activityTypesModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'activityTypesModalOverlay') closeActivityTypesModal();
+  });
+  document.getElementById('addActivityTypeBtn').addEventListener('click', addActivityType);
+  document.getElementById('exportHrKpiReportBtn').addEventListener('click', exportHrKpiReportToExcel);
+  document.getElementById('hrKpiBranchFilter').addEventListener('change', runHrKpiReport);
   document.getElementById('otherReportBackBtn').addEventListener('click', () => {
     document.getElementById('otherReportDetailWrap').style.display = 'none';
     document.getElementById('otherReportTypeGrid').style.display = 'grid';
@@ -17243,6 +17562,13 @@ function bindBackofficeEvents() {
   // ---- Attendance ----
   document.getElementById('addAttendanceBtn').addEventListener('click', () => openAttendanceModal(null));
   document.getElementById('exportAttendanceBtn').addEventListener('click', exportAttendanceToExcel);
+  document.getElementById('printMonthlySheetBtn').addEventListener('click', openMonthlySheetModal);
+  document.getElementById('cancelMonthlySheetBtn').addEventListener('click', closeMonthlySheetModal);
+  document.getElementById('monthlySheetModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'monthlySheetModalOverlay') closeMonthlySheetModal();
+  });
+  document.getElementById('generateMonthlySheetBtn').addEventListener('click', generateMonthlySheet);
+  document.getElementById('monthlySheetScope').addEventListener('change', onMonthlySheetScopeChange);
   document.getElementById('runAttendanceFilterBtn').addEventListener('click', () => runAttendanceFilter());
   document.getElementById('attendanceEmployeeFilter').addEventListener('change', renderAttendanceTable);
   document.getElementById('attendanceBranchFilter').addEventListener('change', renderAttendanceTable);
@@ -17286,6 +17612,7 @@ function bindBackofficeEvents() {
     if (e.target.id === 'leaveRequestModalOverlay') closeLeaveRequestModal();
   });
   document.getElementById('leaveRequestForm').addEventListener('submit', saveLeaveRequest);
+  document.getElementById('refreshLeaveBalancesBtn').addEventListener('click', renderLeaveBalancesTable);
 
   // ---- Stocktake sessions ----
   document.getElementById('addStocktakeSessionBtn').addEventListener('click', () => {
@@ -27219,11 +27546,13 @@ async function openEmployeeModal(employee) {
   document.getElementById('employeeHireDate').value = employee?.hire_date || '';
   document.getElementById('employeeBaseSalary').value = employee ? (employee.base_salary || 0) : 0;
   document.getElementById('employeeOvertimeRate').value = employee ? (employee.overtime_hourly_rate || 0) : 0;
+  document.getElementById('employeeAnnualLeaveDays').value = employee ? (employee.annual_leave_days ?? 21) : 21;
   document.getElementById('employeeActive').checked = employee ? employee.is_active !== false : true;
   document.getElementById('employeeNationalId').value = employee?.national_id || '';
   document.getElementById('employeePassportNumber').value = employee?.passport_number || '';
   document.getElementById('employeeGender').value = employee?.gender || '';
   document.getElementById('employeeAddress').value = employee?.address || '';
+  document.getElementById('employeeAttendancePin').value = '';
   document.getElementById('employeeModalError').classList.remove('show');
 
   let scheduleByWeekday = {};
@@ -27267,6 +27596,7 @@ async function saveEmployee(e) {
     hire_date: document.getElementById('employeeHireDate').value || null,
     base_salary: Number(document.getElementById('employeeBaseSalary').value) || 0,
     overtime_hourly_rate: Number(document.getElementById('employeeOvertimeRate').value) || 0,
+    annual_leave_days: Number(document.getElementById('employeeAnnualLeaveDays').value) || 0,
     is_active: document.getElementById('employeeActive').checked,
     address: document.getElementById('employeeAddress').value.trim() || null,
   };
@@ -27289,6 +27619,12 @@ async function saveEmployee(e) {
     if (schedDeleteErr) throw schedDeleteErr;
     const { error: schedInsertErr } = await supabaseClient.from('employee_work_schedules').insert(scheduleRows);
     if (schedInsertErr) throw schedInsertErr;
+
+    const newPin = document.getElementById('employeeAttendancePin').value.trim();
+    if (newPin) {
+      const { error: pinErr } = await supabaseClient.rpc('set_employee_attendance_pin', { p_employee_id: employeeId, p_pin: newPin });
+      if (pinErr) throw pinErr;
+    }
 
     showToast(id ? 'تم تحديث بيانات الموظف بنجاح' : 'تمت إضافة الموظف بنجاح');
     closeEmployeeModal();
@@ -27397,6 +27733,28 @@ async function loadBoAttendance(fromDate, toDate) {
 // يشتغل يوم معيّن حسب مواعيد عمله الأسبوعية ومفيش سجل حضور ليه خالص —
 // بيومات ماضية بس (مش النهاردة ولا المستقبل)، وبس للموظفين اللي ليهم
 // مواعيد عمل محددة أصلاً (من غير مواعيد محفوظة مينفعش نحكم إنه غايب).
+// بترجع Map: employee_id -> Set من تواريخ (YYYY-MM-DD) مغطاة بإجازة معتمدة
+// ضمن الفترة المحددة، عشان اليوم اللي فيه إجازة معتمدة ميتحسبش "غياب".
+async function getApprovedLeaveDateSet(fromDate, toDate) {
+  const { data, error } = await supabaseClient
+    .from('leave_requests')
+    .select('employee_id, start_date, end_date')
+    .eq('status', 'approved')
+    .lte('start_date', toDate)
+    .gte('end_date', fromDate);
+  if (error) { console.error(error); return {}; }
+  const map = {};
+  (data || []).forEach(r => {
+    const start = new Date((r.start_date > fromDate ? r.start_date : fromDate) + 'T00:00:00');
+    const end = new Date((r.end_date < toDate ? r.end_date : toDate) + 'T00:00:00');
+    if (!map[r.employee_id]) map[r.employee_id] = new Set();
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      map[r.employee_id].add(toDateInputValue(d));
+    }
+  });
+  return map;
+}
+
 async function appendVirtualAbsentRows(fromDate, toDate) {
   if (boEmployees.length === 0) await loadBoEmployees();
   const { data: scheduleRows, error } = await supabaseClient.from('employee_work_schedules').select('*');
@@ -27406,6 +27764,7 @@ async function appendVirtualAbsentRows(fromDate, toDate) {
     if (!scheduleMap[r.employee_id]) scheduleMap[r.employee_id] = {};
     scheduleMap[r.employee_id][r.weekday] = r;
   });
+  const approvedLeaveMap = await getApprovedLeaveDateSet(fromDate, toDate);
 
   const existingKeys = new Set(boAttendance.map(a => a.employee_id + '_' + a.work_date));
   const todayStr = toDateInputValue(new Date());
@@ -27420,12 +27779,15 @@ async function appendVirtualAbsentRows(fromDate, toDate) {
   boEmployees.filter(e => e.is_active !== false).forEach(emp => {
     const empSchedule = scheduleMap[emp.id];
     if (!empSchedule) return;
+    const leaveDates = approvedLeaveMap[emp.id];
     for (let d = new Date(start); d <= cappedEnd; d.setDate(d.getDate() + 1)) {
       const dateStr = toDateInputValue(d);
       const sched = empSchedule[d.getDay()];
       if (!sched || sched.is_day_off) continue;
       const key = emp.id + '_' + dateStr;
       if (existingKeys.has(key)) continue;
+      // عنده إجازة معتمدة في نفس اليوم ده — يظهر "إجازة" مش "غياب"
+      const isOnApprovedLeave = leaveDates?.has(dateStr);
       virtualRows.push({
         id: null,
         employee_id: emp.id,
@@ -27433,7 +27795,7 @@ async function appendVirtualAbsentRows(fromDate, toDate) {
         work_date: dateStr,
         check_in: null,
         check_out: null,
-        status: 'absent',
+        status: isOnApprovedLeave ? 'on_leave' : 'absent',
         notes: null,
         worked_hours: null,
         variance_hours: null,
@@ -27594,6 +27956,578 @@ function exportOvertimeReportToExcel() {
   XLSX.writeFile(wb, `الأوفر-تايم-${dateStr}.xlsx`);
 }
 
+// ---- تقرير المهام الخارجية حسب النشاط ----
+let lastFieldVisitsReportRows = [];
+let fieldVisitsReportFiltersPopulated = false;
+
+function populateFieldVisitsReportFilters() {
+  if (fieldVisitsReportFiltersPopulated) return;
+  const empSel = document.getElementById('fieldVisitsReportEmployeeFilter');
+  empSel.innerHTML = '<option value="">كل الموظفين</option>' +
+    boEmployees.map(e => `<option value="${e.id}">${escapeHtml(e.full_name)}</option>`).join('');
+
+  const brField = document.getElementById('fieldVisitsReportBranchField');
+  const brSel = document.getElementById('fieldVisitsReportBranchFilter');
+  if (boBranchesList.length > 1) {
+    brField.style.display = '';
+    brSel.innerHTML = '<option value="">كل الفروع</option>' +
+      boBranchesList.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+  } else {
+    brField.style.display = 'none';
+  }
+
+  supabaseClient.from('field_visit_activity_types').select('*').order('sort_order').then(({ data }) => {
+    const actSel = document.getElementById('fieldVisitsReportActivityFilter');
+    actSel.innerHTML = '<option value="">كل الأنشطة</option>' +
+      (data || []).map(t => `<option value="${t.id}">${escapeHtml(t.name)}</option>`).join('');
+  });
+
+  fieldVisitsReportFiltersPopulated = true;
+}
+
+async function runFieldVisitsReport() {
+  const fromDate = document.getElementById('fieldVisitsReportFromDate').value;
+  const toDate = document.getElementById('fieldVisitsReportToDate').value;
+  if (!fromDate || !toDate) return;
+  const employeeId = document.getElementById('fieldVisitsReportEmployeeFilter').value;
+  const activityId = document.getElementById('fieldVisitsReportActivityFilter').value;
+  const branchId = document.getElementById('fieldVisitsReportBranchFilter')?.value || '';
+  const summaryBody = document.getElementById('fieldVisitsActivitySummaryBody');
+  const detailBody = document.getElementById('fieldVisitsReportDetailBody');
+  summaryBody.innerHTML = `<tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>`;
+  detailBody.innerHTML = `<tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>`;
+  try {
+    let query = supabaseClient
+      .from('attendance_field_visits')
+      .select('*, employees(full_name), branches(name), field_visit_activity_types(name), customers(name)')
+      .gte('left_at', `${fromDate}T00:00:00`)
+      .lte('left_at', `${toDate}T23:59:59`)
+      .order('left_at', { ascending: false });
+    if (employeeId) query = query.eq('employee_id', employeeId);
+    if (activityId) query = query.eq('activity_type_id', activityId);
+    query = applyBranchScope(query, branchId, 'branch_id');
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const rows = (data || []).map(v => {
+      const durationMinutes = v.returned_at ? Math.round((new Date(v.returned_at) - new Date(v.left_at)) / 60000) : null;
+      return {
+        employeeName: v.employees?.full_name || 'موظف محذوف',
+        activityName: v.field_visit_activity_types?.name || 'غير محدد',
+        customerOrLocation: [v.customers?.name, v.location_text].filter(Boolean).join(' — ') || '—',
+        leftAt: new Date(v.left_at).toLocaleString('ar-EG'),
+        returnedAt: v.returned_at ? new Date(v.returned_at).toLocaleString('ar-EG') : 'لسه طالع',
+        durationMinutes,
+        result: v.result,
+      };
+    });
+    lastFieldVisitsReportRows = rows;
+
+    // ملخص حسب النشاط
+    const byActivity = {};
+    rows.forEach(r => {
+      if (!byActivity[r.activityName]) byActivity[r.activityName] = { count: 0, totalMinutes: 0, completed: 0, notCompleted: 0, postponed: 0 };
+      const bucket = byActivity[r.activityName];
+      bucket.count++;
+      if (r.durationMinutes != null) bucket.totalMinutes += r.durationMinutes;
+      if (r.result === 'completed') bucket.completed++;
+      if (r.result === 'not_completed') bucket.notCompleted++;
+      if (r.result === 'postponed') bucket.postponed++;
+    });
+    const activityNames = Object.keys(byActivity).sort((a, b) => byActivity[b].count - byActivity[a].count);
+    if (activityNames.length === 0) {
+      summaryBody.innerHTML = `<tr><td colspan="7" class="bo-empty">لا توجد بيانات في الفترة المحددة</td></tr>`;
+    } else {
+      summaryBody.innerHTML = '';
+      activityNames.forEach(name => {
+        const b = byActivity[name];
+        const avgMinutes = b.count > 0 ? Math.round(b.totalMinutes / b.count) : 0;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${escapeHtml(name)}</td>
+          <td class="num">${b.count}</td>
+          <td class="num">${formatMinutesAsHM(b.totalMinutes)}</td>
+          <td class="num">${formatMinutesAsHM(avgMinutes)}</td>
+          <td class="num">${b.completed}</td>
+          <td class="num">${b.notCompleted}</td>
+          <td class="num">${b.postponed}</td>`;
+        summaryBody.appendChild(tr);
+      });
+    }
+
+    // تفاصيل الزيارات
+    renderBreakdownTable('fieldVisitsReportDetailBody', rows, 7, row => `
+      <td>${escapeHtml(row.employeeName)}</td>
+      <td>${escapeHtml(row.activityName)}</td>
+      <td class="wrap-cell">${escapeHtml(row.customerOrLocation)}</td>
+      <td class="num">${row.leftAt}</td>
+      <td class="num">${row.returnedAt}</td>
+      <td class="num">${row.durationMinutes != null ? formatMinutesAsHM(row.durationMinutes) : '—'}</td>
+      <td>${row.result ? (FIELD_VISIT_RESULT_LABELS[row.result] || row.result) : '—'}</td>`);
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحميل تقرير المهام الخارجية', true);
+    summaryBody.innerHTML = `<tr><td colspan="7" class="bo-empty">تعذر تحميل البيانات</td></tr>`;
+    detailBody.innerHTML = `<tr><td colspan="7" class="bo-empty">تعذر تحميل البيانات</td></tr>`;
+  }
+}
+
+function exportFieldVisitsReportToExcel() {
+  if (lastFieldVisitsReportRows.length === 0) { showToast('لا توجد بيانات لتصديرها', true); return; }
+  const rows = lastFieldVisitsReportRows.map(r => ({
+    'الموظف': r.employeeName,
+    'النشاط': r.activityName,
+    'العميل / الموقع': r.customerOrLocation,
+    'وقت الخروج': r.leftAt,
+    'وقت الرجوع': r.returnedAt,
+    'المدة (دقيقة)': r.durationMinutes ?? '',
+    'النتيجة': r.result ? (FIELD_VISIT_RESULT_LABELS[r.result] || r.result) : '',
+  }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'المهام الخارجية');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `المهام-الخارجية-${dateStr}.xlsx`);
+}
+
+// ---- إدارة الأنشطة الخدمية (قائمة قابلة للتعديل من الأدمن) ----
+async function openActivityTypesModal() {
+  document.getElementById('activityTypesModalError').classList.remove('show');
+  document.getElementById('newActivityTypeName').value = '';
+  await loadActivityTypesTable();
+  document.getElementById('activityTypesModalOverlay').classList.add('show');
+}
+
+function closeActivityTypesModal() {
+  document.getElementById('activityTypesModalOverlay').classList.remove('show');
+  // القوائم المنسدلة في شاشات تانية محتاجة تتحدث بعد أي تعديل هنا
+  fieldVisitActivityTypesLoaded = false;
+  fieldVisitAdminOptionsLoaded = false;
+  fieldVisitsReportFiltersPopulated = false;
+}
+
+async function loadActivityTypesTable() {
+  const tbody = document.getElementById('activityTypesTableBody');
+  tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>`;
+  const { data, error } = await supabaseClient.from('field_visit_activity_types').select('*').order('sort_order');
+  if (error) { console.error(error); tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">تعذر التحميل</td></tr>`; return; }
+  if (!data || data.length === 0) { tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">لا توجد أنشطة بعد</td></tr>`; return; }
+  tbody.innerHTML = '';
+  data.forEach(t => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" value="${escapeHtml(t.name)}" data-id="${t.id}" class="activity-type-name-input" style="width:100%;"></td>
+      <td><input type="checkbox" ${t.is_active ? 'checked' : ''} data-id="${t.id}" class="activity-type-active-input" style="width:auto;"></td>
+      <td><button type="button" class="bo-icon-btn danger" data-id="${t.id}" data-action="delete-activity">حذف</button></td>`;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('.activity-type-name-input').forEach(inp => {
+    inp.addEventListener('change', () => updateActivityType(inp.dataset.id, { name: inp.value.trim() }));
+  });
+  tbody.querySelectorAll('.activity-type-active-input').forEach(inp => {
+    inp.addEventListener('change', () => updateActivityType(inp.dataset.id, { is_active: inp.checked }));
+  });
+  tbody.querySelectorAll('[data-action="delete-activity"]').forEach(btn => {
+    btn.addEventListener('click', () => deleteActivityType(btn.dataset.id));
+  });
+}
+
+async function updateActivityType(id, patch) {
+  const { error } = await supabaseClient.from('field_visit_activity_types').update(patch).eq('id', id);
+  if (error) { console.error(error); showToast('تعذر حفظ التعديل', true); return; }
+  showToast('تم الحفظ');
+}
+
+async function deleteActivityType(id) {
+  // النشاط ممكن يكون مستخدم في زيارات قديمة، فبنعطّله بدل ما نحذفه لو الحذف
+  // فشل بسبب ربط قاعدة البيانات (foreign key)
+  if (!confirm('حذف هذا النشاط؟ لو كان مستخدمًا في زيارات سابقة سيتم تعطيله بدل الحذف.')) return;
+  const { error } = await supabaseClient.from('field_visit_activity_types').delete().eq('id', id);
+  if (error) {
+    const { error: deactivateErr } = await supabaseClient.from('field_visit_activity_types').update({ is_active: false }).eq('id', id);
+    if (deactivateErr) { console.error(deactivateErr); showToast('تعذر حذف أو تعطيل النشاط', true); return; }
+    showToast('النشاط مستخدم في زيارات سابقة، تم تعطيله بدل الحذف');
+  } else {
+    showToast('تم حذف النشاط');
+  }
+  await loadActivityTypesTable();
+}
+
+async function addActivityType() {
+  const input = document.getElementById('newActivityTypeName');
+  const name = input.value.trim();
+  const errEl = document.getElementById('activityTypesModalError');
+  errEl.classList.remove('show');
+  if (!name) { errEl.textContent = 'اكتب اسم النشاط الأول'; errEl.classList.add('show'); return; }
+  const { error } = await supabaseClient.from('field_visit_activity_types').insert({ name, sort_order: 100 });
+  if (error) { console.error(error); errEl.textContent = 'تعذر إضافة النشاط'; errEl.classList.add('show'); return; }
+  input.value = '';
+  showToast('تمت إضافة النشاط');
+  await loadActivityTypesTable();
+}
+
+// ---- لوحة KPI الموارد البشرية ----
+let lastHrKpiRows = [];
+let hrKpiFiltersPopulated = false;
+
+function populateHrKpiFilters() {
+  if (hrKpiFiltersPopulated) return;
+  const brField = document.getElementById('hrKpiBranchField');
+  const brSel = document.getElementById('hrKpiBranchFilter');
+  if (boBranchesList.length > 1) {
+    brField.style.display = '';
+    brSel.innerHTML = '<option value="">كل الفروع</option>' +
+      boBranchesList.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+  } else {
+    brField.style.display = 'none';
+  }
+  hrKpiFiltersPopulated = true;
+}
+
+// نفس منطق حساب الأوفر تايم المستخدم في تقرير الأوفر تايم، بس بياخد
+// الحقول جاهزة من v_attendance_daily_hours بدل ما يجيبها من جدول منفصل
+function overtimeMinutesFromViewRow(row) {
+  if (!row.check_out || !row.check_in) return 0;
+  if (row.schedule_is_day_off) {
+    return Math.max(0, Math.round((new Date(row.check_out) - new Date(row.check_in)) / 60000));
+  }
+  if (!row.schedule_end_time) return 0;
+  const [h, m] = row.schedule_end_time.split(':').map(Number);
+  const scheduledEnd = new Date(row.work_date + 'T00:00:00');
+  scheduledEnd.setHours(h, m, 0, 0);
+  const diff = Math.round((new Date(row.check_out) - scheduledEnd) / 60000);
+  return diff > 0 ? diff : 0;
+}
+
+async function runHrKpiReport() {
+  const fromDate = document.getElementById('hrKpiFromDate').value;
+  const toDate = document.getElementById('hrKpiToDate').value;
+  if (!fromDate || !toDate) return;
+  const branchId = document.getElementById('hrKpiBranchFilter')?.value || '';
+  const tbody = document.getElementById('hrKpiTableBody');
+  tbody.innerHTML = `<tr><td colspan="9" class="bo-empty">جاري التحميل...</td></tr>`;
+  try {
+    if (boEmployees.length === 0) await loadBoEmployees();
+    const employees = boEmployees.filter(e => e.is_active !== false && (!branchId || e.branch_id === branchId));
+
+    const { data: scheduleRows, error: schedErr } = await supabaseClient.from('employee_work_schedules').select('*');
+    if (schedErr) throw schedErr;
+    const scheduleMap = {};
+    (scheduleRows || []).forEach(r => {
+      if (!scheduleMap[r.employee_id]) scheduleMap[r.employee_id] = {};
+      scheduleMap[r.employee_id][r.weekday] = r;
+    });
+
+    let attQuery = supabaseClient
+      .from('v_attendance_daily_hours')
+      .select('employee_id, work_date, check_in, check_out, late_minutes, schedule_is_day_off, schedule_end_time')
+      .gte('work_date', fromDate)
+      .lte('work_date', toDate);
+    if (branchId) attQuery = attQuery.eq('branch_id', branchId);
+    const { data: attRows, error: attErr } = await attQuery;
+    if (attErr) throw attErr;
+    const attByEmpDate = {};
+    (attRows || []).forEach(r => { attByEmpDate[r.employee_id + '_' + r.work_date] = r; });
+
+    const approvedLeaveMap = await getApprovedLeaveDateSet(fromDate, toDate);
+
+    const todayStr = toDateInputValue(new Date());
+    const start = new Date(fromDate + 'T00:00:00');
+    const rangeEnd = new Date(toDate + 'T00:00:00');
+    const yesterday = new Date(todayStr + 'T00:00:00');
+    yesterday.setDate(yesterday.getDate() - 1);
+    const cappedEnd = rangeEnd < yesterday ? rangeEnd : yesterday;
+
+    const rows = [];
+    employees.forEach(emp => {
+      const empSchedule = scheduleMap[emp.id];
+      if (!empSchedule) return; // مفيش مواعيد عمل محددة، مينفعش نحسبله KPI دقيق
+      const leaveDates = approvedLeaveMap[emp.id];
+      let expectedDays = 0, presentDays = 0, absentDays = 0, leaveDays = 0;
+      let lateMinutesTotal = 0, lateOccurrences = 0, overtimeMinutesTotal = 0;
+
+      for (let d = new Date(start); d <= cappedEnd; d.setDate(d.getDate() + 1)) {
+        const dateStr = toDateInputValue(d);
+        const sched = empSchedule[d.getDay()];
+        if (!sched || sched.is_day_off) continue;
+        expectedDays++;
+        const att = attByEmpDate[emp.id + '_' + dateStr];
+        if (att && att.check_in) {
+          presentDays++;
+          if (att.late_minutes > 0) { lateMinutesTotal += att.late_minutes; lateOccurrences++; }
+          overtimeMinutesTotal += overtimeMinutesFromViewRow(att);
+        } else if (leaveDates?.has(dateStr)) {
+          leaveDays++;
+        } else {
+          absentDays++;
+        }
+      }
+      if (expectedDays === 0) return;
+      rows.push({
+        employeeName: emp.full_name,
+        branchName: boBranchesList.find(b => b.id === emp.branch_id)?.name || '—',
+        expectedDays, presentDays, absentDays, leaveDays,
+        attendanceRate: Math.round((presentDays / expectedDays) * 1000) / 10,
+        avgLateMinutes: lateOccurrences > 0 ? Math.round(lateMinutesTotal / lateOccurrences) : 0,
+        overtimeHours: Math.round((overtimeMinutesTotal / 60) * 100) / 100,
+      });
+    });
+    lastHrKpiRows = rows;
+
+    // كروت الملخص الإجمالي
+    const totalExpected = rows.reduce((s, r) => s + r.expectedDays, 0);
+    const totalPresent = rows.reduce((s, r) => s + r.presentDays, 0);
+    const totalAbsent = rows.reduce((s, r) => s + r.absentDays, 0);
+    const totalOvertimeHours = rows.reduce((s, r) => s + r.overtimeHours, 0);
+    const lateRows = rows.filter(r => r.avgLateMinutes > 0);
+    const avgLateOverall = lateRows.length > 0 ? Math.round(lateRows.reduce((s, r) => s + r.avgLateMinutes, 0) / lateRows.length) : 0;
+
+    document.getElementById('hrKpiAttendanceRateLabel').textContent = totalExpected > 0 ? `${Math.round((totalPresent / totalExpected) * 1000) / 10}%` : '—';
+    document.getElementById('hrKpiAvgLateLabel').textContent = `${avgLateOverall} د`;
+    document.getElementById('hrKpiOvertimeLabel').textContent = `${totalOvertimeHours.toFixed(2)} س`;
+    document.getElementById('hrKpiAbsenceLabel').textContent = totalAbsent;
+
+    rows.sort((a, b) => a.attendanceRate - b.attendanceRate);
+    renderBreakdownTable('hrKpiTableBody', rows, 9, row => `
+      <td>${escapeHtml(row.employeeName)}</td>
+      <td>${escapeHtml(row.branchName)}</td>
+      <td class="num">${row.expectedDays}</td>
+      <td class="num">${row.presentDays}</td>
+      <td class="num">${row.attendanceRate}%</td>
+      <td class="num">${row.absentDays}</td>
+      <td class="num">${row.leaveDays}</td>
+      <td class="num">${row.avgLateMinutes > 0 ? row.avgLateMinutes + ' د' : '—'}</td>
+      <td class="num">${row.overtimeHours > 0 ? row.overtimeHours + ' س' : '—'}</td>`);
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحميل لوحة KPI الموارد البشرية', true);
+    tbody.innerHTML = `<tr><td colspan="9" class="bo-empty">تعذر تحميل البيانات</td></tr>`;
+  }
+}
+
+function exportHrKpiReportToExcel() {
+  if (lastHrKpiRows.length === 0) { showToast('لا توجد بيانات لتصديرها', true); return; }
+  const rows = lastHrKpiRows.map(r => ({
+    'الموظف': r.employeeName,
+    'الفرع': r.branchName,
+    'أيام العمل المتوقعة': r.expectedDays,
+    'أيام الحضور': r.presentDays,
+    'نسبة الحضور %': r.attendanceRate,
+    'أيام الغياب': r.absentDays,
+    'أيام إجازة معتمدة': r.leaveDays,
+    'متوسط التأخير (دقيقة)': r.avgLateMinutes,
+    'إجمالي الأوفر تايم (ساعة)': r.overtimeHours,
+  }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'KPI الموارد البشرية');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `KPI-الموارد-البشرية-${dateStr}.xlsx`);
+}
+
+// ---- كشف حضور شهري لموظف (يفتح نسخة جاهزة للطباعة، والموظف يحفظها PDF
+// من نافذة الطباعة في المتصفح — أدق طريقة لضمان ظهور النص العربي صح
+// بدل توليد PDF مباشر بمكتبة مش بتدعم العربي كويس) ----
+function openMonthlySheetModal() {
+  const empSel = document.getElementById('monthlySheetEmployeeSelect');
+  empSel.innerHTML = boEmployees.filter(e => e.is_active !== false)
+    .map(e => `<option value="${e.id}">${escapeHtml(e.full_name)}</option>`).join('');
+  const branchSel = document.getElementById('monthlySheetBranchSelect');
+  branchSel.innerHTML = boBranchesList.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+  document.getElementById('monthlySheetScope').value = 'employee';
+  document.getElementById('monthlySheetEmployeeField').style.display = '';
+  document.getElementById('monthlySheetBranchField').style.display = 'none';
+  const now = new Date();
+  document.getElementById('monthlySheetMonth').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  document.getElementById('monthlySheetModalError').classList.remove('show');
+  document.getElementById('monthlySheetModalOverlay').classList.add('show');
+}
+
+function closeMonthlySheetModal() {
+  document.getElementById('monthlySheetModalOverlay').classList.remove('show');
+}
+
+function onMonthlySheetScopeChange() {
+  const scope = document.getElementById('monthlySheetScope').value;
+  document.getElementById('monthlySheetEmployeeField').style.display = scope === 'employee' ? '' : 'none';
+  document.getElementById('monthlySheetBranchField').style.display = scope === 'branch' ? '' : 'none';
+}
+
+// بتحسب بيانات يوم بيوم لموظف واحد في شهر معين (نفس منطق شاشة الحضور
+// وتقرير KPI، مجمّعة هنا عشان تتستخدم في الكشف الفردي والجماعي مع بعض)
+async function computeEmployeeMonthlyAttendance(employeeId, year, month) {
+  const monthStart = toDateInputValue(new Date(year, month - 1, 1));
+  const monthEnd = toDateInputValue(new Date(year, month, 0));
+  const daysInMonth = new Date(year, month, 0).getDate();
+
+  const [{ data: attRows }, { data: scheduleRows }, approvedLeaveMap] = await Promise.all([
+    supabaseClient.from('v_attendance_daily_hours').select('*').eq('employee_id', employeeId).gte('work_date', monthStart).lte('work_date', monthEnd),
+    supabaseClient.from('employee_work_schedules').select('*').eq('employee_id', employeeId),
+    getApprovedLeaveDateSet(monthStart, monthEnd),
+  ]);
+  const attByDate = {};
+  (attRows || []).forEach(r => { attByDate[r.work_date] = r; });
+  const scheduleByWeekday = {};
+  (scheduleRows || []).forEach(r => { scheduleByWeekday[r.weekday] = r; });
+  const leaveDates = approvedLeaveMap[employeeId] || new Set();
+  const todayStr = toDateInputValue(new Date());
+
+  let presentDays = 0, absentDays = 0, leaveDaysCount = 0, dayOffCount = 0;
+  let lateMinutesTotal = 0, overtimeMinutesTotal = 0, workedHoursTotal = 0;
+  const dayRows = [];
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const d = new Date(year, month - 1, day);
+    const weekday = d.getDay();
+    const sched = scheduleByWeekday[weekday];
+    const att = attByDate[dateStr];
+    let statusLabel, rowClass = '';
+    if (att && att.check_in) {
+      presentDays++;
+      if (att.late_minutes > 0) lateMinutesTotal += att.late_minutes;
+      if (att.worked_hours) workedHoursTotal += Number(att.worked_hours);
+      overtimeMinutesTotal += overtimeMinutesFromViewRow(att);
+      statusLabel = ATTENDANCE_STATUS_LABELS[att.status] || att.status;
+    } else if (sched && sched.is_day_off) {
+      dayOffCount++; statusLabel = 'إجازة أسبوعية'; rowClass = 'off-row';
+    } else if (leaveDates.has(dateStr)) {
+      leaveDaysCount++; statusLabel = 'إجازة معتمدة'; rowClass = 'leave-row';
+    } else if (dateStr < todayStr) {
+      absentDays++; statusLabel = 'غائب'; rowClass = 'absent-row';
+    } else {
+      statusLabel = '—';
+    }
+    dayRows.push({
+      dateStr, weekdayLabel: WEEKDAY_LABELS[weekday],
+      checkIn: att?.check_in ? formatAttendanceTime(att.check_in) : '—',
+      checkOut: att?.check_out ? formatAttendanceTime(att.check_out) : '—',
+      workedHours: att?.worked_hours != null ? att.worked_hours : '—',
+      lateMinutes: att?.late_minutes > 0 ? att.late_minutes : '—',
+      statusLabel, rowClass,
+    });
+  }
+  return { dayRows, presentDays, absentDays, leaveDaysCount, dayOffCount, lateMinutesTotal, overtimeMinutesTotal, workedHoursTotal };
+}
+
+function buildEmployeeSheetBlock(employee, branchName, monthLabelText, stats, isLastBlock) {
+  const { dayRows, presentDays, absentDays, leaveDaysCount, dayOffCount, lateMinutesTotal, overtimeMinutesTotal, workedHoursTotal } = stats;
+  return `
+    <div class="emp-sheet-block" style="${isLastBlock ? '' : 'page-break-after:always;'}">
+      <div class="sheet-header">
+        <div>
+          <div class="sheet-title">${escapeHtml(companyInfo.name || '')}</div>
+          <div class="sheet-sub">كشف حضور وانصراف شهري</div>
+        </div>
+        ${companyInfo.logo ? `<img src="${companyInfo.logo}">` : ''}
+      </div>
+      <div class="emp-info">
+        <div><span>الموظف: </span><b>${escapeHtml(employee.full_name)}</b></div>
+        <div><span>الوظيفة: </span>${escapeHtml(employee.job_title || '—')}</div>
+        <div><span>الفرع: </span>${escapeHtml(branchName || '—')}</div>
+        <div><span>الشهر: </span><b>${monthLabelText}</b></div>
+      </div>
+      <table>
+        <thead><tr><th>التاريخ</th><th>اليوم</th><th>الحضور</th><th>الانصراف</th><th>ساعات العمل</th><th>التأخير (د)</th><th>الحالة</th></tr></thead>
+        <tbody>
+          ${dayRows.map(r => `<tr class="${r.rowClass}"><td>${r.dateStr}</td><td>${r.weekdayLabel}</td><td>${r.checkIn}</td><td>${r.checkOut}</td><td>${r.workedHours}</td><td>${r.lateMinutes}</td><td>${r.statusLabel}</td></tr>`).join('')}
+        </tbody>
+      </table>
+      <div class="summary-row">
+        <div>أيام الحضور: <b>${presentDays}</b></div>
+        <div>أيام الغياب: <b>${absentDays}</b></div>
+        <div>أيام إجازة معتمدة: <b>${leaveDaysCount}</b></div>
+        <div>أيام إجازة أسبوعية: <b>${dayOffCount}</b></div>
+        <div>إجمالي ساعات العمل: <b>${workedHoursTotal.toFixed(2)}</b></div>
+        <div>إجمالي دقايق التأخير: <b>${lateMinutesTotal}</b></div>
+        <div>إجمالي ساعات الأوفر تايم: <b>${(overtimeMinutesTotal / 60).toFixed(2)}</b></div>
+      </div>
+      <div class="signatures">
+        <div>توقيع الموظف</div>
+        <div>توقيع المسؤول المباشر</div>
+      </div>
+    </div>`;
+}
+
+async function generateMonthlySheet() {
+  const errEl = document.getElementById('monthlySheetModalError');
+  errEl.classList.remove('show');
+  const scope = document.getElementById('monthlySheetScope').value;
+  const monthVal = document.getElementById('monthlySheetMonth').value; // "YYYY-MM"
+  if (!monthVal) { errEl.textContent = 'اختر الشهر'; errEl.classList.add('show'); return; }
+
+  let targetEmployees = [];
+  if (scope === 'employee') {
+    const employeeId = document.getElementById('monthlySheetEmployeeSelect').value;
+    if (!employeeId) { errEl.textContent = 'اختر الموظف'; errEl.classList.add('show'); return; }
+    targetEmployees = boEmployees.filter(e => e.id === employeeId);
+  } else if (scope === 'branch') {
+    const branchId = document.getElementById('monthlySheetBranchSelect').value;
+    if (!branchId) { errEl.textContent = 'اختر الفرع'; errEl.classList.add('show'); return; }
+    targetEmployees = boEmployees.filter(e => e.is_active !== false && e.branch_id === branchId);
+  } else {
+    targetEmployees = boEmployees.filter(e => e.is_active !== false);
+  }
+  if (targetEmployees.length === 0) { errEl.textContent = 'لا يوجد موظفين مطابقين للنطاق المحدد'; errEl.classList.add('show'); return; }
+
+  const btn = document.getElementById('generateMonthlySheetBtn');
+  btn.disabled = true;
+  btn.textContent = targetEmployees.length > 1 ? `جاري تجهيز ${targetEmployees.length} كشف...` : 'جاري التجهيز...';
+  try {
+    const [year, month] = monthVal.split('-').map(Number);
+    const monthLabelText = new Date(year, month - 1, 1).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long' });
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) { errEl.textContent = 'المتصفح منع فتح نافذة جديدة، اسمح بالنوافذ المنبثقة وحاول تاني'; errEl.classList.add('show'); return; }
+
+    // بنحسب كشوف الموظفين واحد ورا التاني (مش بالتوازي) عشان منحملش
+    // القاعدة بعدد كبير من الاستعلامات دفعة واحدة لو النطاق "كل الشركة"
+    const blocks = [];
+    for (let i = 0; i < targetEmployees.length; i++) {
+      const employee = targetEmployees[i];
+      const stats = await computeEmployeeMonthlyAttendance(employee.id, year, month);
+      const branchName = boBranchesList.find(b => b.id === employee.branch_id)?.name || '';
+      blocks.push(buildEmployeeSheetBlock(employee, branchName, monthLabelText, stats, i === targetEmployees.length - 1));
+    }
+
+    const titleSuffix = targetEmployees.length === 1 ? targetEmployees[0].full_name : `${targetEmployees.length} موظف`;
+    printWindow.document.write(`
+      <!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8">
+      <title>كشف حضور - ${escapeHtml(titleSuffix)} - ${monthVal}</title>
+      <style>
+        body { font-family: Tahoma, Arial, sans-serif; padding: 24px; color: #1a1a1a; }
+        .sheet-header { display:flex; align-items:center; justify-content:space-between; border-bottom:2px solid #333; padding-bottom:12px; margin-bottom:16px; }
+        .sheet-header img { max-height:56px; }
+        .sheet-title { font-size:20px; font-weight:bold; margin:0; }
+        .sheet-sub { color:#555; font-size:13px; margin-top:4px; }
+        .emp-info { display:flex; gap:24px; margin-bottom:16px; font-size:13.5px; }
+        .emp-info div span { color:#666; }
+        table { width:100%; border-collapse:collapse; font-size:12.5px; }
+        th, td { border:1px solid #ccc; padding:5px 8px; text-align:center; }
+        th { background:#f0f0f0; }
+        .off-row { background:#f5f5f5; color:#888; }
+        .leave-row { background:#eaf3fb; }
+        .absent-row { background:#fdecec; }
+        .summary-row { display:flex; gap:22px; margin-top:16px; font-size:13px; flex-wrap:wrap; }
+        .summary-row b { font-size:15px; }
+        .signatures { display:flex; justify-content:space-between; margin-top:60px; font-size:13px; }
+        .signatures div { width:40%; border-top:1px solid #333; padding-top:6px; text-align:center; }
+        @media print { body { padding:8px; } }
+      </style></head><body>
+        ${blocks.join('')}
+        <script>window.onload = () => setTimeout(() => window.print(), 300);<\/script>
+
+      </body></html>
+    `);
+    printWindow.document.close();
+    closeMonthlySheetModal();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = 'تعذر تجهيز الكشف';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'معاينة وطباعة';
+  }
+}
+
 function renderAttendanceTable() {
   const tbody = document.getElementById('attendanceTableBody');
   const empFilter = document.getElementById('attendanceEmployeeFilter')?.value || '';
@@ -27625,7 +28559,7 @@ function renderAttendanceTable() {
     // بتعديل يدوي (زرار "تحديد وقت الانصراف") بدل "تسجيل انصراف الآن" اللي
     // بيثبت الوقت اللحظي فقط.
     if (a.is_missing_checkout) tr.style.background = 'rgba(239,68,68,0.08)';
-    if (a.is_virtual_absent) tr.style.background = 'rgba(193,59,59,0.05)';
+    if (a.is_virtual_absent) tr.style.background = a.status === 'on_leave' ? 'rgba(59,130,193,0.05)' : 'rgba(193,59,59,0.05)';
     const varianceLabel = a.variance_hours == null ? '—'
       : (a.variance_hours > 0 ? `+${a.variance_hours} ساعة` : `${a.variance_hours} ساعة`);
     const varianceColor = a.variance_hours == null ? '' : (a.variance_hours < 0 ? 'color:var(--danger);' : (a.variance_hours > 0 ? 'color:var(--teal-700);' : ''));
@@ -27637,11 +28571,11 @@ function renderAttendanceTable() {
       <td class="num">${a.check_out ? formatAttendanceTime(a.check_out) : (a.is_missing_checkout ? '<span class="bo-badge inactive">⚠ لم يُسجَّل</span>' : '—')}</td>
       <td class="num">${a.worked_hours != null ? a.worked_hours : '—'}</td>
       <td class="num" style="${varianceColor}">${varianceLabel}</td>
-      <td><span class="bo-badge ${ATTENDANCE_STATUS_BADGE[a.status] || 'info'}">${ATTENDANCE_STATUS_LABELS[a.status] || a.status}</span>${a.is_virtual_absent ? '<br><span style="color:var(--ink-soft); font-size:11px;">غياب محسوب تلقائيًا</span>' : ''}</td>
+      <td><span class="bo-badge ${ATTENDANCE_STATUS_BADGE[a.status] || 'info'}">${ATTENDANCE_STATUS_LABELS[a.status] || a.status}</span>${a.is_virtual_absent ? `<br><span style="color:var(--ink-soft); font-size:11px;">${a.status === 'on_leave' ? 'إجازة معتمدة (تلقائي)' : 'غياب محسوب تلقائيًا'}</span>` : ''}</td>
       <td class="wrap-cell">${escapeHtml(a.notes || '—')}${a.check_out_reason ? `<br><span style="color:var(--ink-soft); font-size:11.5px;">سبب تعديل الانصراف: ${escapeHtml(a.check_out_reason)}</span>` : ''}</td>
       <td>
         <div class="bo-row-actions">
-          ${a.is_virtual_absent ? '<button class="bo-icon-btn" data-action="record-absence">تسجيل الغياب</button>' : `
+          ${a.is_virtual_absent ? `<button class="bo-icon-btn" data-action="record-absence">${a.status === 'on_leave' ? 'تسجيل كإجازة' : 'تسجيل الغياب'}</button>` : `
           ${a.check_in && !a.check_out && !a.is_missing_checkout ? '<button class="bo-icon-btn" data-action="checkout">تسجيل انصراف الآن</button>' : ''}
           ${a.is_missing_checkout ? '<button class="bo-icon-btn" data-action="resolve">تحديد وقت الانصراف</button>' : ''}
           <button class="bo-icon-btn" data-action="edit">تعديل</button>
@@ -27839,13 +28773,33 @@ async function quickAttendanceCheckOut(record) {
 
 // ---- سجلات المهام الخارجية (تعديل يدوي من شاشة الأدمن) ----
 let boFieldVisits = [];
+const FIELD_VISIT_RESULT_LABELS = { completed: 'تمت بنجاح', not_completed: 'لم تتم', postponed: 'مؤجلة' };
+const FIELD_VISIT_RESULT_BADGE = { completed: 'active', not_completed: 'inactive', postponed: 'pending' };
+let fieldVisitAdminOptionsLoaded = false;
+
+let fieldVisitAdminCustomerSearch = null;
+async function loadFieldVisitAdminOptions() {
+  if (fieldVisitAdminOptionsLoaded) return;
+  if (boCustomers.length === 0) await loadBoCustomers();
+  const { data: activityTypes } = await supabaseClient.from('field_visit_activity_types').select('*').order('sort_order');
+  document.getElementById('fieldVisitActivityType').innerHTML = '<option value="">اختر النشاط...</option>' +
+    (activityTypes || []).map(t => `<option value="${t.id}">${escapeHtml(t.name)}${t.is_active === false ? ' (غير مفعّل)' : ''}</option>`).join('');
+
+  fieldVisitAdminCustomerSearch = createSmartSearch({
+    input: document.getElementById('fieldVisitCustomerInput'),
+    hidden: document.getElementById('fieldVisitCustomer'),
+    dropdown: document.getElementById('fieldVisitCustomerDropdown'),
+    getItems: () => boCustomers.map(c => ({ value: c.id, label: c.name, sublabel: c.phone || '', search: `${c.name} ${c.phone || ''}` })),
+  });
+  fieldVisitAdminOptionsLoaded = true;
+}
 
 async function loadBoFieldVisits(fromDate, toDate) {
   const tbody = document.getElementById('fieldVisitsTableBody');
-  tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr>`;
   let query = supabaseClient
     .from('attendance_field_visits')
-    .select('*, employees(full_name), branches(name)')
+    .select('*, employees(full_name), branches(name), field_visit_activity_types(name), customers(name)')
     .order('left_at', { ascending: false });
   if (fromDate) query = query.gte('left_at', `${fromDate}T00:00:00`);
   if (toDate) query = query.lte('left_at', `${toDate}T23:59:59`);
@@ -27858,18 +28812,21 @@ async function loadBoFieldVisits(fromDate, toDate) {
 function renderFieldVisitsTable() {
   const tbody = document.getElementById('fieldVisitsTableBody');
   if (boFieldVisits.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">لا توجد سجلات مهام خارجية في الفترة المحددة</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="bo-empty">لا توجد سجلات مهام خارجية في الفترة المحددة</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
   boFieldVisits.forEach(v => {
     const tr = document.createElement('tr');
+    const customerOrLocation = [v.customers?.name, v.location_text].filter(Boolean).join(' — ') || '—';
     tr.innerHTML = `
       <td>${escapeHtml(v.employees?.full_name || '—')}</td>
       <td>${escapeHtml(v.branches?.name || '—')}</td>
+      <td>${escapeHtml(v.field_visit_activity_types?.name || '—')}</td>
+      <td class="wrap-cell">${escapeHtml(customerOrLocation)}${v.reason ? `<br><span style="color:var(--ink-soft); font-size:11.5px;">${escapeHtml(v.reason)}</span>` : ''}</td>
       <td class="num">${v.left_at ? new Date(v.left_at).toLocaleString('ar-EG') : '—'}</td>
       <td class="num">${v.returned_at ? new Date(v.returned_at).toLocaleString('ar-EG') : '<span class="bo-badge info">لسه طالع</span>'}</td>
-      <td class="wrap-cell">${escapeHtml(v.reason || '—')}</td>
+      <td>${v.result ? `<span class="bo-badge ${FIELD_VISIT_RESULT_BADGE[v.result] || 'info'}">${FIELD_VISIT_RESULT_LABELS[v.result]}</span>` : '—'}</td>
       <td>
         <div class="bo-row-actions">
           <button class="bo-icon-btn" data-action="edit">تعديل</button>
@@ -27883,11 +28840,18 @@ function renderFieldVisitsTable() {
   });
 }
 
-function openFieldVisitModal(visit) {
+async function openFieldVisitModal(visit) {
+  await loadFieldVisitAdminOptions();
   document.getElementById('fieldVisitId').value = visit.id;
   document.getElementById('fieldVisitLeftAt').value = toDatetimeLocalInputValue(visit.left_at);
   document.getElementById('fieldVisitReturnedAt').value = toDatetimeLocalInputValue(visit.returned_at);
+  document.getElementById('fieldVisitActivityType').value = visit.activity_type_id || '';
+  document.getElementById('fieldVisitCustomer').value = visit.customer_id || '';
+  document.getElementById('fieldVisitCustomerInput').value = visit.customer_id ? (visit.customers?.name || boCustomers.find(c => c.id === visit.customer_id)?.name || '') : '';
+  document.getElementById('fieldVisitLocation').value = visit.location_text || '';
   document.getElementById('fieldVisitReason').value = visit.reason || '';
+  document.getElementById('fieldVisitResult').value = visit.result || '';
+  document.getElementById('fieldVisitResultNotes').value = visit.result_notes || '';
   document.getElementById('fieldVisitNotes').value = visit.notes || '';
   document.getElementById('fieldVisitModalError').classList.remove('show');
   document.getElementById('fieldVisitModalOverlay').classList.add('show');
@@ -27912,7 +28876,12 @@ async function saveFieldVisit(e) {
     const payload = {
       left_at: new Date(leftAtVal).toISOString(),
       returned_at: returnedAtVal ? new Date(returnedAtVal).toISOString() : null,
+      activity_type_id: document.getElementById('fieldVisitActivityType').value || null,
+      customer_id: document.getElementById('fieldVisitCustomer').value || null,
+      location_text: document.getElementById('fieldVisitLocation').value.trim() || null,
       reason: document.getElementById('fieldVisitReason').value.trim() || null,
+      result: document.getElementById('fieldVisitResult').value || null,
+      result_notes: document.getElementById('fieldVisitResultNotes').value.trim() || null,
       notes: document.getElementById('fieldVisitNotes').value.trim() || null,
       updated_by: currentProfile?.id || null,
     };
@@ -27952,9 +28921,20 @@ async function openMyAttendanceModal() {
     showToast('حسابك غير مربوط ببيانات موظف — راجع الأدمن لربط حسابك بسجل الموظف', true);
     return;
   }
+  switchMyAttendanceTab('self');
+  document.getElementById('shiftTeamTabBtn').style.display = (currentShift && !currentShift.pending) ? '' : 'none';
   document.getElementById('myAttendanceModalOverlay').classList.add('show');
   document.getElementById('myAttendanceStatusText').textContent = 'جاري التحميل...';
   await refreshMyAttendanceStatus();
+}
+
+function switchMyAttendanceTab(tab) {
+  document.querySelectorAll('#myAttendanceTabs [data-att-tab]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.attTab === tab);
+  });
+  document.getElementById('myAttendanceSelfPanel').style.display = tab === 'self' ? '' : 'none';
+  document.getElementById('myAttendanceTeamPanel').style.display = tab === 'team' ? '' : 'none';
+  if (tab === 'team') loadShiftTeamAttendanceEmployees();
 }
 
 function closeMyAttendanceModal() {
@@ -27974,7 +28954,7 @@ async function refreshMyAttendanceStatus() {
 
   const { data: visitData, error: visitErr } = await supabaseClient
     .from('attendance_field_visits')
-    .select('*')
+    .select('*, field_visit_activity_types(name), customers(name)')
     .eq('employee_id', currentProfile.employee_id)
     .is('returned_at', null)
     .order('left_at', { ascending: false })
@@ -27986,13 +28966,38 @@ async function refreshMyAttendanceStatus() {
   renderMyAttendanceModal();
 }
 
+let fieldVisitActivityTypesLoaded = false;
+let myFieldVisitCustomerSearch = null;
+async function loadFieldVisitFormOptions() {
+  if (fieldVisitActivityTypesLoaded) return;
+  if (boCustomers.length === 0) await loadBoCustomers();
+  const { data: activityTypes } = await supabaseClient.from('field_visit_activity_types').select('*').eq('is_active', true).order('sort_order');
+  const actSel = document.getElementById('myFieldVisitActivityType');
+  actSel.innerHTML = '<option value="">اختر النشاط...</option>' +
+    (activityTypes || []).map(t => `<option value="${t.id}">${escapeHtml(t.name)}</option>`).join('');
+
+  myFieldVisitCustomerSearch = createSmartSearch({
+    input: document.getElementById('myFieldVisitCustomerInput'),
+    hidden: document.getElementById('myFieldVisitCustomer'),
+    dropdown: document.getElementById('myFieldVisitCustomerDropdown'),
+    getItems: () => boCustomers.map(c => ({ value: c.id, label: c.name, sublabel: c.phone || '', search: `${c.name} ${c.phone || ''}` })),
+    onChange: (item) => {
+      const customer = boCustomers.find(c => c.id === item.value);
+      const locationInput = document.getElementById('myFieldVisitLocation');
+      if (customer?.address && !locationInput.value) locationInput.value = customer.address;
+    },
+  });
+  fieldVisitActivityTypesLoaded = true;
+}
+
 function renderMyAttendanceModal() {
   const statusEl = document.getElementById('myAttendanceStatusText');
   const checkInBtn = document.getElementById('myCheckInBtn');
   const checkOutBtn = document.getElementById('myCheckOutBtn');
   const fieldVisitOutBtn = document.getElementById('myFieldVisitOutBtn');
   const fieldVisitInBtn = document.getElementById('myFieldVisitInBtn');
-  const fieldVisitReasonWrap = document.getElementById('myFieldVisitReasonWrap');
+  const fieldVisitOutFields = document.getElementById('myFieldVisitOutFields');
+  const fieldVisitInFields = document.getElementById('myFieldVisitInFields');
   const fieldVisitStatusText = document.getElementById('myFieldVisitStatusText');
 
   if (!myAttendanceToday) {
@@ -28010,16 +29015,21 @@ function renderMyAttendanceModal() {
   }
 
   const canFieldVisit = !!myAttendanceToday;
+  if (canFieldVisit) loadFieldVisitFormOptions();
   if (myOpenFieldVisit) {
     fieldVisitOutBtn.style.display = 'none';
     fieldVisitInBtn.style.display = '';
-    fieldVisitReasonWrap.style.display = 'none';
-    fieldVisitStatusText.textContent = `طالع لمهمة من الساعة ${formatAttendanceTime(myOpenFieldVisit.left_at)}${myOpenFieldVisit.reason ? ' — ' + myOpenFieldVisit.reason : ''}`;
+    fieldVisitOutFields.style.display = 'none';
+    fieldVisitInFields.style.display = '';
+    const activityLabel = myOpenFieldVisit.field_visit_activity_types?.name;
+    const customerLabel = myOpenFieldVisit.customers?.name;
+    fieldVisitStatusText.textContent = `طالع لمهمة${activityLabel ? ' (' + activityLabel + ')' : ''} من الساعة ${formatAttendanceTime(myOpenFieldVisit.left_at)}${customerLabel ? ' — عند ' + customerLabel : ''}${myOpenFieldVisit.reason ? ' — ' + myOpenFieldVisit.reason : ''}`;
     fieldVisitStatusText.style.display = '';
   } else {
     fieldVisitOutBtn.style.display = canFieldVisit ? '' : 'none';
     fieldVisitInBtn.style.display = 'none';
-    fieldVisitReasonWrap.style.display = canFieldVisit ? '' : 'none';
+    fieldVisitOutFields.style.display = canFieldVisit ? '' : 'none';
+    fieldVisitInFields.style.display = 'none';
     fieldVisitStatusText.style.display = 'none';
   }
 }
@@ -28086,6 +29096,10 @@ async function myCheckOut() {
 
 async function myFieldVisitOut() {
   if (!myAttendanceToday) { showToast('سجّل حضورك الأول', true); return; }
+  const activityTypeId = document.getElementById('myFieldVisitActivityType').value;
+  if (!activityTypeId) { showToast('اختر النشاط الخدمي للمهمة', true); return; }
+  const customerId = document.getElementById('myFieldVisitCustomer').value;
+  const locationText = document.getElementById('myFieldVisitLocation').value.trim();
   const reason = document.getElementById('myFieldVisitReason').value.trim();
   const btn = document.getElementById('myFieldVisitOutBtn');
   btn.disabled = true;
@@ -28094,10 +29108,17 @@ async function myFieldVisitOut() {
       attendance_id: myAttendanceToday.id,
       employee_id: currentProfile.employee_id,
       branch_id: currentProfile.branch_id || null,
+      activity_type_id: activityTypeId,
+      customer_id: customerId || null,
+      location_text: locationText || null,
       reason: reason || null,
     });
     if (error) throw error;
     document.getElementById('myFieldVisitReason').value = '';
+    document.getElementById('myFieldVisitLocation').value = '';
+    document.getElementById('myFieldVisitCustomer').value = '';
+    document.getElementById('myFieldVisitCustomerInput').value = '';
+    document.getElementById('myFieldVisitActivityType').value = '';
     showToast('تم تسجيل خروجك للمهمة');
     await refreshMyAttendanceStatus();
   } catch (err) {
@@ -28110,14 +29131,22 @@ async function myFieldVisitOut() {
 
 async function myFieldVisitIn() {
   if (!myOpenFieldVisit) return;
+  const result = document.getElementById('myFieldVisitResult').value;
+  const resultNotes = document.getElementById('myFieldVisitResultNotes').value.trim();
   const btn = document.getElementById('myFieldVisitInBtn');
   btn.disabled = true;
   try {
     const { error } = await supabaseClient
       .from('attendance_field_visits')
-      .update({ returned_at: new Date().toISOString() })
+      .update({
+        returned_at: new Date().toISOString(),
+        result: result || null,
+        result_notes: resultNotes || null,
+      })
       .eq('id', myOpenFieldVisit.id);
     if (error) throw error;
+    document.getElementById('myFieldVisitResult').value = '';
+    document.getElementById('myFieldVisitResultNotes').value = '';
     showToast('تم تسجيل رجوعك من المهمة');
     await refreshMyAttendanceStatus();
   } catch (err) {
@@ -28125,6 +29154,60 @@ async function myFieldVisitIn() {
     showToast(err.message || 'تعذر تسجيل الرجوع', true);
   } finally {
     btn.disabled = false;
+  }
+}
+
+// ---- تسجيل حضور فريق الشيفت من جهاز الكاشير المشترك (بالـPIN) ----
+async function loadShiftTeamAttendanceEmployees() {
+  const sel = document.getElementById('shiftAttendanceEmployeeSelect');
+  sel.innerHTML = '<option value="">اختر الموظف...</option>';
+  if (!currentShift) return;
+  try {
+    // بنجيب موظفي نفس فرع الوردية المفتوحة بس، مش كل الموظفين
+    const { data, error } = await supabaseClient
+      .from('employees')
+      .select('id, full_name')
+      .eq('branch_id', currentShift.branch_id)
+      .eq('is_active', true)
+      .order('full_name');
+    if (error) throw error;
+    sel.innerHTML += (data || []).map(e => `<option value="${e.id}">${escapeHtml(e.full_name)}</option>`).join('');
+  } catch (err) {
+    console.error(err);
+  }
+  document.getElementById('shiftAttendancePin').value = '';
+  document.getElementById('shiftAttendanceError').classList.remove('show');
+  document.getElementById('shiftAttendanceResult').style.display = 'none';
+}
+
+async function submitShiftAttendance() {
+  const errEl = document.getElementById('shiftAttendanceError');
+  const resultEl = document.getElementById('shiftAttendanceResult');
+  errEl.classList.remove('show');
+  resultEl.style.display = 'none';
+  const employeeId = document.getElementById('shiftAttendanceEmployeeSelect').value;
+  const pin = document.getElementById('shiftAttendancePin').value.trim();
+  if (!employeeId) { errEl.textContent = 'اختر الموظف'; errEl.classList.add('show'); return; }
+  if (!pin) { errEl.textContent = 'ادخل الرقم السري'; errEl.classList.add('show'); return; }
+  const btn = document.getElementById('submitShiftAttendanceBtn');
+  btn.disabled = true;
+  btn.textContent = 'جاري التسجيل...';
+  try {
+    const { data, error } = await supabaseClient.rpc('shift_clock_in_out', { p_employee_id: employeeId, p_pin: pin });
+    if (error) throw error;
+    const actionLabel = data.action === 'check_in' ? 'تسجيل الحضور' : 'تسجيل الانصراف';
+    resultEl.textContent = `تم ${actionLabel} لـ ${data.employee_name} الساعة ${formatAttendanceTime(data.at)}`;
+    resultEl.style.display = '';
+    document.getElementById('shiftAttendancePin').value = '';
+    document.getElementById('shiftAttendanceEmployeeSelect').value = '';
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = (err.message || '').includes('الرقم السري غير صحيح') ? 'الرقم السري غير صحيح'
+      : (err.message || 'تعذر تسجيل الحضور');
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'تسجيل';
   }
 }
 
@@ -28298,6 +29381,7 @@ async function saveLeaveRequest(e) {
     closeLeaveRequestModal();
     await loadBoLeaveRequests();
     renderLeaveRequestsTable();
+    renderLeaveBalancesTable();
   } catch (err) {
     console.error(err);
     errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
@@ -28316,10 +29400,20 @@ async function deleteLeaveRequest(record) {
   showToast('تم حذف طلب الإجازة بنجاح');
   await loadBoLeaveRequests();
   renderLeaveRequestsTable();
+  renderLeaveBalancesTable();
 }
 
 async function setLeaveRequestStatus(record, status) {
   if (!hasBoActionPermission('leave-requests', 'edit')) { showToast('ليس لديك صلاحية التعديل في هذه الشاشة', true); return; }
+  // لو النوع سنوية وبنوافق عليها، نتأكد إن الرصيد يكفي ونحذر لو هيخلص/يبقى سالب
+  if (status === 'approved' && record.leave_type === 'annual') {
+    const balance = await getEmployeeAnnualLeaveBalance(record.employee_id);
+    const remainingAfter = balance.remaining - Number(record.days_count || 0);
+    if (remainingAfter < 0) {
+      const confirmMsg = `رصيد الموظف المتبقي ${balance.remaining} يوم فقط، والموافقة على هذا الطلب (${record.days_count} يوم) هتخلي الرصيد سالب (${remainingAfter}). هل تريد المتابعة؟`;
+      if (!confirm(confirmMsg)) return;
+    }
+  }
   const { error } = await supabaseClient.from('leave_requests').update({
     status, reviewed_by: currentProfile.id, reviewed_at: new Date().toISOString()
   }).eq('id', record.id);
@@ -28327,6 +29421,49 @@ async function setLeaveRequestStatus(record, status) {
   showToast(status === 'approved' ? 'تمت الموافقة على طلب الإجازة' : 'تم رفض طلب الإجازة');
   await loadBoLeaveRequests();
   renderLeaveRequestsTable();
+  renderLeaveBalancesTable();
+}
+
+// ---- أرصدة الإجازة السنوية ----
+// الرصيد المتبقي = الرصيد السنوي المحدد للموظف - مجموع أيام الإجازات
+// السنوية (annual) المعتمدة (approved) اللي تبدأ في السنة الحالية —
+// من غير جدول رصيد منفصل، عشان يفضل مصدر واحد للحقيقة (leave_requests)
+async function getEmployeeAnnualLeaveBalance(employeeId) {
+  const employee = boEmployees.find(e => e.id === employeeId);
+  const allocation = Number(employee?.annual_leave_days ?? 21);
+  const year = new Date().getFullYear();
+  const used = boLeaveRequests
+    .filter(r => r.employee_id === employeeId && r.leave_type === 'annual' && r.status === 'approved' && r.start_date?.slice(0, 4) === String(year))
+    .reduce((sum, r) => sum + Number(r.days_count || 0), 0);
+  return { allocation, used, remaining: Math.round((allocation - used) * 100) / 100 };
+}
+
+function renderLeaveBalancesTable() {
+  document.getElementById('leaveBalancesYearLabel').textContent = new Date().getFullYear();
+  const tbody = document.getElementById('leaveBalancesTableBody');
+  const activeEmployees = boEmployees.filter(e => e.is_active !== false);
+  if (activeEmployees.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" class="bo-empty">لا يوجد موظفين</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  const year = new Date().getFullYear();
+  activeEmployees.forEach(emp => {
+    const allocation = Number(emp.annual_leave_days ?? 21);
+    const used = boLeaveRequests
+      .filter(r => r.employee_id === emp.id && r.leave_type === 'annual' && r.status === 'approved' && r.start_date?.slice(0, 4) === String(year))
+      .reduce((sum, r) => sum + Number(r.days_count || 0), 0);
+    const remaining = Math.round((allocation - used) * 100) / 100;
+    const tr = document.createElement('tr');
+    if (remaining <= 0) tr.style.background = 'rgba(239,68,68,0.08)';
+    else if (remaining <= 2) tr.style.background = 'rgba(245,158,11,0.08)';
+    tr.innerHTML = `
+      <td>${escapeHtml(emp.full_name)}</td>
+      <td class="num">${allocation}</td>
+      <td class="num">${used}</td>
+      <td class="num" style="${remaining <= 0 ? 'color:var(--danger); font-weight:600;' : ''}">${remaining}${remaining <= 0 ? ' ⚠' : ''}</td>`;
+    tbody.appendChild(tr);
+  });
 }
 
 // ---- Stocktake sessions (الجرد الدوري) ----
@@ -35428,6 +36565,8 @@ const INVENTORY_QUICK_RANGE_CONFIGS = [
   { rowId: 'otherReturnsQuickRange', fromId: 'otherReturnsFromDate', toId: 'otherReturnsToDate', refresh: () => refreshReturnsAnalysisReport() },
   { rowId: 'etaLogQuickRange', fromId: 'etaLogFromDate', toId: 'etaLogToDate', refresh: () => runEtaLogReport() },
   { rowId: 'overtimeQuickRange', fromId: 'overtimeFromDate', toId: 'overtimeToDate', refresh: () => runOvertimeReport() },
+  { rowId: 'fieldVisitsReportQuickRange', fromId: 'fieldVisitsReportFromDate', toId: 'fieldVisitsReportToDate', refresh: () => runFieldVisitsReport() },
+  { rowId: 'hrKpiQuickRange', fromId: 'hrKpiFromDate', toId: 'hrKpiToDate', refresh: () => runHrKpiReport() },
 ];
 
 function initInventoryQuickRanges() {
