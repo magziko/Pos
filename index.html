@@ -2826,6 +2826,10 @@ a { color: inherit; }
               <div class="report-type-icon">🏆</div>
               <div class="report-type-label">الأصناف الأكثر مبيعًا</div>
             </button>
+            <button type="button" class="report-type-card" data-report="topcustomers">
+              <div class="report-type-icon">⭐</div>
+              <div class="report-type-label">أفضل العملاء</div>
+            </button>
             <button type="button" class="report-type-card" id="salesReportCard-branch" data-report="branch" style="display:none;">
               <div class="report-type-icon">🏬</div>
               <div class="report-type-label">المبيعات حسب الفرع</div>
@@ -2907,6 +2911,29 @@ a { color: inherit; }
                   <thead><tr><th>الصنف</th><th>الكمية المباعة</th><th>الإيراد</th></tr></thead>
                   <tbody id="topProductsTableBody">
                     <tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="salesReportDetail-topcustomers" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">أفضل العملاء (أعلى 50 حسب إجمالي الشراء)</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-icon-btn" id="exportTopCustomersReportBtn">تصدير إكسل</button>
+                </div>
+              </div>
+              <div class="report-cards">
+                <div class="report-card">
+                  <div class="report-card-label">عدد العملاء المسجلين اللي اشتروا في الفترة</div>
+                  <div class="report-card-value num" id="topCustomersActiveCount">0</div>
+                </div>
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>العميل</th><th>الهاتف</th><th>عدد الفواتير</th><th>إجمالي الشراء</th><th>آخر عملية شراء</th></tr></thead>
+                  <tbody id="topCustomersTableBody">
+                    <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -3406,6 +3433,7 @@ a { color: inherit; }
                 <div class="report-subtitle">تنبيهات نقص المخزون (تحت حد الطلب)</div>
                 <div class="report-subtitle-actions">
                   <select id="invLowStockWarehouseFilter" class="report-inline-select"><option value="">كل المخازن</option></select>
+                  <button class="bo-outline-btn" id="convertLowStockToRequisitionBtn">تحويل المحدد لطلب توريد</button>
                   <button class="bo-icon-btn" id="exportInvLowStockBtn">تصدير إكسل</button>
                 </div>
               </div>
@@ -3421,9 +3449,9 @@ a { color: inherit; }
               </div>
               <div class="bo-table-wrap">
                 <table class="bo-table">
-                  <thead><tr><th>الصنف</th><th>الفئة</th><th>الكمية المتاحة</th><th>حد الطلب</th><th>النقص</th></tr></thead>
+                  <thead><tr><th><input type="checkbox" id="invLowStockSelectAll" style="width:auto;"></th><th>الصنف</th><th>الفئة</th><th>الكمية المتاحة</th><th>حد الطلب</th><th>النقص</th><th>الكمية المقترحة للطلب</th></tr></thead>
                   <tbody id="invLowStockTableBody">
-                    <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
+                    <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -14970,6 +14998,7 @@ const REPORT_TABS = {
     { key: 'trend', title: 'اتجاه المبيعات اليومي' },
     { key: 'category', title: 'المبيعات حسب الفئة' },
     { key: 'topproducts', title: 'الأصناف الأكثر مبيعًا' },
+    { key: 'topcustomers', title: 'أفضل العملاء' },
     { key: 'branch', title: 'المبيعات حسب الفرع' },
     { key: 'cashier', title: 'المبيعات حسب الكاشير' },
     { key: 'payment', title: 'المبيعات حسب طرق الدفع' },
@@ -17061,7 +17090,7 @@ function bindBackofficeEvents() {
   document.getElementById('supplierSearchInput').addEventListener('input', renderSuppliersTable);
 
   // ---- Purchase requisitions ----
-  document.getElementById('addRequisitionBtn').addEventListener('click', openRequisitionFormModal);
+  document.getElementById('addRequisitionBtn').addEventListener('click', () => openRequisitionFormModal());
   document.getElementById('cancelRequisitionFormBtn').addEventListener('click', closeRequisitionFormModal);
   document.getElementById('requisitionFormModalOverlay').addEventListener('click', (e) => {
     if (e.target.id === 'requisitionFormModalOverlay') closeRequisitionFormModal();
@@ -17737,6 +17766,7 @@ function bindBackofficeEvents() {
     });
   });
   document.getElementById('exportCashierReportBtn').addEventListener('click', () => exportCashierReportToExcel());
+  document.getElementById('exportTopCustomersReportBtn').addEventListener('click', () => exportTopCustomersReportToExcel());
   document.getElementById('exportPaymentMethodReportBtn').addEventListener('click', () => exportPaymentMethodReportToExcel());
   document.getElementById('paymentMethodCashierFilter').addEventListener('change', (e) => renderPaymentMethodReport(e.target.value || ''));
   document.getElementById('exportMixedPaymentReportBtn').addEventListener('click', () => exportMixedPaymentReportToExcel());
@@ -17756,6 +17786,10 @@ function bindBackofficeEvents() {
 
   document.getElementById('invLowStockWarehouseFilter').addEventListener('change', () => refreshInventoryLowStockReport());
   document.getElementById('exportInvLowStockBtn').addEventListener('click', () => exportInvLowStockToExcel());
+  document.getElementById('convertLowStockToRequisitionBtn').addEventListener('click', convertLowStockToRequisition);
+  document.getElementById('invLowStockSelectAll').addEventListener('change', (e) => {
+    document.querySelectorAll('.low-stock-row-check').forEach(cb => { cb.checked = e.target.checked; });
+  });
 
   document.getElementById('invValuationWarehouseFilter').addEventListener('change', () => refreshInventoryValuationReport());
   document.getElementById('exportInvValuationBtn').addEventListener('click', () => exportInvValuationToExcel());
@@ -28185,17 +28219,16 @@ function populateHrKpiFilters() {
 
 // نفس منطق حساب الأوفر تايم المستخدم في تقرير الأوفر تايم، بس بياخد
 // الحقول جاهزة من v_attendance_daily_hours بدل ما يجيبها من جدول منفصل
+// غلاف رقيق حوالين calcOvertimeMinutes عشان يشتغل مباشرة على صف راجع من
+// v_attendance_daily_hours (اللي بيرجّع أعمدة schedule_is_day_off /
+// schedule_end_time بدل كائن schedule منفصل) — من غير ما نكرر نفس معادلة
+// حساب الأوفر تايم في مكانين مختلفين ممكن يتنسى تحديث أحدهم لو القاعدة اتغيرت
 function overtimeMinutesFromViewRow(row) {
-  if (!row.check_out || !row.check_in) return 0;
-  if (row.schedule_is_day_off) {
-    return Math.max(0, Math.round((new Date(row.check_out) - new Date(row.check_in)) / 60000));
-  }
-  if (!row.schedule_end_time) return 0;
-  const [h, m] = row.schedule_end_time.split(':').map(Number);
-  const scheduledEnd = new Date(row.work_date + 'T00:00:00');
-  scheduledEnd.setHours(h, m, 0, 0);
-  const diff = Math.round((new Date(row.check_out) - scheduledEnd) / 60000);
-  return diff > 0 ? diff : 0;
+  const minutes = calcOvertimeMinutes(row, {
+    is_day_off: row.schedule_is_day_off,
+    end_time: row.schedule_end_time,
+  });
+  return minutes || 0;
 }
 
 async function runHrKpiReport() {
@@ -29407,7 +29440,7 @@ async function setLeaveRequestStatus(record, status) {
   if (!hasBoActionPermission('leave-requests', 'edit')) { showToast('ليس لديك صلاحية التعديل في هذه الشاشة', true); return; }
   // لو النوع سنوية وبنوافق عليها، نتأكد إن الرصيد يكفي ونحذر لو هيخلص/يبقى سالب
   if (status === 'approved' && record.leave_type === 'annual') {
-    const balance = await getEmployeeAnnualLeaveBalance(record.employee_id);
+    const balance = getEmployeeAnnualLeaveBalance(record.employee_id);
     const remainingAfter = balance.remaining - Number(record.days_count || 0);
     if (remainingAfter < 0) {
       const confirmMsg = `رصيد الموظف المتبقي ${balance.remaining} يوم فقط، والموافقة على هذا الطلب (${record.days_count} يوم) هتخلي الرصيد سالب (${remainingAfter}). هل تريد المتابعة؟`;
@@ -29428,7 +29461,7 @@ async function setLeaveRequestStatus(record, status) {
 // الرصيد المتبقي = الرصيد السنوي المحدد للموظف - مجموع أيام الإجازات
 // السنوية (annual) المعتمدة (approved) اللي تبدأ في السنة الحالية —
 // من غير جدول رصيد منفصل، عشان يفضل مصدر واحد للحقيقة (leave_requests)
-async function getEmployeeAnnualLeaveBalance(employeeId) {
+function getEmployeeAnnualLeaveBalance(employeeId) {
   const employee = boEmployees.find(e => e.id === employeeId);
   const allocation = Number(employee?.annual_leave_days ?? 21);
   const year = new Date().getFullYear();
@@ -29447,13 +29480,8 @@ function renderLeaveBalancesTable() {
     return;
   }
   tbody.innerHTML = '';
-  const year = new Date().getFullYear();
   activeEmployees.forEach(emp => {
-    const allocation = Number(emp.annual_leave_days ?? 21);
-    const used = boLeaveRequests
-      .filter(r => r.employee_id === emp.id && r.leave_type === 'annual' && r.status === 'approved' && r.start_date?.slice(0, 4) === String(year))
-      .reduce((sum, r) => sum + Number(r.days_count || 0), 0);
-    const remaining = Math.round((allocation - used) * 100) / 100;
+    const { allocation, used, remaining } = getEmployeeAnnualLeaveBalance(emp.id);
     const tr = document.createElement('tr');
     if (remaining <= 0) tr.style.background = 'rgba(239,68,68,0.08)';
     else if (remaining <= 2) tr.style.background = 'rgba(245,158,11,0.08)';
@@ -29947,12 +29975,14 @@ function renderRequisitionsTable() {
   });
 }
 
-function openRequisitionFormModal() {
-  requisitionLines = [{ productId: '', quantity: 1, notes: '' }];
+function openRequisitionFormModal(prefillLines) {
+  requisitionLines = (prefillLines && prefillLines.length > 0)
+    ? prefillLines.map(l => ({ ...l }))
+    : [{ productId: '', quantity: 1, notes: '' }];
   const branchSelect = document.getElementById('requisitionBranch');
   branchSelect.innerHTML = boBranchesList.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
   branchSelect.value = currentProfile.branch_id || (boBranchesList[0]?.id || '');
-  document.getElementById('requisitionNotes').value = '';
+  document.getElementById('requisitionNotes').value = prefillLines?.length ? 'طلب تلقائي من تقرير نقص المخزون' : '';
   renderRequisitionLines();
   document.getElementById('requisitionFormModalError').classList.remove('show');
   document.getElementById('requisitionFormModalOverlay').classList.add('show');
@@ -32193,6 +32223,7 @@ let lastInvAdjustmentsRows = [];
 let lastInvTopMoversRows = [];
 let lastBomCostRows = [];
 let lastCashierReportRows = [];
+let lastTopCustomersReportRows = [];
 let lastPaymentMethodReportRows = [];
 let lastDailyTrendReportRows = [];
 let lastBranchReportRows = [];
@@ -32495,7 +32526,7 @@ async function runReport() {
     // ملخص الفواتير
     let salesQuery = supabaseClient
       .from('sales')
-      .select('id, invoice_number, total, user_id, branch_id, payment_method, created_at, customers(name), users_profile(full_name), branches(name)')
+      .select('id, invoice_number, total, user_id, branch_id, payment_method, created_at, customer_id, customers(name, phone), users_profile(full_name), branches(name)')
       .eq('status', 'completed')
       .gte('created_at', fromISO)
       .lte('created_at', toISO);
@@ -32529,6 +32560,29 @@ async function runReport() {
        <td class="num">${(row.count > 0 ? row.total / row.count : 0).toFixed(2)}</td>
        <td class="num">${(totalSales > 0 ? (row.total / totalSales * 100) : 0).toFixed(1)}%</td>`);
     lastCashierReportRows = cashierRows;
+
+    // أفضل العملاء (من نفس بيانات sales المحمّلة فوق، من غير استعلام إضافي)
+    // — العملاء المسجّلين بس (customer_id موجود)، عميل الكاش النقدي مش بيتحسب هنا
+    const customerGrouped = {};
+    (sales || []).forEach(s => {
+      if (!s.customer_id) return;
+      if (!customerGrouped[s.customer_id]) {
+        customerGrouped[s.customer_id] = { name: s.customers?.name || 'عميل محذوف', phone: s.customers?.phone || '', count: 0, total: 0, lastDate: s.created_at };
+      }
+      const c = customerGrouped[s.customer_id];
+      c.count += 1;
+      c.total += Number(s.total);
+      if (s.created_at > c.lastDate) c.lastDate = s.created_at;
+    });
+    const topCustomersRows = Object.values(customerGrouped).sort((a, b) => b.total - a.total).slice(0, 50);
+    document.getElementById('topCustomersActiveCount').textContent = Object.keys(customerGrouped).length;
+    renderBreakdownTable('topCustomersTableBody', topCustomersRows, 5, row =>
+      `<td>${escapeHtml(row.name)}</td>
+       <td>${escapeHtml(row.phone || '—')}</td>
+       <td class="num">${row.count}</td>
+       <td class="num">${row.total.toFixed(2)}</td>
+       <td class="num">${new Date(row.lastDate).toLocaleDateString('ar-EG')}</td>`);
+    lastTopCustomersReportRows = topCustomersRows;
 
     // المبيعات حسب طريقة الدفع — بنقرأ من sale_payments (تفصيل كل طريقة فعليًا)
     // بدلاً من sales.payment_method، وذلك لأن الفواتير التي دُفعت بدفع مقسّم (نقدي + بطاقة مثلًا)
@@ -36420,6 +36474,18 @@ function exportCashierReportToExcel() {
   XLSX.writeFile(wb, `تقرير-المبيعات-حسب-الكاشير-${dateStr}.xlsx`);
 }
 
+function exportTopCustomersReportToExcel() {
+  if (lastTopCustomersReportRows.length === 0) { showToast('لا توجد بيانات لتصديرها', true); return; }
+  const rows = lastTopCustomersReportRows.map(r => ({
+    'العميل': r.name, 'الهاتف': r.phone, 'عدد الفواتير': r.count, 'إجمالي الشراء': r.total,
+    'آخر عملية شراء': new Date(r.lastDate).toLocaleDateString('ar-EG'),
+  }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'أفضل العملاء');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `تقرير-أفضل-العملاء-${dateStr}.xlsx`);
+}
+
 function exportDailyTrendReportToExcel() {
   if (lastDailyTrendReportRows.length === 0) { showToast('لا توجد بيانات لتصديرها', true); return; }
   const rows = lastDailyTrendReportRows.map(r => ({
@@ -36763,37 +36829,51 @@ function exportStItemsToExcel() {
 async function refreshInventoryLowStockReport() {
   const warehouseId = document.getElementById('invLowStockWarehouseFilter').value || null;
   const tbody = document.getElementById('invLowStockTableBody');
-  tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>`;
   try {
     const stockByProduct = await fetchStockByProduct(warehouseId);
     const rows = boProducts
       .filter(p => p.is_active && Number(p.reorder_level) > 0 && (stockByProduct[p.id] || 0) <= Number(p.reorder_level))
-      .map(p => ({
-        name: p.name, category: p.categories?.name || 'بدون فئة',
-        qty: stockByProduct[p.id] || 0, reorder: Number(p.reorder_level),
-      }))
+      .map(p => {
+        const qty = stockByProduct[p.id] || 0;
+        const reorder = Number(p.reorder_level);
+        // الكمية المقترحة للطلب = الفرق بين حد الطلب والرصيد الحالي، بحد
+        // أدنى 1، عشان الطلب يوصّل المخزون على الأقل لحد الطلب نفسه
+        const suggestedQty = Math.max(reorder - qty, 1);
+        return { id: p.id, name: p.name, category: p.categories?.name || 'بدون فئة', qty, reorder, suggestedQty };
+      })
       .sort((a, b) => a.qty - b.qty);
 
     document.getElementById('invLowStockCount').textContent = rows.length;
     document.getElementById('invLowStockZeroCount').textContent = rows.filter(r => r.qty <= 0).length;
 
-    renderBreakdownTable('invLowStockTableBody', rows, 5, row => `
+    renderBreakdownTable('invLowStockTableBody', rows, 7, row => `
+      <td><input type="checkbox" class="low-stock-row-check" data-id="${row.id}" data-name="${escapeHtml(row.name)}" data-qty="${row.suggestedQty}" style="width:auto;"></td>
       <td>${escapeHtml(row.name)}</td>
       <td>${escapeHtml(row.category)}</td>
       <td class="num">${formatQty(row.qty)}</td>
       <td class="num">${formatQty(row.reorder)}</td>
-      <td class="num">${formatQty(row.reorder - row.qty)}</td>`);
+      <td class="num">${formatQty(row.reorder - row.qty)}</td>
+      <td class="num">${formatQty(row.suggestedQty)}</td>`);
     lastInvLowStockRows = rows;
+    document.getElementById('invLowStockSelectAll').checked = false;
   } catch (err) {
     console.error(err);
     showToast('تعذر تحميل تقرير نقص المخزون', true);
   }
 }
 
+function convertLowStockToRequisition() {
+  const checked = Array.from(document.querySelectorAll('.low-stock-row-check:checked'));
+  if (checked.length === 0) { showToast('حدد صنف واحد على الأقل أولًا', true); return; }
+  const prefillLines = checked.map(cb => ({ productId: cb.dataset.id, quantity: Number(cb.dataset.qty) || 1, notes: '' }));
+  openRequisitionFormModal(prefillLines);
+}
+
 function exportInvLowStockToExcel() {
   if (lastInvLowStockRows.length === 0) { showToast('لا توجد بيانات لتصديرها', true); return; }
   const rows = lastInvLowStockRows.map(r => ({
-    'الصنف': r.name, 'الفئة': r.category, 'الكمية المتاحة': r.qty, 'حد الطلب': r.reorder, 'النقص': r.reorder - r.qty,
+    'الصنف': r.name, 'الفئة': r.category, 'الكمية المتاحة': r.qty, 'حد الطلب': r.reorder, 'النقص': r.reorder - r.qty, 'الكمية المقترحة للطلب': r.suggestedQty,
   }));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'نقص المخزون');
