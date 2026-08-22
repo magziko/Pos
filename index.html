@@ -177,6 +177,19 @@ a { color: inherit; }
   #dashExportModalOverlay.show .z-report-modal-box { max-width: 100%; box-shadow: none; border: none; }
 }
 .main { display: grid; grid-template-columns: 1fr 380px; overflow: hidden; }
+.pos-tables-floor { padding: 18px; overflow-y: auto; }
+.pos-tables-floor-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.pos-tables-floor-title { font-size: 18px; font-weight: 700; }
+.pos-tables-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 14px; }
+.pos-table-card { border: 2px solid var(--border); border-radius: var(--radius-md); padding: 16px 10px; text-align: center; cursor: pointer; background: var(--surface); transition: transform .1s; }
+.pos-table-card:active { transform: scale(0.97); }
+.pos-table-card.available { border-color: var(--teal-600); background: var(--teal-100); }
+.pos-table-card.occupied { border-color: var(--danger); background: rgba(239,68,68,0.08); }
+.pos-table-card .pt-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.pos-table-card .pt-capacity { font-size: 11.5px; color: var(--ink-soft); }
+.pos-table-card .pt-total { font-size: 13px; font-weight: 700; color: var(--danger); margin-top: 6px; }
+.pos-table-card .pt-status { font-size: 11px; margin-top: 4px; color: var(--ink-soft); }
+.back-to-tables-btn { display: none; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 13px; cursor: pointer; margin-bottom: 10px; }
 .dash-updated-label { font-size: 12px; color: var(--ink-soft); direction: ltr; }
 .dash-chart-caption { font-size: 12.5px; color: var(--amber-600); font-weight: 600; }
 .dash-chart-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px; direction: ltr; position: relative; }
@@ -454,6 +467,23 @@ a { color: inherit; }
 .bo-outline-btn:hover { background: var(--teal-100); }
 .bo-outline-btn:disabled { opacity: .6; cursor: not-allowed; }
 .bo-table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; position: relative; }
+.smart-table-toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
+.smart-table-toolbar label { font-size:12.5px; color:var(--ink-soft); }
+.smart-table-toolbar select { font-size:12.5px; padding:5px 8px; border:1px solid var(--border); border-radius:6px; background:var(--surface); }
+.smart-table-th { cursor:pointer; user-select:none; white-space:nowrap; }
+.smart-table-th .st-sort-arrow { font-size:10px; opacity:0.4; margin-left:3px; }
+.smart-table-th.st-sorted .st-sort-arrow { opacity:1; }
+.smart-table-filter-row th { padding:4px 8px; background:var(--surface); }
+.smart-table-filter-row input { width:100%; box-sizing:border-box; font-size:12px; padding:4px 6px; border:1px solid var(--border); border-radius:5px; }
+.smart-table-group-row td { background:var(--surface-sunken); font-weight:700; cursor:pointer; padding:8px 14px; }
+.smart-table-group-row .st-group-arrow { display:inline-block; transition:transform .15s; margin-left:6px; }
+.smart-table-group-row.collapsed .st-group-arrow { transform:rotate(-90deg); }
+.smart-table-sum-row td { background:var(--surface-sunken); font-weight:700; border-top:2px solid var(--border); }
+.smart-table-pagination { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; font-size:12.5px; flex-wrap:wrap; gap:8px; }
+.smart-table-pagination .st-page-btns { display:flex; gap:4px; align-items:center; }
+.smart-table-pagination button { border:1px solid var(--border); background:var(--surface); border-radius:6px; padding:4px 9px; cursor:pointer; font-size:12.5px; }
+.smart-table-pagination button:disabled { opacity:0.4; cursor:default; }
+.smart-table-pagination button.active { background:var(--teal-600); color:#fff; border-color:var(--teal-600); }
 .bo-table { width: 100%; min-width: max-content; border-collapse: collapse; font-size: 13.5px; }
 .bo-table th { text-align: right; background: var(--surface-sunken); color: var(--ink-soft); font-weight: 600; padding: 10px 14px; font-size: 12.5px; white-space: nowrap; }
 .bo-table td { padding: 10px 14px; border-top: 1px solid var(--surface-sunken); vertical-align: middle; white-space: nowrap; }
@@ -1307,12 +1337,21 @@ a { color: inherit; }
         <button class="return-topbar-btn" id="cashDropBtn" style="display:none;" title="سحب نقدي من الدرج لخزنة الفرع"><span class="return-topbar-icon">💵</span><span class="return-topbar-label">سحب نقدي</span></button>
         <button class="close-shift-btn" id="closeShiftBtn" style="display:none;" title="إغلاق الوردية"><span class="topbar-btn-icon">🔒</span><span class="topbar-btn-label">إغلاق الوردية</span></button>
         <button class="return-topbar-btn" id="myAttendanceBtn" style="display:none;" title="الحضور والانصراف"><span class="return-topbar-icon">🕒</span><span class="return-topbar-label">الحضور والانصراف</span></button>
+        <button class="return-topbar-btn" id="posTablesNavBtn" style="display:none;" title="الطاولات"><span class="return-topbar-icon">🍽️</span><span class="return-topbar-label">الطاولات</span></button>
         <button class="logout-btn" id="backofficeBtn" style="display:none;" title="لوحة التحكم"><span class="topbar-btn-icon">🖥️</span><span class="topbar-btn-label">لوحة التحكم</span></button>
         <button class="logout-btn" id="logoutBtn" title="تسجيل الخروج"><span class="topbar-btn-icon">⏻</span><span class="topbar-btn-label">تسجيل الخروج</span></button>
       </div>
     </div>
-    <div class="main">
+    <div class="pos-tables-floor" id="posTablesFloorView" style="display:none;">
+      <div class="pos-tables-floor-header">
+        <div class="pos-tables-floor-title" id="posTablesFloorTitle">الطاولات</div>
+        <button class="bo-outline-btn" id="refreshPosTablesFloorBtn">تحديث</button>
+      </div>
+      <div class="pos-tables-grid" id="posTablesFloorGrid"></div>
+    </div>
+    <div class="main" id="posMainView">
       <div class="product-side">
+        <button type="button" class="back-to-tables-btn" id="backToTablesBtn">‹ <span id="backToTablesLabel">رجوع للطاولات</span></button>
         <div class="search-row"><input type="text" id="searchInput" placeholder="ابحث بالاسم أو امسح الباركود..."></div>
         <div class="categories" id="categoriesRow"><button class="cat-chip active" data-cat="all">الكل</button></div>
         <div class="product-grid" id="productGrid"><div class="empty-state">جاري تحميل الأصناف...</div></div>
@@ -1617,6 +1656,7 @@ a { color: inherit; }
             <button class="bo-nav-sub-item" data-section="business-types">أنواع الأنشطة التجارية</button>
             <button class="bo-nav-sub-item" data-section="pos-devices">أجهزة نقاط البيع</button>
             <button class="bo-nav-sub-item" data-section="branch-settings">إعدادات الفرع</button>
+            <button class="bo-nav-sub-item" id="posTablesNavItem" data-section="pos-tables" style="display:none;">الطاولات والكراسي</button>
             <button class="bo-nav-sub-item" data-section="print-settings">إعدادات الطباعة</button>
             <button class="bo-nav-sub-item" data-section="backup">نسخة احتياطية</button>
             <button class="bo-nav-sub-item" data-section="reset-data">تهيئة البيانات</button>
@@ -2810,6 +2850,10 @@ a { color: inherit; }
           </div>
 
           <div class="report-type-grid" id="salesReportTypeGrid">
+            <button type="button" class="report-type-card" data-report="details">
+              <div class="report-type-icon">📋</div>
+              <div class="report-type-label">تفاصيل المبيعات</div>
+            </button>
             <button type="button" class="report-type-card" data-report="summary">
               <div class="report-type-icon">📊</div>
               <div class="report-type-label">إجمالي المبيعات والأرباح</div>
@@ -2855,6 +2899,16 @@ a { color: inherit; }
           <div id="salesReportDetailWrap" style="display:none;">
             <button type="button" class="report-back-btn" id="salesReportBackBtn">‹ رجوع لكل تقارير المبيعات</button>
 
+            <div id="salesReportDetail-details" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">تفاصيل المبيعات</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-icon-btn" id="exportSalesDetailsReportBtn">تصدير إكسل</button>
+                </div>
+              </div>
+              <div id="salesDetailsSmartTable"></div>
+            </div>
+
             <div id="salesReportDetail-summary" class="report-detail" style="display:none;">
               <div class="report-cards">
                 <div class="report-card">
@@ -2894,14 +2948,7 @@ a { color: inherit; }
               <div class="daily-trend-chart-wrap">
                 <div class="daily-trend-chart" id="dailyTrendChart"></div>
               </div>
-              <div class="bo-table-wrap">
-                <table class="bo-table">
-                  <thead><tr><th>اليوم</th><th>عدد الفواتير</th><th>الإجمالي</th></tr></thead>
-                  <tbody id="dailyTrendTableBody">
-                    <tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>
-                  </tbody>
-                </table>
-              </div>
+              <div id="dailyTrendSmartTable"></div>
             </div>
 
             <div id="salesReportDetail-topproducts" class="report-detail" style="display:none;">
@@ -3122,14 +3169,7 @@ a { color: inherit; }
                   <button class="bo-icon-btn" id="exportCategoryReportBtn">تصدير إكسل</button>
                 </div>
               </div>
-              <div class="bo-table-wrap">
-                <table class="bo-table">
-                  <thead><tr><th>الفئة</th><th>الكمية المباعة</th><th>الإيراد</th><th>النسبة من المبيعات</th></tr></thead>
-                  <tbody id="categoryReportTableBody">
-                    <tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>
-                  </tbody>
-                </table>
-              </div>
+              <div id="categoryReportSmartTable"></div>
             </div>
           </div>
         </div>
@@ -6089,6 +6129,27 @@ a { color: inherit; }
           </form>
         </div>
 
+        <!-- قسم الطاولات والكراسي (شاشة مستقلة، بتغطي كل الفروع) -->
+        <div id="bo-section-pos-tables" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title" id="posTablesSectionTitle">الطاولات والكراسي</div>
+            <div class="bo-section-actions">
+              <button class="bo-add-btn" id="addPosTableBtn">+ إضافة</button>
+            </div>
+          </div>
+          <div class="report-filters" style="margin-bottom:14px;">
+            <div class="field"><label>الفرع</label><select id="posTablesBranchFilter"><option value="">كل الفروع</option></select></div>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>الاسم/الرقم</th><th>الفرع</th><th>السعة (عدد الأشخاص)</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="posTablesTableBody">
+                <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- قسم إعدادات الطباعة -->
         <div id="bo-section-print-settings" style="display:none;">
           <div class="bo-section-header">
@@ -8057,6 +8118,19 @@ a { color: inherit; }
           <input type="checkbox" id="businessTypeUsesMultipleUnits" style="width:auto;"> يستخدم وحدات بيع متعددة (كرتونة/قطعة) زي مخازن الجملة
         </label>
       </div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="businessTypeUsesSeatingUnits" style="width:auto;"> يستخدم وحدات جلوس (طاولات للمطاعم، كراسي للكوافير...إلخ)
+        </label>
+      </div>
+      <div class="field field-full" id="businessTypeSeatingLabelWrap" style="display:none;">
+        <label>مسمّى وحدة الجلوس بالمفرد (مثال: طاولة، كرسي)</label>
+        <input type="text" id="businessTypeSeatingLabel" placeholder="طاولة">
+      </div>
+      <div class="field field-full" id="businessTypeSeatingLabelPluralWrap" style="display:none;">
+        <label>مسمّى وحدة الجلوس بالجمع (مثال: طاولات، كراسي)</label>
+        <input type="text" id="businessTypeSeatingLabelPlural" placeholder="طاولات">
+      </div>
 
       <div class="ci-section-subtitle">قوالب أصناف سريعة</div>
       <div class="field field-full">
@@ -9056,6 +9130,31 @@ a { color: inherit; }
       <button type="button" class="modal-cancel-btn" id="cancelMonthlySheetBtn">إلغاء</button>
       <button type="button" class="submit-btn" id="generateMonthlySheetBtn">معاينة وطباعة</button>
     </div>
+  </div>
+</div>
+
+<!-- Modal: إضافة/تعديل طاولة أو كرسي -->
+<div class="modal-overlay" id="posTableModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="posTableModalTitle">إضافة</div>
+    <form id="posTableForm">
+      <input type="hidden" id="posTableId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>الفرع</label><select id="posTableBranch" required></select></div>
+        <div class="field field-full"><label>الاسم/الرقم</label><input type="text" id="posTableName" required placeholder="مثال: طاولة 1"></div>
+        <div class="field"><label>السعة (عدد الأشخاص، اختياري)</label><input type="number" id="posTableCapacity" min="1" step="1"></div>
+        <div class="field field-full">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="posTableActive" checked style="width:auto;"> مفعّلة
+          </label>
+        </div>
+      </div>
+      <div class="error-msg" id="posTableModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelPosTableBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="savePosTableBtn">حفظ</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -10922,6 +11021,10 @@ let allCategories = [];
 let activeCategory = 'all';
 let cart = [];
 let heldOrders = JSON.parse(localStorage.getItem('pos_held_orders') || '[]');
+// ---- حالة الطاولة/الكرسي النشط (لو الفرع بيستخدم وحدات جلوس) ----
+let activeTableId = null;
+let activeTableOrderId = null; // id سجل sale_orders (draft) المرتبط بالطاولة الحالية، لو موجود
+let activeTableName = null;
 let splitPaymentLines = []; // [{ method, amount }] — لدفع الفاتورة بأكثر من طريقة دفع فى نفس العملية
 let posInitialized = false;
 
@@ -11650,6 +11753,108 @@ function bindNotifEvents() {
 }
 let notifEventsBound = false;
 
+// ---- شاشة الطاولات/الكراسي (لو الفرع بيستخدم وحدات جلوس) ----
+function branchUsesSeatingUnits() {
+  const bt = getCurrentBranchBusinessType();
+  return !!bt?.uses_seating_units;
+}
+
+function seatingUnitLabel() {
+  const bt = getCurrentBranchBusinessType();
+  return bt?.settings?.seating_unit_label || 'طاولة';
+}
+
+function seatingUnitLabelPlural() {
+  const bt = getCurrentBranchBusinessType();
+  return bt?.settings?.seating_unit_label_plural || (bt?.settings?.seating_unit_label ? bt.settings.seating_unit_label : 'طاولات');
+}
+
+async function showPosTablesFloorView() {
+  activeTableId = null;
+  activeTableOrderId = null;
+  document.getElementById('posMainView').style.display = 'none';
+  document.getElementById('posTablesFloorView').style.display = 'block';
+  document.getElementById('posTablesFloorTitle').textContent = seatingUnitLabelPlural() + ' الفرع';
+  const grid = document.getElementById('posTablesFloorGrid');
+  grid.innerHTML = '<div class="empty-state">جاري التحميل...</div>';
+  try {
+    const [{ data: tables, error: tErr }, { data: openOrders, error: oErr }] = await Promise.all([
+      supabaseClient.from('pos_tables').select('*').eq('branch_id', currentProfile.branch_id).eq('is_active', true).order('sort_order').order('name'),
+      supabaseClient.from('sale_orders').select('id, table_id, total').eq('branch_id', currentProfile.branch_id).eq('status', 'draft').not('table_id', 'is', null),
+    ]);
+    if (tErr) throw tErr; if (oErr) throw oErr;
+    const orderByTable = {};
+    (openOrders || []).forEach(o => { orderByTable[o.table_id] = o; });
+    if ((tables || []).length === 0) {
+      grid.innerHTML = `<div class="empty-state">مفيش ${escapeHtml(seatingUnitLabelPlural())} مضافة — أضفها من شاشة "${escapeHtml(seatingUnitLabelPlural())}" في لوحة التحكم</div>`;
+      return;
+    }
+    grid.innerHTML = '';
+    (tables || []).forEach(t => {
+      const openOrder = orderByTable[t.id];
+      const card = document.createElement('div');
+      card.className = 'pos-table-card ' + (openOrder ? 'occupied' : 'available');
+      card.innerHTML = `
+        <div class="pt-name">${escapeHtml(t.name)}</div>
+        ${t.capacity ? `<div class="pt-capacity">${t.capacity} أشخاص</div>` : ''}
+        ${openOrder ? `<div class="pt-total">${Number(openOrder.total).toFixed(2)}</div>` : ''}
+        <div class="pt-status">${openOrder ? 'مشغولة' : 'فاضية'}</div>`;
+      card.addEventListener('click', () => openPosTableForOrder(t, openOrder || null));
+      grid.appendChild(card);
+    });
+  } catch (err) {
+    console.error(err);
+    grid.innerHTML = '<div class="empty-state">تعذر تحميل الطاولات</div>';
+  }
+}
+
+async function openPosTableForOrder(table, existingOrder) {
+  activeTableId = table.id;
+  activeTableOrderId = null;
+  activeTableName = table.name;
+  cart = [];
+  if (existingOrder) {
+    try {
+      const { data: items, error } = await supabaseClient
+        .from('sale_order_items')
+        .select('*')
+        .eq('sale_order_id', existingOrder.id);
+      if (error) throw error;
+      cart = (items || []).map(it => {
+        const product = boProducts.find(p => p.id === it.product_id);
+        const unit = it.product_unit_id ? product?.product_units?.find(u => u.id === it.product_unit_id) : null;
+        return {
+          product, quantity: Number(it.quantity), unitPrice: Number(it.unit_price),
+          productUnitId: it.product_unit_id || null,
+          unitLabel: unit?.unit_types?.name || '', factor: unit ? (Number(unit.factor_to_base) || 1) : 1,
+          basePrice: product ? resolveProductPrice(product) : Number(it.unit_price),
+          modifiers: [], modifiersKey: null, overridePrice: null,
+        };
+      }).filter(l => l.product);
+      activeTableOrderId = existingOrder.id;
+    } catch (err) {
+      console.error(err);
+      showToast('تعذر تحميل طلبية الطاولة المحفوظة', true);
+    }
+  }
+  document.getElementById('posTablesFloorView').style.display = 'none';
+  document.getElementById('posMainView').style.display = 'grid';
+  document.getElementById('backToTablesBtn').style.display = 'flex';
+  document.getElementById('posTablesNavBtn').style.display = 'none';
+  document.getElementById('backToTablesLabel').textContent = `رجوع لـ${seatingUnitLabelPlural()} الفرع — ${table.name}`;
+  renderCart();
+}
+
+// بترجع لشاشة الطاولات — لو فيه صنف في السلة بتحفظه أول كطلبية مؤقتة
+// (draft) قبل ما ترجع، عشان التقدّم ميضيعش
+async function backToPosTablesFloor() {
+  if (cart.length > 0 && activeTableId) {
+    await saveSaleOrder({ silentReturn: true });
+  } else {
+    showPosTablesFloorView();
+  }
+}
+
 async function enterPos() {
   showView('pos');
   if (!posInitialized) {
@@ -11681,6 +11886,22 @@ async function enterPos() {
   updateShiftBadge();
   if (!currentShift && appIsOnline) openOpenShiftModal(true);
   else if (!currentShift) showToast('لا توجد وردية مفتوحة محفوظة محليًا — يجب الاتصال بالإنترنت وفتح وردية قبل البيع', true);
+
+  // بنحمّل الفروع وأنواع الأنشطة هنا لأنها أصلًا بتتحمّل في لوحة التحكم بس،
+  // ومحتاجينها في الكاشير عشان نعرف هل الفرع بيستخدم طاولات/كراسي
+  if (appIsOnline) {
+    try { await Promise.all([loadBoBranches(), loadBoBusinessTypes()]); } catch (err) { console.error(err); }
+  }
+  // شاشة الطاولات مش شاشة دخول إجبارية — أوردر التيك أواي/الدليفري ميحتاجش
+  // طاولة أصلًا، فالكاشير بيدخل على شاشة المنتجات العادية زي أي فرع تاني،
+  // وله زرار في الأعلى يفتح شاشة الطاولات وقت ما يحتاجها فعلًا
+  document.getElementById('posTablesFloorView').style.display = 'none';
+  document.getElementById('posMainView').style.display = 'grid';
+  const tablesNavBtn = document.getElementById('posTablesNavBtn');
+  if (tablesNavBtn) {
+    tablesNavBtn.style.display = branchUsesSeatingUnits() ? 'flex' : 'none';
+    tablesNavBtn.querySelector('.return-topbar-label').textContent = seatingUnitLabelPlural();
+  }
 
   if (appIsOnline && pendingCount() > 0) processOutboxQueue();
 }
@@ -11749,6 +11970,16 @@ function startClock() {
 function bindPosEvents() {
   posEls.logoutBtn.addEventListener('click', doLogout);
   posEls.myAttendanceBtn.addEventListener('click', openMyAttendanceModal);
+  document.getElementById('posTablesNavBtn').addEventListener('click', () => {
+    if (activeTableId) { backToPosTablesFloor(); return; }
+    if (cart.length > 0) {
+      if (!confirm(`في صنف في السلة الحالية (طلب من غير طاولة). لو رحت لشاشة ${seatingUnitLabelPlural()} هيتفقد. تكمل؟`)) return;
+      cart = []; renderCart();
+    }
+    showPosTablesFloorView();
+  });
+  document.getElementById('backToTablesBtn').addEventListener('click', backToPosTablesFloor);
+  document.getElementById('refreshPosTablesFloorBtn').addEventListener('click', showPosTablesFloorView);
   document.querySelectorAll('#myAttendanceTabs [data-att-tab]').forEach(btn => {
     btn.addEventListener('click', () => switchMyAttendanceTab(btn.dataset.attTab));
   });
@@ -13171,6 +13402,155 @@ function initBranchSettingsSection() {
   document.getElementById('branchSettingsForm').addEventListener('submit', saveBranchSettings);
 }
 
+// ---- شاشة "الطاولات والكراسي" (مستقلة، بتغطي كل الفروع اللي نوع نشاطها بيستخدم وحدات جلوس) ----
+let boPosTables = [];
+let posTablesSectionLoadedOnce = false;
+
+function getCurrentBranchBusinessType() {
+  const branch = boBranchesList.find(b => b.id === currentProfile.branch_id);
+  return boBusinessTypes.find(bt => bt.id === branch?.business_type_id) || null;
+}
+
+function businessTypeForBranch(branchId) {
+  const branch = boBranchesList.find(b => b.id === branchId);
+  return boBusinessTypes.find(bt => bt.id === branch?.business_type_id) || null;
+}
+
+// بترجع لستة الفروع اللي نوع نشاطها التجاري بيستخدم وحدات جلوس بس
+function branchesUsingSeatingUnits() {
+  return boBranchesList.filter(b => businessTypeForBranch(b.id)?.uses_seating_units);
+}
+
+async function updatePosTablesNavVisibility() {
+  if (boBranchesList.length === 0) await loadBoBranches();
+  if (boBusinessTypes.length === 0) await loadBoBusinessTypes();
+  const navItem = document.getElementById('posTablesNavItem');
+  if (navItem) navItem.style.display = branchesUsingSeatingUnits().length > 0 ? '' : 'none';
+}
+
+async function initPosTablesSection() {
+  if (boBranchesList.length === 0) await loadBoBranches();
+  if (boBusinessTypes.length === 0) await loadBoBusinessTypes();
+  const eligibleBranches = branchesUsingSeatingUnits();
+  const filterSel = document.getElementById('posTablesBranchFilter');
+  filterSel.innerHTML = '<option value="">كل الفروع</option>' +
+    eligibleBranches.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+  if (!posTablesSectionLoadedOnce) {
+    filterSel.addEventListener('change', () => { loadBoPosTables().then(renderPosTablesTable); });
+    posTablesSectionLoadedOnce = true;
+  }
+  await loadBoPosTables();
+  renderPosTablesTable();
+}
+
+async function loadBoPosTables() {
+  const branchId = document.getElementById('posTablesBranchFilter').value;
+  const eligibleBranchIds = branchesUsingSeatingUnits().map(b => b.id);
+  let query = supabaseClient.from('pos_tables').select('*, branches(name)').order('sort_order').order('name');
+  query = branchId ? query.eq('branch_id', branchId) : query.in('branch_id', eligibleBranchIds.length > 0 ? eligibleBranchIds : ['00000000-0000-0000-0000-000000000000']);
+  const { data, error } = await query;
+  if (error) { console.error(error); showToast('تعذر تحميل الطاولات', true); return; }
+  boPosTables = data || [];
+}
+
+function renderPosTablesTable() {
+  const tbody = document.getElementById('posTablesTableBody');
+  if (boPosTables.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">لا توجد وحدات مضافة بعد</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  boPosTables.forEach(t => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(t.name)}</td>
+      <td>${escapeHtml(t.branches?.name || '—')}</td>
+      <td class="num">${t.capacity || '—'}</td>
+      <td><span class="bo-badge ${t.is_active ? 'active' : 'inactive'}">${t.is_active ? 'مفعّلة' : 'متوقفة'}</span></td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openPosTableModal(t));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deletePosTable(t));
+    tbody.appendChild(tr);
+  });
+}
+
+function openPosTableModal(table) {
+  const eligibleBranches = branchesUsingSeatingUnits();
+  const branchSel = document.getElementById('posTableBranch');
+  branchSel.innerHTML = eligibleBranches.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+  if (eligibleBranches.length === 0) {
+    showToast('مفيش فروع نوع نشاطها بيستخدم وحدات جلوس — فعّلها الأول من "أنواع الأنشطة التجارية"', true);
+    return;
+  }
+  document.getElementById('posTableModalTitle').textContent = table ? 'تعديل' : 'إضافة';
+  document.getElementById('posTableId').value = table ? table.id : '';
+  branchSel.value = table ? table.branch_id : (document.getElementById('posTablesBranchFilter').value || eligibleBranches[0].id);
+  document.getElementById('posTableName').value = table ? table.name : '';
+  document.getElementById('posTableCapacity').value = table?.capacity || '';
+  document.getElementById('posTableActive').checked = table ? table.is_active : true;
+  document.getElementById('posTableModalError').classList.remove('show');
+  document.getElementById('posTableModalOverlay').classList.add('show');
+}
+
+function closePosTableModal() {
+  document.getElementById('posTableModalOverlay').classList.remove('show');
+}
+
+async function savePosTable(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('posTableModalError');
+  errEl.classList.remove('show');
+  const id = document.getElementById('posTableId').value;
+  const payload = {
+    branch_id: document.getElementById('posTableBranch').value,
+    name: document.getElementById('posTableName').value.trim(),
+    capacity: document.getElementById('posTableCapacity').value ? Number(document.getElementById('posTableCapacity').value) : null,
+    is_active: document.getElementById('posTableActive').checked,
+  };
+  const btn = document.getElementById('savePosTableBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  try {
+    if (!payload.branch_id) throw new Error('اختر الفرع');
+    if (!payload.name) throw new Error('اكتب اسم/رقم الوحدة');
+    if (id) {
+      const { error } = await supabaseClient.from('pos_tables').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('pos_tables').insert(payload);
+      if (error) throw error;
+    }
+    showToast('تم الحفظ بنجاح');
+    closePosTableModal();
+    await loadBoPosTables();
+    renderPosTablesTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ';
+  }
+}
+
+async function deletePosTable(table) {
+  if (!confirm(`هل تريد حذف "${table.name}"؟ لو مرتبطة بطلبيات سابقة سيتم إيقافها بدل الحذف.`)) return;
+  const { error } = await supabaseClient.from('pos_tables').delete().eq('id', table.id);
+  if (error) {
+    const { error: deactivateErr } = await supabaseClient.from('pos_tables').update({ is_active: false }).eq('id', table.id);
+    if (deactivateErr) { console.error(deactivateErr); showToast('تعذر حذف أو إيقاف الوحدة', true); return; }
+    showToast('الوحدة مرتبطة بطلبيات سابقة، تم إيقافها بدل الحذف');
+  } else {
+    showToast('تم الحذف بنجاح');
+  }
+  await loadBoPosTables();
+  renderPosTablesTable();
+}
+
 async function saveBranchSettings(e) {
   e.preventDefault();
   if (!currentProfile?.branch_id) return;
@@ -13960,6 +14340,17 @@ async function doCheckout() {
 
     showReceipt(receiptData);
 
+    // لو الفاتورة دي كانت لطاولة/كرسي، نمسح الطلبية المؤقتة (draft) اللي
+    // كانت شايلة أوردر الطاولة — الفاتورة الحقيقية اتسجلت خلاص في sales،
+    // ومسح الـdraft ده هو اللي بيخلي الطاولة تفضى تلقائيًا في شاشة الطاولات
+    if (activeTableOrderId) {
+      const closingTableOrderId = activeTableOrderId;
+      supabaseClient.from('sale_orders').delete().eq('id', closingTableOrderId)
+        .then(({ error }) => { if (error) console.error('تعذر تنظيف طلبية الطاولة المؤقتة', error); });
+    }
+    const wasTableCheckout = !!activeTableId;
+    activeTableId = null; activeTableOrderId = null; activeTableName = null;
+
     cart = []; posEls.discountInput.value = 0; setCustomerSelection('', { silent: true });
     delete posEls.paidInput.dataset.touched; posEls.paidInput.value = '';
     posEls.paymentMethodSelect.value = 'cash';
@@ -13977,6 +14368,11 @@ async function doCheckout() {
     closeMobileCart();
     await loadStockBalances();
     renderProducts();
+    if (wasTableCheckout) {
+      document.getElementById('backToTablesBtn').style.display = 'none';
+      document.getElementById('posTablesNavBtn').style.display = 'flex';
+      showPosTablesFloorView();
+    }
   } catch (err) {
     console.error(err);
     showToast(err.message || 'حدث خطأ أثناء إتمام عملية البيع، يرجى المحاولة مرة أخرى', true);
@@ -13995,7 +14391,8 @@ async function doCheckout() {
 // المستخدم يفتح الطلبية من شاشة "طلبات البيع" في لوحة التحكم ويضغط
 // "تأكيد وتحويل لفاتورة بيع".
 // ============================================================
-async function saveSaleOrder() {
+async function saveSaleOrder(opts) {
+  const silentReturn = opts?.silentReturn;
   if (cart.length === 0) return;
   if (currentProfile.roles?.permissions?.read_only === true) {
     showToast('هذا الدور "قراءة فقط" ولا يمكنه حفظ طلبيات بيع', true);
@@ -14006,37 +14403,56 @@ async function saveSaleOrder() {
     return;
   }
   const btn = posEls.saveSaleOrderBtn;
-  if (btn) { btn.disabled = true; btn.textContent = 'جاري الحفظ...'; }
+  if (btn && !silentReturn) { btn.disabled = true; btn.textContent = 'جاري الحفظ...'; }
   try {
     const subtotal = calcSubtotal();
     const discount = Number(posEls.discountInput.value) || 0;
-    const maxDiscountCheck = checkMaxDiscountAllowed(subtotal, discount);
-    if (!maxDiscountCheck.ok) {
-      const maxPct = getMaxDiscountPercent();
-      const maxAllowed = subtotal * (maxPct / 100);
-      const authResult = await requestDiscountAuthorization(subtotal, discount, maxPct, maxAllowed);
-      if (!authResult.authorized) {
-        throw new Error('لم يتم حفظ الطلبية — الخصم يتجاوز الحد المسموح ولم يتم تفويضه من مدير');
+    if (!silentReturn) {
+      const maxDiscountCheck = checkMaxDiscountAllowed(subtotal, discount);
+      if (!maxDiscountCheck.ok) {
+        const maxPct = getMaxDiscountPercent();
+        const maxAllowed = subtotal * (maxPct / 100);
+        const authResult = await requestDiscountAuthorization(subtotal, discount, maxPct, maxAllowed);
+        if (!authResult.authorized) {
+          throw new Error('لم يتم حفظ الطلبية — الخصم يتجاوز الحد المسموح ولم يتم تفويضه من مدير');
+        }
+        showToast(`تم تفويض تجاوز الخصم بواسطة "${authResult.authorizerName || 'مدير'}"`);
       }
-      showToast(`تم تفويض تجاوز الخصم بواسطة "${authResult.authorizerName || 'مدير'}"`);
     }
     const tax = calcTaxTotal();
     const total = calcTotal();
     const customerId = posEls.customerSelect.value || null;
-    if (branchSettings.require_customer_pos && !customerId) {
+    if (branchSettings.require_customer_pos && !customerId && !activeTableId) {
       throw new Error('من إعدادات الفرع: يجب تحديد العميل قبل إتمام البيع');
     }
     const paymentMethod = posEls.splitToggle.checked ? 'mixed' : (posEls.paymentMethodSelect.value || 'cash');
     const saleWarehouseId = posSelectedWarehouseId() || await getMainWarehouseId(currentProfile.branch_id);
 
-    const { data: order, error: orderError } = await supabaseClient
-      .from('sale_orders')
-      .insert({
-        branch_id: currentProfile.branch_id, user_id: currentProfile.id, customer_id: customerId,
-        status: 'draft', subtotal, discount, tax, total, payment_method: paymentMethod,
-        warehouse_id: saleWarehouseId, channel_id: posEls.salesChannelSelect?.value || null,
-      }).select().single();
-    if (orderError) throw orderError;
+    let order;
+    if (activeTableOrderId) {
+      // طلبية الطاولة موجودة بالفعل — بنحدّثها بدل ما ننشئ وحدة جديدة،
+      // وبنمسح سطورها القديمة ونعيد إدراجها بالسلة الحالية
+      const { data: updated, error: updateError } = await supabaseClient
+        .from('sale_orders')
+        .update({ customer_id: customerId, subtotal, discount, tax, total, payment_method: paymentMethod, warehouse_id: saleWarehouseId })
+        .eq('id', activeTableOrderId).select().single();
+      if (updateError) throw updateError;
+      order = updated;
+      const { error: delErr } = await supabaseClient.from('sale_order_items').delete().eq('sale_order_id', order.id);
+      if (delErr) throw delErr;
+    } else {
+      const { data: inserted, error: orderError } = await supabaseClient
+        .from('sale_orders')
+        .insert({
+          branch_id: currentProfile.branch_id, user_id: currentProfile.id, customer_id: customerId,
+          status: 'draft', subtotal, discount, tax, total, payment_method: paymentMethod,
+          warehouse_id: saleWarehouseId, channel_id: posEls.salesChannelSelect?.value || null,
+          table_id: activeTableId || null,
+        }).select().single();
+      if (orderError) throw orderError;
+      order = inserted;
+      if (activeTableId) activeTableOrderId = order.id;
+    }
 
     const orderItems = cart.map(l => ({
       sale_order_id: order.id, product_id: l.product.id, product_unit_id: l.productUnitId || null,
@@ -14046,7 +14462,11 @@ async function saveSaleOrder() {
     const { error: itemsError } = await supabaseClient.from('sale_order_items').insert(orderItems);
     if (itemsError) throw itemsError;
 
-    showToast(`تم حفظ الطلبية رقم ${order.order_number} — بدون أي تأثير على المخزون أو حساب العميل حتى تأكيدها من "طلبات البيع"`);
+    if (!silentReturn) {
+      showToast(activeTableId
+        ? `تم حفظ طلبية ${seatingUnitLabel()} "${activeTableName || ''}"`
+        : `تم حفظ الطلبية رقم ${order.order_number} — بدون أي تأثير على المخزون أو حساب العميل حتى تأكيدها من "طلبات البيع"`);
+    }
 
     cart = []; posEls.discountInput.value = 0; setCustomerSelection('', { silent: true });
     delete posEls.paidInput.dataset.touched; posEls.paidInput.value = '';
@@ -14063,11 +14483,18 @@ async function saveSaleOrder() {
     resetAutoDiscountsSelection();
     renderCart();
     closeMobileCart();
+
+    if (activeTableId) {
+      activeTableId = null; activeTableOrderId = null; activeTableName = null;
+      document.getElementById('backToTablesBtn').style.display = 'none';
+      document.getElementById('posTablesNavBtn').style.display = 'flex';
+      showPosTablesFloorView();
+    }
   } catch (err) {
     console.error(err);
     showToast(err.message || 'حدث خطأ أثناء حفظ الطلبية', true);
   } finally {
-    if (btn) { btn.disabled = cart.length === 0; btn.textContent = 'حفظ كطلبية بيع (بدون تأثير على الأرصدة)'; }
+    if (btn && !silentReturn) { btn.disabled = cart.length === 0; btn.textContent = 'حفظ كطلبية بيع (بدون تأثير على الأرصدة)'; }
   }
 }
 
@@ -14922,6 +15349,7 @@ async function enterBackoffice() {
   renderRecipesTable();
   renderEmployeesTable();
   renderExpenseItemsTable();
+  updatePosTablesNavVisibility();
   renderUnitTypesTable();
   renderTaxRatesTable();
   renderPriceTiersTable();
@@ -14956,7 +15384,7 @@ async function enterBackoffice() {
 const boAllSections = ['dashboard','products','categories','unit-types','tax-rates','price-tiers','quick-discounts','customer-types',
   'sales-list','sale-orders','delivery','delivery-zones','delivery-companies','sales-channels','driver-settlements','customers','suppliers','supplier-prices','payments','purchase-orders','purchases','purchase-returns','sale-returns','purchase-requisitions',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
-  'soon','company-info','permissions','users','branches','business-types','pos-devices','branch-settings','print-settings','stock','stocktake','product-batches','product-serials','backup','reset-data','employees','attendance','leave-requests','expense-items','expenses','salaries','sales-commissions','treasuries','capital','fixed-assets','promotions','coupons','modifier-groups','recipes'];
+  'soon','company-info','permissions','users','branches','business-types','pos-devices','branch-settings','pos-tables','print-settings','stock','stocktake','product-batches','product-serials','backup','reset-data','employees','attendance','leave-requests','expense-items','expenses','salaries','sales-commissions','treasuries','capital','fixed-assets','promotions','coupons','modifier-groups','recipes'];
 
 const boNavGroups = [
   { toggle: 'stockNavToggle', group: 'stockNavGroup', sections: ['products','categories','unit-types','tax-rates','price-tiers','quick-discounts','modifier-groups','recipes','stock','stocktake','product-batches','product-serials'] },
@@ -14966,7 +15394,7 @@ const boNavGroups = [
   { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
   { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['treasuries','payments','expense-items','expenses','capital','fixed-assets'] },
   { toggle: 'hrNavToggle', group: 'hrNavGroup', sections: ['employees','attendance','leave-requests','salaries','sales-commissions'] },
-  { toggle: 'adminNavToggle', group: 'adminNavGroup', sections: ['company-info','permissions','users','branches','business-types','pos-devices','branch-settings','print-settings','backup','reset-data'] }
+  { toggle: 'adminNavToggle', group: 'adminNavGroup', sections: ['company-info','permissions','users','branches','business-types','pos-devices','branch-settings','pos-tables','print-settings','backup','reset-data'] }
 ];
 
 // كل قسم في القائمة الجانبية بيتبع لأنهي مفتاح صلاحية (roles.permissions)
@@ -14986,7 +15414,7 @@ const SECTION_PERMISSION_MAP = {
   'employees': 'hr', 'attendance': 'hr', 'leave-requests': 'hr', 'salaries': 'hr', 'sales-commissions': 'hr',
   'company-info': 'admin', 'permissions': 'admin', 'users': 'admin', 'branches': 'admin',
   'business-types': 'admin', 'pos-devices': 'admin',
-  'branch-settings': 'admin', 'print-settings': 'admin', 'backup': 'admin', 'reset-data': 'admin',
+  'branch-settings': 'admin', 'pos-tables': 'admin', 'print-settings': 'admin', 'backup': 'admin', 'reset-data': 'admin',
   'soon': null
 };
 
@@ -14994,6 +15422,7 @@ const SECTION_PERMISSION_MAP = {
 // الخمسة، عشان نقدر نبني منها صلاحيات تفصيلية لكل تقرير على حدة.
 const REPORT_TABS = {
   'reports-sales': { grid: 'salesReportTypeGrid', title: 'تقارير المبيعات', items: [
+    { key: 'details', title: 'تفاصيل المبيعات' },
     { key: 'summary', title: 'إجمالي المبيعات والأرباح' },
     { key: 'trend', title: 'اتجاه المبيعات اليومي' },
     { key: 'category', title: 'المبيعات حسب الفئة' },
@@ -15077,7 +15506,7 @@ const SCREEN_LABELS = {
   'employees': 'بيانات الموظفين', 'attendance': 'الحضور والانصراف', 'leave-requests': 'طلبات الإجازات', 'salaries': 'الرواتب',
   'company-info': 'بيانات الشركة', 'permissions': 'الصلاحية الأمنية', 'users': 'إدارة المستخدمين',
   'branches': 'الفروع', 'business-types': 'أنواع الأنشطة التجارية', 'pos-devices': 'أجهزة نقاط البيع',
-  'branch-settings': 'إعدادات الفرع', 'print-settings': 'إعدادات الطباعة',
+  'branch-settings': 'إعدادات الفرع', 'pos-tables': 'الطاولات والكراسي', 'print-settings': 'إعدادات الطباعة',
   'backup': 'نسخة احتياطية', 'reset-data': 'تهيئة البيانات', 'capital': 'رأس المال وحقوق الملكية'
 };
 
@@ -15593,7 +16022,7 @@ const ADD_BUTTON_MAP = {
   'treasuries': 'addTreasuryBtn', 'expense-items': 'addExpenseItemBtn', 'expenses': 'addExpenseBtn',
   'fixed-assets': 'addFixedAssetBtn', 'employees': 'addEmployeeBtn', 'attendance': 'addAttendanceBtn', 'leave-requests': 'addLeaveRequestBtn', 'salaries': 'addSalaryBtn',
   'users': 'addUserBtn', 'branches': 'addBranchBtn', 'permissions': 'addPermissionBtn',
-  'business-types': 'addBusinessTypeBtn', 'pos-devices': 'addPosDeviceBtn'
+  'business-types': 'addBusinessTypeBtn', 'pos-devices': 'addPosDeviceBtn', 'pos-tables': 'addPosTableBtn'
 };
 
 // صلاحية دقيقة على مستوى عملية واحدة (إضافة/تعديل/حذف) جوه شاشة معينة.
@@ -15767,6 +16196,7 @@ function activateBoSection(section, btn) {
   if (section === 'reset-data' && !resetDataLoadedOnce) { initResetDataSection(); resetDataLoadedOnce = true; }
   if (section === 'company-info' && !companyInfoLoadedOnce) { initCompanyInfoSection(); companyInfoLoadedOnce = true; }
   if (section === 'branch-settings' && !branchSettingsLoadedOnce) { initBranchSettingsSection(); initLoyaltySettingsSection(); branchSettingsLoadedOnce = true; }
+  if (section === 'pos-tables') { initPosTablesSection(); }
   if (section === 'print-settings' && !printSettingsLoadedOnce) { initPrintSettingsSection(); printSettingsLoadedOnce = true; }
   if (section === 'permissions') { renderPermissionsTable(); }
   if (section === 'reports-sales' && !reportsLoadedOnce) { populateReportBranchFilter(); runReport(); reportsLoadedOnce = true; }
@@ -17326,6 +17756,12 @@ function bindBackofficeEvents() {
 
   // ---- Business types ----
   document.getElementById('addBusinessTypeBtn').addEventListener('click', () => openBusinessTypeModal(null));
+  document.getElementById('addPosTableBtn').addEventListener('click', () => openPosTableModal(null));
+  document.getElementById('cancelPosTableBtn').addEventListener('click', closePosTableModal);
+  document.getElementById('posTableModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'posTableModalOverlay') closePosTableModal();
+  });
+  document.getElementById('posTableForm').addEventListener('submit', savePosTable);
   document.getElementById('businessTypesSearchInput').addEventListener('input', (e) => {
     businessTypesSearchTerm = e.target.value;
     renderBusinessTypesTable();
@@ -17335,6 +17771,10 @@ function bindBackofficeEvents() {
     if (e.target.id === 'businessTypeModalOverlay') closeBusinessTypeModal();
   });
   document.getElementById('businessTypeForm').addEventListener('submit', saveBusinessType);
+  document.getElementById('businessTypeUsesSeatingUnits').addEventListener('change', (e) => {
+    document.getElementById('businessTypeSeatingLabelWrap').style.display = e.target.checked ? '' : 'none';
+    document.getElementById('businessTypeSeatingLabelPluralWrap').style.display = e.target.checked ? '' : 'none';
+  });
 
   // ---- POS devices ----
   document.getElementById('addPosDeviceBtn').addEventListener('click', () => openPosDeviceModal(null));
@@ -17767,6 +18207,7 @@ function bindBackofficeEvents() {
   });
   document.getElementById('exportCashierReportBtn').addEventListener('click', () => exportCashierReportToExcel());
   document.getElementById('exportTopCustomersReportBtn').addEventListener('click', () => exportTopCustomersReportToExcel());
+  document.getElementById('exportSalesDetailsReportBtn').addEventListener('click', () => exportSalesDetailsReportToExcel());
   document.getElementById('exportPaymentMethodReportBtn').addEventListener('click', () => exportPaymentMethodReportToExcel());
   document.getElementById('paymentMethodCashierFilter').addEventListener('change', (e) => renderPaymentMethodReport(e.target.value || ''));
   document.getElementById('exportMixedPaymentReportBtn').addEventListener('click', () => exportMixedPaymentReportToExcel());
@@ -24424,6 +24865,11 @@ function openBusinessTypeModal(item) {
   document.getElementById('businessTypeUsesRecipes').checked = item ? !!item.uses_recipes : false;
   document.getElementById('businessTypeUsesModifiers').checked = item ? !!item.uses_modifiers : false;
   document.getElementById('businessTypeUsesMultipleUnits').checked = item ? !!item.uses_multiple_units : false;
+  document.getElementById('businessTypeUsesSeatingUnits').checked = item ? !!item.uses_seating_units : false;
+  document.getElementById('businessTypeSeatingLabel').value = item?.settings?.seating_unit_label || '';
+  document.getElementById('businessTypeSeatingLabelPlural').value = item?.settings?.seating_unit_label_plural || '';
+  document.getElementById('businessTypeSeatingLabelWrap').style.display = item?.uses_seating_units ? '' : 'none';
+  document.getElementById('businessTypeSeatingLabelPluralWrap').style.display = item?.uses_seating_units ? '' : 'none';
   document.getElementById('businessTypeActive').checked = item ? item.is_active : true;
   currentBusinessTypeTemplates = (item?.settings?.templates || []).map(t => ({ ...t }));
   renderBusinessTypeTemplatesList();
@@ -24493,6 +24939,7 @@ async function saveBusinessType(e) {
   const usesRecipes = document.getElementById('businessTypeUsesRecipes').checked;
   const usesModifiers = document.getElementById('businessTypeUsesModifiers').checked;
   const usesMultipleUnits = document.getElementById('businessTypeUsesMultipleUnits').checked;
+  const usesSeatingUnits = document.getElementById('businessTypeUsesSeatingUnits').checked;
 
   const payload = {
     name: document.getElementById('businessTypeName').value.trim(),
@@ -24504,13 +24951,16 @@ async function saveBusinessType(e) {
     uses_recipes: usesRecipes,
     uses_modifiers: usesModifiers,
     uses_multiple_units: usesMultipleUnits,
+    uses_seating_units: usesSeatingUnits,
     is_active: document.getElementById('businessTypeActive').checked,
     settings: {
       default_sell_by: usesWeight ? 'weight' : 'unit',
       ...(usesVariants ? { variant_attributes: ['size', 'color'] } : {}),
       templates: currentBusinessTypeTemplates.filter(t => (t.label || '').trim() !== ''),
       ...(document.getElementById('businessTypeItemNameLabel').value.trim() ? { item_name_label: document.getElementById('businessTypeItemNameLabel').value.trim() } : {}),
-      ...(document.getElementById('businessTypeIcon').value.trim() ? { icon: document.getElementById('businessTypeIcon').value.trim() } : {})
+      ...(document.getElementById('businessTypeIcon').value.trim() ? { icon: document.getElementById('businessTypeIcon').value.trim() } : {}),
+      ...(document.getElementById('businessTypeSeatingLabel').value.trim() ? { seating_unit_label: document.getElementById('businessTypeSeatingLabel').value.trim() } : {}),
+      ...(document.getElementById('businessTypeSeatingLabelPlural').value.trim() ? { seating_unit_label_plural: document.getElementById('businessTypeSeatingLabelPlural').value.trim() } : {})
     }
   };
 
@@ -32224,6 +32674,51 @@ let lastInvTopMoversRows = [];
 let lastBomCostRows = [];
 let lastCashierReportRows = [];
 let lastTopCustomersReportRows = [];
+let lastSalesDetailsRows = [];
+let salesDetailsSmartTableInstance = null;
+
+const SALES_DETAILS_COLUMNS = [
+  { key: 'dateLabel', label: 'التاريخ', type: 'text' },
+  { key: 'branchName', label: 'الفرع', type: 'text' },
+  { key: 'cashierName', label: 'الكاشير', type: 'text' },
+  { key: 'channelName', label: 'القناة', type: 'text' },
+  { key: 'invoiceLabel', label: 'رقم الفاتورة', type: 'text' },
+  { key: 'subtotal', label: 'المجموع الفرعي', type: 'number', sum: true },
+  { key: 'discount', label: 'الخصم', type: 'number', sum: true },
+  { key: 'tax', label: 'الضريبة', type: 'number', sum: true },
+  { key: 'total', label: 'الإجمالي', type: 'number', sum: true },
+];
+
+const DAILY_TREND_COLUMNS = [
+  { key: 'date', label: 'اليوم', type: 'date', format: v => formatDayLabel(v) },
+  { key: 'count', label: 'عدد الفواتير', type: 'number', sum: true },
+  { key: 'total', label: 'الإجمالي', type: 'number', sum: true },
+];
+
+const CATEGORY_REPORT_COLUMNS = [
+  { key: 'name', label: 'الفئة', type: 'text' },
+  { key: 'quantity', label: 'الكمية المباعة', type: 'number', sum: true },
+  { key: 'revenue', label: 'الإيراد', type: 'number', sum: true },
+  { key: 'percentage', label: 'النسبة من المبيعات', type: 'number', format: v => v.toFixed(1) + '%' },
+];
+
+function renderSalesDetailsReport() {
+  const container = document.getElementById('salesDetailsSmartTable');
+  if (!container) return;
+  salesDetailsSmartTableInstance = createSmartTable(container, SALES_DETAILS_COLUMNS, lastSalesDetailsRows);
+}
+
+function exportSalesDetailsReportToExcel() {
+  if (lastSalesDetailsRows.length === 0) { showToast('لا توجد بيانات لتصديرها', true); return; }
+  const rows = lastSalesDetailsRows.map(r => ({
+    'التاريخ': r.dateLabel, 'الفرع': r.branchName, 'الكاشير': r.cashierName, 'القناة': r.channelName,
+    'رقم الفاتورة': r.invoiceLabel, 'المجموع الفرعي': r.subtotal, 'الخصم': r.discount, 'الضريبة': r.tax, 'الإجمالي': r.total,
+  }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'تفاصيل المبيعات');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `تفاصيل-المبيعات-${dateStr}.xlsx`);
+}
 let lastPaymentMethodReportRows = [];
 let lastDailyTrendReportRows = [];
 let lastBranchReportRows = [];
@@ -32371,6 +32866,191 @@ function renderMixedPaymentReport(sales, salePayments) {
      <td>${escapeHtml(formatMethodBreakdown(row.methodTotals))}</td>
      <td class="num">${row.total.toFixed(2)}</td>`);
   lastMixedPaymentReportRows = rows;
+}
+
+// ==== جدول ذكي عام: ترتيب لكل عمود + بحث لكل عمود + تجميع حسب عمود +
+// صف مجاميع + صفحات — بديل خفيف لتجربة جداول Odoo، مصمم يشتغل على
+// الموبايل (التجميع باختيار من قايمة بدل السحب لعمود الترويسة) ====
+//
+// columns: [{ key, label, type: 'text'|'number'|'date', sum?: bool, format?: fn(value,row) }]
+// rows: مصفوفة كائنات بيانات خام (بدون فورمات)
+function createSmartTable(container, columns, rows) {
+  const state = {
+    sortKey: null, sortDir: 1,
+    filters: {}, // key -> نص البحث
+    groupBy: '',
+    collapsedGroups: new Set(),
+    page: 1, pageSize: 10,
+  };
+
+  function formattedValue(col, row) {
+    const raw = row[col.key];
+    return col.format ? col.format(raw, row) : (raw ?? '');
+  }
+
+  function getFilteredSorted() {
+    let result = rows.filter(row => columns.every(col => {
+      const q = (state.filters[col.key] || '').trim().toLowerCase();
+      if (!q) return true;
+      return String(formattedValue(col, row)).toLowerCase().includes(q);
+    }));
+    if (state.sortKey) {
+      const col = columns.find(c => c.key === state.sortKey);
+      result = result.slice().sort((a, b) => {
+        let av = a[state.sortKey], bv = b[state.sortKey];
+        if (col.type === 'number') { av = Number(av) || 0; bv = Number(bv) || 0; return (av - bv) * state.sortDir; }
+        if (col.type === 'date') { av = new Date(av).getTime() || 0; bv = new Date(bv).getTime() || 0; return (av - bv) * state.sortDir; }
+        return String(av ?? '').localeCompare(String(bv ?? ''), 'ar') * state.sortDir;
+      });
+    }
+    return result;
+  }
+
+  function sumOf(rowsSubset, col) {
+    return rowsSubset.reduce((s, r) => s + (Number(r[col.key]) || 0), 0);
+  }
+
+  function render() {
+    const filtered = getFilteredSorted();
+    const groupCol = columns.find(c => c.key === state.groupBy);
+
+    container.innerHTML = '';
+
+    // شريط الأدوات: تجميع حسب + حجم الصفحة
+    const toolbar = document.createElement('div');
+    toolbar.className = 'smart-table-toolbar';
+    toolbar.innerHTML = `
+      <label>تجميع حسب:
+        <select class="st-groupby-select">
+          <option value="">بدون تجميع</option>
+          ${columns.map(c => `<option value="${c.key}" ${state.groupBy === c.key ? 'selected' : ''}>${escapeHtml(c.label)}</option>`).join('')}
+        </select>
+      </label>
+      ${!groupCol ? `<label>عدد الصفوف: <select class="st-pagesize-select">${[10, 20, 50, 100].map(n => `<option value="${n}" ${state.pageSize === n ? 'selected' : ''}>${n}</option>`).join('')}</select></label>` : ''}
+      <span style="font-size:12.5px; color:var(--ink-soft);">${filtered.length} صف</span>
+    `;
+    container.appendChild(toolbar);
+    toolbar.querySelector('.st-groupby-select').addEventListener('change', (e) => {
+      state.groupBy = e.target.value; state.page = 1; state.collapsedGroups.clear(); render();
+    });
+    const pageSizeSel = toolbar.querySelector('.st-pagesize-select');
+    if (pageSizeSel) pageSizeSel.addEventListener('change', (e) => { state.pageSize = Number(e.target.value); state.page = 1; render(); });
+
+    const wrap = document.createElement('div');
+    wrap.className = 'bo-table-wrap';
+    const table = document.createElement('table');
+    table.className = 'bo-table';
+
+    // رأس الجدول (قابل للترتيب بالنقر)
+    const thead = document.createElement('thead');
+    const headRow = document.createElement('tr');
+    columns.forEach(col => {
+      const th = document.createElement('th');
+      th.className = 'smart-table-th' + (state.sortKey === col.key ? ' st-sorted' : '');
+      const arrow = state.sortKey === col.key ? (state.sortDir === 1 ? '▲' : '▼') : '↕';
+      th.innerHTML = `${escapeHtml(col.label)} <span class="st-sort-arrow">${arrow}</span>`;
+      th.addEventListener('click', () => {
+        if (state.sortKey === col.key) state.sortDir *= -1; else { state.sortKey = col.key; state.sortDir = 1; }
+        render();
+      });
+      headRow.appendChild(th);
+    });
+    thead.appendChild(headRow);
+
+    // صف بحث لكل عمود
+    const filterRow = document.createElement('tr');
+    filterRow.className = 'smart-table-filter-row';
+    columns.forEach(col => {
+      const th = document.createElement('th');
+      th.innerHTML = `<input type="text" placeholder="بحث..." value="${escapeHtml(state.filters[col.key] || '')}">`;
+      th.querySelector('input').addEventListener('input', (e) => {
+        state.filters[col.key] = e.target.value; state.page = 1; render();
+      });
+      filterRow.appendChild(th);
+    });
+    thead.appendChild(filterRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+
+    function renderDataRow(row) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = columns.map(col => `<td class="${col.type === 'number' ? 'num' : ''}">${escapeHtml(String(formattedValue(col, row)))}</td>`).join('');
+      tbody.appendChild(tr);
+    }
+
+    if (groupCol) {
+      // تجميع حسب العمود المختار — كل مجموعة قابلة للطي، وجواها مجموع
+      // الأعمدة الرقمية المعلّمة بـsum:true
+      const groups = {};
+      filtered.forEach(row => {
+        const label = String(formattedValue(groupCol, row));
+        if (!groups[label]) groups[label] = [];
+        groups[label].push(row);
+      });
+      Object.keys(groups).sort((a, b) => a.localeCompare(b, 'ar')).forEach(label => {
+        const groupRows = groups[label];
+        const collapsed = state.collapsedGroups.has(label);
+        const groupTr = document.createElement('tr');
+        groupTr.className = 'smart-table-group-row' + (collapsed ? ' collapsed' : '');
+        const sumsText = columns.filter(c => c.sum).map(c => `${escapeHtml(c.label)}: ${sumOf(groupRows, c).toFixed(2)}`).join(' · ');
+        const cell = document.createElement('td');
+        cell.colSpan = columns.length;
+        cell.innerHTML = `<span class="st-group-arrow">▾</span> ${escapeHtml(label)} (${groupRows.length}) ${sumsText ? '— ' + sumsText : ''}`;
+        groupTr.appendChild(cell);
+        groupTr.addEventListener('click', () => {
+          if (state.collapsedGroups.has(label)) state.collapsedGroups.delete(label); else state.collapsedGroups.add(label);
+          render();
+        });
+        tbody.appendChild(groupTr);
+        if (!collapsed) groupRows.forEach(renderDataRow);
+      });
+      if (filtered.length === 0) tbody.innerHTML = `<tr><td colspan="${columns.length}" class="bo-empty">لا توجد بيانات مطابقة</td></tr>`;
+    } else {
+      const totalPages = Math.max(1, Math.ceil(filtered.length / state.pageSize));
+      if (state.page > totalPages) state.page = totalPages;
+      const pageRows = filtered.slice((state.page - 1) * state.pageSize, state.page * state.pageSize);
+      if (pageRows.length === 0) tbody.innerHTML = `<tr><td colspan="${columns.length}" class="bo-empty">لا توجد بيانات مطابقة</td></tr>`;
+      else pageRows.forEach(renderDataRow);
+    }
+    table.appendChild(tbody);
+
+    // صف المجاميع — دايمًا من إجمالي الصفوف المفلترة (مش الصفحة الحالية بس)
+    const sumCols = columns.filter(c => c.sum);
+    if (sumCols.length > 0) {
+      const tfoot = document.createElement('tfoot');
+      const sumTr = document.createElement('tr');
+      sumTr.className = 'smart-table-sum-row';
+      sumTr.innerHTML = columns.map(col => {
+        if (!col.sum) return '<td></td>';
+        return `<td class="num">Sum: ${sumOf(filtered, col).toFixed(2)}</td>`;
+      }).join('');
+      tfoot.appendChild(sumTr);
+      table.appendChild(tfoot);
+    }
+
+    wrap.appendChild(table);
+    container.appendChild(wrap);
+
+    // الصفحات (بس في وضع بدون تجميع)
+    if (!groupCol) {
+      const totalPages = Math.max(1, Math.ceil(filtered.length / state.pageSize));
+      const pag = document.createElement('div');
+      pag.className = 'smart-table-pagination';
+      pag.innerHTML = `
+        <span>صفحة ${state.page} من ${totalPages} (${filtered.length} عنصر)</span>
+        <div class="st-page-btns">
+          <button class="st-prev-btn" ${state.page <= 1 ? 'disabled' : ''}>‹</button>
+          <button class="st-next-btn" ${state.page >= totalPages ? 'disabled' : ''}>›</button>
+        </div>`;
+      pag.querySelector('.st-prev-btn').addEventListener('click', () => { state.page--; render(); });
+      pag.querySelector('.st-next-btn').addEventListener('click', () => { state.page++; render(); });
+      container.appendChild(pag);
+    }
+  }
+
+  render();
+  return { refresh: (newRows) => { rows = newRows; state.page = 1; render(); } };
 }
 
 function renderBreakdownTable(tbodyId, rows, colspan, rowHtmlFn) {
@@ -32526,7 +33206,7 @@ async function runReport() {
     // ملخص الفواتير
     let salesQuery = supabaseClient
       .from('sales')
-      .select('id, invoice_number, total, user_id, branch_id, payment_method, created_at, customer_id, customers(name, phone), users_profile(full_name), branches(name)')
+      .select('id, invoice_number, subtotal, discount, tax, total, user_id, branch_id, payment_method, created_at, customer_id, customers(name, phone), users_profile(full_name), branches(name), sales_channels(name)')
       .eq('status', 'completed')
       .gte('created_at', fromISO)
       .lte('created_at', toISO);
@@ -32584,6 +33264,20 @@ async function runReport() {
        <td class="num">${new Date(row.lastDate).toLocaleDateString('ar-EG')}</td>`);
     lastTopCustomersReportRows = topCustomersRows;
 
+    // تفاصيل المبيعات (جدول ذكي: ترتيب + بحث لكل عمود + تجميع + صفحات)
+    lastSalesDetailsRows = (sales || []).map(s => ({
+      dateLabel: new Date(s.created_at).toLocaleDateString('ar-EG'),
+      branchName: s.branches?.name || '—',
+      cashierName: s.users_profile?.full_name || '—',
+      channelName: s.sales_channels?.name || 'المحل',
+      invoiceLabel: 'INV-' + String(s.invoice_number).padStart(6, '0'),
+      subtotal: Number(s.subtotal || 0),
+      discount: Number(s.discount || 0),
+      tax: Number(s.tax || 0),
+      total: Number(s.total || 0),
+    }));
+    renderSalesDetailsReport();
+
     // المبيعات حسب طريقة الدفع — بنقرأ من sale_payments (تفصيل كل طريقة فعليًا)
     // بدلاً من sales.payment_method، وذلك لأن الفواتير التي دُفعت بدفع مقسّم (نقدي + بطاقة مثلًا)
     // تظهر بكل مبلغ فى بابه الصح
@@ -32616,10 +33310,7 @@ async function runReport() {
     });
     const dailyRows = Object.keys(dailyMap).sort().map(d => ({ date: d, count: dailyMap[d].count, total: dailyMap[d].total }));
     renderDailyTrendChart(dailyRows);
-    renderBreakdownTable('dailyTrendTableBody', dailyRows, 3, row =>
-      `<td>${formatDayLabel(row.date)}</td>
-       <td class="num">${row.count}</td>
-       <td class="num">${row.total.toFixed(2)}</td>`);
+    createSmartTable(document.getElementById('dailyTrendSmartTable'), DAILY_TREND_COLUMNS, dailyRows);
     lastDailyTrendReportRows = dailyRows;
 
     // المبيعات حسب الفرع (تظهر فقط لو أكتر من فرع)
@@ -32682,11 +33373,8 @@ async function runReport() {
 
     const categoryRows = Object.values(categoryGrouped).sort((a, b) => b.revenue - a.revenue);
     const categoryRevenueTotal = categoryRows.reduce((sum, c) => sum + c.revenue, 0);
-    renderBreakdownTable('categoryReportTableBody', categoryRows, 4, row =>
-      `<td>${escapeHtml(row.name)}</td>
-       <td class="num">${row.quantity}</td>
-       <td class="num">${row.revenue.toFixed(2)}</td>
-       <td class="num">${(categoryRevenueTotal > 0 ? (row.revenue / categoryRevenueTotal * 100) : 0).toFixed(1)}%</td>`);
+    categoryRows.forEach(row => { row.percentage = categoryRevenueTotal > 0 ? Math.round((row.revenue / categoryRevenueTotal) * 1000) / 10 : 0; });
+    createSmartTable(document.getElementById('categoryReportSmartTable'), CATEGORY_REPORT_COLUMNS, categoryRows);
     lastCategoryReportRows = categoryRows;
 
     const grossProfit = totalSales - totalCost;
