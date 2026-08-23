@@ -2906,6 +2906,10 @@ a { color: inherit; }
               <div class="report-type-icon">⭐</div>
               <div class="report-type-label">أفضل العملاء</div>
             </button>
+            <button type="button" class="report-type-card" id="salesReportCard-table-performance" data-report="table-performance" style="display:none;">
+              <div class="report-type-icon">🍽️</div>
+              <div class="report-type-label" id="tablePerformanceCardLabel">أداء الطاولات</div>
+            </button>
             <button type="button" class="report-type-card" id="salesReportCard-branch" data-report="branch" style="display:none;">
               <div class="report-type-icon">🏬</div>
               <div class="report-type-label">المبيعات حسب الفرع</div>
@@ -3016,6 +3020,27 @@ a { color: inherit; }
                   </tbody>
                 </table>
               </div>
+            </div>
+
+            <div id="salesReportDetail-table-performance" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle" id="tablePerformanceTitle">أداء الطاولات</div>
+              </div>
+              <div class="report-cards">
+                <div class="report-card">
+                  <div class="report-card-label" id="tablePerformanceOrdersLabel">عدد الطلبات</div>
+                  <div class="report-card-value num" id="tablePerformanceOrdersCount">0</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي الإيراد</div>
+                  <div class="report-card-value num" id="tablePerformanceTotalRevenue">0.00</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label" id="tablePerformanceBestLabel">الأعلى إيرادًا</div>
+                  <div class="report-card-value" id="tablePerformanceBestName">—</div>
+                </div>
+              </div>
+              <div id="tablePerformanceSmartTable"></div>
             </div>
 
             <div id="salesReportDetail-cashier" class="report-detail" style="display:none;">
@@ -6209,8 +6234,12 @@ a { color: inherit; }
 
           <!-- تبويب: قائمة الطاولات -->
           <div id="posTablesTab-list" style="display:none;">
-            <div class="bo-section-actions" style="justify-content:flex-end; margin-bottom:10px;">
-              <button class="bo-add-btn" id="addPosTableBtn">+ إضافة</button>
+            <div class="bo-section-actions" style="justify-content:space-between; margin-bottom:10px;">
+              <input type="text" id="posTablesListSearch" placeholder="بحث بالاسم...">
+              <div style="display:flex; gap:8px;">
+                <button class="bo-add-btn" id="addPosTableBtn">+ إضافة</button>
+                <button class="bo-outline-btn" id="bulkAddPosTableBtn">+ إضافة عدة طاولات دفعة واحدة</button>
+              </div>
             </div>
             <div class="bo-table-wrap">
               <table class="bo-table">
@@ -9247,6 +9276,27 @@ a { color: inherit; }
         <button type="submit" class="submit-btn" id="savePosTableBtn">حفظ</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Modal: إضافة عدة طاولات دفعة واحدة -->
+<div class="modal-overlay" id="bulkPosTableModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">إضافة عدة طاولات دفعة واحدة</div>
+    <div class="modal-grid">
+      <div class="field field-full"><label>الدور (اختياري)</label><select id="bulkPosTableFloor"><option value="">بدون دور محدد</option></select></div>
+      <div class="field field-full"><label>الجناح/المنطقة (اختياري)</label><select id="bulkPosTableSection"><option value="">بدون جناح محدد</option></select></div>
+      <div class="field"><label>البادئة/الاسم</label><input type="text" id="bulkPosTablePrefix" value="طاولة" placeholder="طاولة"></div>
+      <div class="field"><label>يبدأ من رقم</label><input type="number" id="bulkPosTableStart" value="1" min="1" step="1"></div>
+      <div class="field"><label>العدد</label><input type="number" id="bulkPosTableCount" value="10" min="1" max="200" step="1"></div>
+      <div class="field"><label>السعة الافتراضية (اختياري)</label><input type="number" id="bulkPosTableCapacity" min="1" step="1"></div>
+    </div>
+    <div style="font-size:12px; color:var(--ink-soft); margin:8px 0;" id="bulkPosTablePreview"></div>
+    <div class="error-msg" id="bulkPosTableModalError"></div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="cancelBulkPosTableBtn">إلغاء</button>
+      <button type="button" class="submit-btn" id="saveBulkPosTableBtn">إضافة الكل</button>
+    </div>
   </div>
 </div>
 
@@ -14047,12 +14097,14 @@ async function loadBoPosTables(branchId) {
 
 function renderPosTablesTable() {
   const tbody = document.getElementById('posTablesTableBody');
-  if (boPosTables.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لا توجد وحدات مضافة بعد</td></tr>`;
+  const q = (document.getElementById('posTablesListSearch')?.value || '').trim().toLowerCase();
+  const filtered = q ? boPosTables.filter(t => t.name.toLowerCase().includes(q)) : boPosTables;
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">${q ? 'لا توجد نتائج مطابقة' : 'لا توجد وحدات مضافة بعد'}</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
-  boPosTables.forEach(t => {
+  filtered.forEach(t => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${escapeHtml(t.name)}</td>
@@ -14157,6 +14209,76 @@ async function savePosTable(e) {
     btn.disabled = false; btn.textContent = 'حفظ';
   }
 }
+
+// ---- إضافة عدة طاولات دفعة واحدة (مثلاً "طاولة 1" لغاية "طاولة 20") ----
+function openBulkPosTableModal() {
+  const branchId = document.getElementById('posTablesBranchFilter').value;
+  if (!branchId) { showToast('اختر الفرع الأول من أعلى الشاشة', true); return; }
+  const floorSel = document.getElementById('bulkPosTableFloor');
+  floorSel.innerHTML = '<option value="">بدون دور محدد</option>' + boPosFloors.map(f => `<option value="${f.id}">${escapeHtml(f.name)}</option>`).join('');
+  const sectionSel = document.getElementById('bulkPosTableSection');
+  sectionSel.innerHTML = '<option value="">بدون جناح محدد</option>';
+  floorSel.onchange = async () => {
+    await loadPosSections(floorSel.value);
+    sectionSel.innerHTML = '<option value="">بدون جناح محدد</option>' + boPosSections.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+  };
+  document.getElementById('bulkPosTablePrefix').value = seatingUnitLabel();
+  document.getElementById('bulkPosTableStart').value = 1;
+  document.getElementById('bulkPosTableCount').value = 10;
+  document.getElementById('bulkPosTableCapacity').value = '';
+  document.getElementById('bulkPosTableModalError').classList.remove('show');
+  updateBulkPosTablePreview();
+  document.getElementById('bulkPosTableModalOverlay').classList.add('show');
+}
+
+function updateBulkPosTablePreview() {
+  const prefix = document.getElementById('bulkPosTablePrefix').value.trim() || seatingUnitLabel();
+  const start = Number(document.getElementById('bulkPosTableStart').value) || 1;
+  const count = Math.min(Number(document.getElementById('bulkPosTableCount').value) || 0, 200);
+  const preview = document.getElementById('bulkPosTablePreview');
+  if (count <= 0) { preview.textContent = ''; return; }
+  const first = `${prefix} ${start}`;
+  const last = `${prefix} ${start + count - 1}`;
+  preview.textContent = count === 1 ? `هيتم إضافة: ${first}` : `هيتم إضافة من "${first}" لغاية "${last}" (${count} ${seatingUnitLabelPlural()})`;
+}
+
+function closeBulkPosTableModal() {
+  document.getElementById('bulkPosTableModalOverlay').classList.remove('show');
+}
+
+async function saveBulkPosTables() {
+  const errEl = document.getElementById('bulkPosTableModalError');
+  errEl.classList.remove('show');
+  const branchId = document.getElementById('posTablesBranchFilter').value;
+  const prefix = document.getElementById('bulkPosTablePrefix').value.trim();
+  const start = Number(document.getElementById('bulkPosTableStart').value) || 1;
+  const count = Number(document.getElementById('bulkPosTableCount').value) || 0;
+  const capacity = document.getElementById('bulkPosTableCapacity').value ? Number(document.getElementById('bulkPosTableCapacity').value) : null;
+  const floorId = document.getElementById('bulkPosTableFloor').value || null;
+  const sectionId = document.getElementById('bulkPosTableSection').value || null;
+  const btn = document.getElementById('saveBulkPosTableBtn');
+  btn.disabled = true; btn.textContent = 'جاري الإضافة...';
+  try {
+    if (!prefix) throw new Error('اكتب البادئة/الاسم');
+    if (count < 1 || count > 200) throw new Error('العدد لازم يكون بين 1 و200');
+    const rows = Array.from({ length: count }, (_, i) => ({
+      branch_id: branchId, floor_id: floorId, section_id: sectionId,
+      name: `${prefix} ${start + i}`, capacity, shape: 'square', is_active: true,
+    }));
+    const { error } = await supabaseClient.from('pos_tables').insert(rows);
+    if (error) throw error;
+    showToast(`تمت إضافة ${count} ${seatingUnitLabelPlural()} بنجاح`);
+    closeBulkPosTableModal();
+    await refreshPosTablesForSelectedBranch();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الإضافة';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'إضافة الكل';
+  }
+}
+
 
 async function deletePosTable(table) {
   // لو الطاولة عليها طلبية مفتوحة (draft) دلوقتي، مينفعش نحذفها أو
@@ -14840,7 +14962,7 @@ async function performOnlineCheckout(ctx) {
       branch_id: currentProfile.branch_id, user_id: currentProfile.id, customer_id: customerId,
       status: 'completed', subtotal, discount, tax, total, paid_amount: paidAmount, remaining,
       payment_method: paymentMethod, shift_id: (currentShift && !currentShift.pending) ? currentShift.id : null,
-      channel_id: channelId || null,
+      channel_id: channelId || null, table_id: activeTableId || null,
     }).select().single();
   if (saleError) throw saleError;
 
@@ -14895,6 +15017,7 @@ async function performOnlineCheckout(ctx) {
 
   return {
     invoiceNumber: displayInvoiceNumber, realInvoiceNumber: sale.invoice_number, pendingSync: false,
+    tableName: activeTableId ? activeTableName : null, tableLabel: activeTableId ? seatingUnitLabel() : null,
     saleId: sale.id,
     createdAt: sale.created_at, cashierName: currentProfile.full_name, branchName: currentProfile.branches?.name || '',
     customerName, instantNote,
@@ -14943,7 +15066,7 @@ async function queueOfflineSale(ctx) {
         branch_id: currentProfile.branch_id, user_id: currentProfile.id, customer_id: customerId,
         status: 'completed', subtotal, discount, tax, total, paid_amount: paidAmount, remaining,
         payment_method: paymentMethod, shift_id: (currentShift && !currentShift.pending) ? currentShift.id : null,
-        channel_id: channelId || null,
+        channel_id: channelId || null, table_id: activeTableId || null,
       },
       // إذا كانت الوردية نفسها لا تزال بانتظار المزامنة، يُسجَّل لها مرجع مؤقت حتى تُربط بالمعرّف
       // الحقيقي تلقائيًا وقت ما الوردية تتزامن (شوف syncQueuedShiftOpen)
@@ -14962,6 +15085,7 @@ async function queueOfflineSale(ctx) {
 
   return {
     invoiceNumber: invoiceLabel, realInvoiceNumber: null, pendingSync: true,
+    tableName: activeTableId ? activeTableName : null, tableLabel: activeTableId ? seatingUnitLabel() : null,
     createdAt, cashierName: currentProfile.full_name, branchName: currentProfile.branches?.name || '',
     customerName, instantNote,
     lines: cart.map(l => ({
@@ -15396,6 +15520,7 @@ function buildReceiptHtml(sale, dateStr) {
     </div>
     <div class="r-divider"></div>
     <div class="r-row"><span>الكاشير</span><span>${escapeHtml(sale.cashierName)}</span></div>
+    ${sale.tableName ? `<div class="r-row"><span>${escapeHtml(sale.tableLabel || 'الطاولة')}</span><span>${escapeHtml(sale.tableName)}</span></div>` : ''}
     ${sale.customerName ? `<div class="r-row"><span>العميل</span><span>${escapeHtml(sale.customerName)}</span></div>` : ''}
     ${(sale.paymentLines && sale.paymentLines.length > 1) ? `
     ${sale.paymentLines.map(l => `<div class="r-row"><span>${escapeHtml(paymentMethodLabels[l.method] || l.method)}</span><span class="num">${l.amount.toFixed(2)}</span></div>`).join('')}
@@ -16173,6 +16298,7 @@ const REPORT_TABS = {
     { key: 'category', title: 'المبيعات حسب الفئة' },
     { key: 'topproducts', title: 'الأصناف الأكثر مبيعًا' },
     { key: 'topcustomers', title: 'أفضل العملاء' },
+    { key: 'table-performance', title: 'أداء الطاولات/الكراسي' },
     { key: 'branch', title: 'المبيعات حسب الفرع' },
     { key: 'cashier', title: 'المبيعات حسب الكاشير' },
     { key: 'payment', title: 'المبيعات حسب طرق الدفع' },
@@ -18507,6 +18633,14 @@ function bindBackofficeEvents() {
     if (e.target.id === 'posTableModalOverlay') closePosTableModal();
   });
   document.getElementById('posTableForm').addEventListener('submit', savePosTable);
+  document.getElementById('bulkAddPosTableBtn').addEventListener('click', openBulkPosTableModal);
+  document.getElementById('cancelBulkPosTableBtn').addEventListener('click', closeBulkPosTableModal);
+  document.getElementById('bulkPosTableModalOverlay').addEventListener('click', (e) => { if (e.target.id === 'bulkPosTableModalOverlay') closeBulkPosTableModal(); });
+  document.getElementById('saveBulkPosTableBtn').addEventListener('click', saveBulkPosTables);
+  ['bulkPosTablePrefix', 'bulkPosTableStart', 'bulkPosTableCount'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updateBulkPosTablePreview);
+  });
+  document.getElementById('posTablesListSearch').addEventListener('input', renderPosTablesTable);
   document.getElementById('addPosFloorBtn').addEventListener('click', () => openPosFloorModal(null));
   document.getElementById('cancelPosFloorBtn').addEventListener('click', closePosFloorModal);
   document.getElementById('posFloorModalOverlay').addEventListener('click', (e) => { if (e.target.id === 'posFloorModalOverlay') closePosFloorModal(); });
@@ -33959,7 +34093,7 @@ async function runReport() {
     // ملخص الفواتير
     let salesQuery = supabaseClient
       .from('sales')
-      .select('id, invoice_number, subtotal, discount, tax, total, user_id, branch_id, payment_method, created_at, customer_id, customers(name, phone), users_profile(full_name), branches(name), sales_channels(name)')
+      .select('id, invoice_number, subtotal, discount, tax, total, user_id, branch_id, payment_method, created_at, customer_id, customers(name, phone), users_profile(full_name), branches(name), sales_channels(name), table_id, pos_tables(name)')
       .eq('status', 'completed')
       .gte('created_at', fromISO)
       .lte('created_at', toISO);
@@ -34030,6 +34164,43 @@ async function runReport() {
       total: Number(s.total || 0),
     }));
     renderSalesDetailsReport();
+
+    // أداء الطاولات/الكراسي — بيظهر بس لو الفرع (المحدد في الفلتر، أو
+    // فرع الموظف الحالي لو مفيش فلتر فرع) نوع نشاطه بيستخدم وحدات جلوس
+    const tablePerfBt = branchId ? businessTypeForBranch(branchId) : getCurrentBranchBusinessType();
+    const showTablePerf = !!tablePerfBt?.uses_seating_units;
+    const tablePerfCard = document.getElementById('salesReportCard-table-performance');
+    if (tablePerfCard) tablePerfCard.style.display = showTablePerf ? 'flex' : 'none';
+    if (showTablePerf) {
+      const unitLabel = tablePerfBt.settings?.seating_unit_label_plural || tablePerfBt.settings?.seating_unit_label || 'الطاولات';
+      document.getElementById('tablePerformanceCardLabel').textContent = 'أداء ' + unitLabel;
+      document.getElementById('tablePerformanceTitle').textContent = 'أداء ' + unitLabel;
+      document.getElementById('tablePerformanceOrdersLabel').textContent = 'عدد الطلبات على ' + unitLabel;
+      document.getElementById('tablePerformanceBestLabel').textContent = 'الأعلى إيرادًا';
+
+      const tableGrouped = {};
+      let tableSalesCount = 0, tableSalesTotal = 0;
+      (sales || []).forEach(s => {
+        if (!s.table_id) return;
+        tableSalesCount++; tableSalesTotal += Number(s.total);
+        if (!tableGrouped[s.table_id]) tableGrouped[s.table_id] = { name: s.pos_tables?.name || 'طاولة محذوفة', orders: 0, revenue: 0 };
+        tableGrouped[s.table_id].orders += 1;
+        tableGrouped[s.table_id].revenue += Number(s.total);
+      });
+      const tablePerfRows = Object.values(tableGrouped).map(r => ({ ...r, avgOrder: r.orders > 0 ? r.revenue / r.orders : 0 }))
+        .sort((a, b) => b.revenue - a.revenue);
+
+      document.getElementById('tablePerformanceOrdersCount').textContent = tableSalesCount;
+      document.getElementById('tablePerformanceTotalRevenue').textContent = tableSalesTotal.toFixed(2);
+      document.getElementById('tablePerformanceBestName').textContent = tablePerfRows[0]?.name || '—';
+
+      createSmartTable(document.getElementById('tablePerformanceSmartTable'), [
+        { key: 'name', label: 'الاسم', type: 'text' },
+        { key: 'orders', label: 'عدد الطلبات', type: 'number', sum: true },
+        { key: 'revenue', label: 'إجمالي الإيراد', type: 'number', sum: true, format: v => v.toFixed(2) },
+        { key: 'avgOrder', label: 'متوسط الطلب', type: 'number', format: v => v.toFixed(2) },
+      ], tablePerfRows);
+    }
 
     // المبيعات حسب طريقة الدفع — بنقرأ من sale_payments (تفصيل كل طريقة فعليًا)
     // بدلاً من sales.payment_method، وذلك لأن الفواتير التي دُفعت بدفع مقسّم (نقدي + بطاقة مثلًا)
