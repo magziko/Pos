@@ -11873,7 +11873,17 @@ function bindNotifEvents() {
     const rejectBtn = e.target.closest('[data-discount-reject]');
     if (rejectBtn) { resolveDiscountAuthRequest(rejectBtn.getAttribute('data-discount-reject'), false); return; }
     const item = e.target.closest('.notif-item[data-notif-id]');
-    if (item) markNotifRead(item.getAttribute('data-notif-id'));
+    if (item) {
+      const notifId = item.getAttribute('data-notif-id');
+      const notif = notifItems.find(n => n.id === notifId);
+      markNotifRead(notifId);
+      // إشعار "طاولة مفتوحة لفترة طويلة" — نودّي المستخدم لشاشة الطاولات مباشرة
+      const posViewActive = document.getElementById('view-pos')?.classList.contains('active');
+      if (notif?.type === 'long_open_table' && posViewActive && branchUsesSeatingUnits()) {
+        closeNotifPanel();
+        showPosTablesFloorView();
+      }
+    }
   });
   document.addEventListener('click', (e) => {
     if (!notifPanelOpen) return;
@@ -14123,6 +14133,12 @@ async function savePosTable(e) {
   try {
     if (!payload.branch_id) throw new Error('اختر الفرع');
     if (!payload.name) throw new Error('اكتب اسم/رقم الوحدة');
+    if (id && !payload.is_active) {
+      const { data: openOrder, error: checkErr } = await supabaseClient
+        .from('sale_orders').select('id').eq('table_id', id).eq('status', 'draft').maybeSingle();
+      if (checkErr) throw checkErr;
+      if (openOrder) throw new Error('لا يمكن إيقاف هذه الطاولة — عليها طلبية مفتوحة حاليًا');
+    }
     if (id) {
       const { error } = await supabaseClient.from('pos_tables').update(payload).eq('id', id);
       if (error) throw error;
@@ -14143,6 +14159,16 @@ async function savePosTable(e) {
 }
 
 async function deletePosTable(table) {
+  // لو الطاولة عليها طلبية مفتوحة (draft) دلوقتي، مينفعش نحذفها أو
+  // نوقفها — هيتفقد الوصول للطلبية دي خالص من شاشة الكاشير (تفضل معلّقة
+  // من غير أي حد يقدر يوصلها أو يقفلها)
+  const { data: openOrder, error: checkErr } = await supabaseClient
+    .from('sale_orders').select('id, total').eq('table_id', table.id).eq('status', 'draft').maybeSingle();
+  if (checkErr) { console.error(checkErr); showToast('تعذر التحقق من حالة الطاولة', true); return; }
+  if (openOrder) {
+    showToast(`لا يمكن حذف أو إيقاف "${table.name}" — عليها طلبية مفتوحة حاليًا بإجمالي ${Number(openOrder.total).toFixed(2)}. أنهِ الطلبية أو انقلها لطاولة تانية الأول`, true);
+    return;
+  }
   if (!confirm(`هل تريد حذف "${table.name}"؟ لو مرتبطة بطلبيات سابقة سيتم إيقافها بدل الحذف.`)) return;
   const { error } = await supabaseClient.from('pos_tables').delete().eq('id', table.id);
   if (error) {
