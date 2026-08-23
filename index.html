@@ -14199,7 +14199,10 @@ function makeLayoutItemDraggable(el, table, startsOnCanvas) {
       ghost = buildLayoutItem({ ...table, pos_x: 50, pos_y: 50 }, true);
       ghost.style.opacity = '0.85';
     }
-    ghost.setPointerCapture?.(downEvt.pointerId);
+    // بنمسك الـpointer على العنصر الأصلي اللي استقبل الحدث (el) مش على
+    // "الشبح" (ghost)، لأن الشبح في حالة السحب من الترايّ لسه مش متضاف
+    // للصفحة أصلاً وقت الضغط، وده كان بيطلع InvalidStateError
+    try { el.setPointerCapture?.(downEvt.pointerId); } catch (err) { /* بعض المتصفحات بترفض لو العنصر هيتشال، مش مشكلة */ }
 
     function moveHandler(moveEvt) {
       const rect = canvas.getBoundingClientRect();
