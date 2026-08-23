@@ -193,6 +193,13 @@ a { color: inherit; }
 .pos-table-card .pt-timer-warn { color: var(--danger); font-weight: 700; }
 .pos-table-card.merge-selected { outline: 3px solid var(--teal-600); outline-offset: -3px; }
 .pt-transfer-btn { margin-top: 8px; font-size: 10.5px; padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; }
+.pos-layout-canvas { position: relative; width: 100%; height: 480px; background: repeating-linear-gradient(0deg, var(--surface-sunken), var(--surface-sunken) 1px, var(--surface) 1px, var(--surface) 40px), repeating-linear-gradient(90deg, var(--surface-sunken), var(--surface-sunken) 1px, var(--surface) 1px, var(--surface) 40px); border: 1px dashed var(--border); border-radius: var(--radius-md); overflow: hidden; touch-action: none; }
+.pos-layout-item { position: absolute; width: 76px; height: 76px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--teal-100); border: 2px solid var(--teal-600); border-radius: 10px; font-size: 11.5px; font-weight: 700; cursor: grab; user-select: none; transform: translate(-50%, -50%); text-align: center; padding: 4px; }
+.pos-layout-item.round { border-radius: 50%; }
+.pos-layout-item:active { cursor: grabbing; }
+.pos-layout-item .li-cap { font-size: 10px; font-weight: 400; color: var(--ink-soft); }
+.pos-layout-tray { display: flex; flex-wrap: wrap; gap: 10px; min-height: 40px; padding: 10px; border: 1px dashed var(--border); border-radius: var(--radius-md); }
+.pos-layout-tray-item { padding: 8px 12px; background: var(--surface-sunken); border-radius: 8px; font-size: 12.5px; cursor: grab; }
 .back-to-tables-btn { display: none; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 13px; cursor: pointer; margin-bottom: 10px; }
 .dash-updated-label { font-size: 12px; color: var(--ink-soft); direction: ltr; }
 .dash-chart-caption { font-size: 12.5px; color: var(--amber-600); font-weight: 600; }
@@ -1351,7 +1358,9 @@ a { color: inherit; }
         <div class="pos-tables-floor-title" id="posTablesFloorTitle">الطاولات</div>
         <button class="bo-outline-btn" id="refreshPosTablesFloorBtn">تحديث</button>
       </div>
-      <div class="pos-tables-grid" id="posTablesFloorGrid"></div>
+      <div class="quick-range-row" id="posFloorTabsRow" style="display:none; margin-bottom:14px;"></div>
+    <div class="pos-layout-canvas" id="posFloorCanvasView" style="display:none; margin-bottom:16px;"></div>
+    <div class="pos-tables-grid" id="posTablesFloorGrid"></div>
     </div>
 
     <!-- مودال نقل الطلب لطاولة تانية -->
@@ -6153,20 +6162,72 @@ a { color: inherit; }
         <div id="bo-section-pos-tables" style="display:none;">
           <div class="bo-section-header">
             <div class="bo-section-title" id="posTablesSectionTitle">الطاولات والكراسي</div>
-            <div class="bo-section-actions">
-              <button class="bo-add-btn" id="addPosTableBtn">+ إضافة</button>
-            </div>
           </div>
           <div class="report-filters" style="margin-bottom:14px;">
-            <div class="field"><label>الفرع</label><select id="posTablesBranchFilter"><option value="">كل الفروع</option></select></div>
+            <div class="field"><label>الفرع</label><select id="posTablesBranchFilter"></select></div>
           </div>
-          <div class="bo-table-wrap">
-            <table class="bo-table">
-              <thead><tr><th>الاسم/الرقم</th><th>الفرع</th><th>السعة (عدد الأشخاص)</th><th>الحالة</th><th></th></tr></thead>
-              <tbody id="posTablesTableBody">
-                <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
-              </tbody>
-            </table>
+
+          <div class="quick-range-row" id="posTablesTabsRow" style="margin-bottom:16px;">
+            <button class="quick-range-btn active" data-pt-tab="floors">الأدوار والأجنحة</button>
+            <button class="quick-range-btn" data-pt-tab="list">قائمة الطاولات</button>
+            <button class="quick-range-btn" data-pt-tab="layout">مخطط الصالة</button>
+          </div>
+
+          <!-- تبويب: الأدوار والأجنحة -->
+          <div id="posTablesTab-floors">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+              <div>
+                <div class="bo-section-header" style="margin-bottom:10px;">
+                  <div class="bo-section-title" style="font-size:14px;">الأدوار</div>
+                  <button class="bo-add-btn" id="addPosFloorBtn">+ إضافة دور</button>
+                </div>
+                <div class="bo-table-wrap">
+                  <table class="bo-table">
+                    <thead><tr><th>اسم الدور</th><th></th></tr></thead>
+                    <tbody id="posFloorsTableBody"><tr><td colspan="2" class="bo-empty">اختر فرع الأول</td></tr></tbody>
+                  </table>
+                </div>
+              </div>
+              <div>
+                <div class="bo-section-header" style="margin-bottom:10px;">
+                  <div class="bo-section-title" style="font-size:14px;">الأجنحة/المناطق</div>
+                  <button class="bo-add-btn" id="addPosSectionBtn">+ إضافة جناح</button>
+                </div>
+                <div class="field" style="margin-bottom:10px;"><label>الدور</label><select id="posSectionsFloorFilter"></select></div>
+                <div class="bo-table-wrap">
+                  <table class="bo-table">
+                    <thead><tr><th>اسم الجناح</th><th>اللون</th><th></th></tr></thead>
+                    <tbody id="posSectionsTableBody"><tr><td colspan="3" class="bo-empty">اختر دور الأول</td></tr></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- تبويب: قائمة الطاولات -->
+          <div id="posTablesTab-list" style="display:none;">
+            <div class="bo-section-actions" style="justify-content:flex-end; margin-bottom:10px;">
+              <button class="bo-add-btn" id="addPosTableBtn">+ إضافة</button>
+            </div>
+            <div class="bo-table-wrap">
+              <table class="bo-table">
+                <thead><tr><th>الاسم/الرقم</th><th>الدور</th><th>الجناح</th><th>السعة</th><th>الحالة</th><th></th></tr></thead>
+                <tbody id="posTablesTableBody">
+                  <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- تبويب: مخطط الصالة (سحب وإفلات لتحديد مكان كل طاولة) -->
+          <div id="posTablesTab-layout" style="display:none;">
+            <div class="field" style="max-width:260px; margin-bottom:10px;"><label>الدور</label><select id="layoutFloorSelect"></select></div>
+            <div style="font-size:12px; color:var(--ink-soft); margin-bottom:10px;">اسحب كل طاولة لمكانها في الصالة. التغيير بيتحفظ تلقائي أول ما تسيبها.</div>
+            <div class="pos-layout-canvas" id="posLayoutCanvas"></div>
+            <div style="margin-top:14px;">
+              <div style="font-size:12.5px; color:var(--ink-soft); margin-bottom:6px;">طاولات لسه مش متحددلها مكان على المخطط:</div>
+              <div class="pos-layout-tray" id="posLayoutTray"></div>
+            </div>
           </div>
         </div>
 
@@ -9161,6 +9222,8 @@ a { color: inherit; }
       <input type="hidden" id="posTableId">
       <div class="modal-grid">
         <div class="field field-full"><label>الفرع</label><select id="posTableBranch" required></select></div>
+        <div class="field"><label>الدور (اختياري)</label><select id="posTableFloor"><option value="">بدون دور محدد</option></select></div>
+        <div class="field"><label>الجناح/المنطقة (اختياري)</label><select id="posTableSection"><option value="">بدون جناح محدد</option></select></div>
         <div class="field field-full"><label>الاسم/الرقم</label><input type="text" id="posTableName" required placeholder="مثال: طاولة 1"></div>
         <div class="field"><label>السعة (عدد الأشخاص، اختياري)</label><input type="number" id="posTableCapacity" min="1" step="1"></div>
         <div class="field field-full">
@@ -9173,6 +9236,44 @@ a { color: inherit; }
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelPosTableBtn">إلغاء</button>
         <button type="submit" class="submit-btn" id="savePosTableBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: إضافة/تعديل دور -->
+<div class="modal-overlay" id="posFloorModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="posFloorModalTitle">إضافة دور</div>
+    <form id="posFloorForm">
+      <input type="hidden" id="posFloorId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>اسم الدور</label><input type="text" id="posFloorName" required placeholder="مثال: الدور الأرضي"></div>
+      </div>
+      <div class="error-msg" id="posFloorModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelPosFloorBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="savePosFloorBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: إضافة/تعديل جناح -->
+<div class="modal-overlay" id="posSectionModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="posSectionModalTitle">إضافة جناح</div>
+    <form id="posSectionForm">
+      <input type="hidden" id="posSectionId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>الدور</label><select id="posSectionFloor" required></select></div>
+        <div class="field field-full"><label>اسم الجناح</label><input type="text" id="posSectionName" required placeholder="مثال: جناح شرقي"></div>
+        <div class="field field-full"><label>لون مميّز (اختياري)</label><input type="color" id="posSectionColor" value="#0d9488" style="height:38px; padding:2px;"></div>
+      </div>
+      <div class="error-msg" id="posSectionModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelPosSectionBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="savePosSectionBtn">حفظ</button>
       </div>
     </form>
   </div>
@@ -11794,6 +11895,9 @@ let mergeModeActive = false;
 let mergeSelectedTableIds = new Set();
 const LONG_OPEN_MINUTES_WARNING = 45;
 
+let lastPosTablesFloorData = { tables: [], orderByTable: {}, floors: [] };
+let activePosFloorTabId = 'all';
+
 async function showPosTablesFloorView() {
   activeTableId = null;
   activeTableOrderId = null;
@@ -11804,20 +11908,25 @@ async function showPosTablesFloorView() {
   document.getElementById('posTablesFloorTitle').textContent = seatingUnitLabelPlural() + ' الفرع';
   const grid = document.getElementById('posTablesFloorGrid');
   grid.innerHTML = '<div class="empty-state">جاري التحميل...</div>';
+  document.getElementById('posFloorTabsRow').style.display = 'none';
+  document.getElementById('posFloorCanvasView').style.display = 'none';
   clearInterval(posTablesFloorInterval);
   try {
-    const [{ data: tables, error: tErr }, { data: openOrders, error: oErr }] = await Promise.all([
-      supabaseClient.from('pos_tables').select('*').eq('branch_id', currentProfile.branch_id).eq('is_active', true).order('sort_order').order('name'),
+    const [{ data: tables, error: tErr }, { data: openOrders, error: oErr }, { data: floors, error: fErr }] = await Promise.all([
+      supabaseClient.from('pos_tables').select('*, pos_sections(color)').eq('branch_id', currentProfile.branch_id).eq('is_active', true).order('sort_order').order('name'),
       supabaseClient.from('sale_orders').select('id, table_id, total, created_at').eq('branch_id', currentProfile.branch_id).eq('status', 'draft').not('table_id', 'is', null),
+      supabaseClient.from('pos_floors').select('*').eq('branch_id', currentProfile.branch_id).eq('is_active', true).order('sort_order').order('name'),
     ]);
-    if (tErr) throw tErr; if (oErr) throw oErr;
+    if (tErr) throw tErr; if (oErr) throw oErr; if (fErr) throw fErr;
     const orderByTable = {};
     (openOrders || []).forEach(o => { orderByTable[o.table_id] = o; });
-    lastPosTablesFloorData = { tables: tables || [], orderByTable };
+    lastPosTablesFloorData = { tables: tables || [], orderByTable, floors: floors || [] };
+    if (!(floors || []).some(f => f.id === activePosFloorTabId)) activePosFloorTabId = 'all';
     if ((tables || []).length === 0) {
       grid.innerHTML = `<div class="empty-state">مفيش ${escapeHtml(seatingUnitLabelPlural())} مضافة — أضفها من شاشة "${escapeHtml(seatingUnitLabelPlural())}" في لوحة التحكم</div>`;
       return;
     }
+    renderPosFloorTabs();
     renderPosTablesFloorGrid();
     // تحديث عدّاد الوقت كل دقيقة من غير إعادة تحميل من القاعدة
     posTablesFloorInterval = setInterval(updatePosTablesFloorTimers, 60000);
@@ -11827,17 +11936,69 @@ async function showPosTablesFloorView() {
   }
 }
 
-let lastPosTablesFloorData = { tables: [], orderByTable: {} };
+function renderPosFloorTabs() {
+  const { floors } = lastPosTablesFloorData;
+  const row = document.getElementById('posFloorTabsRow');
+  if (floors.length === 0) { row.style.display = 'none'; return; }
+  row.style.display = 'flex';
+  row.innerHTML = `<button class="quick-range-btn ${activePosFloorTabId === 'all' ? 'active' : ''}" data-floor-tab="all">الكل</button>` +
+    floors.map(f => `<button class="quick-range-btn ${activePosFloorTabId === f.id ? 'active' : ''}" data-floor-tab="${f.id}">${escapeHtml(f.name)}</button>`).join('');
+  row.querySelectorAll('[data-floor-tab]').forEach(btn => {
+    btn.addEventListener('click', () => { activePosFloorTabId = btn.dataset.floorTab; renderPosTablesFloorGrid(); });
+  });
+}
 
 function minutesSince(iso) {
   return Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
 }
 
+function buildFloorTableCardHtml(t, openOrder) {
+  const isSelected = mergeSelectedTableIds.has(t.id);
+  const elapsedMin = openOrder ? minutesSince(openOrder.created_at) : 0;
+  const isLongOpen = openOrder && elapsedMin >= LONG_OPEN_MINUTES_WARNING;
+  const sectionColor = t.pos_sections?.color;
+  return `
+    ${sectionColor ? `<div style="width:10px; height:10px; border-radius:50%; background:${escapeHtml(sectionColor)}; margin:0 auto 4px;"></div>` : ''}
+    <div class="pt-name">${escapeHtml(t.name)}</div>
+    ${t.capacity ? `<div class="pt-capacity">${t.capacity} أشخاص</div>` : ''}
+    ${openOrder ? `<div class="pt-total">${Number(openOrder.total).toFixed(2)}</div>` : ''}
+    ${openOrder ? `<div class="pt-timer ${isLongOpen ? 'pt-timer-warn' : ''}">${elapsedMin < 60 ? elapsedMin + ' د' : Math.floor(elapsedMin / 60) + 'س ' + (elapsedMin % 60) + 'د'}</div>` : ''}
+    <div class="pt-status">${openOrder ? 'مشغولة' : 'فاضية'}</div>
+    ${openOrder && !mergeModeActive ? `<button type="button" class="pt-transfer-btn" data-action="transfer">نقل ⇄</button>` : ''}
+  `;
+}
+
+function bindFloorTableCard(card, t, openOrder) {
+  const isSelected = mergeSelectedTableIds.has(t.id);
+  card.className += openOrder ? ' occupied' : ' available';
+  if (isSelected) card.className += ' merge-selected';
+  if (mergeModeActive) {
+    if (openOrder) {
+      card.addEventListener('click', () => {
+        if (mergeSelectedTableIds.has(t.id)) mergeSelectedTableIds.delete(t.id); else mergeSelectedTableIds.add(t.id);
+        renderPosTablesFloorGrid();
+      });
+    } else {
+      card.style.opacity = '0.4'; card.style.cursor = 'default';
+    }
+  } else {
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('[data-action="transfer"]')) return;
+      openPosTableForOrder(t, openOrder || null);
+    });
+    const transferBtn = card.querySelector('[data-action="transfer"]');
+    if (transferBtn) transferBtn.addEventListener('click', (e) => { e.stopPropagation(); openTransferTableModal(t, openOrder); });
+  }
+}
+
 function renderPosTablesFloorGrid() {
   const { tables, orderByTable } = lastPosTablesFloorData;
+  const visibleTables = activePosFloorTabId === 'all' ? tables : tables.filter(t => t.floor_id === activePosFloorTabId);
   const occupiedCount = Object.keys(orderByTable).length;
   const grid = document.getElementById('posTablesFloorGrid');
+  const canvasView = document.getElementById('posFloorCanvasView');
   grid.innerHTML = '';
+  canvasView.innerHTML = '';
 
   // شريط أدوات: دمج طاولات (يظهر بس لو فيه طاولتين مشغولتين على الأقل)
   const toolbar = document.createElement('div');
@@ -11858,38 +12019,31 @@ function renderPosTablesFloorGrid() {
   const confirmMergeBtn = document.getElementById('confirmMergeBtn');
   if (confirmMergeBtn) confirmMergeBtn.addEventListener('click', mergeSelectedTables);
 
-  tables.forEach(t => {
-    const openOrder = orderByTable[t.id];
+  const positioned = visibleTables.filter(t => t.pos_x != null && t.pos_y != null);
+  const unpositioned = visibleTables.filter(t => t.pos_x == null || t.pos_y == null);
+
+  if (positioned.length > 0) {
+    canvasView.style.display = 'block';
+    positioned.forEach(t => {
+      const openOrder = lastPosTablesFloorData.orderByTable[t.id];
+      const card = document.createElement('div');
+      card.className = 'pos-layout-item pos-table-card' + (t.shape === 'round' ? ' round' : '');
+      card.style.left = t.pos_x + '%';
+      card.style.top = t.pos_y + '%';
+      card.innerHTML = buildFloorTableCardHtml(t, openOrder);
+      bindFloorTableCard(card, t, openOrder);
+      canvasView.appendChild(card);
+    });
+  } else {
+    canvasView.style.display = 'none';
+  }
+
+  unpositioned.forEach(t => {
+    const openOrder = lastPosTablesFloorData.orderByTable[t.id];
     const card = document.createElement('div');
-    const isSelected = mergeSelectedTableIds.has(t.id);
-    card.className = 'pos-table-card ' + (openOrder ? 'occupied' : 'available') + (isSelected ? ' merge-selected' : '');
-    const elapsedMin = openOrder ? minutesSince(openOrder.created_at) : 0;
-    const isLongOpen = openOrder && elapsedMin >= LONG_OPEN_MINUTES_WARNING;
-    card.innerHTML = `
-      <div class="pt-name">${escapeHtml(t.name)}</div>
-      ${t.capacity ? `<div class="pt-capacity">${t.capacity} أشخاص</div>` : ''}
-      ${openOrder ? `<div class="pt-total">${Number(openOrder.total).toFixed(2)}</div>` : ''}
-      ${openOrder ? `<div class="pt-timer ${isLongOpen ? 'pt-timer-warn' : ''}">${elapsedMin < 60 ? elapsedMin + ' د' : Math.floor(elapsedMin / 60) + 'س ' + (elapsedMin % 60) + 'د'}</div>` : ''}
-      <div class="pt-status">${openOrder ? 'مشغولة' : 'فاضية'}</div>
-      ${openOrder && !mergeModeActive ? `<button type="button" class="pt-transfer-btn" data-action="transfer">نقل ⇄</button>` : ''}
-    `;
-    if (mergeModeActive) {
-      if (openOrder) {
-        card.addEventListener('click', () => {
-          if (mergeSelectedTableIds.has(t.id)) mergeSelectedTableIds.delete(t.id); else mergeSelectedTableIds.add(t.id);
-          renderPosTablesFloorGrid();
-        });
-      } else {
-        card.style.opacity = '0.4'; card.style.cursor = 'default';
-      }
-    } else {
-      card.addEventListener('click', (e) => {
-        if (e.target.closest('[data-action="transfer"]')) return;
-        openPosTableForOrder(t, openOrder || null);
-      });
-      const transferBtn = card.querySelector('[data-action="transfer"]');
-      if (transferBtn) transferBtn.addEventListener('click', (e) => { e.stopPropagation(); openTransferTableModal(t, openOrder); });
-    }
+    card.className = 'pos-table-card';
+    card.innerHTML = buildFloorTableCardHtml(t, openOrder);
+    bindFloorTableCard(card, t, openOrder);
     grid.appendChild(card);
   });
 }
@@ -13592,7 +13746,10 @@ function initBranchSettingsSection() {
 
 // ---- شاشة "الطاولات والكراسي" (مستقلة، بتغطي كل الفروع اللي نوع نشاطها بيستخدم وحدات جلوس) ----
 let boPosTables = [];
+let boPosFloors = [];
+let boPosSections = [];
 let posTablesSectionLoadedOnce = false;
+let posTablesActiveTab = 'floors';
 
 function getCurrentBranchBusinessType() {
   const branch = boBranchesList.find(b => b.id === currentProfile.branch_id);
@@ -13616,27 +13773,239 @@ async function updatePosTablesNavVisibility() {
   if (navItem) navItem.style.display = branchesUsingSeatingUnits().length > 0 ? '' : 'none';
 }
 
+function switchPosTablesTab(tab) {
+  posTablesActiveTab = tab;
+  document.querySelectorAll('#posTablesTabsRow [data-pt-tab]').forEach(btn => btn.classList.toggle('active', btn.dataset.ptTab === tab));
+  ['floors', 'list', 'layout'].forEach(t => { document.getElementById('posTablesTab-' + t).style.display = t === tab ? '' : 'none'; });
+  if (tab === 'layout') initLayoutTab();
+}
+
 async function initPosTablesSection() {
   if (boBranchesList.length === 0) await loadBoBranches();
   if (boBusinessTypes.length === 0) await loadBoBusinessTypes();
   const eligibleBranches = branchesUsingSeatingUnits();
   const filterSel = document.getElementById('posTablesBranchFilter');
-  filterSel.innerHTML = '<option value="">كل الفروع</option>' +
-    eligibleBranches.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+  if (eligibleBranches.length === 0) {
+    filterSel.innerHTML = '<option value="">لا يوجد فروع مفعّلة لهذه الميزة</option>';
+    return;
+  }
+  const prevValue = filterSel.value;
+  filterSel.innerHTML = eligibleBranches.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+  filterSel.value = eligibleBranches.some(b => b.id === prevValue) ? prevValue : eligibleBranches[0].id;
   if (!posTablesSectionLoadedOnce) {
-    filterSel.addEventListener('change', () => { loadBoPosTables().then(renderPosTablesTable); });
+    filterSel.addEventListener('change', () => refreshPosTablesForSelectedBranch());
+    document.querySelectorAll('#posTablesTabsRow [data-pt-tab]').forEach(btn => {
+      btn.addEventListener('click', () => switchPosTablesTab(btn.dataset.ptTab));
+    });
     posTablesSectionLoadedOnce = true;
   }
-  await loadBoPosTables();
-  renderPosTablesTable();
+  switchPosTablesTab('floors');
+  await refreshPosTablesForSelectedBranch();
 }
 
-async function loadBoPosTables() {
+async function refreshPosTablesForSelectedBranch() {
   const branchId = document.getElementById('posTablesBranchFilter').value;
-  const eligibleBranchIds = branchesUsingSeatingUnits().map(b => b.id);
-  let query = supabaseClient.from('pos_tables').select('*, branches(name)').order('sort_order').order('name');
-  query = branchId ? query.eq('branch_id', branchId) : query.in('branch_id', eligibleBranchIds.length > 0 ? eligibleBranchIds : ['00000000-0000-0000-0000-000000000000']);
-  const { data, error } = await query;
+  document.getElementById('posTablesSectionTitle').textContent = seatingUnitLabelPlural();
+  await loadPosFloors(branchId);
+  renderPosFloorsTable();
+  populatePosSectionsFloorFilter();
+  await loadPosSections(document.getElementById('posSectionsFloorFilter').value);
+  renderPosSectionsTable();
+  await loadBoPosTables(branchId);
+  renderPosTablesTable();
+  if (posTablesActiveTab === 'layout') initLayoutTab();
+}
+
+// ---- الأدوار ----
+async function loadPosFloors(branchId) {
+  if (!branchId) { boPosFloors = []; return; }
+  const { data, error } = await supabaseClient.from('pos_floors').select('*').eq('branch_id', branchId).eq('is_active', true).order('sort_order').order('name');
+  if (error) { console.error(error); showToast('تعذر تحميل الأدوار', true); return; }
+  boPosFloors = data || [];
+}
+
+function renderPosFloorsTable() {
+  const tbody = document.getElementById('posFloorsTableBody');
+  if (boPosFloors.length === 0) { tbody.innerHTML = `<tr><td colspan="2" class="bo-empty">لا توجد أدوار مضافة بعد</td></tr>`; return; }
+  tbody.innerHTML = '';
+  boPosFloors.forEach(f => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(f.name)}</td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openPosFloorModal(f));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deletePosFloor(f));
+    tbody.appendChild(tr);
+  });
+}
+
+function openPosFloorModal(floor) {
+  document.getElementById('posFloorModalTitle').textContent = floor ? 'تعديل دور' : 'إضافة دور';
+  document.getElementById('posFloorId').value = floor ? floor.id : '';
+  document.getElementById('posFloorName').value = floor ? floor.name : '';
+  document.getElementById('posFloorModalError').classList.remove('show');
+  document.getElementById('posFloorModalOverlay').classList.add('show');
+}
+
+function closePosFloorModal() { document.getElementById('posFloorModalOverlay').classList.remove('show'); }
+
+async function savePosFloor(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('posFloorModalError');
+  errEl.classList.remove('show');
+  const branchId = document.getElementById('posTablesBranchFilter').value;
+  const id = document.getElementById('posFloorId').value;
+  const name = document.getElementById('posFloorName').value.trim();
+  const btn = document.getElementById('savePosFloorBtn');
+  btn.disabled = true;
+  try {
+    if (!branchId) throw new Error('اختر الفرع الأول من أعلى الشاشة');
+    if (!name) throw new Error('اكتب اسم الدور');
+    if (id) {
+      const { error } = await supabaseClient.from('pos_floors').update({ name }).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('pos_floors').insert({ branch_id: branchId, name, sort_order: boPosFloors.length });
+      if (error) throw error;
+    }
+    showToast('تم الحفظ بنجاح');
+    closePosFloorModal();
+    await refreshPosTablesForSelectedBranch();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function deletePosFloor(floor) {
+  if (!confirm(`حذف دور "${floor.name}"؟ الطاولات المرتبطة بيه هتفضل موجودة بس من غير دور محدد.`)) return;
+  const { error } = await supabaseClient.from('pos_floors').delete().eq('id', floor.id);
+  if (error) {
+    const { error: deactivateErr } = await supabaseClient.from('pos_floors').update({ is_active: false }).eq('id', floor.id);
+    if (deactivateErr) { console.error(deactivateErr); showToast('تعذر حذف أو إيقاف الدور', true); return; }
+  }
+  showToast('تم الحذف بنجاح');
+  await refreshPosTablesForSelectedBranch();
+}
+
+// ---- الأجنحة/المناطق ----
+function populatePosSectionsFloorFilter() {
+  const sel = document.getElementById('posSectionsFloorFilter');
+  const prev = sel.value;
+  sel.innerHTML = boPosFloors.map(f => `<option value="${f.id}">${escapeHtml(f.name)}</option>`).join('');
+  if (boPosFloors.length === 0) { sel.innerHTML = '<option value="">أضف دور الأول</option>'; return; }
+  sel.value = boPosFloors.some(f => f.id === prev) ? prev : boPosFloors[0].id;
+  if (!sel.dataset.bound) {
+    sel.addEventListener('change', async () => { await loadPosSections(sel.value); renderPosSectionsTable(); });
+    sel.dataset.bound = '1';
+  }
+}
+
+async function loadPosSections(floorId) {
+  if (!floorId) { boPosSections = []; return; }
+  const { data, error } = await supabaseClient.from('pos_sections').select('*').eq('floor_id', floorId).eq('is_active', true).order('sort_order').order('name');
+  if (error) { console.error(error); showToast('تعذر تحميل الأجنحة', true); return; }
+  boPosSections = data || [];
+}
+
+function renderPosSectionsTable() {
+  const tbody = document.getElementById('posSectionsTableBody');
+  if (boPosSections.length === 0) { tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">لا توجد أجنحة مضافة بعد</td></tr>`; return; }
+  tbody.innerHTML = '';
+  boPosSections.forEach(s => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(s.name)}</td>
+      <td>${s.color ? `<span style="display:inline-block; width:16px; height:16px; border-radius:4px; background:${escapeHtml(s.color)}; vertical-align:middle;"></span>` : '—'}</td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openPosSectionModal(s));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deletePosSection(s));
+    tbody.appendChild(tr);
+  });
+}
+
+function openPosSectionModal(section) {
+  const floorSel = document.getElementById('posSectionFloor');
+  floorSel.innerHTML = boPosFloors.map(f => `<option value="${f.id}">${escapeHtml(f.name)}</option>`).join('');
+  if (boPosFloors.length === 0) { showToast('أضف دور واحد على الأقل الأول', true); return; }
+  document.getElementById('posSectionModalTitle').textContent = section ? 'تعديل جناح' : 'إضافة جناح';
+  document.getElementById('posSectionId').value = section ? section.id : '';
+  floorSel.value = section ? section.floor_id : document.getElementById('posSectionsFloorFilter').value;
+  document.getElementById('posSectionName').value = section ? section.name : '';
+  document.getElementById('posSectionColor').value = section?.color || '#0d9488';
+  document.getElementById('posSectionModalError').classList.remove('show');
+  document.getElementById('posSectionModalOverlay').classList.add('show');
+}
+
+function closePosSectionModal() { document.getElementById('posSectionModalOverlay').classList.remove('show'); }
+
+async function savePosSection(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('posSectionModalError');
+  errEl.classList.remove('show');
+  const id = document.getElementById('posSectionId').value;
+  const payload = {
+    floor_id: document.getElementById('posSectionFloor').value,
+    name: document.getElementById('posSectionName').value.trim(),
+    color: document.getElementById('posSectionColor').value,
+  };
+  const btn = document.getElementById('savePosSectionBtn');
+  btn.disabled = true;
+  try {
+    if (!payload.floor_id) throw new Error('اختر الدور');
+    if (!payload.name) throw new Error('اكتب اسم الجناح');
+    if (id) {
+      const { error } = await supabaseClient.from('pos_sections').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('pos_sections').insert({ ...payload, sort_order: boPosSections.length });
+      if (error) throw error;
+    }
+    showToast('تم الحفظ بنجاح');
+    closePosSectionModal();
+    await loadPosSections(document.getElementById('posSectionsFloorFilter').value);
+    renderPosSectionsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function deletePosSection(section) {
+  if (!confirm(`حذف جناح "${section.name}"؟`)) return;
+  const { error } = await supabaseClient.from('pos_sections').delete().eq('id', section.id);
+  if (error) {
+    const { error: deactivateErr } = await supabaseClient.from('pos_sections').update({ is_active: false }).eq('id', section.id);
+    if (deactivateErr) { console.error(deactivateErr); showToast('تعذر حذف أو إيقاف الجناح', true); return; }
+  }
+  showToast('تم الحذف بنجاح');
+  await loadPosSections(document.getElementById('posSectionsFloorFilter').value);
+  renderPosSectionsTable();
+}
+
+// ---- قائمة الطاولات ----
+async function loadBoPosTables(branchId) {
+  branchId = branchId || document.getElementById('posTablesBranchFilter').value;
+  if (!branchId) { boPosTables = []; return; }
+  const { data, error } = await supabaseClient
+    .from('pos_tables').select('*, pos_floors(name), pos_sections(name, color)')
+    .eq('branch_id', branchId).order('sort_order').order('name');
   if (error) { console.error(error); showToast('تعذر تحميل الطاولات', true); return; }
   boPosTables = data || [];
 }
@@ -13644,7 +14013,7 @@ async function loadBoPosTables() {
 function renderPosTablesTable() {
   const tbody = document.getElementById('posTablesTableBody');
   if (boPosTables.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">لا توجد وحدات مضافة بعد</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">لا توجد وحدات مضافة بعد</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
@@ -13652,7 +14021,8 @@ function renderPosTablesTable() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${escapeHtml(t.name)}</td>
-      <td>${escapeHtml(t.branches?.name || '—')}</td>
+      <td>${escapeHtml(t.pos_floors?.name || '—')}</td>
+      <td>${t.pos_sections ? `<span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:${escapeHtml(t.pos_sections.color || '#999')}; margin-left:5px;"></span>${escapeHtml(t.pos_sections.name)}` : '—'}</td>
       <td class="num">${t.capacity || '—'}</td>
       <td><span class="bo-badge ${t.is_active ? 'active' : 'inactive'}">${t.is_active ? 'مفعّلة' : 'متوقفة'}</span></td>
       <td>
@@ -13665,6 +14035,23 @@ function renderPosTablesTable() {
     tr.querySelector('[data-action="delete"]').addEventListener('click', () => deletePosTable(t));
     tbody.appendChild(tr);
   });
+}
+
+function populatePosTableFloorSectionSelects(selectedFloorId, selectedSectionId) {
+  const floorSel = document.getElementById('posTableFloor');
+  floorSel.innerHTML = '<option value="">بدون دور محدد</option>' + boPosFloors.map(f => `<option value="${f.id}">${escapeHtml(f.name)}</option>`).join('');
+  floorSel.value = selectedFloorId || '';
+  const populateSections = () => {
+    const sectionSel = document.getElementById('posTableSection');
+    const relevantSections = boPosSections.filter(s => s.floor_id === floorSel.value);
+    sectionSel.innerHTML = '<option value="">بدون جناح محدد</option>' + relevantSections.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+    sectionSel.value = relevantSections.some(s => s.id === selectedSectionId) ? selectedSectionId : '';
+  };
+  populateSections();
+  floorSel.onchange = async () => {
+    await loadPosSections(floorSel.value);
+    populateSections();
+  };
 }
 
 function openPosTableModal(table) {
@@ -13681,6 +14068,7 @@ function openPosTableModal(table) {
   document.getElementById('posTableName').value = table ? table.name : '';
   document.getElementById('posTableCapacity').value = table?.capacity || '';
   document.getElementById('posTableActive').checked = table ? table.is_active : true;
+  populatePosTableFloorSectionSelects(table?.floor_id, table?.section_id);
   document.getElementById('posTableModalError').classList.remove('show');
   document.getElementById('posTableModalOverlay').classList.add('show');
 }
@@ -13696,6 +14084,8 @@ async function savePosTable(e) {
   const id = document.getElementById('posTableId').value;
   const payload = {
     branch_id: document.getElementById('posTableBranch').value,
+    floor_id: document.getElementById('posTableFloor').value || null,
+    section_id: document.getElementById('posTableSection').value || null,
     name: document.getElementById('posTableName').value.trim(),
     capacity: document.getElementById('posTableCapacity').value ? Number(document.getElementById('posTableCapacity').value) : null,
     is_active: document.getElementById('posTableActive').checked,
@@ -13714,8 +14104,7 @@ async function savePosTable(e) {
     }
     showToast('تم الحفظ بنجاح');
     closePosTableModal();
-    await loadBoPosTables();
-    renderPosTablesTable();
+    await refreshPosTablesForSelectedBranch();
   } catch (err) {
     console.error(err);
     errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
@@ -13735,8 +14124,110 @@ async function deletePosTable(table) {
   } else {
     showToast('تم الحذف بنجاح');
   }
-  await loadBoPosTables();
-  renderPosTablesTable();
+  await refreshPosTablesForSelectedBranch();
+}
+
+// ---- مخطط الصالة: سحب وإفلات لتحديد مكان كل طاولة (إحداثيات نسبة مئوية) ----
+async function initLayoutTab() {
+  const floorSel = document.getElementById('layoutFloorSelect');
+  const prev = floorSel.value;
+  if (boPosFloors.length === 0) {
+    floorSel.innerHTML = '<option value="">أضف دور من تبويب "الأدوار والأجنحة" الأول</option>';
+    document.getElementById('posLayoutCanvas').innerHTML = '';
+    document.getElementById('posLayoutTray').innerHTML = '';
+    return;
+  }
+  floorSel.innerHTML = boPosFloors.map(f => `<option value="${f.id}">${escapeHtml(f.name)}</option>`).join('');
+  floorSel.value = boPosFloors.some(f => f.id === prev) ? prev : boPosFloors[0].id;
+  if (!floorSel.dataset.bound) {
+    floorSel.addEventListener('change', renderLayoutCanvas);
+    floorSel.dataset.bound = '1';
+  }
+  renderLayoutCanvas();
+}
+
+function renderLayoutCanvas() {
+  const floorId = document.getElementById('layoutFloorSelect').value;
+  const canvas = document.getElementById('posLayoutCanvas');
+  const tray = document.getElementById('posLayoutTray');
+  canvas.innerHTML = '';
+  tray.innerHTML = '';
+  const floorTables = boPosTables.filter(t => t.floor_id === floorId && t.is_active);
+  const positioned = floorTables.filter(t => t.pos_x != null && t.pos_y != null);
+  const unpositioned = floorTables.filter(t => t.pos_x == null || t.pos_y == null);
+
+  positioned.forEach(t => canvas.appendChild(buildLayoutItem(t, true)));
+  if (unpositioned.length === 0) {
+    tray.innerHTML = '<span style="font-size:12px; color:var(--ink-soft);">كل الطاولات محددلها مكان ✓</span>';
+  } else {
+    unpositioned.forEach(t => {
+      const chip = document.createElement('div');
+      chip.className = 'pos-layout-tray-item';
+      chip.textContent = t.name;
+      chip.dataset.tableId = t.id;
+      makeLayoutItemDraggable(chip, t, false);
+      tray.appendChild(chip);
+    });
+  }
+}
+
+function buildLayoutItem(table, positioned) {
+  const el = document.createElement('div');
+  el.className = 'pos-layout-item' + (table.shape === 'round' ? ' round' : '');
+  el.style.left = (table.pos_x ?? 50) + '%';
+  el.style.top = (table.pos_y ?? 50) + '%';
+  if (table.pos_sections?.color) el.style.borderColor = table.pos_sections.color;
+  el.innerHTML = `${escapeHtml(table.name)}${table.capacity ? `<span class="li-cap">${table.capacity} أشخاص</span>` : ''}`;
+  el.dataset.tableId = table.id;
+  makeLayoutItemDraggable(el, table, true);
+  return el;
+}
+
+// بيدعم الماوس واللمس مع بعض عن طريق Pointer Events، وبيحفظ الموضع
+// كنسبة مئوية من أبعاد لوحة المخطط فور ما تسيب الطاولة (pointerup)
+function makeLayoutItemDraggable(el, table, startsOnCanvas) {
+  el.addEventListener('pointerdown', (downEvt) => {
+    downEvt.preventDefault();
+    const canvas = document.getElementById('posLayoutCanvas');
+    const canvasRect = canvas.getBoundingClientRect();
+    let ghost = el;
+    let onCanvas = startsOnCanvas;
+
+    if (!onCanvas) {
+      // بداية السحب من الترايّ (لسه مش متحدد مكانه) — بننشئ عنصر فعلي على
+      // الكانفاس يتبع المؤشر، ولو اتسابت جواه هيتثبت مكانها
+      ghost = buildLayoutItem({ ...table, pos_x: 50, pos_y: 50 }, true);
+      ghost.style.opacity = '0.85';
+    }
+    ghost.setPointerCapture?.(downEvt.pointerId);
+
+    function moveHandler(moveEvt) {
+      const rect = canvas.getBoundingClientRect();
+      let xPct = ((moveEvt.clientX - rect.left) / rect.width) * 100;
+      let yPct = ((moveEvt.clientY - rect.top) / rect.height) * 100;
+      xPct = Math.max(3, Math.min(97, xPct));
+      yPct = Math.max(3, Math.min(97, yPct));
+      if (!onCanvas) { canvas.appendChild(ghost); onCanvas = true; }
+      ghost.style.left = xPct + '%';
+      ghost.style.top = yPct + '%';
+      ghost.dataset.pendingX = xPct;
+      ghost.dataset.pendingY = yPct;
+    }
+    async function upHandler() {
+      document.removeEventListener('pointermove', moveHandler);
+      document.removeEventListener('pointerup', upHandler);
+      if (ghost.dataset.pendingX == null) return; // كليك من غير سحب فعلي
+      const x = Math.round(Number(ghost.dataset.pendingX) * 10) / 10;
+      const y = Math.round(Number(ghost.dataset.pendingY) * 10) / 10;
+      const { error } = await supabaseClient.from('pos_tables').update({ pos_x: x, pos_y: y }).eq('id', table.id);
+      if (error) { console.error(error); showToast('تعذر حفظ مكان الطاولة', true); return; }
+      const localTable = boPosTables.find(t => t.id === table.id);
+      if (localTable) { localTable.pos_x = x; localTable.pos_y = y; }
+      renderLayoutCanvas();
+    }
+    document.addEventListener('pointermove', moveHandler);
+    document.addEventListener('pointerup', upHandler);
+  });
 }
 
 async function saveBranchSettings(e) {
@@ -17956,6 +18447,14 @@ function bindBackofficeEvents() {
     if (e.target.id === 'posTableModalOverlay') closePosTableModal();
   });
   document.getElementById('posTableForm').addEventListener('submit', savePosTable);
+  document.getElementById('addPosFloorBtn').addEventListener('click', () => openPosFloorModal(null));
+  document.getElementById('cancelPosFloorBtn').addEventListener('click', closePosFloorModal);
+  document.getElementById('posFloorModalOverlay').addEventListener('click', (e) => { if (e.target.id === 'posFloorModalOverlay') closePosFloorModal(); });
+  document.getElementById('posFloorForm').addEventListener('submit', savePosFloor);
+  document.getElementById('addPosSectionBtn').addEventListener('click', () => openPosSectionModal(null));
+  document.getElementById('cancelPosSectionBtn').addEventListener('click', closePosSectionModal);
+  document.getElementById('posSectionModalOverlay').addEventListener('click', (e) => { if (e.target.id === 'posSectionModalOverlay') closePosSectionModal(); });
+  document.getElementById('posSectionForm').addEventListener('submit', savePosSection);
   document.getElementById('businessTypesSearchInput').addEventListener('input', (e) => {
     businessTypesSearchTerm = e.target.value;
     renderBusinessTypesTable();
