@@ -189,6 +189,10 @@ a { color: inherit; }
 .pos-table-card .pt-capacity { font-size: 11.5px; color: var(--ink-soft); }
 .pos-table-card .pt-total { font-size: 13px; font-weight: 700; color: var(--danger); margin-top: 6px; }
 .pos-table-card .pt-status { font-size: 11px; margin-top: 4px; color: var(--ink-soft); }
+.pos-table-card .pt-timer { font-size: 11.5px; color: var(--ink-soft); margin-top: 3px; }
+.pos-table-card .pt-timer-warn { color: var(--danger); font-weight: 700; }
+.pos-table-card.merge-selected { outline: 3px solid var(--teal-600); outline-offset: -3px; }
+.pt-transfer-btn { margin-top: 8px; font-size: 10.5px; padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; }
 .back-to-tables-btn { display: none; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 13px; cursor: pointer; margin-bottom: 10px; }
 .dash-updated-label { font-size: 12px; color: var(--ink-soft); direction: ltr; }
 .dash-chart-caption { font-size: 12.5px; color: var(--amber-600); font-weight: 600; }
@@ -1348,6 +1352,22 @@ a { color: inherit; }
         <button class="bo-outline-btn" id="refreshPosTablesFloorBtn">تحديث</button>
       </div>
       <div class="pos-tables-grid" id="posTablesFloorGrid"></div>
+    </div>
+
+    <!-- مودال نقل الطلب لطاولة تانية -->
+    <div class="modal-overlay" id="transferTableModalOverlay">
+      <div class="modal-box">
+        <div class="modal-title">نقل الطلب لـ<span id="transferTableUnitLabel"></span> تانية</div>
+        <div class="modal-grid">
+          <div class="field field-full"><label>انقل من</label><input type="text" id="transferFromLabel" disabled></div>
+          <div class="field field-full"><label>انقل إلى</label><select id="transferToSelect"></select></div>
+        </div>
+        <div class="error-msg" id="transferTableModalError"></div>
+        <div class="modal-actions">
+          <button type="button" class="modal-cancel-btn" id="cancelTransferTableBtn">إلغاء</button>
+          <button type="button" class="submit-btn" id="confirmTransferTableBtn">نقل</button>
+        </div>
+      </div>
     </div>
     <div class="main" id="posMainView">
       <div class="product-side">
@@ -11769,43 +11789,114 @@ function seatingUnitLabelPlural() {
   return bt?.settings?.seating_unit_label_plural || (bt?.settings?.seating_unit_label ? bt.settings.seating_unit_label : 'طاولات');
 }
 
+let posTablesFloorInterval = null;
+let mergeModeActive = false;
+let mergeSelectedTableIds = new Set();
+const LONG_OPEN_MINUTES_WARNING = 45;
+
 async function showPosTablesFloorView() {
   activeTableId = null;
   activeTableOrderId = null;
+  mergeModeActive = false;
+  mergeSelectedTableIds = new Set();
   document.getElementById('posMainView').style.display = 'none';
   document.getElementById('posTablesFloorView').style.display = 'block';
   document.getElementById('posTablesFloorTitle').textContent = seatingUnitLabelPlural() + ' الفرع';
   const grid = document.getElementById('posTablesFloorGrid');
   grid.innerHTML = '<div class="empty-state">جاري التحميل...</div>';
+  clearInterval(posTablesFloorInterval);
   try {
     const [{ data: tables, error: tErr }, { data: openOrders, error: oErr }] = await Promise.all([
       supabaseClient.from('pos_tables').select('*').eq('branch_id', currentProfile.branch_id).eq('is_active', true).order('sort_order').order('name'),
-      supabaseClient.from('sale_orders').select('id, table_id, total').eq('branch_id', currentProfile.branch_id).eq('status', 'draft').not('table_id', 'is', null),
+      supabaseClient.from('sale_orders').select('id, table_id, total, created_at').eq('branch_id', currentProfile.branch_id).eq('status', 'draft').not('table_id', 'is', null),
     ]);
     if (tErr) throw tErr; if (oErr) throw oErr;
     const orderByTable = {};
     (openOrders || []).forEach(o => { orderByTable[o.table_id] = o; });
+    lastPosTablesFloorData = { tables: tables || [], orderByTable };
     if ((tables || []).length === 0) {
       grid.innerHTML = `<div class="empty-state">مفيش ${escapeHtml(seatingUnitLabelPlural())} مضافة — أضفها من شاشة "${escapeHtml(seatingUnitLabelPlural())}" في لوحة التحكم</div>`;
       return;
     }
-    grid.innerHTML = '';
-    (tables || []).forEach(t => {
-      const openOrder = orderByTable[t.id];
-      const card = document.createElement('div');
-      card.className = 'pos-table-card ' + (openOrder ? 'occupied' : 'available');
-      card.innerHTML = `
-        <div class="pt-name">${escapeHtml(t.name)}</div>
-        ${t.capacity ? `<div class="pt-capacity">${t.capacity} أشخاص</div>` : ''}
-        ${openOrder ? `<div class="pt-total">${Number(openOrder.total).toFixed(2)}</div>` : ''}
-        <div class="pt-status">${openOrder ? 'مشغولة' : 'فاضية'}</div>`;
-      card.addEventListener('click', () => openPosTableForOrder(t, openOrder || null));
-      grid.appendChild(card);
-    });
+    renderPosTablesFloorGrid();
+    // تحديث عدّاد الوقت كل دقيقة من غير إعادة تحميل من القاعدة
+    posTablesFloorInterval = setInterval(updatePosTablesFloorTimers, 60000);
   } catch (err) {
     console.error(err);
     grid.innerHTML = '<div class="empty-state">تعذر تحميل الطاولات</div>';
   }
+}
+
+let lastPosTablesFloorData = { tables: [], orderByTable: {} };
+
+function minutesSince(iso) {
+  return Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+}
+
+function renderPosTablesFloorGrid() {
+  const { tables, orderByTable } = lastPosTablesFloorData;
+  const occupiedCount = Object.keys(orderByTable).length;
+  const grid = document.getElementById('posTablesFloorGrid');
+  grid.innerHTML = '';
+
+  // شريط أدوات: دمج طاولات (يظهر بس لو فيه طاولتين مشغولتين على الأقل)
+  const toolbar = document.createElement('div');
+  toolbar.className = 'pos-tables-toolbar';
+  toolbar.style.cssText = 'grid-column:1/-1; display:flex; gap:10px; margin-bottom:6px; align-items:center;';
+  if (occupiedCount >= 2) {
+    toolbar.innerHTML = mergeModeActive
+      ? `<span style="font-size:12.5px; color:var(--ink-soft);">اختر طاولتين أو أكتر هتتدمج، وأول طاولة تختارها هتبقى الرئيسية</span>
+         <button class="bo-outline-btn" id="confirmMergeBtn" ${mergeSelectedTableIds.size < 2 ? 'disabled' : ''}>تأكيد الدمج (${mergeSelectedTableIds.size})</button>
+         <button class="bo-outline-btn" id="cancelMergeBtn">إلغاء</button>`
+      : `<button class="bo-outline-btn" id="startMergeBtn">دمج طاولات</button>`;
+  }
+  grid.appendChild(toolbar);
+  const startMergeBtn = document.getElementById('startMergeBtn');
+  if (startMergeBtn) startMergeBtn.addEventListener('click', () => { mergeModeActive = true; mergeSelectedTableIds = new Set(); renderPosTablesFloorGrid(); });
+  const cancelMergeBtn = document.getElementById('cancelMergeBtn');
+  if (cancelMergeBtn) cancelMergeBtn.addEventListener('click', () => { mergeModeActive = false; mergeSelectedTableIds = new Set(); renderPosTablesFloorGrid(); });
+  const confirmMergeBtn = document.getElementById('confirmMergeBtn');
+  if (confirmMergeBtn) confirmMergeBtn.addEventListener('click', mergeSelectedTables);
+
+  tables.forEach(t => {
+    const openOrder = orderByTable[t.id];
+    const card = document.createElement('div');
+    const isSelected = mergeSelectedTableIds.has(t.id);
+    card.className = 'pos-table-card ' + (openOrder ? 'occupied' : 'available') + (isSelected ? ' merge-selected' : '');
+    const elapsedMin = openOrder ? minutesSince(openOrder.created_at) : 0;
+    const isLongOpen = openOrder && elapsedMin >= LONG_OPEN_MINUTES_WARNING;
+    card.innerHTML = `
+      <div class="pt-name">${escapeHtml(t.name)}</div>
+      ${t.capacity ? `<div class="pt-capacity">${t.capacity} أشخاص</div>` : ''}
+      ${openOrder ? `<div class="pt-total">${Number(openOrder.total).toFixed(2)}</div>` : ''}
+      ${openOrder ? `<div class="pt-timer ${isLongOpen ? 'pt-timer-warn' : ''}">${elapsedMin < 60 ? elapsedMin + ' د' : Math.floor(elapsedMin / 60) + 'س ' + (elapsedMin % 60) + 'د'}</div>` : ''}
+      <div class="pt-status">${openOrder ? 'مشغولة' : 'فاضية'}</div>
+      ${openOrder && !mergeModeActive ? `<button type="button" class="pt-transfer-btn" data-action="transfer">نقل ⇄</button>` : ''}
+    `;
+    if (mergeModeActive) {
+      if (openOrder) {
+        card.addEventListener('click', () => {
+          if (mergeSelectedTableIds.has(t.id)) mergeSelectedTableIds.delete(t.id); else mergeSelectedTableIds.add(t.id);
+          renderPosTablesFloorGrid();
+        });
+      } else {
+        card.style.opacity = '0.4'; card.style.cursor = 'default';
+      }
+    } else {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('[data-action="transfer"]')) return;
+        openPosTableForOrder(t, openOrder || null);
+      });
+      const transferBtn = card.querySelector('[data-action="transfer"]');
+      if (transferBtn) transferBtn.addEventListener('click', (e) => { e.stopPropagation(); openTransferTableModal(t, openOrder); });
+    }
+    grid.appendChild(card);
+  });
+}
+
+function updatePosTablesFloorTimers() {
+  if (document.getElementById('posTablesFloorView').style.display === 'none') { clearInterval(posTablesFloorInterval); return; }
+  renderPosTablesFloorGrid();
 }
 
 async function openPosTableForOrder(table, existingOrder) {
@@ -11823,12 +11914,14 @@ async function openPosTableForOrder(table, existingOrder) {
       cart = (items || []).map(it => {
         const product = boProducts.find(p => p.id === it.product_id);
         const unit = it.product_unit_id ? product?.product_units?.find(u => u.id === it.product_unit_id) : null;
+        const modifiers = it.selected_modifiers || [];
         return {
           product, quantity: Number(it.quantity), unitPrice: Number(it.unit_price),
           productUnitId: it.product_unit_id || null,
           unitLabel: unit?.unit_types?.name || '', factor: unit ? (Number(unit.factor_to_base) || 1) : 1,
           basePrice: product ? resolveProductPrice(product) : Number(it.unit_price),
-          modifiers: [], modifiersKey: null, overridePrice: null,
+          modifiers, modifiersKey: modifiers.length > 0 ? modifiers.map(m => m.option_id).sort().join(',') : null,
+          overridePrice: null,
         };
       }).filter(l => l.product);
       activeTableOrderId = existingOrder.id;
@@ -11852,6 +11945,96 @@ async function backToPosTablesFloor() {
     await saveSaleOrder({ silentReturn: true });
   } else {
     showPosTablesFloorView();
+  }
+}
+
+// ---- نقل طلب من طاولة لطاولة تانية فاضية ----
+let transferSourceTable = null;
+function openTransferTableModal(table, openOrder) {
+  if (!openOrder) return;
+  transferSourceTable = { table, openOrder };
+  document.getElementById('transferTableUnitLabel').textContent = ' ' + seatingUnitLabel();
+  document.getElementById('transferFromLabel').value = table.name;
+  const availableTables = lastPosTablesFloorData.tables.filter(t => t.id !== table.id && !lastPosTablesFloorData.orderByTable[t.id]);
+  const toSelect = document.getElementById('transferToSelect');
+  if (availableTables.length === 0) {
+    toSelect.innerHTML = `<option value="">لا توجد ${escapeHtml(seatingUnitLabelPlural())} فاضية حاليًا</option>`;
+  } else {
+    toSelect.innerHTML = availableTables.map(t => `<option value="${t.id}">${escapeHtml(t.name)}</option>`).join('');
+  }
+  document.getElementById('transferTableModalError').classList.remove('show');
+  document.getElementById('transferTableModalOverlay').classList.add('show');
+}
+
+function closeTransferTableModal() {
+  document.getElementById('transferTableModalOverlay').classList.remove('show');
+  transferSourceTable = null;
+}
+
+async function confirmTransferTable() {
+  const errEl = document.getElementById('transferTableModalError');
+  errEl.classList.remove('show');
+  const toId = document.getElementById('transferToSelect').value;
+  if (!toId || !transferSourceTable) { errEl.textContent = `اختر ${seatingUnitLabel()} الوجهة`; errEl.classList.add('show'); return; }
+  const btn = document.getElementById('confirmTransferTableBtn');
+  btn.disabled = true; btn.textContent = 'جاري النقل...';
+  try {
+    const { error } = await supabaseClient.from('sale_orders').update({ table_id: toId }).eq('id', transferSourceTable.openOrder.id);
+    if (error) throw error;
+    showToast(`تم نقل الطلب لـ${document.getElementById('transferToSelect').selectedOptions[0].textContent}`);
+    closeTransferTableModal();
+    showPosTablesFloorView();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'تعذر نقل الطلب';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'نقل';
+  }
+}
+
+// ---- دمج طاولات متعددة في فاتورة واحدة ----
+// أول طاولة في مجموعة الاختيار بتبقى "الرئيسية": باقي الطاولات المختارة
+// بتتنقل أصنافها لطلبيتها وتتقفل هي، فتفضى تلقائيًا في شاشة الطاولات
+async function mergeSelectedTables() {
+  const ids = Array.from(mergeSelectedTableIds);
+  if (ids.length < 2) return;
+  const { orderByTable, tables } = lastPosTablesFloorData;
+  const primaryTableId = ids[0];
+  const primaryOrder = orderByTable[primaryTableId];
+  const otherOrders = ids.slice(1).map(id => orderByTable[id]).filter(Boolean);
+  if (!primaryOrder || otherOrders.length === 0) return;
+  const primaryTableName = tables.find(t => t.id === primaryTableId)?.name || '';
+  if (!confirm(`هيتم دمج طلبات ${ids.length} ${seatingUnitLabelPlural()} في طلبية "${primaryTableName}" الواحدة. متأكد؟`)) return;
+
+  try {
+    for (const order of otherOrders) {
+      // ننقل كل سطور الطلبية التانية لطلبية الطاولة الرئيسية
+      const { error: moveErr } = await supabaseClient
+        .from('sale_order_items').update({ sale_order_id: primaryOrder.id }).eq('sale_order_id', order.id);
+      if (moveErr) throw moveErr;
+      // نقفل الطلبية القديمة (مش حذف، لأن صلاحية الحذف محصورة على sales_management)
+      const { error: closeErr } = await supabaseClient
+        .from('sale_orders')
+        .update({ status: 'cancelled', table_id: null, notes: `تم دمجها مع طلبية "${primaryTableName}"` })
+        .eq('id', order.id);
+      if (closeErr) throw closeErr;
+    }
+    // نعيد حساب إجمالي طلبية الطاولة الرئيسية من مجموع كل سطورها بعد الدمج
+    const { data: mergedItems, error: itemsErr } = await supabaseClient
+      .from('sale_order_items').select('total').eq('sale_order_id', primaryOrder.id);
+    if (itemsErr) throw itemsErr;
+    const newSubtotal = (mergedItems || []).reduce((s, it) => s + Number(it.total || 0), 0);
+    const { error: updateTotalsErr } = await supabaseClient
+      .from('sale_orders').update({ subtotal: newSubtotal, total: newSubtotal }).eq('id', primaryOrder.id);
+    if (updateTotalsErr) throw updateTotalsErr;
+
+    showToast(`تم دمج ${ids.length} ${seatingUnitLabelPlural()} في "${primaryTableName}"`);
+    mergeModeActive = false; mergeSelectedTableIds = new Set();
+    showPosTablesFloorView();
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || 'تعذر دمج الطاولات', true);
   }
 }
 
@@ -11980,6 +12163,11 @@ function bindPosEvents() {
   });
   document.getElementById('backToTablesBtn').addEventListener('click', backToPosTablesFloor);
   document.getElementById('refreshPosTablesFloorBtn').addEventListener('click', showPosTablesFloorView);
+  document.getElementById('cancelTransferTableBtn').addEventListener('click', closeTransferTableModal);
+  document.getElementById('transferTableModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'transferTableModalOverlay') closeTransferTableModal();
+  });
+  document.getElementById('confirmTransferTableBtn').addEventListener('click', confirmTransferTable);
   document.querySelectorAll('#myAttendanceTabs [data-att-tab]').forEach(btn => {
     btn.addEventListener('click', () => switchMyAttendanceTab(btn.dataset.attTab));
   });
@@ -14340,13 +14528,19 @@ async function doCheckout() {
 
     showReceipt(receiptData);
 
-    // لو الفاتورة دي كانت لطاولة/كرسي، نمسح الطلبية المؤقتة (draft) اللي
-    // كانت شايلة أوردر الطاولة — الفاتورة الحقيقية اتسجلت خلاص في sales،
-    // ومسح الـdraft ده هو اللي بيخلي الطاولة تفضى تلقائيًا في شاشة الطاولات
+    // لو الفاتورة دي كانت لطاولة/كرسي، نقفل الطلبية المؤقتة (draft) اللي
+    // كانت شايلة أوردر الطاولة — الفاتورة الحقيقية اتسجلت خلاص في sales.
+    // بنستخدم تحديث الحالة (status='cancelled') مش الحذف، لأن صلاحية
+    // الحذف على sale_orders مقصورة على sales_management، بينما أي كاشير
+    // عادي معاه صلاحية pos بس المفروض يقدر يقفل طاولته بعد الدفع عادي.
+    // تغيير الحالة كافي لإخراج الطاولة من عداد "المشغولة" لأن شاشة الطاولات
+    // بتفلتر على status='draft' بس.
     if (activeTableOrderId) {
       const closingTableOrderId = activeTableOrderId;
-      supabaseClient.from('sale_orders').delete().eq('id', closingTableOrderId)
-        .then(({ error }) => { if (error) console.error('تعذر تنظيف طلبية الطاولة المؤقتة', error); });
+      supabaseClient.from('sale_orders')
+        .update({ status: 'cancelled', notes: 'تم تحصيل الطاولة مباشرة من شاشة الكاشير (مش إلغاء فعلي)' })
+        .eq('id', closingTableOrderId)
+        .then(({ error }) => { if (error) console.error('تعذر إغلاق طلبية الطاولة المؤقتة', error); });
     }
     const wasTableCheckout = !!activeTableId;
     activeTableId = null; activeTableOrderId = null; activeTableName = null;
@@ -14457,7 +14651,7 @@ async function saveSaleOrder(opts) {
     const orderItems = cart.map(l => ({
       sale_order_id: order.id, product_id: l.product.id, product_unit_id: l.productUnitId || null,
       quantity: l.quantity, unit_price: l.unitPrice, discount: 0, total: l.quantity * l.unitPrice,
-      warehouse_id: saleWarehouseId,
+      warehouse_id: saleWarehouseId, selected_modifiers: l.modifiers || [],
     }));
     const { error: itemsError } = await supabaseClient.from('sale_order_items').insert(orderItems);
     if (itemsError) throw itemsError;
@@ -14565,7 +14759,7 @@ async function savePosDeliveryOrder() {
     const orderItems = cart.map(l => ({
       sale_order_id: order.id, product_id: l.product.id, product_unit_id: l.productUnitId || null,
       quantity: l.quantity, unit_price: l.unitPrice, discount: 0, total: l.quantity * l.unitPrice,
-      warehouse_id: saleWarehouseId,
+      warehouse_id: saleWarehouseId, selected_modifiers: l.modifiers || [],
     }));
     const { error: itemsError } = await supabaseClient.from('sale_order_items').insert(orderItems);
     if (itemsError) throw itemsError;
