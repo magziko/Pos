@@ -195,6 +195,9 @@ a { color: inherit; }
 .pt-transfer-btn { margin-top: 8px; font-size: 10.5px; padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; }
 .pos-layout-canvas { position: relative; width: 100%; height: 480px; background: repeating-linear-gradient(0deg, var(--surface-sunken), var(--surface-sunken) 1px, var(--surface) 1px, var(--surface) 40px), repeating-linear-gradient(90deg, var(--surface-sunken), var(--surface-sunken) 1px, var(--surface) 1px, var(--surface) 40px); border: 1px dashed var(--border); border-radius: var(--radius-md); overflow: hidden; touch-action: none; }
 .pos-layout-item { position: absolute; width: 76px; height: 76px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--teal-100); border: 2px solid var(--teal-600); border-radius: 10px; font-size: 11.5px; font-weight: 700; cursor: grab; user-select: none; transform: translate(-50%, -50%); text-align: center; padding: 4px; }
+.pos-layout-item.size-sm { width: 58px; height: 58px; font-size: 10.5px; }
+.pos-layout-item.size-lg { width: 96px; height: 96px; font-size: 12.5px; }
+.pos-layout-item.size-xl { width: 116px; height: 116px; font-size: 13px; }
 .pos-layout-item.round { border-radius: 50%; }
 .pos-layout-item:active { cursor: grabbing; }
 .pos-layout-item .li-cap { font-size: 10px; font-weight: 400; color: var(--ink-soft); }
@@ -6211,7 +6214,7 @@ a { color: inherit; }
             </div>
             <div class="bo-table-wrap">
               <table class="bo-table">
-                <thead><tr><th>الاسم/الرقم</th><th>الدور</th><th>الجناح</th><th>السعة</th><th>الحالة</th><th></th></tr></thead>
+                <thead><tr><th>الاسم/الرقم</th><th>الشكل</th><th>الدور</th><th>الجناح</th><th>السعة</th><th>الحالة</th><th></th></tr></thead>
                 <tbody id="posTablesTableBody">
                   <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
                 </tbody>
@@ -9225,6 +9228,12 @@ a { color: inherit; }
         <div class="field"><label>الدور (اختياري)</label><select id="posTableFloor"><option value="">بدون دور محدد</option></select></div>
         <div class="field"><label>الجناح/المنطقة (اختياري)</label><select id="posTableSection"><option value="">بدون جناح محدد</option></select></div>
         <div class="field field-full"><label>الاسم/الرقم</label><input type="text" id="posTableName" required placeholder="مثال: طاولة 1"></div>
+        <div class="field"><label>الشكل على المخطط</label>
+          <select id="posTableShape">
+            <option value="square">مربّعة</option>
+            <option value="round">دائرية</option>
+          </select>
+        </div>
         <div class="field"><label>السعة (عدد الأشخاص، اختياري)</label><input type="number" id="posTableCapacity" min="1" step="1"></div>
         <div class="field field-full">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
@@ -11885,6 +11894,16 @@ function seatingUnitLabel() {
   return bt?.settings?.seating_unit_label || 'طاولة';
 }
 
+// حجم مربّع/دائرة الطاولة على المخطط بيكبر مع سعتها، عشان المخطط يقرب
+// من شكل الصالة الحقيقي (طاولة 8 أشخاص تبان أكبر من طاولة شخصين)
+function tableSizeClass(capacity) {
+  if (!capacity) return '';
+  if (capacity <= 2) return 'size-sm';
+  if (capacity <= 4) return '';
+  if (capacity <= 6) return 'size-lg';
+  return 'size-xl';
+}
+
 function seatingUnitLabelPlural() {
   const bt = getCurrentBranchBusinessType();
   return bt?.settings?.seating_unit_label_plural || (bt?.settings?.seating_unit_label ? bt.settings.seating_unit_label : 'طاولات');
@@ -11972,6 +11991,12 @@ function bindFloorTableCard(card, t, openOrder) {
   const isSelected = mergeSelectedTableIds.has(t.id);
   card.className += openOrder ? ' occupied' : ' available';
   if (isSelected) card.className += ' merge-selected';
+  // لون الجناح بيبان كشريط علوي مميّز، من غير ما يبوّظ لون "فاضية/مشغولة"
+  // اللي هو أهم إشارة بصرية للكاشير
+  if (t.pos_sections?.color) {
+    card.style.borderTopWidth = '5px';
+    card.style.borderTopColor = t.pos_sections.color;
+  }
   if (mergeModeActive) {
     if (openOrder) {
       card.addEventListener('click', () => {
@@ -12027,7 +12052,7 @@ function renderPosTablesFloorGrid() {
     positioned.forEach(t => {
       const openOrder = lastPosTablesFloorData.orderByTable[t.id];
       const card = document.createElement('div');
-      card.className = 'pos-layout-item pos-table-card' + (t.shape === 'round' ? ' round' : '');
+      card.className = 'pos-layout-item pos-table-card' + (t.shape === 'round' ? ' round' : '') + ' ' + tableSizeClass(t.capacity);
       card.style.left = t.pos_x + '%';
       card.style.top = t.pos_y + '%';
       card.innerHTML = buildFloorTableCardHtml(t, openOrder);
@@ -14013,7 +14038,7 @@ async function loadBoPosTables(branchId) {
 function renderPosTablesTable() {
   const tbody = document.getElementById('posTablesTableBody');
   if (boPosTables.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">لا توجد وحدات مضافة بعد</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">لا توجد وحدات مضافة بعد</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
@@ -14021,6 +14046,7 @@ function renderPosTablesTable() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${escapeHtml(t.name)}</td>
+      <td>${t.shape === 'round' ? '⬤ دائرية' : '■ مربّعة'}</td>
       <td>${escapeHtml(t.pos_floors?.name || '—')}</td>
       <td>${t.pos_sections ? `<span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:${escapeHtml(t.pos_sections.color || '#999')}; margin-left:5px;"></span>${escapeHtml(t.pos_sections.name)}` : '—'}</td>
       <td class="num">${t.capacity || '—'}</td>
@@ -14067,6 +14093,7 @@ function openPosTableModal(table) {
   branchSel.value = table ? table.branch_id : (document.getElementById('posTablesBranchFilter').value || eligibleBranches[0].id);
   document.getElementById('posTableName').value = table ? table.name : '';
   document.getElementById('posTableCapacity').value = table?.capacity || '';
+  document.getElementById('posTableShape').value = table?.shape || 'square';
   document.getElementById('posTableActive').checked = table ? table.is_active : true;
   populatePosTableFloorSectionSelects(table?.floor_id, table?.section_id);
   document.getElementById('posTableModalError').classList.remove('show');
@@ -14088,6 +14115,7 @@ async function savePosTable(e) {
     section_id: document.getElementById('posTableSection').value || null,
     name: document.getElementById('posTableName').value.trim(),
     capacity: document.getElementById('posTableCapacity').value ? Number(document.getElementById('posTableCapacity').value) : null,
+    shape: document.getElementById('posTableShape').value,
     is_active: document.getElementById('posTableActive').checked,
   };
   const btn = document.getElementById('savePosTableBtn');
@@ -14173,10 +14201,13 @@ function renderLayoutCanvas() {
 
 function buildLayoutItem(table, positioned) {
   const el = document.createElement('div');
-  el.className = 'pos-layout-item' + (table.shape === 'round' ? ' round' : '');
+  el.className = 'pos-layout-item' + (table.shape === 'round' ? ' round' : '') + ' ' + tableSizeClass(table.capacity);
   el.style.left = (table.pos_x ?? 50) + '%';
   el.style.top = (table.pos_y ?? 50) + '%';
-  if (table.pos_sections?.color) el.style.borderColor = table.pos_sections.color;
+  if (table.pos_sections?.color) {
+    el.style.borderColor = table.pos_sections.color;
+    el.style.background = table.pos_sections.color + '26'; // شفافية خفيفة (hex alpha)
+  }
   el.innerHTML = `${escapeHtml(table.name)}${table.capacity ? `<span class="li-cap">${table.capacity} أشخاص</span>` : ''}`;
   el.dataset.tableId = table.id;
   makeLayoutItemDraggable(el, table, true);
