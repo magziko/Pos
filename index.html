@@ -194,7 +194,9 @@ a { color: inherit; }
 .pos-table-card.merge-selected { outline: 3px solid var(--teal-600); outline-offset: -3px; }
 .pt-transfer-btn { margin-top: 8px; font-size: 10.5px; padding: 3px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; }
 .pos-layout-canvas { position: relative; width: 100%; height: 480px; background: repeating-linear-gradient(0deg, var(--surface-sunken), var(--surface-sunken) 1px, var(--surface) 1px, var(--surface) 40px), repeating-linear-gradient(90deg, var(--surface-sunken), var(--surface-sunken) 1px, var(--surface) 1px, var(--surface) 40px); border: 1px dashed var(--border); border-radius: var(--radius-md); overflow: hidden; touch-action: none; }
-.pos-layout-item { position: absolute; width: 76px; height: 76px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--teal-100); border: 2px solid var(--teal-600); border-radius: 10px; font-size: 11.5px; font-weight: 700; cursor: grab; user-select: none; transform: translate(-50%, -50%); text-align: center; padding: 4px; }
+.pos-layout-item { position: absolute; width: 76px; height: 76px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--teal-100); border: 2px solid var(--teal-600); border-radius: 10px; font-size: 11.5px; font-weight: 700; cursor: grab; user-select: none; transform: translate(-50%, -50%); text-align: center; padding: 4px; z-index: 2; }
+.pos-layout-zone-band { position: absolute; right: 0; left: 0; pointer-events: none; z-index: 0; }
+.pos-layout-zone-label { position: absolute; top: 6px; right: 10px; font-size: 11px; font-weight: 700; }
 .pos-layout-item.size-sm { width: 58px; height: 58px; font-size: 10.5px; }
 .pos-layout-item.size-lg { width: 96px; height: 96px; font-size: 12.5px; }
 .pos-layout-item.size-xl { width: 116px; height: 116px; font-size: 13px; }
@@ -14358,12 +14360,36 @@ async function initLayoutTab() {
   renderLayoutCanvas();
 }
 
+// بترسم شرائح أفقية خلفية للوحة المخطط، شريحة لكل جناح، بترتيب إنشائهم
+// (الجناح الأول اللي اتضاف زي "شرقي" بيفضل فوق، والتاني زي "غربي" تحته)
+// — دليل بصري لمكان كل جناح، مش قيد فعلي بيمنعك تسحب طاولة بره منطقتها
+async function renderLayoutZoneBands(canvas, floorId) {
+  if (!floorId) return;
+  const { data: sections, error } = await supabaseClient
+    .from('pos_sections').select('*').eq('floor_id', floorId).eq('is_active', true).order('sort_order').order('name');
+  if (error || !sections || sections.length === 0) return;
+  // لو اللوحة اتغيّرت لدور تاني قبل ما الطلب ده يخلص، منرسمش على الفاضي
+  if (document.getElementById('layoutFloorSelect').value !== floorId) return;
+  const bandHeight = 100 / sections.length;
+  sections.forEach((s, i) => {
+    const band = document.createElement('div');
+    band.className = 'pos-layout-zone-band';
+    band.style.top = (i * bandHeight) + '%';
+    band.style.height = bandHeight + '%';
+    band.style.background = (s.color || '#94a3b8') + '14';
+    if (i > 0) band.style.borderTop = '1px dashed ' + (s.color || '#94a3b8');
+    band.innerHTML = `<span class="pos-layout-zone-label" style="color:${escapeHtml(s.color || '#666')};">${escapeHtml(s.name)}</span>`;
+    canvas.appendChild(band);
+  });
+}
+
 function renderLayoutCanvas() {
   const floorId = document.getElementById('layoutFloorSelect').value;
   const canvas = document.getElementById('posLayoutCanvas');
   const tray = document.getElementById('posLayoutTray');
   canvas.innerHTML = '';
   tray.innerHTML = '';
+  renderLayoutZoneBands(canvas, floorId);
   const floorTables = boPosTables.filter(t => t.floor_id === floorId && t.is_active);
   const positioned = floorTables.filter(t => t.pos_x != null && t.pos_y != null);
   const unpositioned = floorTables.filter(t => t.pos_x == null || t.pos_y == null);
