@@ -12036,9 +12036,11 @@ function buildFloorTableCardHtml(t, openOrder) {
   const elapsedMin = openOrder ? minutesSince(openOrder.created_at) : 0;
   const isLongOpen = openOrder && elapsedMin >= LONG_OPEN_MINUTES_WARNING;
   const sectionColor = t.pos_sections?.color;
+  const floorName = activePosFloorTabId === 'all' ? lastPosTablesFloorData.floors.find(f => f.id === t.floor_id)?.name : null;
   return `
     ${sectionColor ? `<div style="width:10px; height:10px; border-radius:50%; background:${escapeHtml(sectionColor)}; margin:0 auto 4px;"></div>` : ''}
     <div class="pt-name">${escapeHtml(t.name)}</div>
+    ${floorName ? `<div class="pt-capacity">${escapeHtml(floorName)}</div>` : ''}
     ${t.capacity ? `<div class="pt-capacity">${t.capacity} أشخاص</div>` : ''}
     ${openOrder ? `<div class="pt-total">${Number(openOrder.total).toFixed(2)}</div>` : ''}
     ${openOrder ? `<div class="pt-timer ${isLongOpen ? 'pt-timer-warn' : ''}">${elapsedMin < 60 ? elapsedMin + ' د' : Math.floor(elapsedMin / 60) + 'س ' + (elapsedMin % 60) + 'د'}</div>` : ''}
@@ -12107,7 +12109,14 @@ function renderPosTablesFloorGrid() {
   const positioned = visibleTables.filter(t => t.pos_x != null && t.pos_y != null);
   const unpositioned = visibleTables.filter(t => t.pos_x == null || t.pos_y == null);
 
-  if (positioned.length > 0) {
+  // المخطط بالمواضع (Canvas) منطقي بس لما يكون دور واحد محدد، لأن كل
+  // دور له نظام إحداثيات مستقل عن الباقي في مصمّم المخطط. لو التاب
+  // المختار "الكل"، ممكن طاولتين من دورين مختلفين يكون ليهم نفس
+  // الإحداثيات تقريبًا فيتراكبوا فوق بعض بصريًا — فبنرجع للعرض
+  // كشبكة عادية في وضع "الكل" بدل المخطط
+  const useCanvasView = activePosFloorTabId !== 'all' && positioned.length > 0;
+
+  if (useCanvasView) {
     canvasView.style.display = 'block';
     positioned.forEach(t => {
       const openOrder = lastPosTablesFloorData.orderByTable[t.id];
@@ -12123,7 +12132,8 @@ function renderPosTablesFloorGrid() {
     canvasView.style.display = 'none';
   }
 
-  unpositioned.forEach(t => {
+  const gridTables = useCanvasView ? unpositioned : visibleTables;
+  gridTables.forEach(t => {
     const openOrder = lastPosTablesFloorData.orderByTable[t.id];
     const card = document.createElement('div');
     card.className = 'pos-table-card';
@@ -12143,13 +12153,17 @@ async function openPosTableForOrder(table, existingOrder) {
   activeTableOrderId = null;
   activeTableName = table.name;
   cart = [];
+  posEls.discountInput.value = 0;
+  setCustomerSelection('', { silent: true });
+  posEls.paymentMethodSelect.value = 'cash';
   if (existingOrder) {
     try {
-      const { data: items, error } = await supabaseClient
-        .from('sale_order_items')
-        .select('*')
-        .eq('sale_order_id', existingOrder.id);
-      if (error) throw error;
+      const [{ data: items, error: itemsErr }, { data: orderRow, error: orderErr }] = await Promise.all([
+        supabaseClient.from('sale_order_items').select('*').eq('sale_order_id', existingOrder.id),
+        supabaseClient.from('sale_orders').select('customer_id, discount, payment_method').eq('id', existingOrder.id).single(),
+      ]);
+      if (itemsErr) throw itemsErr;
+      if (orderErr) throw orderErr;
       cart = (items || []).map(it => {
         const product = boProducts.find(p => p.id === it.product_id);
         const unit = it.product_unit_id ? product?.product_units?.find(u => u.id === it.product_unit_id) : null;
@@ -12164,6 +12178,15 @@ async function openPosTableForOrder(table, existingOrder) {
         };
       }).filter(l => l.product);
       activeTableOrderId = existingOrder.id;
+      // نرجّع الخصم والعميل اللي كانوا محفوظين على الطلبية، مش بس الأصناف
+      if (orderRow?.discount) posEls.discountInput.value = orderRow.discount;
+      if (orderRow?.customer_id) setCustomerSelection(orderRow.customer_id, { silent: true });
+      // بنرجّع طريقة الدفع المحفوظة برضه، إلا لو كانت "متعددة" (mixed) —
+      // لأن تفاصيل تقسيم الدفع مش متخزنة على الطلبية المؤقتة، فمينفعش
+      // نرجّعها بدقة، فبنسيبها على الافتراضي (نقدي) في الحالة دي بس
+      if (orderRow?.payment_method && orderRow.payment_method !== 'mixed') {
+        posEls.paymentMethodSelect.value = orderRow.payment_method;
+      }
     } catch (err) {
       console.error(err);
       showToast('تعذر تحميل طلبية الطاولة المحفوظة', true);
@@ -14125,21 +14148,29 @@ function renderPosTablesTable() {
   });
 }
 
-function populatePosTableFloorSectionSelects(selectedFloorId, selectedSectionId) {
+async function populatePosTableFloorSectionSelects(selectedFloorId, selectedSectionId) {
   const floorSel = document.getElementById('posTableFloor');
   floorSel.innerHTML = '<option value="">بدون دور محدد</option>' + boPosFloors.map(f => `<option value="${f.id}">${escapeHtml(f.name)}</option>`).join('');
   floorSel.value = selectedFloorId || '';
-  const populateSections = () => {
+
+  // بنجيب أجنحة الدور المختار طازة من القاعدة دايمًا، بدل ما نعتمد على
+  // boPosSections العامة اللي ممكن تكون لسه محمّلة لدور تاني (لو آخر
+  // حاجة اتفتحت في تبويب "الأدوار والأجنحة" كانت لدور مختلف) — ده كان
+  // سبب اختفاء بعض الأجنحة زي الجناح الغربي من قائمة الاختيار
+  async function populateSections() {
     const sectionSel = document.getElementById('posTableSection');
-    const relevantSections = boPosSections.filter(s => s.floor_id === floorSel.value);
-    sectionSel.innerHTML = '<option value="">بدون جناح محدد</option>' + relevantSections.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
-    sectionSel.value = relevantSections.some(s => s.id === selectedSectionId) ? selectedSectionId : '';
-  };
-  populateSections();
-  floorSel.onchange = async () => {
-    await loadPosSections(floorSel.value);
-    populateSections();
-  };
+    if (!floorSel.value) {
+      sectionSel.innerHTML = '<option value="">بدون جناح محدد</option>';
+      return;
+    }
+    sectionSel.innerHTML = '<option value="">جاري التحميل...</option>';
+    const { data: sections, error } = await supabaseClient.from('pos_sections').select('*').eq('floor_id', floorSel.value).eq('is_active', true).order('sort_order').order('name');
+    if (error) { console.error(error); sectionSel.innerHTML = '<option value="">تعذر تحميل الأجنحة</option>'; return; }
+    sectionSel.innerHTML = '<option value="">بدون جناح محدد</option>' + (sections || []).map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+    sectionSel.value = (sections || []).some(s => s.id === selectedSectionId) ? selectedSectionId : '';
+  }
+  await populateSections();
+  floorSel.onchange = () => { selectedSectionId = null; populateSections(); };
 }
 
 function openPosTableModal(table) {
@@ -14219,8 +14250,13 @@ function openBulkPosTableModal() {
   const sectionSel = document.getElementById('bulkPosTableSection');
   sectionSel.innerHTML = '<option value="">بدون جناح محدد</option>';
   floorSel.onchange = async () => {
-    await loadPosSections(floorSel.value);
-    sectionSel.innerHTML = '<option value="">بدون جناح محدد</option>' + boPosSections.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+    if (!floorSel.value) { sectionSel.innerHTML = '<option value="">بدون جناح محدد</option>'; return; }
+    sectionSel.innerHTML = '<option value="">جاري التحميل...</option>';
+    // بنجيب أجنحة الدور ده لوحدها من غير ما نلمس boPosSections العامة،
+    // عشان منأثرش على أي تبويب/مودال تاني فاتح حاليًا بيعتمد عليها
+    const { data: sections, error } = await supabaseClient.from('pos_sections').select('*').eq('floor_id', floorSel.value).eq('is_active', true).order('sort_order').order('name');
+    if (error) { console.error(error); sectionSel.innerHTML = '<option value="">تعذر تحميل الأجنحة</option>'; return; }
+    sectionSel.innerHTML = '<option value="">بدون جناح محدد</option>' + (sections || []).map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
   };
   document.getElementById('bulkPosTablePrefix').value = seatingUnitLabel();
   document.getElementById('bulkPosTableStart').value = 1;
