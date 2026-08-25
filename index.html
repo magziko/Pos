@@ -12219,12 +12219,20 @@ function openTransferTableModal(table, openOrder) {
   transferSourceTable = { table, openOrder };
   document.getElementById('transferTableUnitLabel').textContent = ' ' + seatingUnitLabel();
   document.getElementById('transferFromLabel').value = table.name;
-  const availableTables = lastPosTablesFloorData.tables.filter(t => t.id !== table.id && !lastPosTablesFloorData.orderByTable[t.id]);
+  const { floors } = lastPosTablesFloorData;
+  const showFloorName = floors.length > 1;
+  let availableTables = lastPosTablesFloorData.tables.filter(t => t.id !== table.id && !lastPosTablesFloorData.orderByTable[t.id]);
+  // طاولات نفس الدور تظهر الأول، عشان النقل التقيل (لنفس الدور) يكون
+  // أسهل وصولًا من النقل لدور تاني
+  availableTables = availableTables.slice().sort((a, b) => (a.floor_id === table.floor_id ? -1 : 1) - (b.floor_id === table.floor_id ? -1 : 1));
   const toSelect = document.getElementById('transferToSelect');
   if (availableTables.length === 0) {
     toSelect.innerHTML = `<option value="">لا توجد ${escapeHtml(seatingUnitLabelPlural())} فاضية حاليًا</option>`;
   } else {
-    toSelect.innerHTML = availableTables.map(t => `<option value="${t.id}">${escapeHtml(t.name)}</option>`).join('');
+    toSelect.innerHTML = availableTables.map(t => {
+      const floorName = showFloorName ? (floors.find(f => f.id === t.floor_id)?.name || 'بدون دور') : null;
+      return `<option value="${t.id}">${escapeHtml(t.name)}${floorName ? ' — ' + escapeHtml(floorName) : ''}</option>`;
+    }).join('');
   }
   document.getElementById('transferTableModalError').classList.remove('show');
   document.getElementById('transferTableModalOverlay').classList.add('show');
@@ -12250,7 +12258,7 @@ async function confirmTransferTable() {
     showPosTablesFloorView();
   } catch (err) {
     console.error(err);
-    errEl.textContent = err.message || 'تعذر نقل الطلب';
+    errEl.textContent = friendlyTableConflictMessage(err) || err.message || 'تعذر نقل الطلب';
     errEl.classList.add('show');
   } finally {
     btn.disabled = false; btn.textContent = 'نقل';
@@ -12263,13 +12271,19 @@ async function confirmTransferTable() {
 async function mergeSelectedTables() {
   const ids = Array.from(mergeSelectedTableIds);
   if (ids.length < 2) return;
-  const { orderByTable, tables } = lastPosTablesFloorData;
+  const { orderByTable, tables, floors } = lastPosTablesFloorData;
   const primaryTableId = ids[0];
   const primaryOrder = orderByTable[primaryTableId];
   const otherOrders = ids.slice(1).map(id => orderByTable[id]).filter(Boolean);
   if (!primaryOrder || otherOrders.length === 0) return;
-  const primaryTableName = tables.find(t => t.id === primaryTableId)?.name || '';
-  if (!confirm(`هيتم دمج طلبات ${ids.length} ${seatingUnitLabelPlural()} في طلبية "${primaryTableName}" الواحدة. متأكد؟`)) return;
+  const selectedTables = ids.map(id => tables.find(t => t.id === id)).filter(Boolean);
+  const primaryTableName = selectedTables[0]?.name || '';
+  const otherNames = selectedTables.slice(1).map(t => t.name).join('، ');
+  const floorIds = new Set(selectedTables.map(t => t.floor_id));
+  const crossFloorWarning = floorIds.size > 1
+    ? `\n\n⚠️ تنبيه: الطاولات المختارة من أدوار مختلفة (${selectedTables.map(t => floors.find(f => f.id === t.floor_id)?.name || 'بدون دور').join('، ')}).`
+    : '';
+  if (!confirm(`هيتم دمج طلبات "${otherNames}" في طلبية "${primaryTableName}" الواحدة.${crossFloorWarning}\n\nمتأكد؟`)) return;
 
   try {
     for (const order of otherOrders) {
@@ -14363,13 +14377,27 @@ async function initLayoutTab() {
 // بترسم شرائح أفقية خلفية للوحة المخطط، شريحة لكل جناح، بترتيب إنشائهم
 // (الجناح الأول اللي اتضاف زي "شرقي" بيفضل فوق، والتاني زي "غربي" تحته)
 // — دليل بصري لمكان كل جناح، مش قيد فعلي بيمنعك تسحب طاولة بره منطقتها
-async function renderLayoutZoneBands(canvas, floorId) {
+let layoutRenderGeneration = 0;
+
+// لو حصل تعارض إن طاولة اتفتحت/اتنقل ليها طلب من جهاز تاني في نفس
+// اللحظة، قاعدة البيانات بترفض بكود 23505 (unique violation) — بنحوّله
+// لرسالة مفهومة للكاشير بدل رسالة تقنية
+function friendlyTableConflictMessage(err) {
+  if (err?.code === '23505' && err?.message?.includes('idx_sale_orders_one_draft_per_table')) {
+    return `${seatingUnitLabel()} اتفتحت أو اتنقل ليها طلب من جهاز تاني لحظة ما كنت بتحاول. حدّث شاشة الطاولات وحاول تاني`;
+  }
+  return null;
+}
+
+
+async function renderLayoutZoneBands(canvas, floorId, myGeneration) {
   if (!floorId) return;
   const { data: sections, error } = await supabaseClient
     .from('pos_sections').select('*').eq('floor_id', floorId).eq('is_active', true).order('sort_order').order('name');
   if (error || !sections || sections.length === 0) return;
-  // لو اللوحة اتغيّرت لدور تاني قبل ما الطلب ده يخلص، منرسمش على الفاضي
-  if (document.getElementById('layoutFloorSelect').value !== floorId) return;
+  // لو حصل render تاني (سحب طاولة تانية مثلاً) قبل ما الطلب ده يخلص،
+  // منرسمش فوق لوحة بقت قديمة — كده بنمنع تكرار الشرائح
+  if (myGeneration !== layoutRenderGeneration) return;
   const bandHeight = 100 / sections.length;
   sections.forEach((s, i) => {
     const band = document.createElement('div');
@@ -14384,12 +14412,14 @@ async function renderLayoutZoneBands(canvas, floorId) {
 }
 
 function renderLayoutCanvas() {
+  layoutRenderGeneration++;
+  const myGeneration = layoutRenderGeneration;
   const floorId = document.getElementById('layoutFloorSelect').value;
   const canvas = document.getElementById('posLayoutCanvas');
   const tray = document.getElementById('posLayoutTray');
   canvas.innerHTML = '';
   tray.innerHTML = '';
-  renderLayoutZoneBands(canvas, floorId);
+  renderLayoutZoneBands(canvas, floorId, myGeneration);
   const floorTables = boPosTables.filter(t => t.floor_id === floorId && t.is_active);
   const positioned = floorTables.filter(t => t.pos_x != null && t.pos_y != null);
   const unpositioned = floorTables.filter(t => t.pos_x == null || t.pos_y == null);
@@ -15423,7 +15453,7 @@ async function saveSaleOrder(opts) {
     }
   } catch (err) {
     console.error(err);
-    showToast(err.message || 'حدث خطأ أثناء حفظ الطلبية', true);
+    showToast(friendlyTableConflictMessage(err) || err.message || 'حدث خطأ أثناء حفظ الطلبية', true);
   } finally {
     if (btn && !silentReturn) { btn.disabled = cart.length === 0; btn.textContent = 'حفظ كطلبية بيع (بدون تأثير على الأرصدة)'; }
   }
