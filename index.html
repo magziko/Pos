@@ -773,6 +773,12 @@ a { color: inherit; }
 .unit-row { display: grid; grid-template-columns: 1.2fr 1fr 1fr auto; gap: 8px; align-items: center; background: var(--surface-sunken); padding: 8px; border-radius: var(--radius-sm); }
 .unit-row input, .unit-row select { padding: 8px 9px; font-size: 12.5px; }
 .unit-row .remove-unit-btn { color: var(--danger); background: none; font-size: 16px; font-weight: 700; padding: 4px 8px; }
+.simple-list-row { display: flex; gap: 8px; align-items: center; background: var(--surface-sunken); padding: 8px; border-radius: var(--radius-sm); }
+.simple-list-row input { flex: 1; padding: 8px 9px; font-size: 12.5px; }
+.simple-list-row .remove-unit-btn { color: var(--danger); background: none; font-size: 16px; font-weight: 700; padding: 4px 8px; }
+.asset-type-row { display: grid; grid-template-columns: 64px 1fr 1.4fr auto; gap: 8px; align-items: center; background: var(--surface-sunken); padding: 8px; border-radius: var(--radius-sm); }
+.asset-type-row input { padding: 8px 9px; font-size: 12.5px; }
+.asset-type-row .remove-unit-btn { color: var(--danger); background: none; font-size: 16px; font-weight: 700; padding: 4px 8px; }
 .transfer-row { display: grid; grid-template-columns: 2fr 1fr auto; gap: 8px; align-items: center; background: var(--surface-sunken); padding: 8px; border-radius: var(--radius-sm); margin-bottom: 6px; }
 .transfer-row input, .transfer-row select { padding: 8px 9px; font-size: 12.5px; }
 .transfer-row .remove-unit-btn { color: var(--danger); background: none; font-size: 16px; font-weight: 700; padding: 4px 8px; }
@@ -1148,7 +1154,7 @@ a { color: inherit; }
   /* Compact multi-field editor rows (unit conversions / stock transfer / purchase lines):
      scroll sideways instead of squeezing every field unreadably */
   .units-list, #transferItemsList, .purchase-lines-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
-  .unit-row, .transfer-row { min-width: 420px; }
+  .unit-row, .transfer-row, .asset-type-row { min-width: 420px; }
   .purchase-line-row { min-width: 520px; }
   .purchase-line-row.with-unit { min-width: 600px; }
 }
@@ -8247,11 +8253,64 @@ a { color: inherit; }
         <input type="text" id="businessTypeSeatingLabelPlural" placeholder="طاولات">
       </div>
 
-      <div class="ci-section-subtitle">قوالب أصناف سريعة</div>
+      <div class="ci-section-subtitle">قوالب أصناف سريعة (منتجات وخدمات)</div>
       <div class="field field-full">
         <div class="units-list" id="businessTypeTemplatesList"></div>
         <button type="button" class="btn-secondary" id="addBusinessTypeTemplateRowBtn" style="margin-top:8px;">+ إضافة قالب</button>
-        <p style="font-size:11.5px; color:var(--ink-soft); margin:6px 0 0;">هتظهر كخيارات جاهزة في زرار "إضافة سريعة" بشاشة الأصناف، لأي فرع نشاطه ده.</p>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin:6px 0 0;">هتظهر كخيارات جاهزة في زرار "إضافة سريعة" بشاشة الأصناف، لأي فرع نشاطه ده. حدّد نوع كل قالب (منتج له مخزون / خدمة بدون مخزون).</p>
+      </div>
+
+      <div class="ci-section-subtitle">خصائص إضافية للنشاط (اختياري)</div>
+      <div class="field field-full">
+        <div class="units-list" id="businessTypeAdditionalPropsList"></div>
+        <button type="button" class="btn-secondary" id="addBusinessTypeAdditionalPropBtn" style="margin-top:8px;">+ إضافة خاصية</button>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin:6px 0 0;">خصائص عامة يقترحها هذا النشاط (مثال: "مدة الضمان بالشهور")، هتُستخدم مستقبلًا كحقول مقترحة عند إدخال بيانات مرتبطة بالنشاط.</p>
+      </div>
+
+      <div class="ci-section-subtitle">أنواع الأصول/الأجهزة الخاصة بالنشاط (اختياري)</div>
+      <div class="field field-full">
+        <div class="units-list" id="businessTypeAssetTypesList"></div>
+        <button type="button" class="btn-secondary" id="addBusinessTypeAssetTypeBtn" style="margin-top:8px;">+ إضافة نوع أصل</button>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin:6px 0 0;">مثال: "وحدة تكييف"، "مصعد"، "نظام برمجي". اكتب الحقول المقترحة لكل نوع مفصولة بفاصلة (مثال: الموديل، القدرة، تاريخ التركيب) — تجهيز مستقبلي فقط، لا يُنشئ أي أصول الآن.</p>
+      </div>
+
+      <div class="ci-section-subtitle">وحدات إدارة الخدمات المستقبلية لهذا النشاط (اختياري)</div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="businessTypeModule_assets" style="width:auto;"> الأصول/الأجهزة</label>
+      </div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="businessTypeModule_service_orders" style="width:auto;"> أوامر الخدمة</label>
+      </div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="businessTypeModule_technicians" style="width:auto;"> الفنيين</label>
+      </div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="businessTypeModule_visits" style="width:auto;"> الزيارات</label>
+      </div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="businessTypeModule_maintenance" style="width:auto;"> الصيانة الدورية</label>
+      </div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="businessTypeModule_contracts" style="width:auto;"> العقود</label>
+      </div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="businessTypeModule_tickets" style="width:auto;"> تذاكر الدعم الفني</label>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin:6px 0 0;">تحديد الوحدات هنا تجهيز/تخطيط فقط لهذا النشاط — الشاشات نفسها غير مُفعّلة بعد في النظام.</p>
+      </div>
+
+      <div class="ci-section-subtitle">التقارير الخاصة بالنشاط (اختياري)</div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="businessTypeReport_service_visits" style="width:auto;"> تقرير الزيارات</label>
+      </div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="businessTypeReport_maintenance_due" style="width:auto;"> تقرير الصيانة المستحقة</label>
+      </div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="businessTypeReport_contracts" style="width:auto;"> تقرير العقود</label>
+      </div>
+      <div class="field field-full">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="businessTypeReport_tickets" style="width:auto;"> تقرير تذاكر الدعم</label>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin:6px 0 0;">نفس الأمر: تحديد مبدئي فقط، هذه التقارير غير موجودة بعد في النظام.</p>
       </div>
 
       <div class="ci-section-subtitle">الحالة</div>
@@ -18280,8 +18339,18 @@ function bindBackofficeEvents() {
   });
 
   document.getElementById('addBusinessTypeTemplateRowBtn').addEventListener('click', () => {
-    currentBusinessTypeTemplates.push({ label: '', sell_by: 'unit', initial_tab: 'basic' });
+    currentBusinessTypeTemplates.push({ label: '', kind: 'product', sell_by: 'unit', initial_tab: 'basic' });
     renderBusinessTypeTemplatesList();
+  });
+
+  document.getElementById('addBusinessTypeAdditionalPropBtn').addEventListener('click', () => {
+    currentBusinessTypeAdditionalProps.push({ label: '' });
+    renderBusinessTypeAdditionalPropsList();
+  });
+
+  document.getElementById('addBusinessTypeAssetTypeBtn').addEventListener('click', () => {
+    currentBusinessTypeAssetTypes.push({ icon: '', label: '', attributes: [] });
+    renderBusinessTypeAssetTypesList();
   });
 
   document.getElementById('productIsBundle').addEventListener('change', (e) => {
@@ -25747,7 +25816,14 @@ async function deleteBranch(branch) {
 
 // ---- أنواع الأنشطة التجارية (business_types) ----
 let boBusinessTypes = [];
-let currentBusinessTypeTemplates = []; // قوالب الأصناف السريعة الخاصة بنوع النشاط المفتوح حاليًا في مودال التعديل
+let currentBusinessTypeTemplates = []; // قوالب الأصناف السريعة (منتجات/خدمات) الخاصة بنوع النشاط المفتوح حاليًا في مودال التعديل
+let currentBusinessTypeAdditionalProps = []; // خصائص إضافية عامة مقترحة لهذا النشاط (تجهيز مستقبلي، لا تُستهلك بعد)
+let currentBusinessTypeAssetTypes = []; // أنواع الأصول/الأجهزة المقترحة لهذا النشاط (تجهيز مستقبلي، لا تُنشئ أصول فعلية بعد)
+
+// المفاتيح الثابتة لوحدات ولتقارير إدارة الخدمات المستقبلية — تُقرأ/تُكتب من settings.future_modules
+// و settings.enabled_reports فقط كتجهيز مستقبلي؛ لا توجد شاشات فعلية تستهلكها بعد
+const SERVICE_MGMT_MODULE_KEYS = ['assets', 'service_orders', 'technicians', 'visits', 'maintenance', 'contracts', 'tickets'];
+const SERVICE_MGMT_REPORT_KEYS = ['service_visits', 'maintenance_due', 'contracts', 'tickets'];
 
 async function loadBoBusinessTypes() {
   const { data, error } = await supabaseClient.from('business_types').select('*').order('name');
@@ -25806,6 +25882,8 @@ function renderBusinessTypesTable() {
     if (x.uses_multiple_units) badges.push(`<span class="bt-mini-badge">📦 وحدات متعددة</span>`);
     if (templatesCount > 0) badges.push(`<span class="bt-mini-badge">⚡ ${templatesCount} قوالب</span>`);
     if (x.settings?.item_name_label) badges.push(`<span class="bt-mini-badge">🏷 ${escapeHtml(x.settings.item_name_label)}</span>`);
+    if ((x.settings?.asset_types || []).length > 0) badges.push(`<span class="bt-mini-badge">🧩 ${x.settings.asset_types.length} أنواع أصول</span>`);
+    if ((x.settings?.future_modules || []).length > 0) badges.push(`<span class="bt-mini-badge">🛠 مهيّأ لإدارة الخدمات</span>`);
     const card = document.createElement('div');
     card.className = `bt-card${x.is_active ? '' : ' inactive'}`;
     card.innerHTML = `
@@ -25852,6 +25930,20 @@ function openBusinessTypeModal(item) {
   document.getElementById('businessTypeActive').checked = item ? item.is_active : true;
   currentBusinessTypeTemplates = (item?.settings?.templates || []).map(t => ({ ...t }));
   renderBusinessTypeTemplatesList();
+  currentBusinessTypeAdditionalProps = (item?.settings?.additional_properties || []).map(p => ({ ...p }));
+  renderBusinessTypeAdditionalPropsList();
+  currentBusinessTypeAssetTypes = (item?.settings?.asset_types || []).map(a => ({ ...a, attributes: [...(a.attributes || [])] }));
+  renderBusinessTypeAssetTypesList();
+  const activeModules = item?.settings?.future_modules || [];
+  SERVICE_MGMT_MODULE_KEYS.forEach(key => {
+    const el = document.getElementById('businessTypeModule_' + key);
+    if (el) el.checked = activeModules.includes(key);
+  });
+  const activeReports = item?.settings?.enabled_reports || [];
+  SERVICE_MGMT_REPORT_KEYS.forEach(key => {
+    const el = document.getElementById('businessTypeReport_' + key);
+    if (el) el.checked = activeReports.includes(key);
+  });
   const branchNoteEl = document.getElementById('businessTypeBranchCountNote');
   const branchCount = item ? boBranchesList.filter(b => b.business_type_id === item.id).length : 0;
   if (branchNoteEl) {
@@ -25869,11 +25961,18 @@ function renderBusinessTypeTemplatesList() {
   currentBusinessTypeTemplates.forEach((t, idx) => {
     const row = document.createElement('div');
     row.className = 'unit-row';
+    row.style.gridTemplateColumns = '1fr 0.8fr 1fr 1fr auto';
 
     const labelInput = document.createElement('input');
     labelInput.type = 'text'; labelInput.placeholder = 'اسم القالب — مثال: لحم بقري';
     labelInput.value = t.label ?? '';
     labelInput.addEventListener('input', () => { currentBusinessTypeTemplates[idx].label = labelInput.value; });
+
+    const kindSelect = document.createElement('select');
+    kindSelect.innerHTML = `
+      <option value="product" ${t.kind !== 'service' ? 'selected' : ''}>منتج (له مخزون)</option>
+      <option value="service" ${t.kind === 'service' ? 'selected' : ''}>خدمة (بدون مخزون)</option>`;
+    kindSelect.addEventListener('change', () => { currentBusinessTypeTemplates[idx].kind = kindSelect.value; });
 
     const sellBySelect = document.createElement('select');
     sellBySelect.innerHTML = `
@@ -25892,7 +25991,70 @@ function renderBusinessTypeTemplatesList() {
     removeBtn.type = 'button'; removeBtn.className = 'remove-unit-btn'; removeBtn.textContent = '×';
     removeBtn.addEventListener('click', () => { currentBusinessTypeTemplates.splice(idx, 1); renderBusinessTypeTemplatesList(); });
 
-    row.append(labelInput, sellBySelect, initialTabSelect, removeBtn);
+    row.append(labelInput, kindSelect, sellBySelect, initialTabSelect, removeBtn);
+    wrap.appendChild(row);
+  });
+}
+
+// خصائص إضافية عامة مقترحة للنشاط — قائمة نصوص بسيطة (اسم الخاصية فقط)، بنفس فلسفة
+// business_types.settings.variant_attributes الموجودة، لكن معروضة كحقول يقترحها المستخدم
+// بحرية بدل قائمة ثابتة. تجهيز مستقبلي فقط — لا تُستهلك في أي شاشة حاليًا.
+function renderBusinessTypeAdditionalPropsList() {
+  const wrap = document.getElementById('businessTypeAdditionalPropsList');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  currentBusinessTypeAdditionalProps.forEach((p, idx) => {
+    const row = document.createElement('div');
+    row.className = 'simple-list-row';
+
+    const labelInput = document.createElement('input');
+    labelInput.type = 'text'; labelInput.placeholder = 'اسم الخاصية — مثال: مدة الضمان بالشهور';
+    labelInput.value = p.label ?? '';
+    labelInput.addEventListener('input', () => { currentBusinessTypeAdditionalProps[idx].label = labelInput.value; });
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button'; removeBtn.className = 'remove-unit-btn'; removeBtn.textContent = '×';
+    removeBtn.addEventListener('click', () => { currentBusinessTypeAdditionalProps.splice(idx, 1); renderBusinessTypeAdditionalPropsList(); });
+
+    row.append(labelInput, removeBtn);
+    wrap.appendChild(row);
+  });
+}
+
+// أنواع الأصول/الأجهزة المقترحة للنشاط (مثال: وحدة تكييف، مصعد، نظام برمجي)، وكل نوع له
+// حقول مقترحة حرة (نص مفصول بفواصل) — بنفس فلسفة تخزين variant_attributes الحرة للمنتجات،
+// لكن على مستوى النشاط ولنطاق "الأصول" المستقبلي. تجهيز مستقبلي فقط — لا يُنشئ أي جدول
+// أو أصل فعلي؛ البيانات تُخزَّن في business_types.settings.asset_types فقط لحين بناء شاشة الأصول لاحقًا.
+function renderBusinessTypeAssetTypesList() {
+  const wrap = document.getElementById('businessTypeAssetTypesList');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  currentBusinessTypeAssetTypes.forEach((a, idx) => {
+    const row = document.createElement('div');
+    row.className = 'asset-type-row';
+
+    const iconInput = document.createElement('input');
+    iconInput.type = 'text'; iconInput.maxLength = 4; iconInput.placeholder = '🔧';
+    iconInput.value = a.icon ?? '';
+    iconInput.addEventListener('input', () => { currentBusinessTypeAssetTypes[idx].icon = iconInput.value; });
+
+    const labelInput = document.createElement('input');
+    labelInput.type = 'text'; labelInput.placeholder = 'اسم نوع الأصل — مثال: وحدة تكييف';
+    labelInput.value = a.label ?? '';
+    labelInput.addEventListener('input', () => { currentBusinessTypeAssetTypes[idx].label = labelInput.value; });
+
+    const attrsInput = document.createElement('input');
+    attrsInput.type = 'text'; attrsInput.placeholder = 'الحقول المقترحة مفصولة بفاصلة — مثال: الموديل، القدرة، تاريخ التركيب';
+    attrsInput.value = (a.attributes || []).join('، ');
+    attrsInput.addEventListener('input', () => {
+      currentBusinessTypeAssetTypes[idx].attributes = attrsInput.value.split(/[،,]/).map(s => s.trim()).filter(Boolean);
+    });
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button'; removeBtn.className = 'remove-unit-btn'; removeBtn.textContent = '×';
+    removeBtn.addEventListener('click', () => { currentBusinessTypeAssetTypes.splice(idx, 1); renderBusinessTypeAssetTypesList(); });
+
+    row.append(iconInput, labelInput, attrsInput, removeBtn);
     wrap.appendChild(row);
   });
 }
@@ -25936,6 +26098,10 @@ async function saveBusinessType(e) {
       default_sell_by: usesWeight ? 'weight' : 'unit',
       ...(usesVariants ? { variant_attributes: ['size', 'color'] } : {}),
       templates: currentBusinessTypeTemplates.filter(t => (t.label || '').trim() !== ''),
+      additional_properties: currentBusinessTypeAdditionalProps.filter(p => (p.label || '').trim() !== ''),
+      asset_types: currentBusinessTypeAssetTypes.filter(a => (a.label || '').trim() !== ''),
+      future_modules: SERVICE_MGMT_MODULE_KEYS.filter(key => document.getElementById('businessTypeModule_' + key)?.checked),
+      enabled_reports: SERVICE_MGMT_REPORT_KEYS.filter(key => document.getElementById('businessTypeReport_' + key)?.checked),
       ...(document.getElementById('businessTypeItemNameLabel').value.trim() ? { item_name_label: document.getElementById('businessTypeItemNameLabel').value.trim() } : {}),
       ...(document.getElementById('businessTypeIcon').value.trim() ? { icon: document.getElementById('businessTypeIcon').value.trim() } : {}),
       ...(document.getElementById('businessTypeSeatingLabel').value.trim() ? { seating_unit_label: document.getElementById('businessTypeSeatingLabel').value.trim() } : {}),
