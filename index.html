@@ -6810,6 +6810,13 @@ a { color: inherit; }
       <div class="ci-section-subtitle" style="margin-top:0;">البيانات الأساسية</div>
       <div class="modal-grid">
         <div class="field field-full"><label id="productNameFieldLabel">اسم الصنف</label><input type="text" id="productName" required></div>
+        <div class="field field-full">
+          <label>نوع الصنف</label>
+          <select id="productItemKind">
+            <option value="product" selected>منتج — له مخزون ويؤثر عليه عند البيع</option>
+            <option value="service">خدمة — بدون مخزون (تركيب، صيانة، كشف، دعم فني...)</option>
+          </select>
+        </div>
         <div class="field"><label>المجموعة</label><select id="productCategory"><option value="">بدون مجموعة</option></select></div>
         <div class="field"><label>نوع البيع</label>
           <select id="productUnitType"></select>
@@ -6841,7 +6848,7 @@ a { color: inherit; }
 
       <div class="ci-section-subtitle">المخزون والوحدات</div>
       <div class="modal-grid">
-        <div class="field"><label>حد إعادة الطلب</label><input type="number" id="productReorder" step="0.01" min="0" value="0"></div>
+        <div class="field" id="productReorderField"><label>حد إعادة الطلب</label><input type="number" id="productReorder" step="0.01" min="0" value="0"></div>
         <div class="field field-full" id="productSellByWeightField">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
             <input type="checkbox" id="productSellByWeight" style="width:auto;"> يباع بالوزن (كجم) — سعر البيع أعلاه يُعتبر سعر الكيلوجرام
@@ -13056,11 +13063,14 @@ function renderProducts() {
     const card = document.createElement('button');
     card.className = 'product-card';
     const stock = availableStock(p.id);
+    const isServiceItem = p.item_kind === 'service';
     const variants = allProducts.filter(v => v.parent_product_id === p.id);
     const hasVariants = variants.length > 0;
-    const stockLabel = stock <= 0
-      ? `<span style="color:var(--danger);">لا يوجد رصيد</span>`
-      : `<span style="color:var(--ink-soft);">متاح: <span class="num">${stock}</span></span>`;
+    const stockLabel = isServiceItem
+      ? `<span style="color:var(--teal-700);">خدمة</span>`
+      : (stock <= 0
+        ? `<span style="color:var(--danger);">لا يوجد رصيد</span>`
+        : `<span style="color:var(--ink-soft);">متاح: <span class="num">${stock}</span></span>`);
     let priceHtml;
     if (hasVariants) {
       const prices = variants.map(v => resolveProductPrice(v));
@@ -18356,6 +18366,9 @@ function bindBackofficeEvents() {
   document.getElementById('productIsBundle').addEventListener('change', (e) => {
     document.getElementById('productBundleSection').style.display = e.target.checked ? '' : 'none';
   });
+  document.getElementById('productItemKind').addEventListener('change', (e) => {
+    applyProductKindUI(e.target.value);
+  });
   document.getElementById('addBundleItemRowBtn').addEventListener('click', () => {
     currentBundleItems.push({ id: null, component_product_id: '', quantity: '' });
     renderBundleItemsList();
@@ -19879,10 +19892,13 @@ function renderProductsTable() {
       ? `<td class="num cost-guard-cell" data-col="cost_price"><input type="number" step="0.01" min="0" class="bulk-price-input" data-field="cost_price" data-product-id="${p.id}" value="${pendingChange.cost_price ?? p.cost_price}" style="width:90px;"></td>`
       : `<td class="num cost-guard-cell" data-col="cost_price">${Number(p.cost_price).toFixed(2)}</td>`;
     const qty = productsStockMap[p.id] || 0;
+    const isServiceItem = p.item_kind === 'service';
     const isOutOfStock = qty <= 0;
     const isLowStock = !isOutOfStock && Number(p.reorder_level) > 0 && qty <= Number(p.reorder_level);
     const qtyBadge = isOutOfStock ? '<span class="bo-badge inactive">نافذ</span>' : (isLowStock ? '<span class="bo-badge pending">منخفض</span>' : '');
-    const qtyCell = `<td class="num" data-col="qty">${formatProductQtyCell(p, qty)}${qtyBadge ? ` ${qtyBadge}` : ''}</td>`;
+    const qtyCell = isServiceItem
+      ? `<td class="num" data-col="qty"><span class="bo-badge active">خدمة — بدون مخزون</span></td>`
+      : `<td class="num" data-col="qty">${formatProductQtyCell(p, qty)}${qtyBadge ? ` ${qtyBadge}` : ''}</td>`;
     const checkboxCell = productsBulkEditMode
       ? `<td></td>`
       : `<td><input type="checkbox" class="product-row-checkbox" data-product-id="${p.id}" ${productsSelectedIds.has(p.id) ? 'checked' : ''}></td>`;
@@ -19898,7 +19914,7 @@ function renderProductsTable() {
     const lastModifiedText = formatProductLastModified(p);
     tr.innerHTML = `
       ${checkboxCell}
-      <td><button type="button" class="qv-name-trigger" data-action="quickview">${escapeHtml(p.name)}</button>${pricingWarningBadge ? ` ${pricingWarningBadge}` : ''}</td>
+      <td><button type="button" class="qv-name-trigger" data-action="quickview">${escapeHtml(p.name)}</button>${p.item_kind === 'service' ? ' <span class="bo-badge" style="background:var(--teal-100); color:var(--teal-900);">خدمة</span>' : ''}${pricingWarningBadge ? ` ${pricingWarningBadge}` : ''}</td>
       <td data-col="category">${escapeHtml(p.categories?.name || '—')}</td>
       ${salePriceCell}
       ${costPriceCell}
@@ -20580,6 +20596,7 @@ async function openProductModal(product, initialTab, isDuplicate) {
   document.getElementById('productCommissionRate').value = product ? (product.commission_rate ?? 0) : 0;
   document.getElementById('productKitchenAlias').value = product?.kitchen_alias || '';
   document.getElementById('productReorder').value = product ? product.reorder_level : 0;
+  document.getElementById('productItemKind').value = (product && product.item_kind === 'service') ? 'service' : 'product';
   setImageUploadFieldValue('productImage', product?.image_url || '', 'productImagePreview', 'productImagePlaceholder', 'productImageRemoveBtn', 'productImageSizeLabel');
   document.getElementById('productActive').checked = product ? product.is_active : true;
   // تعبئة ذكية حسب نوع نشاط الفرع الحالي — لصنف جديد فاضي فقط (مش عند التعديل أو النسخ)
@@ -20596,8 +20613,9 @@ async function openProductModal(product, initialTab, isDuplicate) {
   // موجود بالفعل بنعرض كل التابات دايمًا، عشان محدش يفقد الوصول لبيانات
   // مسجّلة من قبل (لو النشاط اتغيّر بعد إنشاء الصنف مثلاً).
   applyBusinessTypeTabVisibility(branchBusinessType, isNew);
+  applyProductKindUI(document.getElementById('productItemKind').value);
   let effectiveInitialTab = initialTab || 'basic';
-  if (isNew && effectiveInitialTab !== 'basic') {
+  if (effectiveInitialTab !== 'basic') {
     const tabBtn = document.querySelector(`.pm-tab-btn[data-pm-tab="${effectiveInitialTab}"]`);
     if (tabBtn && tabBtn.style.display === 'none') effectiveInitialTab = 'basic';
   }
@@ -20641,6 +20659,26 @@ function applyBusinessTypeTabVisibility(branchBusinessType, isNew) {
     const shouldShow = !isNew || !branchBusinessType || !!branchBusinessType[flagKey];
     btn.style.display = shouldShow ? '' : 'none';
   });
+}
+
+// خدمة (item_kind = 'service') منطقيًا مفيهاش مخزون أبدًا (لا رصيد، لا دفعات،
+// لا أرقام تسلسلية)، فبنخفي حقل حد إعادة الطلب وتابات الدفعات/الأرقام
+// التسلسلية/المخزون بالمخازن بغض النظر عن كونه صنف جديد أو تعديل — على عكس
+// applyBusinessTypeTabVisibility اللي بتفضّل إظهار كل حاجة عند التعديل. الدالتان
+// تتكاملان مع بعض: دي بتخفي بس، ومتعارضش مع تفعيل نوع النشاط.
+function applyProductKindUI(kind) {
+  const isService = kind === 'service';
+  const reorderField = document.getElementById('productReorderField');
+  if (reorderField) reorderField.style.display = isService ? 'none' : '';
+  ['batches', 'serials', 'stock'].forEach(tabName => {
+    const btn = document.querySelector(`.pm-tab-btn[data-pm-tab="${tabName}"]`);
+    if (btn && isService) btn.style.display = 'none';
+  });
+  // لو التاب المفتوح حاليًا كان مخزون/دفعات/أرقام تسلسلية وهو بقى مخفي، نرجع لتاب البيانات الأساسية
+  const activeBtn = document.querySelector('.pm-tab-btn.active');
+  if (isService && activeBtn && ['batches', 'serials', 'stock'].includes(activeBtn.dataset.pmTab)) {
+    switchPmTab('basic');
+  }
 }
 
 function switchPmTab(tabName) {
@@ -21474,11 +21512,12 @@ async function saveProduct(e) {
     min_price: document.getElementById('productMinPrice').value ? Number(document.getElementById('productMinPrice').value) : null,
     commission_rate: Number(document.getElementById('productCommissionRate').value) || 0,
     kitchen_alias: document.getElementById('productKitchenAlias').value.trim() || null,
-    reorder_level: Number(document.getElementById('productReorder').value) || 0,
+    reorder_level: document.getElementById('productItemKind').value === 'service' ? 0 : (Number(document.getElementById('productReorder').value) || 0),
     image_url: document.getElementById('productImage').value.trim() || null,
     is_active: document.getElementById('productActive').checked,
     sell_by: document.getElementById('productSellByWeight').checked ? 'weight' : 'unit',
     is_bundle: document.getElementById('productIsBundle').checked,
+    item_kind: document.getElementById('productItemKind').value === 'service' ? 'service' : 'product',
   };
   // لو مفيش صلاحية رؤية التكلفة، الحقل أصلاً مخفي في الفورم؛ منشيلش cost_price
   // من الـ payload إلا لو التعديل على صنف موجود بالفعل، عشان ميتصفرش سعر
@@ -31238,7 +31277,7 @@ async function loadStocktakeCountRows(session) {
   (items || []).forEach(it => { itemMap[it.product_id] = it; });
 
   stocktakeCountRows = boProducts
-    .filter(p => p.is_active !== false)
+    .filter(p => p.is_active !== false && p.item_kind !== 'service')
     .sort((a, b) => a.name.localeCompare(b.name, 'ar'))
     .map(p => {
       const existing = itemMap[p.id];
@@ -31590,7 +31629,7 @@ function closeRequisitionFormModal() {
 function renderRequisitionLines() {
   const wrap = document.getElementById('requisitionLinesList');
   wrap.innerHTML = '';
-  const topLevelProducts = boProducts.filter(p => !p.parent_product_id);
+  const topLevelProducts = boProducts.filter(p => !p.parent_product_id && p.item_kind !== 'service');
   requisitionLines.forEach((line, idx) => {
     const row = document.createElement('div');
     row.style.cssText = 'display:flex; gap:6px; margin-bottom:8px; align-items:flex-start;';
@@ -32277,7 +32316,7 @@ function renderPurchaseLines() {
       input: productInput,
       hidden: productHidden,
       dropdown: productDropdown,
-      getItems: () => boProducts.map(p => ({ value: p.id, label: p.name })),
+      getItems: () => boProducts.filter(p => p.item_kind !== 'service').map(p => ({ value: p.id, label: p.name })),
       onChange: (item) => {
         line.productId = item.value;
         const prod = boProducts.find(p => p.id === line.productId);
@@ -32790,7 +32829,7 @@ function renderPurchaseOrderLines() {
       input: productInput,
       hidden: productHidden,
       dropdown: productDropdown,
-      getItems: () => boProducts.map(p => ({ value: p.id, label: p.name })),
+      getItems: () => boProducts.filter(p => p.item_kind !== 'service').map(p => ({ value: p.id, label: p.name })),
       onChange: (item) => {
         line.productId = item.value;
         const prod = boProducts.find(p => p.id === line.productId);
@@ -38577,7 +38616,7 @@ async function refreshInventoryLevelsReport() {
     const stockByProduct = await fetchStockByProduct(warehouseId);
     const q = (document.getElementById('invLevelsSearchInput').value || '').trim().toLowerCase();
     const rows = boProducts
-      .filter(p => p.is_active && (!q || p.name.toLowerCase().includes(q)))
+      .filter(p => p.is_active && p.item_kind !== 'service' && (!q || p.name.toLowerCase().includes(q)))
       .map(p => ({
         name: p.name, category: p.categories?.name || 'بدون فئة', unit: p.unit_type,
         qty: stockByProduct[p.id] || 0, reorder: Number(p.reorder_level) || 0,
@@ -38703,7 +38742,7 @@ async function refreshInventoryLowStockReport() {
   try {
     const stockByProduct = await fetchStockByProduct(warehouseId);
     const rows = boProducts
-      .filter(p => p.is_active && Number(p.reorder_level) > 0 && (stockByProduct[p.id] || 0) <= Number(p.reorder_level))
+      .filter(p => p.is_active && p.item_kind !== 'service' && Number(p.reorder_level) > 0 && (stockByProduct[p.id] || 0) <= Number(p.reorder_level))
       .map(p => {
         const qty = stockByProduct[p.id] || 0;
         const reorder = Number(p.reorder_level);
