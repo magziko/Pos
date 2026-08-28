@@ -16625,7 +16625,8 @@ const SCREEN_LABELS = {
   'company-info': 'بيانات الشركة', 'permissions': 'الصلاحية الأمنية', 'users': 'إدارة المستخدمين',
   'branches': 'الفروع', 'business-types': 'أنواع الأنشطة التجارية', 'pos-devices': 'أجهزة نقاط البيع',
   'branch-settings': 'إعدادات الفرع', 'pos-tables': 'الطاولات والكراسي', 'print-settings': 'إعدادات الطباعة',
-  'backup': 'نسخة احتياطية', 'reset-data': 'تهيئة البيانات', 'capital': 'رأس المال وحقوق الملكية'
+  'backup': 'نسخة احتياطية', 'reset-data': 'تهيئة البيانات', 'capital': 'رأس المال وحقوق الملكية',
+  'assets': 'الأصول/الأجهزة'
 };
 
 // بناء قائمة الشاشات التفصيلية لكل وحدة رئيسية تلقائيًا من SECTION_PERMISSION_MAP
@@ -26890,6 +26891,7 @@ const PERMISSION_GROUPS = [
   { key: 'stock_management', title: 'المخزون والأصناف', desc: 'الأصناف، المجموعات، الوحدات، الضريبة، الخصومات، المخازن ونقل البضاعة', children: buildModuleScreens('stock_management') },
   { key: 'sales_management', title: 'المبيعات', desc: 'فواتير البيع، العملاء، أنواع العملاء، مرتجعات البيع', children: buildModuleScreens('sales_management') },
   { key: 'purchases_management', title: 'المشتريات', desc: 'الموردون، فواتير الشراء، مرتجعات الشراء', children: buildModuleScreens('purchases_management') },
+  { key: 'service_management', title: 'إدارة الخدمات', desc: 'الأصول/الأجهزة، أوامر الخدمة، الفنيين، الزيارات، العقود (تحت الإنشاء تدريجيًا)', children: buildModuleScreens('service_management') },
   { key: 'reports', title: 'التقارير', desc: 'تقارير المبيعات والمشتريات والمخزون والمحاسبة والتقارير الأخرى', reportGroups: REPORT_TABS },
   { key: 'finance', title: 'المالية', desc: 'الخزائن والحسابات البنكية، سجل المدفوعات، بنود المصروفات، المصروفات، الأصول الثابتة', children: buildModuleScreens('finance') },
   { key: 'hr', title: 'الموارد البشرية', desc: 'بيانات الموظفين والرواتب', children: buildModuleScreens('hr') },
