@@ -1636,6 +1636,17 @@ a { color: inherit; }
           </div>
         </div>
 
+        <!-- 3.5 إدارة الخدمات (تحت الإنشاء تدريجيًا) -->
+        <div class="bo-nav-group" id="serviceMgmtNavGroup">
+          <button class="bo-nav-item bo-nav-parent" id="serviceMgmtNavToggle" type="button">
+            <span>إدارة الخدمات</span>
+            <span class="bo-nav-chevron">‹</span>
+          </button>
+          <div class="bo-nav-sub" id="serviceMgmtNavSub">
+            <button class="bo-nav-sub-item" data-section="assets">الأصول/الأجهزة</button>
+          </div>
+        </div>
+
         <!-- 4. التقارير -->
         <div class="bo-nav-group" id="reportsNavGroup">
           <button class="bo-nav-item bo-nav-parent" id="reportsNavToggle" type="button">
@@ -2323,8 +2334,33 @@ a { color: inherit; }
           </div>
         </div>
 
-        <!-- قسم أسعار الموردين (مقارنة أسعار الشراء) -->
-        <div id="bo-section-supplier-prices" style="display:none;">
+        <!-- قسم الأصول/الأجهزة (Service Management — أول شاشة فعلية) -->
+        <div id="bo-section-assets" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">الأصول/الأجهزة</div>
+            <button class="bo-add-btn" id="addAssetBtn">+ أصل جديد</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="assetSearchInput" placeholder="ابحث بالاسم أو اسم العميل...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>اسم الأصل</th>
+                  <th>العميل</th>
+                  <th>نوع الأصل</th>
+                  <th>تاريخ التركيب</th>
+                  <th>الحالة</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="assetsTableBody">
+                <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
           <div class="bo-section-header">
             <div class="bo-section-title">أسعار الموردين لكل صنف (مقارنة أسعار الشراء)</div>
             <button class="bo-add-btn" id="addSupplierPriceBtn">+ سعر جديد</button>
@@ -7117,6 +7153,53 @@ a { color: inherit; }
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelSupplierBtn">إلغاء</button>
         <button type="submit" class="submit-btn" id="saveSupplierBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: أصل/جهاز جديد -->
+<div class="modal-overlay" id="assetModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="assetModalTitle">أصل جديد</div>
+    <form id="assetForm">
+      <input type="hidden" id="assetId">
+      <div class="modal-grid">
+        <div class="field field-full">
+          <label>العميل</label>
+          <div class="smart-search">
+            <input type="text" id="assetCustomerInput" autocomplete="off" placeholder="اكتب اسم العميل...">
+            <input type="hidden" id="assetCustomer">
+            <div class="smart-search-dropdown" id="assetCustomerDropdown"></div>
+          </div>
+        </div>
+        <div class="field field-full"><label>اسم الأصل</label><input type="text" id="assetName" required placeholder="مثال: تكييف الصالة، مصعد المبنى A..."></div>
+        <div class="field field-full" id="assetTypeSelectWrap">
+          <label>نوع الأصل</label>
+          <select id="assetTypeSelect"></select>
+        </div>
+        <div class="field field-full" id="assetTypeOtherWrap" style="display:none;">
+          <label>نوع الأصل (نص حر)</label>
+          <input type="text" id="assetTypeOtherInput" placeholder="اكتب نوع الأصل...">
+        </div>
+        <div class="field"><label>الرقم التعريفي</label><input type="text" id="assetCode" placeholder="رقم/كود داخلي مرجعي"></div>
+        <div class="field"><label>Serial Number</label><input type="text" id="assetSerialNumber" style="direction:ltr; text-align:right;"></div>
+        <div class="field"><label>الموديل</label><input type="text" id="assetModel"></div>
+        <div class="field"><label>الشركة المصنّعة</label><input type="text" id="assetManufacturer"></div>
+        <div class="field"><label>تاريخ الشراء</label><input type="date" id="assetPurchasedAt"></div>
+        <div class="field"><label>تاريخ التركيب</label><input type="date" id="assetInstalledAt"></div>
+        <div class="field"><label>بداية الضمان</label><input type="date" id="assetWarrantyStart"></div>
+        <div class="field"><label>نهاية الضمان</label><input type="date" id="assetWarrantyEnd"></div>
+        <div class="field" style="display:flex; align-items:flex-end;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="assetIsActive" checked style="width:auto;"> الأصل نشط</label>
+        </div>
+        <div class="field field-full"><label>ملاحظات</label><textarea id="assetNotes" rows="2"></textarea></div>
+      </div>
+      <div id="assetAttributesWrap" style="margin-bottom:10px;"></div>
+      <div class="error-msg" id="assetModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelAssetBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveAssetBtn">حفظ</button>
       </div>
     </form>
   </div>
@@ -16414,6 +16497,7 @@ async function enterBackoffice() {
 
 const boAllSections = ['dashboard','products','categories','unit-types','tax-rates','price-tiers','quick-discounts','customer-types',
   'sales-list','sale-orders','delivery','delivery-zones','delivery-companies','sales-channels','driver-settlements','customers','suppliers','supplier-prices','payments','purchase-orders','purchases','purchase-returns','sale-returns','purchase-requisitions',
+  'assets',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
   'soon','company-info','permissions','users','branches','business-types','pos-devices','branch-settings','pos-tables','print-settings','stock','stocktake','product-batches','product-serials','backup','reset-data','employees','attendance','leave-requests','expense-items','expenses','salaries','sales-commissions','treasuries','capital','fixed-assets','promotions','coupons','modifier-groups','recipes'];
 
@@ -16422,6 +16506,7 @@ const boNavGroups = [
   { toggle: 'marketingNavToggle', group: 'marketingNavGroup', sections: ['promotions','coupons'] },
   { toggle: 'salesNavToggle', group: 'salesNavGroup', sections: ['sales-list','sale-orders','delivery','delivery-zones','delivery-companies','sales-channels','driver-settlements','customers','customer-types','sale-returns'] },
   { toggle: 'purchasesNavToggle', group: 'purchasesNavGroup', sections: ['suppliers','supplier-prices','purchase-requisitions','purchase-orders','purchases','purchase-returns'] },
+  { toggle: 'serviceMgmtNavToggle', group: 'serviceMgmtNavGroup', sections: ['assets'] },
   { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
   { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['treasuries','payments','expense-items','expenses','capital','fixed-assets'] },
   { toggle: 'hrNavToggle', group: 'hrNavGroup', sections: ['employees','attendance','leave-requests','salaries','sales-commissions'] },
@@ -16440,6 +16525,7 @@ const SECTION_PERMISSION_MAP = {
   'promotions': 'admin', 'coupons': 'admin',
   'sales-list': 'sales_management', 'sale-orders': 'sales_management', 'delivery': 'sales_management', 'delivery-zones': 'sales_management', 'delivery-companies': 'sales_management', 'sales-channels': 'sales_management', 'driver-settlements': 'sales_management', 'customers': 'sales_management', 'customer-types': 'sales_management', 'sale-returns': 'sales_management',
   'suppliers': 'purchases_management', 'supplier-prices': 'purchases_management', 'purchase-orders': 'purchases_management', 'purchases': 'purchases_management', 'purchase-returns': 'purchases_management', 'purchase-requisitions': 'purchases_management',
+  'assets': 'service_management',
   'reports-sales': 'reports', 'reports-purchases': 'reports', 'reports-inventory': 'reports', 'reports-accounting': 'reports', 'reports-other': 'reports',
   'treasuries': 'finance', 'payments': 'finance', 'expense-items': 'finance', 'expenses': 'finance', 'capital': 'admin', 'fixed-assets': 'finance',
   'employees': 'hr', 'attendance': 'hr', 'leave-requests': 'hr', 'salaries': 'hr', 'sales-commissions': 'hr',
@@ -17006,6 +17092,7 @@ const ACTION_CAPABLE_SCREENS = {
   'driver-settlements': { edit: true },
   'customers': { add: true, edit: true, delete: true },
   'suppliers': { add: true, edit: true, delete: true },
+  'assets': { add: true, edit: true, delete: true },
   'purchase-requisitions': { add: true, edit: true },
   'purchase-orders': { add: true, edit: true, delete: true },
   'sales-list': { edit: true },
@@ -17048,6 +17135,7 @@ const ADD_BUTTON_MAP = {
   'recipes': 'addRecipeBtn',
   'promotions': 'addPromotionBtn', 'coupons': 'addCouponBtn',
   'stock': 'addWarehouseBtn', 'customers': 'addCustomerBtn', 'suppliers': 'addSupplierBtn', 'purchase-requisitions': 'addRequisitionBtn', 'supplier-prices': 'addSupplierPriceBtn',
+  'assets': 'addAssetBtn',
   'purchase-orders': 'addPurchaseOrderBtn', 'purchases': 'addPurchaseBtn', 'purchase-returns': 'addPurchaseReturnBtn', 'sale-returns': 'addSaleReturnFromBoBtn',
   'stocktake': 'addStocktakeSessionBtn', 'product-batches': 'addProductBatchBtn', 'product-serials': 'addProductSerialBtn',
   'delivery': 'addDeliveryOrderBtn', 'delivery-zones': 'addDeliveryZoneBtn', 'delivery-companies': 'addDeliveryCompanyBtn', 'sales-channels': 'addSalesChannelBtn',
@@ -17220,6 +17308,7 @@ function activateBoSection(section, btn) {
   if (section === 'delivery') { loadBoDeliveries().then(renderDeliveriesTable); }
   if (section === 'driver-settlements') { loadDriverSettlementsSectionData(); }
   if (section === 'supplier-prices' && !supplierPricesLoadedOnce) { initSupplierPricesSection(); supplierPricesLoadedOnce = true; }
+  if (section === 'assets' && !boAssetsLoadedOnce) { loadBoAssets().then(renderAssetsTable); boAssetsLoadedOnce = true; }
   if (section === 'purchase-orders') { loadBoPurchaseOrders().then(renderPurchaseOrdersTable); }
   if (section === 'purchase-requisitions') { loadBoRequisitions().then(renderRequisitionsTable); }
   if (section === 'purchase-returns') { loadBoPurchaseReturns().then(renderPurchaseReturnsTable); }
@@ -18563,6 +18652,16 @@ function bindBackofficeEvents() {
   document.getElementById('supplierBalance').addEventListener('input', updateSupplierCreditWarning);
   document.getElementById('supplierCreditLimit').addEventListener('input', updateSupplierCreditWarning);
   document.getElementById('supplierSearchInput').addEventListener('input', renderSuppliersTable);
+
+  // ---- Asset modal ----
+  document.getElementById('addAssetBtn').addEventListener('click', () => openAssetModal(null));
+  document.getElementById('cancelAssetBtn').addEventListener('click', closeAssetModal);
+  document.getElementById('assetModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'assetModalOverlay') closeAssetModal();
+  });
+  document.getElementById('assetForm').addEventListener('submit', saveAsset);
+  document.getElementById('assetTypeSelect').addEventListener('change', () => applyAssetTypeSelection());
+  document.getElementById('assetSearchInput').addEventListener('input', renderAssetsTable);
 
   // ---- Purchase requisitions ----
   document.getElementById('addRequisitionBtn').addEventListener('click', () => openRequisitionFormModal());
@@ -31542,6 +31641,244 @@ async function deleteSupplier(supplier) {
   showToast('تم حذف المورد');
   await loadBoSuppliers();
   renderSuppliersTable();
+}
+
+// ==================== الأصول/الأجهزة (Service Management) ====================
+let boAssets = [];
+let boAssetsLoadedOnce = false;
+let assetCustomerSearch = null;
+
+async function loadBoAssets() {
+  const { data, error } = await supabaseClient
+    .from('assets')
+    .select('*, customers(name)')
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل الأصول', true); return; }
+  boAssets = data || [];
+}
+
+function renderAssetsTable() {
+  const tbody = document.getElementById('assetsTableBody');
+  const q = (document.getElementById('assetSearchInput').value || '').trim().toLowerCase();
+  const filtered = boAssets.filter(a => {
+    if (!q) return true;
+    return a.name.toLowerCase().includes(q) || (a.customers?.name || '').toLowerCase().includes(q);
+  });
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">${boAssets.length === 0 ? 'لا توجد أصول مضافة حتى الآن' : 'لا توجد أصول مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(a => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(a.name)}</td>
+      <td>${escapeHtml(a.customers?.name || '—')}</td>
+      <td>${escapeHtml(a.activity_type_key || '—')}</td>
+      <td class="num">${a.installed_at ? escapeHtml(a.installed_at) : '—'}</td>
+      <td>${a.is_active ? '<span class="bo-badge active">نشط</span>' : '<span class="bo-badge inactive">غير نشط</span>'}</td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openAssetModal(a));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteAsset(a));
+    applyRowActionPerm(tr, 'assets');
+    tbody.appendChild(tr);
+  });
+}
+
+// نوع نشاط الفرع الحالي — نفس أسلوب الحساب المستخدم في فورم الصنف، عشان نقرأ
+// منه settings.asset_types اللي جهّزناها في نظام الأنشطة (Phase 1)
+function currentBranchBusinessTypeForAssets() {
+  return boBusinessTypes.find(bt => bt.id === boBranchesList.find(b => b.id === currentProfile.branch_id)?.business_type_id);
+}
+
+async function openAssetModal(asset) {
+  if (boCustomers.length === 0) await loadBoCustomers();
+
+  document.getElementById('assetModalTitle').textContent = asset ? 'تعديل أصل' : 'أصل جديد';
+  document.getElementById('assetId').value = asset ? asset.id : '';
+  document.getElementById('assetName').value = asset ? asset.name : '';
+  document.getElementById('assetCode').value = asset?.asset_code || '';
+  document.getElementById('assetSerialNumber').value = asset?.serial_number || '';
+  document.getElementById('assetModel').value = asset?.model || '';
+  document.getElementById('assetManufacturer').value = asset?.manufacturer || '';
+  document.getElementById('assetPurchasedAt').value = asset?.purchased_at || '';
+  document.getElementById('assetInstalledAt').value = asset?.installed_at || '';
+  document.getElementById('assetWarrantyStart').value = asset?.warranty_start || '';
+  document.getElementById('assetWarrantyEnd').value = asset?.warranty_end || '';
+  document.getElementById('assetNotes').value = asset?.notes || '';
+  document.getElementById('assetIsActive').checked = asset ? !!asset.is_active : true;
+
+  if (!assetCustomerSearch) {
+    assetCustomerSearch = createSmartSearch({
+      input: document.getElementById('assetCustomerInput'),
+      hidden: document.getElementById('assetCustomer'),
+      dropdown: document.getElementById('assetCustomerDropdown'),
+      getItems: () => boCustomers.map(c => ({ value: c.id, label: c.name, sublabel: c.phone || '', search: `${c.name} ${c.phone || ''}` })),
+    });
+  }
+  document.getElementById('assetCustomerInput').value = asset?.customers?.name || '';
+  document.getElementById('assetCustomer').value = asset ? asset.customer_id : '';
+
+  // نوع الأصل: لو نوع نشاط الفرع معرّف أنواع أصول (من شاشة الأنشطة)، نعرضها
+  // كقائمة اختيار جاهزة + خيار "أخرى"؛ وإلا حقل نص حر مباشرة
+  const businessType = currentBranchBusinessTypeForAssets();
+  const assetTypes = businessType?.settings?.asset_types || [];
+  const select = document.getElementById('assetTypeSelect');
+  const selectWrap = document.getElementById('assetTypeSelectWrap');
+  const otherWrap = document.getElementById('assetTypeOtherWrap');
+  const otherInput = document.getElementById('assetTypeOtherInput');
+
+  if (assetTypes.length === 0) {
+    selectWrap.style.display = 'none';
+    otherWrap.style.display = '';
+    otherInput.value = asset?.activity_type_key || '';
+    renderAssetAttributeInputs([], asset?.attributes || {});
+  } else {
+    selectWrap.style.display = '';
+    const matchedType = assetTypes.find(t => t.label === asset?.activity_type_key);
+    select.innerHTML = assetTypes.map(t => `<option value="${escapeHtml(t.label)}">${t.icon ? t.icon + ' ' : ''}${escapeHtml(t.label)}</option>`).join('')
+      + `<option value="__other__">أخرى (نوع غير مدرج)</option>`;
+    select.value = matchedType ? matchedType.label : (asset && asset.activity_type_key ? '__other__' : (assetTypes[0]?.label || '__other__'));
+    otherInput.value = (!matchedType && asset?.activity_type_key) ? asset.activity_type_key : '';
+    applyAssetTypeSelection(asset?.attributes || {});
+  }
+
+  document.getElementById('assetModalError').classList.remove('show');
+  document.getElementById('assetModalOverlay').classList.add('show');
+}
+
+// بتتنفّذ عند تغيير القائمة المنسدلة لنوع الأصل: تظهر/تخفي حقل "أخرى"،
+// وترسم حقول الخصائص الإضافية المقترحة لهذا النوع تحديدًا (من settings.asset_types)
+function applyAssetTypeSelection(existingAttributeValues) {
+  const businessType = currentBranchBusinessTypeForAssets();
+  const assetTypes = businessType?.settings?.asset_types || [];
+  const select = document.getElementById('assetTypeSelect');
+  const otherWrap = document.getElementById('assetTypeOtherWrap');
+  const chosen = assetTypes.find(t => t.label === select.value);
+  otherWrap.style.display = (select.value === '__other__') ? '' : 'none';
+  renderAssetAttributeInputs(chosen ? (chosen.attributes || []) : [], existingAttributeValues || {});
+}
+
+function renderAssetAttributeInputs(attributeNames, existingValues) {
+  const wrap = document.getElementById('assetAttributesWrap');
+  wrap.innerHTML = '';
+  if (attributeNames.length === 0) return;
+  const title = document.createElement('div');
+  title.className = 'ci-section-subtitle';
+  title.textContent = 'بيانات إضافية لنوع الأصل';
+  wrap.appendChild(title);
+  const grid = document.createElement('div');
+  grid.className = 'modal-grid';
+  attributeNames.forEach(attrName => {
+    const field = document.createElement('div');
+    field.className = 'field';
+    const label = document.createElement('label');
+    label.textContent = attrName;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.dataset.attrName = attrName;
+    input.value = existingValues?.[attrName] || '';
+    field.append(label, input);
+    grid.appendChild(field);
+  });
+  wrap.appendChild(grid);
+}
+
+function closeAssetModal() {
+  document.getElementById('assetModalOverlay').classList.remove('show');
+}
+
+async function saveAsset(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('assetModalError');
+  errEl.classList.remove('show');
+  const saveBtn = document.getElementById('saveAssetBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('assetId').value || null;
+  const customerId = document.getElementById('assetCustomer').value || null;
+  if (!customerId) {
+    errEl.textContent = 'اختر عميل الأصل أولًا';
+    errEl.classList.add('show');
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+    return;
+  }
+
+  const selectWrap = document.getElementById('assetTypeSelectWrap');
+  let activityTypeKey;
+  if (selectWrap.style.display === 'none') {
+    activityTypeKey = document.getElementById('assetTypeOtherInput').value.trim() || null;
+  } else {
+    const select = document.getElementById('assetTypeSelect');
+    activityTypeKey = select.value === '__other__'
+      ? (document.getElementById('assetTypeOtherInput').value.trim() || null)
+      : select.value;
+  }
+
+  const attributes = {};
+  document.querySelectorAll('#assetAttributesWrap [data-attr-name]').forEach(input => {
+    if (input.value.trim() !== '') attributes[input.dataset.attrName] = input.value.trim();
+  });
+
+  const payload = {
+    branch_id: currentProfile.branch_id,
+    customer_id: customerId,
+    name: document.getElementById('assetName').value.trim(),
+    activity_type_key: activityTypeKey,
+    attributes,
+    asset_code: document.getElementById('assetCode').value.trim() || null,
+    serial_number: document.getElementById('assetSerialNumber').value.trim() || null,
+    model: document.getElementById('assetModel').value.trim() || null,
+    manufacturer: document.getElementById('assetManufacturer').value.trim() || null,
+    purchased_at: document.getElementById('assetPurchasedAt').value || null,
+    installed_at: document.getElementById('assetInstalledAt').value || null,
+    warranty_start: document.getElementById('assetWarrantyStart').value || null,
+    warranty_end: document.getElementById('assetWarrantyEnd').value || null,
+    notes: document.getElementById('assetNotes').value.trim() || null,
+    is_active: document.getElementById('assetIsActive').checked,
+  };
+
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('assets').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('assets').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث بيانات الأصل' : 'تمت إضافة الأصل بنجاح');
+    closeAssetModal();
+    await loadBoAssets();
+    renderAssetsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function deleteAsset(asset) {
+  if (!hasBoActionPermission('assets', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف "${asset.name}"؟`)) return;
+  const { error } = await supabaseClient.from('assets').delete().eq('id', asset.id);
+  if (error) {
+    console.error(error);
+    showToast('تعذر حذف الأصل — على الأرجح مرتبط بأوامر خدمة', true);
+    return;
+  }
+  showToast('تم حذف الأصل');
+  await loadBoAssets();
+  renderAssetsTable();
 }
 
 // ---- طلبات الشراء الداخلية (purchase_requisitions) ----
