@@ -1644,6 +1644,8 @@ a { color: inherit; }
           </button>
           <div class="bo-nav-sub" id="serviceMgmtNavSub">
             <button class="bo-nav-sub-item" data-section="assets">الأصول/الأجهزة</button>
+            <button class="bo-nav-sub-item" data-section="service-orders">أوامر الخدمة</button>
+            <button class="bo-nav-sub-item" data-section="service-visits">الزيارات</button>
           </div>
         </div>
 
@@ -2357,6 +2359,65 @@ a { color: inherit; }
               </thead>
               <tbody id="assetsTableBody">
                 <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم أوامر الخدمة -->
+        <div id="bo-section-service-orders" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">أوامر الخدمة</div>
+            <button class="bo-add-btn" id="addServiceOrderBtn">+ أمر خدمة جديد</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="serviceOrderSearchInput" placeholder="ابحث برقم الأمر أو اسم العميل...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>رقم الأمر</th>
+                  <th>العميل</th>
+                  <th>الأصل</th>
+                  <th>النوع</th>
+                  <th>الفني</th>
+                  <th>الحالة</th>
+                  <th>تاريخ الإنشاء</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="serviceOrdersTableBody">
+                <tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم الزيارات -->
+        <div id="bo-section-service-visits" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">الزيارات</div>
+            <button class="bo-add-btn" id="addServiceVisitBtn">+ زيارة جديدة</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="serviceVisitSearchInput" placeholder="ابحث برقم أمر الخدمة أو اسم العميل...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>أمر الخدمة</th>
+                  <th>العميل</th>
+                  <th>الفني</th>
+                  <th>وقت البدء</th>
+                  <th>وقت الانتهاء</th>
+                  <th>الحالة</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="serviceVisitsTableBody">
+                <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
@@ -7200,6 +7261,103 @@ a { color: inherit; }
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelAssetBtn">إلغاء</button>
         <button type="submit" class="submit-btn" id="saveAssetBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: أمر خدمة جديد -->
+<div class="modal-overlay" id="serviceOrderModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title" id="serviceOrderModalTitle">أمر خدمة جديد</div>
+    <form id="serviceOrderForm">
+      <input type="hidden" id="serviceOrderId">
+      <div class="modal-grid">
+        <div class="field field-full">
+          <label>العميل</label>
+          <div class="smart-search">
+            <input type="text" id="serviceOrderCustomerInput" autocomplete="off" placeholder="اكتب اسم العميل..." required>
+            <input type="hidden" id="serviceOrderCustomer">
+            <div class="smart-search-dropdown" id="serviceOrderCustomerDropdown"></div>
+          </div>
+        </div>
+        <div class="field"><label>الأصل (اختياري)</label><select id="serviceOrderAsset"><option value="">— بدون —</option></select></div>
+        <div class="field"><label>العقد (اختياري)</label><select id="serviceOrderContract"><option value="">— بدون —</option></select></div>
+        <div class="field">
+          <label>نوع الأمر</label>
+          <select id="serviceOrderType">
+            <option value="installation">تركيب</option>
+            <option value="maintenance">صيانة دورية</option>
+            <option value="breakdown">عطل</option>
+            <option value="support_ticket">تذكرة دعم فني</option>
+          </select>
+        </div>
+        <div class="field"><label>الفني المسؤول (اختياري)</label><select id="serviceOrderTechnician"><option value="">— بدون —</option></select></div>
+        <div class="field">
+          <label>الحالة</label>
+          <select id="serviceOrderStatus">
+            <option value="draft">مسودة</option>
+            <option value="in_progress">قيد التنفيذ</option>
+            <option value="completed">منتهي</option>
+            <option value="cancelled">ملغي</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;">
+        <label style="display:block; font-size:13px; font-weight:500; color:var(--ink-soft); margin-bottom:6px;">بنود الخدمة / قطع الغيار</label>
+        <div class="purchase-line-row header-row" style="grid-template-columns:1fr 100px 110px 100px 32px;">
+          <div>الصنف (خدمة أو قطعة غيار)</div><div>الكمية</div><div>السعر</div><div>الإجمالي</div><div></div>
+        </div>
+        <div class="purchase-lines-wrap" id="serviceOrderLinesWrap"></div>
+        <button type="button" class="add-line-btn" id="addServiceOrderLineBtn">+ إضافة بند</button>
+      </div>
+
+      <div class="purchase-totals-row">
+        <div>إجمالي الأمر: <span class="num" id="serviceOrderTotalLabel">0.00</span></div>
+      </div>
+
+      <div class="modal-grid">
+        <div class="field field-full"><label>ملاحظات (اختياري)</label><textarea id="serviceOrderNotes" rows="2"></textarea></div>
+      </div>
+
+      <div class="error-msg" id="serviceOrderModalError"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelServiceOrderBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveServiceOrderBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: زيارة جديدة -->
+<div class="modal-overlay" id="serviceVisitModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="serviceVisitModalTitle">زيارة جديدة</div>
+    <form id="serviceVisitForm">
+      <input type="hidden" id="serviceVisitId">
+      <div class="modal-grid">
+        <div class="field field-full">
+          <label>أمر الخدمة</label>
+          <div class="smart-search">
+            <input type="text" id="serviceVisitOrderInput" autocomplete="off" placeholder="اكتب رقم الأمر أو اسم العميل..." required>
+            <input type="hidden" id="serviceVisitOrder">
+            <div class="smart-search-dropdown" id="serviceVisitOrderDropdown"></div>
+          </div>
+        </div>
+        <div class="field"><label>الفني المسؤول (اختياري)</label><select id="serviceVisitTechnician"><option value="">— بدون —</option></select></div>
+        <div class="field" style="display:flex; align-items:flex-end;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="serviceVisitLocationRequired" checked style="width:auto;"> تتطلب حضورًا ميدانيًا (زيارة فعلية بموقع)</label>
+        </div>
+        <div class="field"><label>وقت البدء</label><input type="datetime-local" id="serviceVisitStartedAt"></div>
+        <div class="field"><label>وقت الانتهاء</label><input type="datetime-local" id="serviceVisitEndedAt"></div>
+        <div class="field field-full"><label>نتيجة الزيارة / ملاحظات</label><textarea id="serviceVisitResultNotes" rows="2"></textarea></div>
+      </div>
+      <div class="error-msg" id="serviceVisitModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelServiceVisitBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveServiceVisitBtn">حفظ</button>
       </div>
     </form>
   </div>
@@ -16498,6 +16656,8 @@ async function enterBackoffice() {
 const boAllSections = ['dashboard','products','categories','unit-types','tax-rates','price-tiers','quick-discounts','customer-types',
   'sales-list','sale-orders','delivery','delivery-zones','delivery-companies','sales-channels','driver-settlements','customers','suppliers','supplier-prices','payments','purchase-orders','purchases','purchase-returns','sale-returns','purchase-requisitions',
   'assets',
+  'service-orders',
+  'service-visits',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
   'soon','company-info','permissions','users','branches','business-types','pos-devices','branch-settings','pos-tables','print-settings','stock','stocktake','product-batches','product-serials','backup','reset-data','employees','attendance','leave-requests','expense-items','expenses','salaries','sales-commissions','treasuries','capital','fixed-assets','promotions','coupons','modifier-groups','recipes'];
 
@@ -16506,7 +16666,7 @@ const boNavGroups = [
   { toggle: 'marketingNavToggle', group: 'marketingNavGroup', sections: ['promotions','coupons'] },
   { toggle: 'salesNavToggle', group: 'salesNavGroup', sections: ['sales-list','sale-orders','delivery','delivery-zones','delivery-companies','sales-channels','driver-settlements','customers','customer-types','sale-returns'] },
   { toggle: 'purchasesNavToggle', group: 'purchasesNavGroup', sections: ['suppliers','supplier-prices','purchase-requisitions','purchase-orders','purchases','purchase-returns'] },
-  { toggle: 'serviceMgmtNavToggle', group: 'serviceMgmtNavGroup', sections: ['assets'] },
+  { toggle: 'serviceMgmtNavToggle', group: 'serviceMgmtNavGroup', sections: ['assets', 'service-orders', 'service-visits'] },
   { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
   { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['treasuries','payments','expense-items','expenses','capital','fixed-assets'] },
   { toggle: 'hrNavToggle', group: 'hrNavGroup', sections: ['employees','attendance','leave-requests','salaries','sales-commissions'] },
@@ -16526,6 +16686,8 @@ const SECTION_PERMISSION_MAP = {
   'sales-list': 'sales_management', 'sale-orders': 'sales_management', 'delivery': 'sales_management', 'delivery-zones': 'sales_management', 'delivery-companies': 'sales_management', 'sales-channels': 'sales_management', 'driver-settlements': 'sales_management', 'customers': 'sales_management', 'customer-types': 'sales_management', 'sale-returns': 'sales_management',
   'suppliers': 'purchases_management', 'supplier-prices': 'purchases_management', 'purchase-orders': 'purchases_management', 'purchases': 'purchases_management', 'purchase-returns': 'purchases_management', 'purchase-requisitions': 'purchases_management',
   'assets': 'service_management',
+  'service-orders': 'service_management',
+  'service-visits': 'service_management',
   'reports-sales': 'reports', 'reports-purchases': 'reports', 'reports-inventory': 'reports', 'reports-accounting': 'reports', 'reports-other': 'reports',
   'treasuries': 'finance', 'payments': 'finance', 'expense-items': 'finance', 'expenses': 'finance', 'capital': 'admin', 'fixed-assets': 'finance',
   'employees': 'hr', 'attendance': 'hr', 'leave-requests': 'hr', 'salaries': 'hr', 'sales-commissions': 'hr',
@@ -16626,7 +16788,7 @@ const SCREEN_LABELS = {
   'branches': 'الفروع', 'business-types': 'أنواع الأنشطة التجارية', 'pos-devices': 'أجهزة نقاط البيع',
   'branch-settings': 'إعدادات الفرع', 'pos-tables': 'الطاولات والكراسي', 'print-settings': 'إعدادات الطباعة',
   'backup': 'نسخة احتياطية', 'reset-data': 'تهيئة البيانات', 'capital': 'رأس المال وحقوق الملكية',
-  'assets': 'الأصول/الأجهزة'
+  'assets': 'الأصول/الأجهزة', 'service-orders': 'أوامر الخدمة', 'service-visits': 'الزيارات'
 };
 
 // بناء قائمة الشاشات التفصيلية لكل وحدة رئيسية تلقائيًا من SECTION_PERMISSION_MAP
@@ -17094,6 +17256,8 @@ const ACTION_CAPABLE_SCREENS = {
   'customers': { add: true, edit: true, delete: true },
   'suppliers': { add: true, edit: true, delete: true },
   'assets': { add: true, edit: true, delete: true },
+  'service-orders': { add: true, edit: true, delete: true },
+  'service-visits': { add: true, edit: true, delete: true },
   'purchase-requisitions': { add: true, edit: true },
   'purchase-orders': { add: true, edit: true, delete: true },
   'sales-list': { edit: true },
@@ -17137,6 +17301,8 @@ const ADD_BUTTON_MAP = {
   'promotions': 'addPromotionBtn', 'coupons': 'addCouponBtn',
   'stock': 'addWarehouseBtn', 'customers': 'addCustomerBtn', 'suppliers': 'addSupplierBtn', 'purchase-requisitions': 'addRequisitionBtn', 'supplier-prices': 'addSupplierPriceBtn',
   'assets': 'addAssetBtn',
+  'service-orders': 'addServiceOrderBtn',
+  'service-visits': 'addServiceVisitBtn',
   'purchase-orders': 'addPurchaseOrderBtn', 'purchases': 'addPurchaseBtn', 'purchase-returns': 'addPurchaseReturnBtn', 'sale-returns': 'addSaleReturnFromBoBtn',
   'stocktake': 'addStocktakeSessionBtn', 'product-batches': 'addProductBatchBtn', 'product-serials': 'addProductSerialBtn',
   'delivery': 'addDeliveryOrderBtn', 'delivery-zones': 'addDeliveryZoneBtn', 'delivery-companies': 'addDeliveryCompanyBtn', 'sales-channels': 'addSalesChannelBtn',
@@ -17310,6 +17476,8 @@ function activateBoSection(section, btn) {
   if (section === 'driver-settlements') { loadDriverSettlementsSectionData(); }
   if (section === 'supplier-prices' && !supplierPricesLoadedOnce) { initSupplierPricesSection(); supplierPricesLoadedOnce = true; }
   if (section === 'assets' && !boAssetsLoadedOnce) { loadBoAssets().then(renderAssetsTable); boAssetsLoadedOnce = true; }
+  if (section === 'service-orders' && !boServiceOrdersLoadedOnce) { loadBoServiceOrders().then(renderServiceOrdersTable); boServiceOrdersLoadedOnce = true; }
+  if (section === 'service-visits' && !boServiceVisitsLoadedOnce) { loadBoServiceVisits().then(renderServiceVisitsTable); boServiceVisitsLoadedOnce = true; }
   if (section === 'purchase-orders') { loadBoPurchaseOrders().then(renderPurchaseOrdersTable); }
   if (section === 'purchase-requisitions') { loadBoRequisitions().then(renderRequisitionsTable); }
   if (section === 'purchase-returns') { loadBoPurchaseReturns().then(renderPurchaseReturnsTable); }
@@ -18663,6 +18831,28 @@ function bindBackofficeEvents() {
   document.getElementById('assetForm').addEventListener('submit', saveAsset);
   document.getElementById('assetTypeSelect').addEventListener('change', () => applyAssetTypeSelection());
   document.getElementById('assetSearchInput').addEventListener('input', renderAssetsTable);
+
+  // ---- Service Order modal ----
+  document.getElementById('addServiceOrderBtn').addEventListener('click', () => openServiceOrderModal(null));
+  document.getElementById('cancelServiceOrderBtn').addEventListener('click', closeServiceOrderModal);
+  document.getElementById('serviceOrderModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'serviceOrderModalOverlay') closeServiceOrderModal();
+  });
+  document.getElementById('serviceOrderForm').addEventListener('submit', saveServiceOrder);
+  document.getElementById('addServiceOrderLineBtn').addEventListener('click', () => {
+    serviceOrderLines.push({ productId: null, quantity: 1, unitPrice: 0 });
+    renderServiceOrderLines();
+  });
+  document.getElementById('serviceOrderSearchInput').addEventListener('input', renderServiceOrdersTable);
+
+  // ---- Service Visit modal ----
+  document.getElementById('addServiceVisitBtn').addEventListener('click', () => openServiceVisitModal(null));
+  document.getElementById('cancelServiceVisitBtn').addEventListener('click', closeServiceVisitModal);
+  document.getElementById('serviceVisitModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'serviceVisitModalOverlay') closeServiceVisitModal();
+  });
+  document.getElementById('serviceVisitForm').addEventListener('submit', saveServiceVisit);
+  document.getElementById('serviceVisitSearchInput').addEventListener('input', renderServiceVisitsTable);
 
   // ---- Purchase requisitions ----
   document.getElementById('addRequisitionBtn').addEventListener('click', () => openRequisitionFormModal());
@@ -31881,6 +32071,476 @@ async function deleteAsset(asset) {
   showToast('تم حذف الأصل');
   await loadBoAssets();
   renderAssetsTable();
+}
+
+// ==================== أوامر الخدمة (Service Orders) ====================
+let boServiceOrders = [];
+let boServiceOrdersLoadedOnce = false;
+let serviceOrderLines = [];
+let serviceOrderCustomerSearch = null;
+let boContracts = [];
+
+const SERVICE_ORDER_TYPE_LABELS = { installation: 'تركيب', maintenance: 'صيانة دورية', breakdown: 'عطل', support_ticket: 'تذكرة دعم فني' };
+const SERVICE_ORDER_STATUS_LABELS = { draft: 'مسودة', in_progress: 'قيد التنفيذ', completed: 'منتهي', cancelled: 'ملغي' };
+
+async function loadBoContracts() {
+  const { data, error } = await supabaseClient.from('contracts').select('*').eq('status', 'active').order('created_at', { ascending: false });
+  if (error) { console.error(error); return; }
+  boContracts = data || [];
+}
+
+async function loadBoServiceOrders() {
+  const { data, error } = await supabaseClient
+    .from('service_orders')
+    .select('*, customers(name), assets(name), employees(full_name)')
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل أوامر الخدمة', true); return; }
+  boServiceOrders = data || [];
+}
+
+function renderServiceOrdersTable() {
+  const tbody = document.getElementById('serviceOrdersTableBody');
+  const q = (document.getElementById('serviceOrderSearchInput').value || '').trim().toLowerCase();
+  const filtered = boServiceOrders.filter(o => {
+    if (!q) return true;
+    return String(o.order_number).includes(q) || (o.customers?.name || '').toLowerCase().includes(q);
+  });
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" class="bo-empty">${boServiceOrders.length === 0 ? 'لا توجد أوامر خدمة مضافة حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(o => {
+    const tr = document.createElement('tr');
+    const statusClass = o.status === 'completed' ? 'active' : (o.status === 'cancelled' ? 'inactive' : 'pending');
+    const statusCell = o.sale_id
+      ? `<span class="bo-badge active">${SERVICE_ORDER_STATUS_LABELS[o.status] || o.status}</span> <span class="bo-badge" style="background:var(--teal-100); color:var(--teal-900);">🧾 فاتورة</span>`
+      : `<span class="bo-badge ${statusClass}">${SERVICE_ORDER_STATUS_LABELS[o.status] || o.status}</span>`;
+    const actionsCell = o.sale_id
+      ? `<div class="bo-row-actions"><span style="font-size:12px; color:var(--ink-soft);">تم التحويل لفاتورة</span></div>`
+      : `<div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="confirm" style="color:var(--teal-700);">تأكيد وتحويل لفاتورة</button>
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>`;
+    tr.innerHTML = `
+      <td class="num">#${o.order_number}</td>
+      <td>${escapeHtml(o.customers?.name || '—')}</td>
+      <td>${escapeHtml(o.assets?.name || '—')}</td>
+      <td>${SERVICE_ORDER_TYPE_LABELS[o.order_type] || o.order_type}</td>
+      <td>${escapeHtml(o.employees?.full_name || '—')}</td>
+      <td>${statusCell}</td>
+      <td class="num">${new Date(o.created_at).toLocaleDateString('ar-EG')}</td>
+      <td>${actionsCell}</td>`;
+    if (!o.sale_id) {
+      tr.querySelector('[data-action="confirm"]').addEventListener('click', () => confirmServiceOrder(o));
+      tr.querySelector('[data-action="edit"]').addEventListener('click', () => openServiceOrderModal(o));
+      tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteServiceOrder(o));
+    }
+    applyRowActionPerm(tr, 'service-orders');
+    tbody.appendChild(tr);
+  });
+}
+
+function populateServiceOrderAssetOptions(customerId, selectedAssetId) {
+  const sel = document.getElementById('serviceOrderAsset');
+  const options = customerId ? boAssets.filter(a => a.customer_id === customerId) : [];
+  sel.innerHTML = '<option value="">— بدون —</option>' + options.map(a => `<option value="${a.id}">${escapeHtml(a.name)}</option>`).join('');
+  sel.value = selectedAssetId || '';
+}
+
+function populateServiceOrderContractOptions(customerId, selectedContractId) {
+  const sel = document.getElementById('serviceOrderContract');
+  const options = customerId ? boContracts.filter(c => c.customer_id === customerId) : [];
+  sel.innerHTML = '<option value="">— بدون —</option>' + options.map(c => `<option value="${c.id}">عقد #${c.contract_number}</option>`).join('');
+  sel.value = selectedContractId || '';
+}
+
+async function openServiceOrderModal(order) {
+  if (boCustomers.length === 0) await loadBoCustomers();
+  if (boEmployees.length === 0) await loadBoEmployees();
+  if (boAssets.length === 0) await loadBoAssets();
+  if (boContracts.length === 0) await loadBoContracts();
+
+  document.getElementById('serviceOrderModalTitle').textContent = order ? `تعديل أمر خدمة #${order.order_number}` : 'أمر خدمة جديد';
+  document.getElementById('serviceOrderId').value = order ? order.id : '';
+  document.getElementById('serviceOrderType').value = order?.order_type || 'installation';
+  document.getElementById('serviceOrderStatus').value = order?.status || 'draft';
+  document.getElementById('serviceOrderNotes').value = order?.notes || '';
+
+  const techSel = document.getElementById('serviceOrderTechnician');
+  techSel.innerHTML = '<option value="">— بدون —</option>' + boEmployees.filter(e => e.is_active !== false)
+    .map(e => `<option value="${e.id}">${escapeHtml(e.full_name)}</option>`).join('');
+  techSel.value = order?.technician_employee_id || '';
+
+  if (!serviceOrderCustomerSearch) {
+    serviceOrderCustomerSearch = createSmartSearch({
+      input: document.getElementById('serviceOrderCustomerInput'),
+      hidden: document.getElementById('serviceOrderCustomer'),
+      dropdown: document.getElementById('serviceOrderCustomerDropdown'),
+      getItems: () => boCustomers.map(c => ({ value: c.id, label: c.name, sublabel: c.phone || '', search: `${c.name} ${c.phone || ''}` })),
+      onChange: (item) => {
+        populateServiceOrderAssetOptions(item.value, null);
+        populateServiceOrderContractOptions(item.value, null);
+      },
+    });
+  }
+  document.getElementById('serviceOrderCustomerInput').value = order?.customers?.name || '';
+  document.getElementById('serviceOrderCustomer').value = order ? order.customer_id : '';
+
+  populateServiceOrderAssetOptions(order?.customer_id || null, order?.asset_id || null);
+  populateServiceOrderContractOptions(order?.customer_id || null, order?.contract_id || null);
+
+  if (order) {
+    const { data: items } = await supabaseClient.from('service_order_items').select('*').eq('service_order_id', order.id);
+    serviceOrderLines = (items || []).map(it => ({ id: it.id, productId: it.product_id, quantity: Number(it.quantity), unitPrice: Number(it.unit_price) }));
+  } else {
+    serviceOrderLines = [];
+  }
+  renderServiceOrderLines();
+
+  document.getElementById('serviceOrderModalError').classList.remove('show');
+  document.getElementById('serviceOrderModalOverlay').classList.add('show');
+}
+
+function renderServiceOrderLines() {
+  const wrap = document.getElementById('serviceOrderLinesWrap');
+  wrap.innerHTML = '';
+  serviceOrderLines.forEach((line, idx) => {
+    const row = document.createElement('div');
+    row.className = 'purchase-line-row';
+    row.style.gridTemplateColumns = '1fr 100px 110px 100px 32px';
+
+    const productWrap = document.createElement('div');
+    productWrap.className = 'smart-search';
+    const productInput = document.createElement('input');
+    productInput.type = 'text'; productInput.autocomplete = 'off'; productInput.placeholder = 'اكتب اسم الصنف أو الخدمة...';
+    const productHidden = document.createElement('input');
+    productHidden.type = 'hidden';
+    const productDropdown = document.createElement('div');
+    productDropdown.className = 'smart-search-dropdown';
+    productWrap.append(productInput, productHidden, productDropdown);
+
+    const productSearch = createSmartSearch({
+      input: productInput, hidden: productHidden, dropdown: productDropdown,
+      getItems: () => boProducts.filter(p => p.is_active !== false).map(p => ({ value: p.id, label: p.name + (p.item_kind === 'service' ? ' (خدمة)' : ''), search: p.name })),
+      onChange: (item) => {
+        line.productId = item.value;
+        const prod = boProducts.find(p => p.id === line.productId);
+        if (prod) line.unitPrice = Number(prod.sale_price) || 0;
+        renderServiceOrderLines();
+      },
+    });
+    if (line.productId) productSearch.setValue(line.productId);
+
+    const qtyInput = document.createElement('input');
+    qtyInput.type = 'number'; qtyInput.min = '0.001'; qtyInput.step = '0.001'; qtyInput.value = line.quantity;
+    qtyInput.addEventListener('input', () => { line.quantity = Number(qtyInput.value) || 0; updateSOLineTotal(row, line); updateServiceOrderTotals(); });
+
+    const priceInput = document.createElement('input');
+    priceInput.type = 'number'; priceInput.min = '0'; priceInput.step = '0.01'; priceInput.value = line.unitPrice;
+    priceInput.addEventListener('input', () => { line.unitPrice = Number(priceInput.value) || 0; updateSOLineTotal(row, line); updateServiceOrderTotals(); });
+
+    const totalDiv = document.createElement('div');
+    totalDiv.className = 'purchase-line-total num';
+    totalDiv.textContent = (line.quantity * line.unitPrice).toFixed(2);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button'; removeBtn.className = 'purchase-line-remove'; removeBtn.textContent = '×';
+    removeBtn.addEventListener('click', () => { serviceOrderLines.splice(idx, 1); renderServiceOrderLines(); });
+
+    row.append(productWrap, qtyInput, priceInput, totalDiv, removeBtn);
+    wrap.appendChild(row);
+  });
+  updateServiceOrderTotals();
+}
+
+function updateSOLineTotal(row, line) {
+  row.querySelector('.purchase-line-total').textContent = (line.quantity * line.unitPrice).toFixed(2);
+}
+
+function calcServiceOrderTotal() {
+  return serviceOrderLines.reduce((sum, l) => sum + (Number(l.quantity) || 0) * (Number(l.unitPrice) || 0), 0);
+}
+
+function updateServiceOrderTotals() {
+  document.getElementById('serviceOrderTotalLabel').textContent = calcServiceOrderTotal().toFixed(2);
+}
+
+function closeServiceOrderModal() {
+  document.getElementById('serviceOrderModalOverlay').classList.remove('show');
+}
+
+async function saveServiceOrder(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('serviceOrderModalError');
+  errEl.classList.remove('show');
+
+  const customerId = document.getElementById('serviceOrderCustomer').value || null;
+  if (!customerId) {
+    errEl.textContent = 'اختر عميل أمر الخدمة أولًا';
+    errEl.classList.add('show');
+    return;
+  }
+  const validLines = serviceOrderLines.filter(l => l.productId && l.quantity > 0);
+
+  const saveBtn = document.getElementById('saveServiceOrderBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('serviceOrderId').value || null;
+  const payload = {
+    branch_id: currentProfile.branch_id,
+    customer_id: customerId,
+    asset_id: document.getElementById('serviceOrderAsset').value || null,
+    contract_id: document.getElementById('serviceOrderContract').value || null,
+    order_type: document.getElementById('serviceOrderType').value,
+    technician_employee_id: document.getElementById('serviceOrderTechnician').value || null,
+    status: document.getElementById('serviceOrderStatus').value,
+    notes: document.getElementById('serviceOrderNotes').value.trim() || null,
+    user_id: currentProfile.id,
+  };
+
+  try {
+    let orderId = id;
+    if (id) {
+      const { error } = await supabaseClient.from('service_orders').update(payload).eq('id', id);
+      if (error) throw error;
+      // نمسح البنود القديمة ونعيد إدخالها من جديد — أبسط وأضمن من مقارنة الفروق سطر بسطر
+      const { error: delError } = await supabaseClient.from('service_order_items').delete().eq('service_order_id', id);
+      if (delError) throw delError;
+    } else {
+      const { data: newOrder, error } = await supabaseClient.from('service_orders').insert(payload).select().single();
+      if (error) throw error;
+      orderId = newOrder.id;
+    }
+
+    if (validLines.length > 0) {
+      const items = validLines.map(l => ({
+        service_order_id: orderId, product_id: l.productId,
+        quantity: l.quantity, unit_price: l.unitPrice, total: l.quantity * l.unitPrice,
+      }));
+      const { error: itemsError } = await supabaseClient.from('service_order_items').insert(items);
+      if (itemsError) throw itemsError;
+    }
+
+    showToast(id ? 'تم تحديث أمر الخدمة' : 'تم إنشاء أمر الخدمة بنجاح');
+    closeServiceOrderModal();
+    await loadBoServiceOrders();
+    renderServiceOrdersTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function deleteServiceOrder(order) {
+  if (!hasBoActionPermission('service-orders', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (order.sale_id) { showToast('لا يمكن حذف أمر خدمة تم تحويله لفاتورة بالفعل', true); return; }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف أمر الخدمة رقم #${order.order_number}؟`)) return;
+  const { error: itemsErr } = await supabaseClient.from('service_order_items').delete().eq('service_order_id', order.id);
+  if (itemsErr) { console.error(itemsErr); showToast('تعذر حذف بنود أمر الخدمة', true); return; }
+  const { error } = await supabaseClient.from('service_orders').delete().eq('id', order.id);
+  if (error) {
+    console.error(error);
+    showToast('تعذر حذف أمر الخدمة', true);
+    return;
+  }
+  showToast('تم حذف أمر الخدمة');
+  await loadBoServiceOrders();
+  renderServiceOrdersTable();
+}
+
+// تأكيد أمر الخدمة وتحويله لفاتورة بيع فعلية — عبر fn_confirm_service_order
+// (دالة قاعدة بيانات، بنفس فلسفة fn_confirm_sale_order): بتنشئ فاتورة حقيقية
+// في جدول sales وبنودها في sale_items، فتخصم قطع الغيار من المخزون تلقائيًا
+// (عبر trg_sale_item_stock_effect الموجود بالفعل) وتتجاهل بنود الخدمة تمامًا.
+async function confirmServiceOrder(order) {
+  if (!hasBoActionPermission('service-orders', 'edit')) { showToast('ليس لديك صلاحية تأكيد أوامر الخدمة', true); return; }
+  if (!confirm(`تأكيد أمر الخدمة رقم #${order.order_number} وتحويله لفاتورة بيع؟ لا يمكن التراجع عن هذه الخطوة.`)) return;
+  try {
+    const { data, error } = await supabaseClient.rpc('fn_confirm_service_order', {
+      p_service_order_id: order.id,
+    });
+    if (error) throw error;
+    showToast(`تم تأكيد أمر الخدمة وتحويله إلى فاتورة بيع رقم ${data?.invoice_number ?? ''} بنجاح`);
+    await loadBoServiceOrders();
+    renderServiceOrdersTable();
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || 'حدث خطأ أثناء تأكيد أمر الخدمة', true);
+  }
+}
+
+// ==================== الزيارات (Service Visits) ====================
+let boServiceVisits = [];
+let boServiceVisitsLoadedOnce = false;
+let serviceVisitOrderSearch = null;
+
+async function loadBoServiceVisits() {
+  const { data, error } = await supabaseClient
+    .from('service_visits')
+    .select('*, service_orders(order_number, order_type, customers(name)), employees(full_name)')
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل الزيارات', true); return; }
+  boServiceVisits = data || [];
+}
+
+function renderServiceVisitsTable() {
+  const tbody = document.getElementById('serviceVisitsTableBody');
+  const q = (document.getElementById('serviceVisitSearchInput').value || '').trim().toLowerCase();
+  const filtered = boServiceVisits.filter(v => {
+    if (!q) return true;
+    const orderNum = String(v.service_orders?.order_number || '');
+    const custName = (v.service_orders?.customers?.name || '').toLowerCase();
+    return orderNum.includes(q) || custName.includes(q);
+  });
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">${boServiceVisits.length === 0 ? 'لا توجد زيارات مضافة حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(v => {
+    const tr = document.createElement('tr');
+    const statusLabel = v.ended_at ? 'منتهية' : (v.started_at ? 'جارية' : 'مجدولة');
+    const statusClass = v.ended_at ? 'active' : (v.started_at ? 'pending' : 'inactive');
+    tr.innerHTML = `
+      <td class="num">#${v.service_orders?.order_number ?? '—'}</td>
+      <td>${escapeHtml(v.service_orders?.customers?.name || '—')}</td>
+      <td>${escapeHtml(v.employees?.full_name || '—')}</td>
+      <td class="num">${v.started_at ? new Date(v.started_at).toLocaleString('ar-EG') : '—'}</td>
+      <td class="num">${v.ended_at ? new Date(v.ended_at).toLocaleString('ar-EG') : '—'}</td>
+      <td><span class="bo-badge ${statusClass}">${statusLabel}</span></td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openServiceVisitModal(v));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteServiceVisit(v));
+    applyRowActionPerm(tr, 'service-visits');
+    tbody.appendChild(tr);
+  });
+}
+
+async function openServiceVisitModal(visit) {
+  if (boEmployees.length === 0) await loadBoEmployees();
+  if (boServiceOrders.length === 0) await loadBoServiceOrders();
+
+  document.getElementById('serviceVisitModalTitle').textContent = visit ? 'تعديل زيارة' : 'زيارة جديدة';
+  document.getElementById('serviceVisitId').value = visit ? visit.id : '';
+  document.getElementById('serviceVisitLocationRequired').checked = visit ? !!visit.location_required : true;
+  document.getElementById('serviceVisitStartedAt').value = toDatetimeLocalInputValue(visit?.started_at);
+  document.getElementById('serviceVisitEndedAt').value = toDatetimeLocalInputValue(visit?.ended_at);
+  document.getElementById('serviceVisitResultNotes').value = visit?.result_notes || '';
+
+  const techSel = document.getElementById('serviceVisitTechnician');
+  techSel.innerHTML = '<option value="">— بدون —</option>' + boEmployees.filter(e => e.is_active !== false)
+    .map(e => `<option value="${e.id}">${escapeHtml(e.full_name)}</option>`).join('');
+  techSel.value = visit?.technician_employee_id || '';
+
+  if (!serviceVisitOrderSearch) {
+    serviceVisitOrderSearch = createSmartSearch({
+      input: document.getElementById('serviceVisitOrderInput'),
+      hidden: document.getElementById('serviceVisitOrder'),
+      dropdown: document.getElementById('serviceVisitOrderDropdown'),
+      getItems: () => boServiceOrders.map(o => ({
+        value: o.id,
+        label: `#${o.order_number} — ${o.customers?.name || 'بدون عميل'}`,
+        sublabel: SERVICE_ORDER_TYPE_LABELS[o.order_type] || o.order_type,
+        search: `${o.order_number} ${o.customers?.name || ''}`,
+      })),
+      onChange: (item) => {
+        // لو أمر الخدمة له فني محدد أصلًا، نقترحه تلقائيًا في زيارة جديدة (يقدر يغيّره)
+        const order = boServiceOrders.find(o => o.id === item.value);
+        if (order?.technician_employee_id && !document.getElementById('serviceVisitId').value) {
+          document.getElementById('serviceVisitTechnician').value = order.technician_employee_id;
+        }
+      },
+    });
+  }
+  document.getElementById('serviceVisitOrderInput').value = visit?.service_orders
+    ? `#${visit.service_orders.order_number} — ${visit.service_orders.customers?.name || 'بدون عميل'}` : '';
+  document.getElementById('serviceVisitOrder').value = visit ? visit.service_order_id : '';
+
+  document.getElementById('serviceVisitModalError').classList.remove('show');
+  document.getElementById('serviceVisitModalOverlay').classList.add('show');
+}
+
+function closeServiceVisitModal() {
+  document.getElementById('serviceVisitModalOverlay').classList.remove('show');
+}
+
+async function saveServiceVisit(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('serviceVisitModalError');
+  errEl.classList.remove('show');
+
+  const serviceOrderId = document.getElementById('serviceVisitOrder').value || null;
+  if (!serviceOrderId) {
+    errEl.textContent = 'اختر أمر الخدمة المرتبط بالزيارة أولًا';
+    errEl.classList.add('show');
+    return;
+  }
+
+  const saveBtn = document.getElementById('saveServiceVisitBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('serviceVisitId').value || null;
+  const relatedOrder = boServiceOrders.find(o => o.id === serviceOrderId);
+  const startedAtVal = document.getElementById('serviceVisitStartedAt').value;
+  const endedAtVal = document.getElementById('serviceVisitEndedAt').value;
+
+  const payload = {
+    service_order_id: serviceOrderId,
+    branch_id: relatedOrder?.branch_id || currentProfile.branch_id,
+    technician_employee_id: document.getElementById('serviceVisitTechnician').value || null,
+    location_required: document.getElementById('serviceVisitLocationRequired').checked,
+    started_at: startedAtVal ? new Date(startedAtVal).toISOString() : null,
+    ended_at: endedAtVal ? new Date(endedAtVal).toISOString() : null,
+    result_notes: document.getElementById('serviceVisitResultNotes').value.trim() || null,
+  };
+
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('service_visits').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('service_visits').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث الزيارة' : 'تمت إضافة الزيارة بنجاح');
+    closeServiceVisitModal();
+    await loadBoServiceVisits();
+    renderServiceVisitsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function deleteServiceVisit(visit) {
+  if (!hasBoActionPermission('service-visits', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm('هل أنت متأكد أنك تريد حذف هذه الزيارة؟')) return;
+  const { error } = await supabaseClient.from('service_visits').delete().eq('id', visit.id);
+  if (error) {
+    console.error(error);
+    showToast('تعذر حذف الزيارة', true);
+    return;
+  }
+  showToast('تم حذف الزيارة');
+  await loadBoServiceVisits();
+  renderServiceVisitsTable();
 }
 
 // ---- طلبات الشراء الداخلية (purchase_requisitions) ----
