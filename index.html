@@ -8527,43 +8527,19 @@ a { color: inherit; }
         <p style="font-size:11.5px; color:var(--ink-soft); margin:6px 0 0;">مثال: "وحدة تكييف"، "مصعد"، "نظام برمجي". اكتب الحقول المقترحة لكل نوع مفصولة بفاصلة (مثال: الموديل، القدرة، تاريخ التركيب) — تجهيز مستقبلي فقط، لا يُنشئ أي أصول الآن.</p>
       </div>
 
-      <div class="ci-section-subtitle">وحدات إدارة الخدمات المستقبلية لهذا النشاط (اختياري)</div>
+      <div class="ci-section-subtitle">الشاشات المتاحة لهذا النشاط</div>
       <div class="field field-full">
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="businessTypeModule_assets" style="width:auto;"> الأصول/الأجهزة</label>
-      </div>
-      <div class="field field-full">
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="businessTypeModule_service_orders" style="width:auto;"> أوامر الخدمة</label>
-      </div>
-      <div class="field field-full">
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="businessTypeModule_technicians" style="width:auto;"> الفنيين</label>
-      </div>
-      <div class="field field-full">
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="businessTypeModule_visits" style="width:auto;"> الزيارات</label>
-      </div>
-      <div class="field field-full">
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="businessTypeModule_maintenance" style="width:auto;"> الصيانة الدورية</label>
-      </div>
-      <div class="field field-full">
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="businessTypeModule_contracts" style="width:auto;"> العقود</label>
-      </div>
-      <div class="field field-full">
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="businessTypeModule_tickets" style="width:auto;"> تذاكر الدعم الفني</label>
-        <p style="font-size:11.5px; color:var(--ink-soft); margin:6px 0 0;">تحديد الوحدات هنا تجهيز/تخطيط فقط لهذا النشاط — الشاشات نفسها غير مُفعّلة بعد في النظام.</p>
-      </div>
-
-      <div class="ci-section-subtitle">التقارير الخاصة بالنشاط (اختياري)</div>
-      <div class="field field-full">
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="businessTypeReport_service_visits" style="width:auto;"> تقرير الزيارات</label>
-      </div>
-      <div class="field field-full">
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="businessTypeReport_maintenance_due" style="width:auto;"> تقرير الصيانة المستحقة</label>
-      </div>
-      <div class="field field-full">
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="businessTypeReport_contracts" style="width:auto;"> تقرير العقود</label>
-      </div>
-      <div class="field field-full">
-        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" id="businessTypeReport_tickets" style="width:auto;"> تقرير تذاكر الدعم</label>
-        <p style="font-size:11.5px; color:var(--ink-soft); margin:6px 0 0;">نفس الأمر: تحديد مبدئي فقط، هذه التقارير غير موجودة بعد في النظام.</p>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin:0 0 8px;">
+          حدد الشاشات اللي منطقية لهذا النشاط. أي شاشة متروكة بدون تحديد هتكون **مخفية تلقائيًا** عن أي فرع نشاطه ده،
+          حتى لو المستخدم عنده صلاحية الوصول لها بشكل عام. الشاشات المشتركة (زي المبيعات) ممكن تتفعّل في أكتر من نشاط في نفس الوقت
+          — التحديد هنا خاص بالنشاط ده بس وما بيأثرش على أي نشاط تاني.
+        </p>
+        <div style="display:flex; gap:8px; margin-bottom:8px;">
+          <button type="button" class="btn-secondary" id="businessTypeSectionsSelectAllBtn" style="font-size:11.5px; padding:5px 10px;">تحديد الكل</button>
+          <button type="button" class="btn-secondary" id="businessTypeSectionsSelectNoneBtn" style="font-size:11.5px; padding:5px 10px;">إلغاء الكل</button>
+          <button type="button" class="btn-secondary" id="businessTypeSectionsRestoreDefaultBtn" style="font-size:11.5px; padding:5px 10px; background:var(--teal-100); color:var(--teal-900);">↺ استرجاع الوضع الافتراضي لهذا النشاط</button>
+        </div>
+        <div id="businessTypeSectionsChecklist" style="max-height:340px; overflow-y:auto; border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px;"></div>
       </div>
 
       <div class="ci-section-subtitle">الحالة</div>
@@ -14209,7 +14185,7 @@ async function updatePosTablesNavVisibility() {
   if (boBranchesList.length === 0) await loadBoBranches();
   if (boBusinessTypes.length === 0) await loadBoBusinessTypes();
   const navItem = document.getElementById('posTablesNavItem');
-  if (navItem) navItem.style.display = branchesUsingSeatingUnits().length > 0 ? '' : 'none';
+  if (navItem) navItem.style.display = (branchesUsingSeatingUnits().length > 0 && hasBoScreenPermission('pos-tables')) ? '' : 'none';
 }
 
 function switchPosTablesTab(tab) {
@@ -16697,7 +16673,7 @@ const SECTION_PERMISSION_MAP = {
   'treasuries': 'finance', 'payments': 'finance', 'expense-items': 'finance', 'expenses': 'finance', 'capital': 'admin', 'fixed-assets': 'finance',
   'employees': 'hr', 'attendance': 'hr', 'leave-requests': 'hr', 'salaries': 'hr', 'sales-commissions': 'hr',
   'company-info': 'admin', 'permissions': 'admin', 'users': 'admin', 'branches': 'admin',
-  'business-types': 'admin', 'pos-devices': 'admin',
+  'business-types': 'platform_owner', 'pos-devices': 'admin',
   'branch-settings': 'admin', 'pos-tables': 'admin', 'print-settings': 'admin', 'backup': 'admin', 'reset-data': 'admin',
   'soon': null
 };
@@ -17229,7 +17205,25 @@ function hasBoScreenPermission(section) {
   if (perms[moduleKey] !== true) return false;
   const fineKey = 'scr:' + section;
   if (perms[fineKey] === false) return false;
+  if (!isBoSectionEnabledForActivity(section)) return false;
   return true;
+}
+
+// هل الشاشة دي مفعّلة لنوع نشاط فرع المستخدم الحالي؟ الشاشات المستثناة
+// (ACTIVITY_FILTER_EXEMPT_SECTIONS) تفضل ظاهرة دايمًا. الفلترة هنا مبنية
+// حصرًا على enabled_sections الصريحة — زرار "مفعّل/غير مفعّل" العام لنوع
+// النشاط (is_active) غرضه استبعاده من قوائم اختيار نوع النشاط لفرع جديد،
+// وليس له أي علاقة بإخفاء شاشات الفروع اللي بالفعل بتستخدمه. لو النشاط لسه
+// ما اتخصّصش (enabled_sections = null)، الافتراضي هو الإظهار الكامل (توافق
+// مع الفروع الحالية اللي متعرفتش تخصّص لسه).
+function isBoSectionEnabledForActivity(section) {
+  if (ACTIVITY_FILTER_EXEMPT_SECTIONS.has(section)) return true;
+  const branch = boBranchesList.find(b => b.id === currentProfile.branch_id);
+  const businessType = boBusinessTypes.find(bt => bt.id === branch?.business_type_id);
+  if (!businessType) return true;
+  const enabledSections = businessType.settings?.enabled_sections;
+  if (!Array.isArray(enabledSections)) return true;
+  return enabledSections.includes(section);
 }
 
 // ---- صلاحيات دقيقة على مستوى العملية (إضافة / تعديل / حذف) داخل كل شاشة ----
@@ -18624,6 +18618,23 @@ function bindBackofficeEvents() {
   document.getElementById('addBusinessTypeAssetTypeBtn').addEventListener('click', () => {
     currentBusinessTypeAssetTypes.push({ icon: '', label: '', attributes: [] });
     renderBusinessTypeAssetTypesList();
+  });
+
+  document.getElementById('businessTypeSectionsSelectAllBtn').addEventListener('click', () => {
+    document.querySelectorAll('#businessTypeSectionsChecklist input[type="checkbox"]').forEach(cb => { cb.checked = true; });
+  });
+  document.getElementById('businessTypeSectionsSelectNoneBtn').addEventListener('click', () => {
+    document.querySelectorAll('#businessTypeSectionsChecklist input[type="checkbox"]').forEach(cb => { cb.checked = false; });
+  });
+  document.getElementById('businessTypeSectionsRestoreDefaultBtn').addEventListener('click', () => {
+    const code = document.getElementById('businessTypeCode').value.trim().toLowerCase().replace(/\s+/g, '_');
+    const defaults = BUSINESS_TYPE_DEFAULT_SECTIONS[code];
+    if (!defaults) {
+      showToast('لا يوجد وضع افتراضي محفوظ لهذا الكود — اكتب الكود الصحيح للنشاط الأول ثم احفظ، أو استخدم "تحديد الكل"', true);
+      return;
+    }
+    renderBusinessTypeSectionsChecklist(defaults);
+    showToast('تم استرجاع الوضع الافتراضي المقترح لهذا النشاط — راجعه واحفظ لو مناسب');
   });
 
   document.getElementById('productIsBundle').addEventListener('change', (e) => {
@@ -26154,11 +26165,6 @@ let currentBusinessTypeTemplates = []; // قوالب الأصناف السريع
 let currentBusinessTypeAdditionalProps = []; // خصائص إضافية عامة مقترحة لهذا النشاط (تجهيز مستقبلي، لا تُستهلك بعد)
 let currentBusinessTypeAssetTypes = []; // أنواع الأصول/الأجهزة المقترحة لهذا النشاط (تجهيز مستقبلي، لا تُنشئ أصول فعلية بعد)
 
-// المفاتيح الثابتة لوحدات ولتقارير إدارة الخدمات المستقبلية — تُقرأ/تُكتب من settings.future_modules
-// و settings.enabled_reports فقط كتجهيز مستقبلي؛ لا توجد شاشات فعلية تستهلكها بعد
-const SERVICE_MGMT_MODULE_KEYS = ['assets', 'service_orders', 'technicians', 'visits', 'maintenance', 'contracts', 'tickets'];
-const SERVICE_MGMT_REPORT_KEYS = ['service_visits', 'maintenance_due', 'contracts', 'tickets'];
-
 async function loadBoBusinessTypes() {
   const { data, error } = await supabaseClient.from('business_types').select('*').order('name');
   if (error) { console.error(error); showToast('تعذر تحميل أنواع الأنشطة التجارية', true); return; }
@@ -26217,7 +26223,7 @@ function renderBusinessTypesTable() {
     if (templatesCount > 0) badges.push(`<span class="bt-mini-badge">⚡ ${templatesCount} قوالب</span>`);
     if (x.settings?.item_name_label) badges.push(`<span class="bt-mini-badge">🏷 ${escapeHtml(x.settings.item_name_label)}</span>`);
     if ((x.settings?.asset_types || []).length > 0) badges.push(`<span class="bt-mini-badge">🧩 ${x.settings.asset_types.length} أنواع أصول</span>`);
-    if ((x.settings?.future_modules || []).length > 0) badges.push(`<span class="bt-mini-badge">🛠 مهيّأ لإدارة الخدمات</span>`);
+    if (Array.isArray(x.settings?.enabled_sections)) badges.push(`<span class="bt-mini-badge">🧩 ${x.settings.enabled_sections.length} شاشة مفعّلة</span>`);
     const card = document.createElement('div');
     card.className = `bt-card${x.is_active ? '' : ' inactive'}`;
     card.innerHTML = `
@@ -26268,16 +26274,7 @@ function openBusinessTypeModal(item) {
   renderBusinessTypeAdditionalPropsList();
   currentBusinessTypeAssetTypes = (item?.settings?.asset_types || []).map(a => ({ ...a, attributes: [...(a.attributes || [])] }));
   renderBusinessTypeAssetTypesList();
-  const activeModules = item?.settings?.future_modules || [];
-  SERVICE_MGMT_MODULE_KEYS.forEach(key => {
-    const el = document.getElementById('businessTypeModule_' + key);
-    if (el) el.checked = activeModules.includes(key);
-  });
-  const activeReports = item?.settings?.enabled_reports || [];
-  SERVICE_MGMT_REPORT_KEYS.forEach(key => {
-    const el = document.getElementById('businessTypeReport_' + key);
-    if (el) el.checked = activeReports.includes(key);
-  });
+  renderBusinessTypeSectionsChecklist(item?.settings?.enabled_sections || null);
   const branchNoteEl = document.getElementById('businessTypeBranchCountNote');
   const branchCount = item ? boBranchesList.filter(b => b.business_type_id === item.id).length : 0;
   if (branchNoteEl) {
@@ -26393,6 +26390,98 @@ function renderBusinessTypeAssetTypesList() {
   });
 }
 
+// ==== الأوضاع الافتراضية المقترحة لكل نشاط (مبنية على مفتاح code الثابت،
+// وليس الاسم القابل للتغيير) — من تحليل طبيعة كل نشاط + الأعلام الموجودة
+// بالفعل على كل نوع (uses_weight/uses_batches/uses_serials/...). دي مجرد
+// نقطة بداية مقترحة يقدر صاحب البرنامج يعدّلها/يرجعلها في أي وقت. ====
+const SEC = {
+  stockBasic: ['products', 'categories', 'unit-types', 'tax-rates', 'price-tiers', 'quick-discounts', 'stock', 'stocktake'],
+  salesBasic: ['sales-list', 'sale-orders', 'customers', 'customer-types', 'sale-returns'],
+  purchasesBasic: ['suppliers', 'supplier-prices', 'purchase-orders', 'purchases', 'purchase-returns', 'purchase-requisitions'],
+  financeBasic: ['treasuries', 'payments', 'expense-items', 'expenses'],
+  financeAdvanced: ['capital', 'fixed-assets'],
+  hrBasic: ['employees', 'attendance', 'leave-requests', 'salaries'],
+  delivery: ['delivery', 'delivery-zones', 'delivery-companies', 'sales-channels', 'driver-settlements'],
+  marketing: ['promotions', 'coupons'],
+  serviceMgmt: ['assets', 'service-orders', 'service-visits'],
+};
+
+const BUSINESS_TYPE_DEFAULT_SECTIONS = {
+  restaurant: [...SEC.stockBasic, 'recipes', 'modifier-groups', ...SEC.salesBasic, ...SEC.delivery, ...SEC.marketing, 'pos-tables', ...SEC.purchasesBasic, ...SEC.financeBasic, 'fixed-assets', ...SEC.hrBasic],
+  market: [...SEC.stockBasic, 'product-batches', ...SEC.salesBasic, ...SEC.delivery, ...SEC.marketing, ...SEC.purchasesBasic, ...SEC.financeBasic, ...SEC.financeAdvanced, ...SEC.hrBasic],
+  butcher: [...SEC.stockBasic, 'product-batches', ...SEC.salesBasic, ...SEC.purchasesBasic, ...SEC.financeBasic, ...SEC.hrBasic],
+  software: [...SEC.serviceMgmt, 'products', 'categories', 'tax-rates', 'price-tiers', ...SEC.salesBasic, ...SEC.purchasesBasic, ...SEC.financeBasic, ...SEC.hrBasic, 'sales-commissions'],
+  produce: [...SEC.stockBasic, 'product-batches', ...SEC.salesBasic, ...SEC.purchasesBasic, ...SEC.financeBasic, ...SEC.hrBasic],
+  fish: [...SEC.stockBasic, 'product-batches', ...SEC.salesBasic, ...SEC.purchasesBasic, ...SEC.financeBasic, ...SEC.hrBasic],
+  salon: [...SEC.stockBasic, 'modifier-groups', ...SEC.salesBasic, 'pos-tables', ...SEC.purchasesBasic, ...SEC.financeBasic, ...SEC.hrBasic, 'sales-commissions'],
+  pharmacy: [...SEC.stockBasic, 'product-batches', ...SEC.salesBasic, ...SEC.purchasesBasic, ...SEC.financeBasic, ...SEC.hrBasic],
+  gas_station: [...SEC.stockBasic, ...SEC.salesBasic, ...SEC.purchasesBasic, ...SEC.financeBasic, ...SEC.hrBasic],
+  shoes: [...SEC.stockBasic, ...SEC.salesBasic, ...SEC.purchasesBasic, ...SEC.financeBasic, ...SEC.hrBasic, ...SEC.marketing],
+  jewelry: [...SEC.stockBasic, 'product-serials', ...SEC.salesBasic, ...SEC.purchasesBasic, ...SEC.financeBasic, ...SEC.financeAdvanced, ...SEC.hrBasic],
+  clothing: [...SEC.stockBasic, ...SEC.salesBasic, ...SEC.purchasesBasic, ...SEC.financeBasic, ...SEC.hrBasic, ...SEC.marketing],
+  electronics: [...SEC.stockBasic, 'product-serials', ...SEC.salesBasic, ...SEC.purchasesBasic, ...SEC.financeBasic, ...SEC.hrBasic, ...SEC.marketing],
+  wholesale: [...SEC.stockBasic, ...SEC.salesBasic, 'delivery', 'delivery-zones', 'delivery-companies', ...SEC.purchasesBasic, ...SEC.financeBasic, ...SEC.financeAdvanced, ...SEC.hrBasic],
+  bakery: [...SEC.stockBasic, 'recipes', 'product-batches', ...SEC.salesBasic, 'delivery', ...SEC.purchasesBasic, ...SEC.financeBasic, ...SEC.hrBasic, ...SEC.marketing],
+  laundry: [...SEC.stockBasic, 'modifier-groups', ...SEC.salesBasic, ...SEC.delivery, ...SEC.purchasesBasic, ...SEC.financeBasic, ...SEC.hrBasic],
+  repair_shop: [...SEC.stockBasic, 'product-serials', ...SEC.serviceMgmt, ...SEC.salesBasic, ...SEC.purchasesBasic, ...SEC.financeBasic, ...SEC.hrBasic],
+  elevators: [...SEC.stockBasic, 'product-serials', ...SEC.serviceMgmt, ...SEC.salesBasic, ...SEC.purchasesBasic, ...SEC.financeBasic, ...SEC.hrBasic, 'sales-commissions'],
+  // تكييف وتبريد وفلاتر: أول الأنشطة الثلاثة الأصلية لإدارة الخدمات
+  hvac: [...SEC.stockBasic, 'product-serials', ...SEC.serviceMgmt, ...SEC.salesBasic, ...SEC.purchasesBasic, ...SEC.financeBasic, ...SEC.hrBasic, 'sales-commissions'],
+  // صيانة سيارات: نفس نمط ورشة الصيانة/المصاعد، سوق منفصل
+  car_service: [...SEC.stockBasic, 'product-serials', ...SEC.serviceMgmt, ...SEC.salesBasic, ...SEC.purchasesBasic, ...SEC.financeBasic, ...SEC.hrBasic, 'sales-commissions'],
+  // نادي رياضي/جيم: اشتراكات، بدون قسم إدارة الخدمات (Assets/Orders/Visits
+  // مش منطقية هنا؛ الأنسب هو Contracts لكنه لسه بدون واجهة استخدام فعلية)
+  gym: [...SEC.stockBasic, 'modifier-groups', ...SEC.salesBasic, ...SEC.purchasesBasic, ...SEC.financeBasic, ...SEC.hrBasic, 'sales-commissions'],
+};
+
+Object.keys(BUSINESS_TYPE_DEFAULT_SECTIONS).forEach(code => {
+  BUSINESS_TYPE_DEFAULT_SECTIONS[code] = [...new Set(BUSINESS_TYPE_DEFAULT_SECTIONS[code])];
+});
+
+// الشاشات المستثناة من فلترة النشاط — إعدادات نظام/منصة عامة (مش خاصة بنشاط
+// معيّن)، فتفضل ظاهرة دايمًا لمن يملك الصلاحية العامة بغض النظر عن نوع نشاط
+// فرعه. باقي الشاشات كلها قابلة للتخصيص لكل نشاط على حدة.
+const ACTIVITY_FILTER_EXEMPT_SECTIONS = new Set([
+  'dashboard', 'business-types', 'permissions', 'users', 'branches',
+  'company-info', 'backup', 'reset-data', 'pos-devices', 'branch-settings', 'print-settings',
+  // شاشات التقارير الخمسة مستثناة عمدًا: بنيتها في PERMISSION_GROUPS مختلفة (تفاصيل
+  // تقارير فرعية داخل كل شاشة، مش قائمة شاشات مسطّحة)، فتضمينها في هذا الشيك ليست
+  // بالبساطة الكافية الآن؛ تفضل ظاهرة دايمًا لأي نشاط لحد ما تُبنى لها آلية تخصيص خاصة
+  'reports-sales', 'reports-purchases', 'reports-inventory', 'reports-accounting', 'reports-other'
+]);
+
+// يرسم قائمة كل الشاشات القابلة للتخصيص مجمّعة بنفس تجميع شاشة الصلاحيات
+// (PERMISSION_GROUPS)، عشان تبقى مألوفة ومتسقة مع شاشة الأدوار. لو enabledSections
+// = null (نشاط لسه ما اتخصّصش) بنعرض الكل متحدد افتراضيًا (توافق مع الفروع الحالية).
+function renderBusinessTypeSectionsChecklist(enabledSections) {
+  const wrap = document.getElementById('businessTypeSectionsChecklist');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  const hasCustomSelection = Array.isArray(enabledSections);
+  PERMISSION_GROUPS.forEach(group => {
+    const groupSections = (group.children || []).filter(c => !ACTIVITY_FILTER_EXEMPT_SECTIONS.has(c.key));
+    if (groupSections.length === 0) return;
+    const groupTitle = document.createElement('div');
+    groupTitle.style.cssText = 'font-weight:600; font-size:12.5px; color:var(--ink); margin:10px 0 4px;';
+    groupTitle.textContent = group.title;
+    wrap.appendChild(groupTitle);
+    const grid = document.createElement('div');
+    grid.style.cssText = 'display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:4px 10px;';
+    groupSections.forEach(sec => {
+      const label = document.createElement('label');
+      label.style.cssText = 'display:flex; align-items:center; gap:6px; font-size:12.5px; cursor:pointer;';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.style.width = 'auto';
+      cb.dataset.sectionKey = sec.key;
+      cb.checked = hasCustomSelection ? enabledSections.includes(sec.key) : true;
+      label.append(cb, document.createTextNode(sec.title));
+      grid.appendChild(label);
+    });
+    wrap.appendChild(grid);
+  });
+}
+
 function closeBusinessTypeModal() {
   document.getElementById('businessTypeModalOverlay').classList.remove('show');
 }
@@ -26434,8 +26523,7 @@ async function saveBusinessType(e) {
       templates: currentBusinessTypeTemplates.filter(t => (t.label || '').trim() !== ''),
       additional_properties: currentBusinessTypeAdditionalProps.filter(p => (p.label || '').trim() !== ''),
       asset_types: currentBusinessTypeAssetTypes.filter(a => (a.label || '').trim() !== ''),
-      future_modules: SERVICE_MGMT_MODULE_KEYS.filter(key => document.getElementById('businessTypeModule_' + key)?.checked),
-      enabled_reports: SERVICE_MGMT_REPORT_KEYS.filter(key => document.getElementById('businessTypeReport_' + key)?.checked),
+      enabled_sections: Array.from(document.querySelectorAll('#businessTypeSectionsChecklist input[type="checkbox"]')).filter(cb => cb.checked).map(cb => cb.dataset.sectionKey),
       ...(document.getElementById('businessTypeItemNameLabel').value.trim() ? { item_name_label: document.getElementById('businessTypeItemNameLabel').value.trim() } : {}),
       ...(document.getElementById('businessTypeIcon').value.trim() ? { icon: document.getElementById('businessTypeIcon').value.trim() } : {}),
       ...(document.getElementById('businessTypeSeatingLabel').value.trim() ? { seating_unit_label: document.getElementById('businessTypeSeatingLabel').value.trim() } : {}),
@@ -26455,6 +26543,7 @@ async function saveBusinessType(e) {
     closeBusinessTypeModal();
     await loadBoBusinessTypes();
     renderBusinessTypesTable();
+    applyBoPermissions();
   } catch (err) {
     console.error(err);
     errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
@@ -26470,6 +26559,7 @@ async function toggleBusinessTypeActive(item) {
   if (error) { console.error(error); showToast('تعذر تحديث حالة النشاط', true); return; }
   await loadBoBusinessTypes();
   renderBusinessTypesTable();
+  applyBoPermissions();
 }
 
 // ---- أجهزة نقاط البيع (pos_devices) ----
