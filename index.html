@@ -1646,6 +1646,7 @@ a { color: inherit; }
             <button class="bo-nav-sub-item" data-section="assets">الأصول/الأجهزة</button>
             <button class="bo-nav-sub-item" data-section="service-orders">أوامر الخدمة</button>
             <button class="bo-nav-sub-item" data-section="service-visits">الزيارات</button>
+            <button class="bo-nav-sub-item" data-section="contracts">العقود</button>
           </div>
         </div>
 
@@ -2418,6 +2419,36 @@ a { color: inherit; }
               </thead>
               <tbody id="serviceVisitsTableBody">
                 <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم العقود -->
+        <div id="bo-section-contracts" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">العقود</div>
+            <button class="bo-add-btn" id="addContractBtn">+ عقد جديد</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="contractSearchInput" placeholder="ابحث برقم العقد أو اسم العميل...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>رقم العقد</th>
+                  <th>العميل</th>
+                  <th>النوع</th>
+                  <th>الحالة</th>
+                  <th>من — إلى</th>
+                  <th>الزيارات</th>
+                  <th>السعر</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="contractsTableBody">
+                <tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
@@ -7363,6 +7394,72 @@ a { color: inherit; }
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelServiceVisitBtn">إلغاء</button>
         <button type="submit" class="submit-btn" id="saveServiceVisitBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: عقد جديد -->
+<div class="modal-overlay" id="contractModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="contractModalTitle">عقد جديد</div>
+    <form id="contractForm">
+      <input type="hidden" id="contractId">
+      <div class="modal-grid">
+        <div class="field field-full">
+          <label>العميل</label>
+          <div class="smart-search">
+            <input type="text" id="contractCustomerInput" autocomplete="off" placeholder="اكتب اسم العميل..." required>
+            <input type="hidden" id="contractCustomer">
+            <div class="smart-search-dropdown" id="contractCustomerDropdown"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>نوع العقد</label>
+          <select id="contractType">
+            <option value="maintenance">عقد صيانة</option>
+            <option value="subscription">اشتراك دوري</option>
+            <option value="support">دعم فني</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>الحالة</label>
+          <select id="contractStatus">
+            <option value="active">نشط</option>
+            <option value="expired">منتهي</option>
+            <option value="cancelled">ملغي</option>
+          </select>
+        </div>
+        <div class="field"><label>تاريخ البداية</label><input type="date" id="contractStartDate" required></div>
+        <div class="field"><label>تاريخ النهاية (اختياري)</label><input type="date" id="contractEndDate"></div>
+        <div class="field" id="contractVisitsIncludedField"><label>عدد الزيارات المسموح بها ضمن العقد</label><input type="number" id="contractVisitsIncluded" min="0" step="1"></div>
+        <div class="field" id="contractBillingCycleField">
+          <label>دورة الفوترة</label>
+          <select id="contractBillingCycle">
+            <option value="">— غير محدد —</option>
+            <option value="monthly">شهري</option>
+            <option value="quarterly">ربع سنوي</option>
+            <option value="yearly">سنوي</option>
+            <option value="one_time">دفعة واحدة</option>
+          </select>
+        </div>
+        <div class="field"><label>سعر العقد</label><input type="number" id="contractPrice" min="0" step="0.01" value="0"></div>
+        <div class="field field-full" id="contractVisitsUsedInfo" style="display:none;">
+          <label>الزيارات المستهلكة حتى الآن</label>
+          <div style="font-size:13px; color:var(--ink-soft); padding:8px 0;" id="contractVisitsUsedText"></div>
+        </div>
+        <div class="field field-full">
+          <label>الأصول المشمولة بالعقد (اختياري)</label>
+          <div id="contractAssetsChecklist" style="max-height:160px; overflow-y:auto; border:1px solid var(--border); border-radius:var(--radius-sm); padding:8px;">
+            <p style="font-size:12px; color:var(--ink-soft); margin:0;">اختر عميل أولًا لعرض أصوله</p>
+          </div>
+        </div>
+        <div class="field field-full"><label>ملاحظات</label><textarea id="contractNotes" rows="2"></textarea></div>
+      </div>
+      <div class="error-msg" id="contractModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelContractBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveContractBtn">حفظ</button>
       </div>
     </form>
   </div>
@@ -16639,6 +16736,7 @@ const boAllSections = ['dashboard','products','categories','unit-types','tax-rat
   'assets',
   'service-orders',
   'service-visits',
+  'contracts',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
   'soon','company-info','permissions','users','branches','business-types','pos-devices','branch-settings','pos-tables','print-settings','stock','stocktake','product-batches','product-serials','backup','reset-data','employees','attendance','leave-requests','expense-items','expenses','salaries','sales-commissions','treasuries','capital','fixed-assets','promotions','coupons','modifier-groups','recipes'];
 
@@ -16647,7 +16745,7 @@ const boNavGroups = [
   { toggle: 'marketingNavToggle', group: 'marketingNavGroup', sections: ['promotions','coupons'] },
   { toggle: 'salesNavToggle', group: 'salesNavGroup', sections: ['sales-list','sale-orders','delivery','delivery-zones','delivery-companies','sales-channels','driver-settlements','customers','customer-types','sale-returns'] },
   { toggle: 'purchasesNavToggle', group: 'purchasesNavGroup', sections: ['suppliers','supplier-prices','purchase-requisitions','purchase-orders','purchases','purchase-returns'] },
-  { toggle: 'serviceMgmtNavToggle', group: 'serviceMgmtNavGroup', sections: ['assets', 'service-orders', 'service-visits'] },
+  { toggle: 'serviceMgmtNavToggle', group: 'serviceMgmtNavGroup', sections: ['assets', 'service-orders', 'service-visits', 'contracts'] },
   { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
   { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['treasuries','payments','expense-items','expenses','capital','fixed-assets'] },
   { toggle: 'hrNavToggle', group: 'hrNavGroup', sections: ['employees','attendance','leave-requests','salaries','sales-commissions'] },
@@ -16669,6 +16767,7 @@ const SECTION_PERMISSION_MAP = {
   'assets': 'service_management',
   'service-orders': 'service_management',
   'service-visits': 'service_management',
+  'contracts': 'service_management',
   'reports-sales': 'reports', 'reports-purchases': 'reports', 'reports-inventory': 'reports', 'reports-accounting': 'reports', 'reports-other': 'reports',
   'treasuries': 'finance', 'payments': 'finance', 'expense-items': 'finance', 'expenses': 'finance', 'capital': 'admin', 'fixed-assets': 'finance',
   'employees': 'hr', 'attendance': 'hr', 'leave-requests': 'hr', 'salaries': 'hr', 'sales-commissions': 'hr',
@@ -16769,7 +16868,7 @@ const SCREEN_LABELS = {
   'branches': 'الفروع', 'business-types': 'أنواع الأنشطة التجارية', 'pos-devices': 'أجهزة نقاط البيع',
   'branch-settings': 'إعدادات الفرع', 'pos-tables': 'الطاولات والكراسي', 'print-settings': 'إعدادات الطباعة',
   'backup': 'نسخة احتياطية', 'reset-data': 'تهيئة البيانات', 'capital': 'رأس المال وحقوق الملكية',
-  'assets': 'الأصول/الأجهزة', 'service-orders': 'أوامر الخدمة', 'service-visits': 'الزيارات'
+  'assets': 'الأصول/الأجهزة', 'service-orders': 'أوامر الخدمة', 'service-visits': 'الزيارات', 'contracts': 'العقود'
 };
 
 // بناء قائمة الشاشات التفصيلية لكل وحدة رئيسية تلقائيًا من SECTION_PERMISSION_MAP
@@ -17257,6 +17356,7 @@ const ACTION_CAPABLE_SCREENS = {
   'assets': { add: true, edit: true, delete: true },
   'service-orders': { add: true, edit: true, delete: true },
   'service-visits': { add: true, edit: true, delete: true },
+  'contracts': { add: true, edit: true, delete: true },
   'purchase-requisitions': { add: true, edit: true },
   'purchase-orders': { add: true, edit: true, delete: true },
   'sales-list': { edit: true },
@@ -17302,6 +17402,7 @@ const ADD_BUTTON_MAP = {
   'assets': 'addAssetBtn',
   'service-orders': 'addServiceOrderBtn',
   'service-visits': 'addServiceVisitBtn',
+  'contracts': 'addContractBtn',
   'purchase-orders': 'addPurchaseOrderBtn', 'purchases': 'addPurchaseBtn', 'purchase-returns': 'addPurchaseReturnBtn', 'sale-returns': 'addSaleReturnFromBoBtn',
   'stocktake': 'addStocktakeSessionBtn', 'product-batches': 'addProductBatchBtn', 'product-serials': 'addProductSerialBtn',
   'delivery': 'addDeliveryOrderBtn', 'delivery-zones': 'addDeliveryZoneBtn', 'delivery-companies': 'addDeliveryCompanyBtn', 'sales-channels': 'addSalesChannelBtn',
@@ -17477,6 +17578,7 @@ function activateBoSection(section, btn) {
   if (section === 'assets' && !boAssetsLoadedOnce) { loadBoAssets().then(renderAssetsTable); boAssetsLoadedOnce = true; }
   if (section === 'service-orders' && !boServiceOrdersLoadedOnce) { loadBoServiceOrders().then(renderServiceOrdersTable); boServiceOrdersLoadedOnce = true; }
   if (section === 'service-visits' && !boServiceVisitsLoadedOnce) { loadBoServiceVisits().then(renderServiceVisitsTable); boServiceVisitsLoadedOnce = true; }
+  if (section === 'contracts' && !boContractsLoadedOnce) { loadBoContractsFull().then(renderContractsTable); boContractsLoadedOnce = true; }
   if (section === 'purchase-orders') { loadBoPurchaseOrders().then(renderPurchaseOrdersTable); }
   if (section === 'purchase-requisitions') { loadBoRequisitions().then(renderRequisitionsTable); }
   if (section === 'purchase-returns') { loadBoPurchaseReturns().then(renderPurchaseReturnsTable); }
@@ -18870,6 +18972,16 @@ function bindBackofficeEvents() {
   document.getElementById('serviceVisitForm').addEventListener('submit', saveServiceVisit);
   document.getElementById('serviceVisitSearchInput').addEventListener('input', renderServiceVisitsTable);
 
+  // ---- Contract modal ----
+  document.getElementById('addContractBtn').addEventListener('click', () => openContractModal(null));
+  document.getElementById('cancelContractBtn').addEventListener('click', closeContractModal);
+  document.getElementById('contractModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'contractModalOverlay') closeContractModal();
+  });
+  document.getElementById('contractForm').addEventListener('submit', saveContract);
+  document.getElementById('contractType').addEventListener('change', applyContractTypeFieldVisibility);
+  document.getElementById('contractSearchInput').addEventListener('input', renderContractsTable);
+
   // ---- Purchase requisitions ----
   document.getElementById('addRequisitionBtn').addEventListener('click', () => openRequisitionFormModal());
   document.getElementById('cancelRequisitionFormBtn').addEventListener('click', closeRequisitionFormModal);
@@ -20124,7 +20236,7 @@ function renderQuickAddTemplatesMenu() {
   });
 }
 
-// فتح مودال "صنف جديد" مع تعبئة مسبقة من قالب سريع (اسم، طريقة بيع، والتاب اللي يفتح بيه بعد أول حفظ)
+// فتح مودال "صنف جديد" مع تعبئة مسبقة من قالب سريع (اسم، نوع منتج/خدمة، طريقة بيع، والتاب اللي يفتح بيه بعد أول حفظ)
 async function applyQuickTemplateToNewProduct(template) {
   pendingQuickTemplateInitialTab = (template.initial_tab && template.initial_tab !== 'basic') ? template.initial_tab : null;
   await openProductModal(null, template.initial_tab || 'basic');
@@ -20133,6 +20245,9 @@ async function applyQuickTemplateToNewProduct(template) {
     document.getElementById('productSellByWeight').checked = template.sell_by === 'weight';
     document.getElementById('productSellByWeightField').style.display = '';
   }
+  const kind = template.kind === 'service' ? 'service' : 'product';
+  document.getElementById('productItemKind').value = kind;
+  applyProductKindUI(kind);
   document.getElementById('productName').focus();
   document.getElementById('productName').select();
 }
@@ -26403,7 +26518,7 @@ const SEC = {
   hrBasic: ['employees', 'attendance', 'leave-requests', 'salaries'],
   delivery: ['delivery', 'delivery-zones', 'delivery-companies', 'sales-channels', 'driver-settlements'],
   marketing: ['promotions', 'coupons'],
-  serviceMgmt: ['assets', 'service-orders', 'service-visits'],
+  serviceMgmt: ['assets', 'service-orders', 'service-visits', 'contracts'],
 };
 
 const BUSINESS_TYPE_DEFAULT_SECTIONS = {
@@ -32636,6 +32751,227 @@ async function deleteServiceVisit(visit) {
   showToast('تم حذف الزيارة');
   await loadBoServiceVisits();
   renderServiceVisitsTable();
+}
+
+// ==================== العقود (Contracts) ====================
+let boContractsFull = [];
+let boContractsLoadedOnce = false;
+let contractCustomerSearch = null;
+
+const CONTRACT_TYPE_LABELS = { maintenance: 'عقد صيانة', subscription: 'اشتراك دوري', support: 'دعم فني' };
+const CONTRACT_STATUS_LABELS = { active: 'نشط', expired: 'منتهي', cancelled: 'ملغي' };
+
+async function loadBoContractsFull() {
+  const { data, error } = await supabaseClient
+    .from('contracts')
+    .select('*, customers(name), contract_assets(asset_id, assets(name))')
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل العقود', true); return; }
+  boContractsFull = data || [];
+}
+
+function renderContractsTable() {
+  const tbody = document.getElementById('contractsTableBody');
+  const q = (document.getElementById('contractSearchInput').value || '').trim().toLowerCase();
+  const filtered = boContractsFull.filter(c => {
+    if (!q) return true;
+    return String(c.contract_number).includes(q) || (c.customers?.name || '').toLowerCase().includes(q);
+  });
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" class="bo-empty">${boContractsFull.length === 0 ? 'لا توجد عقود مضافة حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(c => {
+    const tr = document.createElement('tr');
+    const statusClass = c.status === 'active' ? 'active' : (c.status === 'cancelled' ? 'inactive' : 'pending');
+    const visitsCell = c.visits_included
+      ? `${c.visits_used} / ${c.visits_included}`
+      : (c.contract_type === 'maintenance' ? `${c.visits_used}` : '—');
+    const dateRange = `${c.start_date || '—'} → ${c.end_date || 'بدون نهاية'}`;
+    tr.innerHTML = `
+      <td class="num">#${c.contract_number}</td>
+      <td>${escapeHtml(c.customers?.name || '—')}</td>
+      <td>${CONTRACT_TYPE_LABELS[c.contract_type] || c.contract_type}</td>
+      <td><span class="bo-badge ${statusClass}">${CONTRACT_STATUS_LABELS[c.status] || c.status}</span></td>
+      <td class="num">${escapeHtml(dateRange)}</td>
+      <td class="num">${visitsCell}</td>
+      <td class="num">${Number(c.price).toFixed(2)}</td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openContractModal(c));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteContract(c));
+    applyRowActionPerm(tr, 'contracts');
+    tbody.appendChild(tr);
+  });
+}
+
+// نوع العقد بيحدد الحقول ذات الصلة: عدد الزيارات لعقد الصيانة، ودورة
+// الفوترة للاشتراك/الدعم — بنفس فلسفة applyProductKindUI
+function applyContractTypeFieldVisibility() {
+  const type = document.getElementById('contractType').value;
+  document.getElementById('contractVisitsIncludedField').style.display = type === 'maintenance' ? '' : 'none';
+  document.getElementById('contractBillingCycleField').style.display = (type === 'subscription' || type === 'support') ? '' : 'none';
+}
+
+async function renderContractAssetsChecklist(customerId, selectedAssetIds) {
+  const wrap = document.getElementById('contractAssetsChecklist');
+  if (!customerId) {
+    wrap.innerHTML = '<p style="font-size:12px; color:var(--ink-soft); margin:0;">اختر عميل أولًا لعرض أصوله</p>';
+    return;
+  }
+  if (boAssets.length === 0) await loadBoAssets();
+  const customerAssets = boAssets.filter(a => a.customer_id === customerId);
+  if (customerAssets.length === 0) {
+    wrap.innerHTML = '<p style="font-size:12px; color:var(--ink-soft); margin:0;">لا توجد أصول مسجّلة لهذا العميل</p>';
+    return;
+  }
+  wrap.innerHTML = '';
+  customerAssets.forEach(a => {
+    const label = document.createElement('label');
+    label.style.cssText = 'display:flex; align-items:center; gap:6px; font-size:12.5px; cursor:pointer; padding:3px 0;';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.style.width = 'auto';
+    cb.dataset.assetId = a.id;
+    cb.checked = (selectedAssetIds || []).includes(a.id);
+    label.append(cb, document.createTextNode(a.name));
+    wrap.appendChild(label);
+  });
+}
+
+async function openContractModal(contract) {
+  if (boCustomers.length === 0) await loadBoCustomers();
+
+  document.getElementById('contractModalTitle').textContent = contract ? `تعديل عقد #${contract.contract_number}` : 'عقد جديد';
+  document.getElementById('contractId').value = contract ? contract.id : '';
+  document.getElementById('contractType').value = contract?.contract_type || 'maintenance';
+  document.getElementById('contractStatus').value = contract?.status || 'active';
+  document.getElementById('contractStartDate').value = contract?.start_date || '';
+  document.getElementById('contractEndDate').value = contract?.end_date || '';
+  document.getElementById('contractVisitsIncluded').value = contract?.visits_included ?? '';
+  document.getElementById('contractBillingCycle').value = contract?.billing_cycle || '';
+  document.getElementById('contractPrice').value = contract?.price ?? 0;
+  document.getElementById('contractNotes').value = contract?.notes || '';
+  applyContractTypeFieldVisibility();
+
+  // عدد الزيارات المستهلكة (visits_used) للقراءة فقط دايمًا — بيتحدث تلقائيًا من
+  // trg_service_visit_contract_effect عند اكتمال زيارة، مش من هنا
+  const visitsInfoWrap = document.getElementById('contractVisitsUsedInfo');
+  if (contract) {
+    visitsInfoWrap.style.display = '';
+    document.getElementById('contractVisitsUsedText').textContent =
+      `${contract.visits_used} زيارة${contract.visits_included ? ` من أصل ${contract.visits_included} مسموح بها` : ''} — يُحسب تلقائيًا من الزيارات المكتملة`;
+  } else {
+    visitsInfoWrap.style.display = 'none';
+  }
+
+  if (!contractCustomerSearch) {
+    contractCustomerSearch = createSmartSearch({
+      input: document.getElementById('contractCustomerInput'),
+      hidden: document.getElementById('contractCustomer'),
+      dropdown: document.getElementById('contractCustomerDropdown'),
+      getItems: () => boCustomers.map(c => ({ value: c.id, label: c.name, sublabel: c.phone || '', search: `${c.name} ${c.phone || ''}` })),
+      onChange: (item) => { renderContractAssetsChecklist(item.value, []); },
+    });
+  }
+  document.getElementById('contractCustomerInput').value = contract?.customers?.name || '';
+  document.getElementById('contractCustomer').value = contract ? contract.customer_id : '';
+
+  const selectedAssetIds = contract ? (contract.contract_assets || []).map(ca => ca.asset_id) : [];
+  await renderContractAssetsChecklist(contract?.customer_id || null, selectedAssetIds);
+
+  document.getElementById('contractModalError').classList.remove('show');
+  document.getElementById('contractModalOverlay').classList.add('show');
+}
+
+function closeContractModal() {
+  document.getElementById('contractModalOverlay').classList.remove('show');
+}
+
+async function saveContract(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('contractModalError');
+  errEl.classList.remove('show');
+
+  const customerId = document.getElementById('contractCustomer').value || null;
+  if (!customerId) {
+    errEl.textContent = 'اختر عميل العقد أولًا';
+    errEl.classList.add('show');
+    return;
+  }
+
+  const saveBtn = document.getElementById('saveContractBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('contractId').value || null;
+  const payload = {
+    branch_id: currentProfile.branch_id,
+    customer_id: customerId,
+    contract_type: document.getElementById('contractType').value,
+    status: document.getElementById('contractStatus').value,
+    start_date: document.getElementById('contractStartDate').value,
+    end_date: document.getElementById('contractEndDate').value || null,
+    visits_included: document.getElementById('contractVisitsIncluded').value ? Number(document.getElementById('contractVisitsIncluded').value) : null,
+    billing_cycle: document.getElementById('contractBillingCycle').value || null,
+    price: Number(document.getElementById('contractPrice').value) || 0,
+    notes: document.getElementById('contractNotes').value.trim() || null,
+  };
+
+  const selectedAssetIds = Array.from(document.querySelectorAll('#contractAssetsChecklist input[type="checkbox"]:checked')).map(cb => cb.dataset.assetId);
+
+  try {
+    let contractId = id;
+    if (id) {
+      const { error } = await supabaseClient.from('contracts').update(payload).eq('id', id);
+      if (error) throw error;
+      const { error: delError } = await supabaseClient.from('contract_assets').delete().eq('contract_id', id);
+      if (delError) throw delError;
+    } else {
+      const { data: newContract, error } = await supabaseClient.from('contracts').insert(payload).select().single();
+      if (error) throw error;
+      contractId = newContract.id;
+    }
+
+    if (selectedAssetIds.length > 0) {
+      const rows = selectedAssetIds.map(assetId => ({ contract_id: contractId, asset_id: assetId }));
+      const { error: assetsError } = await supabaseClient.from('contract_assets').insert(rows);
+      if (assetsError) throw assetsError;
+    }
+
+    showToast(id ? 'تم تحديث العقد' : 'تم إنشاء العقد بنجاح');
+    closeContractModal();
+    await loadBoContractsFull();
+    renderContractsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function deleteContract(contract) {
+  if (!hasBoActionPermission('contracts', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف العقد رقم #${contract.contract_number}؟`)) return;
+  const { error: assetsErr } = await supabaseClient.from('contract_assets').delete().eq('contract_id', contract.id);
+  if (assetsErr) { console.error(assetsErr); showToast('تعذر حذف بيانات الأصول المرتبطة بالعقد', true); return; }
+  const { error } = await supabaseClient.from('contracts').delete().eq('id', contract.id);
+  if (error) {
+    console.error(error);
+    showToast('تعذر حذف العقد', true);
+    return;
+  }
+  showToast('تم حذف العقد');
+  await loadBoContractsFull();
+  renderContractsTable();
 }
 
 // ---- طلبات الشراء الداخلية (purchase_requisitions) ----
