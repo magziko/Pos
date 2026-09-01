@@ -1647,6 +1647,7 @@ a { color: inherit; }
             <button class="bo-nav-sub-item" data-section="service-orders">أوامر الخدمة</button>
             <button class="bo-nav-sub-item" data-section="service-visits">الزيارات</button>
             <button class="bo-nav-sub-item" data-section="contracts">العقود</button>
+            <button class="bo-nav-sub-item" data-section="my-visits">زياراتي</button>
           </div>
         </div>
 
@@ -2452,6 +2453,15 @@ a { color: inherit; }
               </tbody>
             </table>
           </div>
+        </div>
+
+        <!-- قسم زياراتي (الفني الميداني) — عرض وتحديث بس، بدون إضافة/حذف -->
+        <div id="bo-section-my-visits" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">زياراتي</div>
+          </div>
+          <p style="font-size:12px; color:var(--ink-soft); margin:-6px 0 14px;">الزيارات المسندة إليك أنت فقط — تقدر تبدأ/تنهي الزيارة وتسجّل النتيجة.</p>
+          <div id="myVisitsList"></div>
         </div>
 
         <!-- قسم أسعار الموردين (مقارنة أسعار الشراء) — كان بدون عنصر تغليف خاص
@@ -16758,6 +16768,7 @@ const boAllSections = ['dashboard','products','categories','unit-types','tax-rat
   'service-orders',
   'service-visits',
   'contracts',
+  'my-visits',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
   'soon','company-info','permissions','users','branches','business-types','pos-devices','branch-settings','pos-tables','print-settings','stock','stocktake','product-batches','product-serials','backup','reset-data','employees','attendance','leave-requests','expense-items','expenses','salaries','sales-commissions','treasuries','capital','fixed-assets','promotions','coupons','modifier-groups','recipes'];
 
@@ -16766,7 +16777,7 @@ const boNavGroups = [
   { toggle: 'marketingNavToggle', group: 'marketingNavGroup', sections: ['promotions','coupons'] },
   { toggle: 'salesNavToggle', group: 'salesNavGroup', sections: ['sales-list','sale-orders','delivery','delivery-zones','delivery-companies','sales-channels','driver-settlements','customers','customer-types','sale-returns'] },
   { toggle: 'purchasesNavToggle', group: 'purchasesNavGroup', sections: ['suppliers','supplier-prices','purchase-requisitions','purchase-orders','purchases','purchase-returns'] },
-  { toggle: 'serviceMgmtNavToggle', group: 'serviceMgmtNavGroup', sections: ['assets', 'service-orders', 'service-visits', 'contracts'] },
+  { toggle: 'serviceMgmtNavToggle', group: 'serviceMgmtNavGroup', sections: ['assets', 'service-orders', 'service-visits', 'contracts', 'my-visits'] },
   { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
   { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['treasuries','payments','expense-items','expenses','capital','fixed-assets'] },
   { toggle: 'hrNavToggle', group: 'hrNavGroup', sections: ['employees','attendance','leave-requests','salaries','sales-commissions'] },
@@ -16789,6 +16800,7 @@ const SECTION_PERMISSION_MAP = {
   'service-orders': 'service_management',
   'service-visits': 'service_management',
   'contracts': 'service_management',
+  'my-visits': 'technician',
   'reports-sales': 'reports', 'reports-purchases': 'reports', 'reports-inventory': 'reports', 'reports-accounting': 'reports', 'reports-other': 'reports',
   'treasuries': 'finance', 'payments': 'finance', 'expense-items': 'finance', 'expenses': 'finance', 'capital': 'admin', 'fixed-assets': 'finance',
   'employees': 'hr', 'attendance': 'hr', 'leave-requests': 'hr', 'salaries': 'hr', 'sales-commissions': 'hr',
@@ -16889,7 +16901,7 @@ const SCREEN_LABELS = {
   'branches': 'الفروع', 'business-types': 'أنواع الأنشطة التجارية', 'pos-devices': 'أجهزة نقاط البيع',
   'branch-settings': 'إعدادات الفرع', 'pos-tables': 'الطاولات والكراسي', 'print-settings': 'إعدادات الطباعة',
   'backup': 'نسخة احتياطية', 'reset-data': 'تهيئة البيانات', 'capital': 'رأس المال وحقوق الملكية',
-  'assets': 'الأصول/الأجهزة', 'service-orders': 'أوامر الخدمة', 'service-visits': 'الزيارات', 'contracts': 'العقود'
+  'assets': 'الأصول/الأجهزة', 'service-orders': 'أوامر الخدمة', 'service-visits': 'الزيارات', 'contracts': 'العقود', 'my-visits': 'زياراتي (الفني)'
 };
 
 // بناء قائمة الشاشات التفصيلية لكل وحدة رئيسية تلقائيًا من SECTION_PERMISSION_MAP
@@ -17600,6 +17612,7 @@ function activateBoSection(section, btn) {
   if (section === 'service-orders' && !boServiceOrdersLoadedOnce) { loadBoServiceOrders().then(renderServiceOrdersTable); boServiceOrdersLoadedOnce = true; }
   if (section === 'service-visits' && !boServiceVisitsLoadedOnce) { loadBoServiceVisits().then(renderServiceVisitsTable); boServiceVisitsLoadedOnce = true; }
   if (section === 'contracts' && !boContractsLoadedOnce) { loadBoContractsFull().then(renderContractsTable); boContractsLoadedOnce = true; }
+  if (section === 'my-visits' && !boMyVisitsLoadedOnce) { loadMyVisits().then(renderMyVisits); boMyVisitsLoadedOnce = true; }
   if (section === 'purchase-orders') { loadBoPurchaseOrders().then(renderPurchaseOrdersTable); }
   if (section === 'purchase-requisitions') { loadBoRequisitions().then(renderRequisitionsTable); }
   if (section === 'purchase-returns') { loadBoPurchaseReturns().then(renderPurchaseReturnsTable); }
@@ -26545,7 +26558,7 @@ const SEC = {
   hrBasic: ['employees', 'attendance', 'leave-requests', 'salaries'],
   delivery: ['delivery', 'delivery-zones', 'delivery-companies', 'sales-channels', 'driver-settlements'],
   marketing: ['promotions', 'coupons'],
-  serviceMgmt: ['assets', 'service-orders', 'service-visits', 'contracts'],
+  serviceMgmt: ['assets', 'service-orders', 'service-visits', 'contracts', 'my-visits'],
 };
 
 const BUSINESS_TYPE_DEFAULT_SECTIONS = {
@@ -27319,6 +27332,7 @@ const PERMISSION_GROUPS = [
   { key: 'sales_management', title: 'المبيعات', desc: 'فواتير البيع، العملاء، أنواع العملاء، مرتجعات البيع', children: buildModuleScreens('sales_management') },
   { key: 'purchases_management', title: 'المشتريات', desc: 'الموردون، فواتير الشراء، مرتجعات الشراء', children: buildModuleScreens('purchases_management') },
   { key: 'service_management', title: 'إدارة الخدمات', desc: 'الأصول/الأجهزة، أوامر الخدمة، الفنيين، الزيارات، العقود (تحت الإنشاء تدريجيًا)', children: buildModuleScreens('service_management') },
+  { key: 'technician', title: 'الفني الميداني (وصول محدود)', desc: 'وصول مقتصر على الزيارات المسندة للموظف المرتبط بحساب المستخدم نفسه فقط — منفصل عن إدارة الخدمات الكاملة', children: buildModuleScreens('technician') },
   { key: 'reports', title: 'التقارير', desc: 'تقارير المبيعات والمشتريات والمخزون والمحاسبة والتقارير الأخرى', reportGroups: REPORT_TABS },
   { key: 'finance', title: 'المالية', desc: 'الخزائن والحسابات البنكية، سجل المدفوعات، بنود المصروفات، المصروفات، الأصول الثابتة', children: buildModuleScreens('finance') },
   { key: 'hr', title: 'الموارد البشرية', desc: 'بيانات الموظفين والرواتب', children: buildModuleScreens('hr') },
@@ -33098,6 +33112,94 @@ async function deleteContract(contract) {
   showToast('تم حذف العقد');
   await loadBoContractsFull();
   renderContractsTable();
+}
+
+// ==================== زياراتي (شاشة الفني الميداني — عرض وتحديث بس) ====================
+let boMyVisitsLoadedOnce = false;
+let myVisits = [];
+
+async function loadMyVisits() {
+  if (!currentProfile.employee_id) { myVisits = []; return; }
+  const { data, error } = await supabaseClient
+    .from('service_visits')
+    .select('*, service_orders(order_number, order_type, customers(name), assets(name))')
+    .eq('technician_employee_id', currentProfile.employee_id)
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل زياراتك', true); return; }
+  myVisits = data || [];
+}
+
+function renderMyVisits() {
+  const wrap = document.getElementById('myVisitsList');
+  if (!currentProfile.employee_id) {
+    wrap.innerHTML = '<p style="text-align:center; color:var(--ink-soft); padding:24px 0;">حسابك غير مرتبط بسجل موظف — تواصل مع الإدارة لربط حسابك بموظف عشان تقدر تشوف زياراتك.</p>';
+    return;
+  }
+  if (myVisits.length === 0) {
+    wrap.innerHTML = '<p style="text-align:center; color:var(--ink-soft); padding:24px 0;">لا توجد زيارات مسندة إليك حاليًا</p>';
+    return;
+  }
+  wrap.innerHTML = '';
+  myVisits.forEach(v => {
+    const order = v.service_orders;
+    const status = v.ended_at ? 'منتهية' : (v.started_at ? 'جارية' : 'مجدولة');
+    const statusClass = v.ended_at ? 'active' : (v.started_at ? 'pending' : 'inactive');
+    const card = document.createElement('div');
+    card.style.cssText = 'border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px; margin-bottom:10px;';
+    card.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+        <div>
+          <strong>${escapeHtml(order?.customers?.name || 'بدون عميل')}</strong>
+          ${order?.assets?.name ? ` — ${escapeHtml(order.assets.name)}` : ''}
+        </div>
+        <span class="bo-badge ${statusClass}">${status}</span>
+      </div>
+      <div style="font-size:12.5px; color:var(--ink-soft); margin-top:4px;">
+        أمر خدمة #${order?.order_number ?? '—'} — ${SERVICE_ORDER_TYPE_LABELS[order?.order_type] || order?.order_type || ''}
+        ${v.location_required ? ' • زيارة ميدانية' : ' • بدون موقع (عن بُعد)'}
+      </div>
+      ${v.started_at ? `<div style="font-size:12px; color:var(--ink-soft); margin-top:4px;">بدأت: ${new Date(v.started_at).toLocaleString('ar-EG')}</div>` : ''}
+      ${v.ended_at ? `<div style="font-size:12px; color:var(--ink-soft);">انتهت: ${new Date(v.ended_at).toLocaleString('ar-EG')}</div>` : ''}
+      <div style="margin-top:8px;">
+        <label style="font-size:12px; color:var(--ink-soft); display:block; margin-bottom:4px;">نتيجة الزيارة / ملاحظات</label>
+        <textarea rows="2" data-notes-for="${v.id}" style="width:100%;">${escapeHtml(v.result_notes || '')}</textarea>
+      </div>
+      <div style="margin-top:8px; display:flex; gap:8px;">
+        ${!v.started_at ? `<button type="button" class="btn-secondary" data-action="start">▶ بدء الزيارة</button>` : ''}
+        ${v.started_at && !v.ended_at ? `<button type="button" class="submit-btn" data-action="end" style="padding:6px 14px;">✓ إنهاء الزيارة</button>` : ''}
+        <button type="button" class="btn-secondary" data-action="save-notes">حفظ الملاحظات</button>
+      </div>`;
+    card.querySelector('[data-action="start"]')?.addEventListener('click', () => startMyVisit(v.id));
+    card.querySelector('[data-action="end"]')?.addEventListener('click', () => endMyVisit(v.id, card));
+    card.querySelector('[data-action="save-notes"]')?.addEventListener('click', () => saveMyVisitNotes(v.id, card));
+    wrap.appendChild(card);
+  });
+}
+
+async function startMyVisit(visitId) {
+  const { error } = await supabaseClient.from('service_visits').update({ started_at: new Date().toISOString() }).eq('id', visitId);
+  if (error) { console.error(error); showToast('تعذر بدء الزيارة', true); return; }
+  showToast('تم تسجيل بدء الزيارة');
+  await loadMyVisits();
+  renderMyVisits();
+}
+
+async function endMyVisit(visitId, card) {
+  const notes = card.querySelector(`[data-notes-for="${visitId}"]`)?.value || '';
+  const { error } = await supabaseClient.from('service_visits')
+    .update({ ended_at: new Date().toISOString(), result_notes: notes.trim() || null })
+    .eq('id', visitId);
+  if (error) { console.error(error); showToast('تعذر إنهاء الزيارة', true); return; }
+  showToast('تم إنهاء الزيارة بنجاح');
+  await loadMyVisits();
+  renderMyVisits();
+}
+
+async function saveMyVisitNotes(visitId, card) {
+  const notes = card.querySelector(`[data-notes-for="${visitId}"]`)?.value || '';
+  const { error } = await supabaseClient.from('service_visits').update({ result_notes: notes.trim() || null }).eq('id', visitId);
+  if (error) { console.error(error); showToast('تعذر حفظ الملاحظات', true); return; }
+  showToast('تم حفظ الملاحظات');
 }
 
 // ---- طلبات الشراء الداخلية (purchase_requisitions) ----
