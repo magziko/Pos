@@ -7465,6 +7465,19 @@ a { color: inherit; }
   </div>
 </div>
 
+<!-- Modal: سجل الأصل (تايم لاين كامل — للعرض فقط) -->
+<div class="modal-overlay" id="assetHistoryModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title" id="assetHistoryModalTitle">سجل الأصل</div>
+    <div id="assetHistorySummary" style="background:var(--surface-sunken); border-radius:var(--radius-sm); padding:12px; margin-bottom:14px; font-size:13px; line-height:1.9;"></div>
+    <div id="assetHistoryContracts" style="margin-bottom:14px;"></div>
+    <div id="assetHistoryTimeline" style="max-height:420px; overflow-y:auto;"></div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="closeAssetHistoryBtn">إغلاق</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: طلب توريد جديد -->
 <div class="modal-overlay" id="requisitionFormModalOverlay">
   <div class="modal-box" style="max-width:640px;">
@@ -12319,6 +12332,14 @@ function bindNotifEvents() {
       if (notif?.type === 'long_open_table' && posViewActive && branchUsesSeatingUnits()) {
         closeNotifPanel();
         showPosTablesFloorView();
+      }
+      // إشعارات العقود (قرب الانتهاء / استهلاك الزيارات) — نودّي المستخدم
+      // لشاشة العقود مباشرة لو أصلًا فاتح لوحة التحكم
+      const boViewActive = document.getElementById('view-backoffice')?.classList.contains('active');
+      if ((notif?.type === 'contract_expiring' || notif?.type === 'contract_visits_exhausted') && boViewActive) {
+        closeNotifPanel();
+        const contractsBtn = document.querySelector('[data-section="contracts"]');
+        if (contractsBtn) activateBoSection('contracts', contractsBtn);
       }
     }
   });
@@ -18981,6 +19002,12 @@ function bindBackofficeEvents() {
   document.getElementById('contractForm').addEventListener('submit', saveContract);
   document.getElementById('contractType').addEventListener('change', applyContractTypeFieldVisibility);
   document.getElementById('contractSearchInput').addEventListener('input', renderContractsTable);
+
+  // ---- Asset history modal ----
+  document.getElementById('closeAssetHistoryBtn').addEventListener('click', closeAssetHistoryModal);
+  document.getElementById('assetHistoryModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'assetHistoryModalOverlay') closeAssetHistoryModal();
+  });
 
   // ---- Purchase requisitions ----
   document.getElementById('addRequisitionBtn').addEventListener('click', () => openRequisitionFormModal());
@@ -32081,10 +32108,12 @@ function renderAssetsTable() {
       <td>${a.is_active ? '<span class="bo-badge active">نشط</span>' : '<span class="bo-badge inactive">غير نشط</span>'}</td>
       <td>
         <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="history" style="color:var(--teal-700);">السجل</button>
           <button class="bo-icon-btn" data-action="edit">تعديل</button>
           <button class="bo-icon-btn danger" data-action="delete">حذف</button>
         </div>
       </td>`;
+    tr.querySelector('[data-action="history"]').addEventListener('click', () => openAssetHistoryModal(a));
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openAssetModal(a));
     tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteAsset(a));
     applyRowActionPerm(tr, 'assets');
@@ -32281,6 +32310,103 @@ async function deleteAsset(asset) {
   showToast('تم حذف الأصل');
   await loadBoAssets();
   renderAssetsTable();
+}
+
+// سجل الأصل الكامل — تايم لاين واحد يجمع كل أوامر الخدمة وزياراتها المرتبطة
+// بأصل معيّن، بالإضافة لأي عقود بتغطيه. للعرض فقط (read-only)، بيقرأ من
+// الجداول اللي بنيناها من Phase 3 لحد Phase 8 بدون أي تعديل عليها.
+async function openAssetHistoryModal(asset) {
+  document.getElementById('assetHistoryModalTitle').textContent = `سجل: ${asset.name}`;
+
+  const summaryParts = [
+    `<div><strong>العميل:</strong> ${escapeHtml(asset.customers?.name || '—')}</div>`,
+    `<div><strong>نوع الأصل:</strong> ${escapeHtml(asset.activity_type_key || '—')}</div>`,
+  ];
+  if (asset.model) summaryParts.push(`<div><strong>الموديل:</strong> ${escapeHtml(asset.model)}</div>`);
+  if (asset.manufacturer) summaryParts.push(`<div><strong>الشركة المصنّعة:</strong> ${escapeHtml(asset.manufacturer)}</div>`);
+  if (asset.serial_number) summaryParts.push(`<div><strong>Serial Number:</strong> ${escapeHtml(asset.serial_number)}</div>`);
+  if (asset.installed_at) summaryParts.push(`<div><strong>تاريخ التركيب:</strong> ${escapeHtml(asset.installed_at)}</div>`);
+  if (asset.warranty_end) summaryParts.push(`<div><strong>نهاية الضمان:</strong> ${escapeHtml(asset.warranty_end)}</div>`);
+  document.getElementById('assetHistorySummary').innerHTML = summaryParts.join('');
+
+  const contractsWrap = document.getElementById('assetHistoryContracts');
+  contractsWrap.innerHTML = '<p style="font-size:12.5px; color:var(--ink-soft);">جاري تحميل السجل...</p>';
+  const timelineWrap = document.getElementById('assetHistoryTimeline');
+  timelineWrap.innerHTML = '';
+  document.getElementById('assetHistoryModalOverlay').classList.add('show');
+
+  const [ordersRes, contractLinksRes] = await Promise.all([
+    supabaseClient
+      .from('service_orders')
+      .select('*, employees(full_name), service_visits(*, employees(full_name))')
+      .eq('asset_id', asset.id)
+      .order('created_at', { ascending: false }),
+    supabaseClient
+      .from('contract_assets')
+      .select('contracts(*)')
+      .eq('asset_id', asset.id),
+  ]);
+
+  if (ordersRes.error) {
+    console.error(ordersRes.error);
+    timelineWrap.innerHTML = '<p style="color:var(--danger);">تعذر تحميل سجل الأصل</p>';
+    contractsWrap.innerHTML = '';
+    return;
+  }
+
+  const contracts = (contractLinksRes.data || []).map(c => c.contracts).filter(Boolean);
+  if (contracts.length === 0) {
+    contractsWrap.innerHTML = '';
+  } else {
+    contractsWrap.innerHTML = '<div class="ci-section-subtitle">العقود المغطّى بها هذا الأصل</div>' +
+      contracts.map(c => {
+        const statusClass = c.status === 'active' ? 'active' : (c.status === 'cancelled' ? 'inactive' : 'pending');
+        return `<span class="bo-badge ${statusClass}" style="margin:0 4px 4px 0; display:inline-block;">عقد #${c.contract_number} — ${CONTRACT_TYPE_LABELS[c.contract_type] || c.contract_type}</span>`;
+      }).join('');
+  }
+
+  const orders = ordersRes.data || [];
+  if (orders.length === 0) {
+    timelineWrap.innerHTML = '<p style="font-size:13px; color:var(--ink-soft); text-align:center; padding:20px 0;">مفيش أي أوامر خدمة مسجّلة على الأصل ده حتى الآن</p>';
+    return;
+  }
+
+  timelineWrap.innerHTML = orders.map(o => {
+    const statusClass = o.status === 'completed' ? 'active' : (o.status === 'cancelled' ? 'inactive' : 'pending');
+    const orderInvoiceBadge = o.sale_id ? ' <span class="bo-badge" style="background:var(--teal-100); color:var(--teal-900);">🧾 فاتورة</span>' : '';
+    const visits = o.service_visits || [];
+    const visitsHtml = visits.length === 0
+      ? '<p style="font-size:12px; color:var(--ink-soft); margin:6px 0 0;">مفيش زيارات مسجّلة على الأمر ده</p>'
+      : visits
+          .sort((a, b) => new Date(b.started_at || b.created_at) - new Date(a.started_at || a.created_at))
+          .map(v => `
+            <div style="border-right:2px solid var(--teal-500); padding:6px 10px; margin:6px 0; background:var(--surface-sunken); border-radius:0 var(--radius-sm) var(--radius-sm) 0;">
+              <div style="font-size:12.5px;">🔧 زيارة — ${escapeHtml(v.employees?.full_name || 'بدون فني محدد')}</div>
+              <div style="font-size:11.5px; color:var(--ink-soft);">
+                ${v.started_at ? `من ${new Date(v.started_at).toLocaleString('ar-EG')}` : 'لسه ما بدأتش'}
+                ${v.ended_at ? ` — لحد ${new Date(v.ended_at).toLocaleString('ar-EG')}` : ''}
+              </div>
+              ${v.result_notes ? `<div style="font-size:12px; margin-top:2px;">${escapeHtml(v.result_notes)}</div>` : ''}
+            </div>`).join('');
+
+    return `
+      <div style="border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px; margin-bottom:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+          <div>
+            <strong>أمر خدمة #${o.order_number}</strong> — ${SERVICE_ORDER_TYPE_LABELS[o.order_type] || o.order_type}
+            <span class="bo-badge ${statusClass}">${SERVICE_ORDER_STATUS_LABELS[o.status] || o.status}</span>${orderInvoiceBadge}
+          </div>
+          <div style="font-size:12px; color:var(--ink-soft);">${new Date(o.created_at).toLocaleDateString('ar-EG')}</div>
+        </div>
+        <div style="font-size:12.5px; color:var(--ink-soft); margin-top:4px;">الفني المسؤول: ${escapeHtml(o.employees?.full_name || '—')}</div>
+        ${o.notes ? `<div style="font-size:12.5px; margin-top:4px;">${escapeHtml(o.notes)}</div>` : ''}
+        <div style="margin-top:8px;">${visitsHtml}</div>
+      </div>`;
+  }).join('');
+}
+
+function closeAssetHistoryModal() {
+  document.getElementById('assetHistoryModalOverlay').classList.remove('show');
 }
 
 // ==================== أوامر الخدمة (Service Orders) ====================
