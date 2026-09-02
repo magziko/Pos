@@ -1648,6 +1648,7 @@ a { color: inherit; }
             <button class="bo-nav-sub-item" data-section="service-visits">الزيارات</button>
             <button class="bo-nav-sub-item" data-section="contracts">العقود</button>
             <button class="bo-nav-sub-item" data-section="my-visits">زياراتي</button>
+            <button class="bo-nav-sub-item" data-section="asset-faults">الأعطال</button>
           </div>
         </div>
 
@@ -2462,6 +2463,35 @@ a { color: inherit; }
           </div>
           <p style="font-size:12px; color:var(--ink-soft); margin:-6px 0 14px;">الزيارات المسندة إليك أنت فقط — تقدر تبدأ/تنهي الزيارة وتسجّل النتيجة.</p>
           <div id="myVisitsList"></div>
+        </div>
+
+        <!-- قسم الأعطال -->
+        <div id="bo-section-asset-faults" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">سجل الأعطال</div>
+            <button class="bo-add-btn" id="addAssetFaultBtn">+ عطل جديد</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="assetFaultSearchInput" placeholder="ابحث بالوصف أو اسم الأصل...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>رقم العطل</th>
+                  <th>الأصل</th>
+                  <th>الوصف</th>
+                  <th>الخطورة</th>
+                  <th>الحالة</th>
+                  <th>تاريخ الإبلاغ</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="assetFaultsTableBody">
+                <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <!-- قسم أسعار الموردين (مقارنة أسعار الشراء) — كان بدون عنصر تغليف خاص
@@ -7481,10 +7511,58 @@ a { color: inherit; }
     <div class="modal-title" id="assetHistoryModalTitle">سجل الأصل</div>
     <div id="assetHistorySummary" style="background:var(--surface-sunken); border-radius:var(--radius-sm); padding:12px; margin-bottom:14px; font-size:13px; line-height:1.9;"></div>
     <div id="assetHistoryContracts" style="margin-bottom:14px;"></div>
+    <div id="assetHistoryFaults" style="margin-bottom:14px;"></div>
     <div id="assetHistoryTimeline" style="max-height:420px; overflow-y:auto;"></div>
     <div class="modal-actions">
       <button type="button" class="modal-cancel-btn" id="closeAssetHistoryBtn">إغلاق</button>
     </div>
+  </div>
+</div>
+
+<!-- Modal: عطل جديد -->
+<div class="modal-overlay" id="assetFaultModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="assetFaultModalTitle">عطل جديد</div>
+    <form id="assetFaultForm">
+      <input type="hidden" id="assetFaultId">
+      <div class="modal-grid">
+        <div class="field field-full">
+          <label>الأصل</label>
+          <div class="smart-search">
+            <input type="text" id="assetFaultAssetInput" autocomplete="off" placeholder="اكتب اسم الأصل أو العميل..." required>
+            <input type="hidden" id="assetFaultAsset">
+            <div class="smart-search-dropdown" id="assetFaultAssetDropdown"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>الخطورة</label>
+          <select id="assetFaultSeverity">
+            <option value="low">منخفضة</option>
+            <option value="medium" selected>متوسطة</option>
+            <option value="high">عالية</option>
+            <option value="critical">حرجة</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>الحالة</label>
+          <select id="assetFaultStatus">
+            <option value="open">مفتوح</option>
+            <option value="in_progress">قيد المعالجة</option>
+            <option value="resolved">تم الحل</option>
+          </select>
+        </div>
+        <div class="field field-full"><label>وصف العطل</label><textarea id="assetFaultDescription" rows="2" required></textarea></div>
+        <div class="field field-full" id="assetFaultResolutionField" style="display:none;">
+          <label>ملاحظات الحل</label>
+          <textarea id="assetFaultResolutionNotes" rows="2"></textarea>
+        </div>
+      </div>
+      <div class="error-msg" id="assetFaultModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelAssetFaultBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveAssetFaultBtn">حفظ</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -16769,6 +16847,7 @@ const boAllSections = ['dashboard','products','categories','unit-types','tax-rat
   'service-visits',
   'contracts',
   'my-visits',
+  'asset-faults',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
   'soon','company-info','permissions','users','branches','business-types','pos-devices','branch-settings','pos-tables','print-settings','stock','stocktake','product-batches','product-serials','backup','reset-data','employees','attendance','leave-requests','expense-items','expenses','salaries','sales-commissions','treasuries','capital','fixed-assets','promotions','coupons','modifier-groups','recipes'];
 
@@ -16777,7 +16856,7 @@ const boNavGroups = [
   { toggle: 'marketingNavToggle', group: 'marketingNavGroup', sections: ['promotions','coupons'] },
   { toggle: 'salesNavToggle', group: 'salesNavGroup', sections: ['sales-list','sale-orders','delivery','delivery-zones','delivery-companies','sales-channels','driver-settlements','customers','customer-types','sale-returns'] },
   { toggle: 'purchasesNavToggle', group: 'purchasesNavGroup', sections: ['suppliers','supplier-prices','purchase-requisitions','purchase-orders','purchases','purchase-returns'] },
-  { toggle: 'serviceMgmtNavToggle', group: 'serviceMgmtNavGroup', sections: ['assets', 'service-orders', 'service-visits', 'contracts', 'my-visits'] },
+  { toggle: 'serviceMgmtNavToggle', group: 'serviceMgmtNavGroup', sections: ['assets', 'service-orders', 'service-visits', 'contracts', 'my-visits', 'asset-faults'] },
   { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
   { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['treasuries','payments','expense-items','expenses','capital','fixed-assets'] },
   { toggle: 'hrNavToggle', group: 'hrNavGroup', sections: ['employees','attendance','leave-requests','salaries','sales-commissions'] },
@@ -16801,6 +16880,7 @@ const SECTION_PERMISSION_MAP = {
   'service-visits': 'service_management',
   'contracts': 'service_management',
   'my-visits': 'technician',
+  'asset-faults': 'service_management',
   'reports-sales': 'reports', 'reports-purchases': 'reports', 'reports-inventory': 'reports', 'reports-accounting': 'reports', 'reports-other': 'reports',
   'treasuries': 'finance', 'payments': 'finance', 'expense-items': 'finance', 'expenses': 'finance', 'capital': 'admin', 'fixed-assets': 'finance',
   'employees': 'hr', 'attendance': 'hr', 'leave-requests': 'hr', 'salaries': 'hr', 'sales-commissions': 'hr',
@@ -16901,7 +16981,7 @@ const SCREEN_LABELS = {
   'branches': 'الفروع', 'business-types': 'أنواع الأنشطة التجارية', 'pos-devices': 'أجهزة نقاط البيع',
   'branch-settings': 'إعدادات الفرع', 'pos-tables': 'الطاولات والكراسي', 'print-settings': 'إعدادات الطباعة',
   'backup': 'نسخة احتياطية', 'reset-data': 'تهيئة البيانات', 'capital': 'رأس المال وحقوق الملكية',
-  'assets': 'الأصول/الأجهزة', 'service-orders': 'أوامر الخدمة', 'service-visits': 'الزيارات', 'contracts': 'العقود', 'my-visits': 'زياراتي (الفني)'
+  'assets': 'الأصول/الأجهزة', 'service-orders': 'أوامر الخدمة', 'service-visits': 'الزيارات', 'contracts': 'العقود', 'my-visits': 'زياراتي (الفني)', 'asset-faults': 'الأعطال'
 };
 
 // بناء قائمة الشاشات التفصيلية لكل وحدة رئيسية تلقائيًا من SECTION_PERMISSION_MAP
@@ -17390,6 +17470,7 @@ const ACTION_CAPABLE_SCREENS = {
   'service-orders': { add: true, edit: true, delete: true },
   'service-visits': { add: true, edit: true, delete: true },
   'contracts': { add: true, edit: true, delete: true },
+  'asset-faults': { add: true, edit: true, delete: true },
   'purchase-requisitions': { add: true, edit: true },
   'purchase-orders': { add: true, edit: true, delete: true },
   'sales-list': { edit: true },
@@ -17436,6 +17517,7 @@ const ADD_BUTTON_MAP = {
   'service-orders': 'addServiceOrderBtn',
   'service-visits': 'addServiceVisitBtn',
   'contracts': 'addContractBtn',
+  'asset-faults': 'addAssetFaultBtn',
   'purchase-orders': 'addPurchaseOrderBtn', 'purchases': 'addPurchaseBtn', 'purchase-returns': 'addPurchaseReturnBtn', 'sale-returns': 'addSaleReturnFromBoBtn',
   'stocktake': 'addStocktakeSessionBtn', 'product-batches': 'addProductBatchBtn', 'product-serials': 'addProductSerialBtn',
   'delivery': 'addDeliveryOrderBtn', 'delivery-zones': 'addDeliveryZoneBtn', 'delivery-companies': 'addDeliveryCompanyBtn', 'sales-channels': 'addSalesChannelBtn',
@@ -17613,6 +17695,7 @@ function activateBoSection(section, btn) {
   if (section === 'service-visits' && !boServiceVisitsLoadedOnce) { loadBoServiceVisits().then(renderServiceVisitsTable); boServiceVisitsLoadedOnce = true; }
   if (section === 'contracts' && !boContractsLoadedOnce) { loadBoContractsFull().then(renderContractsTable); boContractsLoadedOnce = true; }
   if (section === 'my-visits' && !boMyVisitsLoadedOnce) { loadMyVisits().then(renderMyVisits); boMyVisitsLoadedOnce = true; }
+  if (section === 'asset-faults' && !boAssetFaultsLoadedOnce) { loadAssetFaults().then(renderAssetFaultsTable); boAssetFaultsLoadedOnce = true; }
   if (section === 'purchase-orders') { loadBoPurchaseOrders().then(renderPurchaseOrdersTable); }
   if (section === 'purchase-requisitions') { loadBoRequisitions().then(renderRequisitionsTable); }
   if (section === 'purchase-returns') { loadBoPurchaseReturns().then(renderPurchaseReturnsTable); }
@@ -19021,6 +19104,16 @@ function bindBackofficeEvents() {
   document.getElementById('assetHistoryModalOverlay').addEventListener('click', (e) => {
     if (e.target.id === 'assetHistoryModalOverlay') closeAssetHistoryModal();
   });
+
+  // ---- Asset fault modal ----
+  document.getElementById('addAssetFaultBtn').addEventListener('click', () => openAssetFaultModal(null));
+  document.getElementById('cancelAssetFaultBtn').addEventListener('click', closeAssetFaultModal);
+  document.getElementById('assetFaultModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'assetFaultModalOverlay') closeAssetFaultModal();
+  });
+  document.getElementById('assetFaultForm').addEventListener('submit', saveAssetFault);
+  document.getElementById('assetFaultStatus').addEventListener('change', applyAssetFaultStatusVisibility);
+  document.getElementById('assetFaultSearchInput').addEventListener('input', renderAssetFaultsTable);
 
   // ---- Purchase requisitions ----
   document.getElementById('addRequisitionBtn').addEventListener('click', () => openRequisitionFormModal());
@@ -26558,7 +26651,7 @@ const SEC = {
   hrBasic: ['employees', 'attendance', 'leave-requests', 'salaries'],
   delivery: ['delivery', 'delivery-zones', 'delivery-companies', 'sales-channels', 'driver-settlements'],
   marketing: ['promotions', 'coupons'],
-  serviceMgmt: ['assets', 'service-orders', 'service-visits', 'contracts', 'my-visits'],
+  serviceMgmt: ['assets', 'service-orders', 'service-visits', 'contracts', 'my-visits', 'asset-faults'],
 };
 
 const BUSINESS_TYPE_DEFAULT_SECTIONS = {
@@ -32345,11 +32438,12 @@ async function openAssetHistoryModal(asset) {
 
   const contractsWrap = document.getElementById('assetHistoryContracts');
   contractsWrap.innerHTML = '<p style="font-size:12.5px; color:var(--ink-soft);">جاري تحميل السجل...</p>';
+  document.getElementById('assetHistoryFaults').innerHTML = '';
   const timelineWrap = document.getElementById('assetHistoryTimeline');
   timelineWrap.innerHTML = '';
   document.getElementById('assetHistoryModalOverlay').classList.add('show');
 
-  const [ordersRes, contractLinksRes] = await Promise.all([
+  const [ordersRes, contractLinksRes, faultsRes] = await Promise.all([
     supabaseClient
       .from('service_orders')
       .select('*, employees(full_name), service_visits(*, employees(full_name))')
@@ -32359,12 +32453,18 @@ async function openAssetHistoryModal(asset) {
       .from('contract_assets')
       .select('contracts(*)')
       .eq('asset_id', asset.id),
+    supabaseClient
+      .from('asset_faults')
+      .select('*')
+      .eq('asset_id', asset.id)
+      .order('reported_at', { ascending: false }),
   ]);
 
   if (ordersRes.error) {
     console.error(ordersRes.error);
     timelineWrap.innerHTML = '<p style="color:var(--danger);">تعذر تحميل سجل الأصل</p>';
     contractsWrap.innerHTML = '';
+    document.getElementById('assetHistoryFaults').innerHTML = '';
     return;
   }
 
@@ -32376,6 +32476,30 @@ async function openAssetHistoryModal(asset) {
       contracts.map(c => {
         const statusClass = c.status === 'active' ? 'active' : (c.status === 'cancelled' ? 'inactive' : 'pending');
         return `<span class="bo-badge ${statusClass}" style="margin:0 4px 4px 0; display:inline-block;">عقد #${c.contract_number} — ${CONTRACT_TYPE_LABELS[c.contract_type] || c.contract_type}</span>`;
+      }).join('');
+  }
+
+  const faults = faultsRes.data || [];
+  const faultsWrap = document.getElementById('assetHistoryFaults');
+  if (faults.length === 0) {
+    faultsWrap.innerHTML = '';
+  } else {
+    const severityColor = { low: 'var(--ink-soft)', medium: 'var(--warning, orange)', high: 'var(--warning, orange)', critical: 'var(--danger)' };
+    faultsWrap.innerHTML = '<div class="ci-section-subtitle">سجل الأعطال</div>' +
+      faults.map(f => {
+        const statusClass = f.status === 'resolved' ? 'active' : (f.status === 'in_progress' ? 'pending' : 'inactive');
+        return `
+          <div style="border-right:2px solid ${severityColor[f.severity] || 'var(--ink-soft)'}; padding:6px 10px; margin-bottom:6px; background:var(--surface-sunken); border-radius:0 var(--radius-sm) var(--radius-sm) 0;">
+            <div style="display:flex; justify-content:space-between; gap:6px; flex-wrap:wrap;">
+              <div style="font-size:12.5px;">⚠️ عطل #${f.fault_number} — ${FAULT_SEVERITY_LABELS[f.severity] || f.severity}</div>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span class="bo-badge ${statusClass}">${FAULT_STATUS_LABELS[f.status] || f.status}</span>
+                <span style="font-size:11px; color:var(--ink-soft);">${new Date(f.reported_at).toLocaleDateString('ar-EG')}</span>
+              </div>
+            </div>
+            <div style="font-size:12.5px; margin-top:2px;">${escapeHtml(f.description)}</div>
+            ${f.resolution_notes ? `<div style="font-size:12px; color:var(--ink-soft); margin-top:2px;">الحل: ${escapeHtml(f.resolution_notes)}</div>` : ''}
+          </div>`;
       }).join('');
   }
 
@@ -33200,6 +33324,161 @@ async function saveMyVisitNotes(visitId, card) {
   const { error } = await supabaseClient.from('service_visits').update({ result_notes: notes.trim() || null }).eq('id', visitId);
   if (error) { console.error(error); showToast('تعذر حفظ الملاحظات', true); return; }
   showToast('تم حفظ الملاحظات');
+}
+
+// ==================== سجل الأعطال (Asset Faults) ====================
+let boAssetFaults = [];
+let boAssetFaultsLoadedOnce = false;
+let assetFaultAssetSearch = null;
+
+const FAULT_SEVERITY_LABELS = { low: 'منخفضة', medium: 'متوسطة', high: 'عالية', critical: 'حرجة' };
+const FAULT_STATUS_LABELS = { open: 'مفتوح', in_progress: 'قيد المعالجة', resolved: 'تم الحل' };
+
+async function loadAssetFaults() {
+  const { data, error } = await supabaseClient
+    .from('asset_faults')
+    .select('*, assets(name, customers(name))')
+    .order('reported_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل سجل الأعطال', true); return; }
+  boAssetFaults = data || [];
+}
+
+function renderAssetFaultsTable() {
+  const tbody = document.getElementById('assetFaultsTableBody');
+  const q = (document.getElementById('assetFaultSearchInput').value || '').trim().toLowerCase();
+  const filtered = boAssetFaults.filter(f => {
+    if (!q) return true;
+    return (f.description || '').toLowerCase().includes(q) || (f.assets?.name || '').toLowerCase().includes(q);
+  });
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">${boAssetFaults.length === 0 ? 'لا توجد أعطال مسجّلة حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  const severityClass = { low: '', medium: 'pending', high: 'pending', critical: 'inactive' };
+  filtered.forEach(f => {
+    const tr = document.createElement('tr');
+    const statusClass = f.status === 'resolved' ? 'active' : (f.status === 'in_progress' ? 'pending' : 'inactive');
+    tr.innerHTML = `
+      <td class="num">#${f.fault_number}</td>
+      <td>${escapeHtml(f.assets?.name || '—')}${f.assets?.customers?.name ? ` <span style="color:var(--ink-soft); font-size:11.5px;">(${escapeHtml(f.assets.customers.name)})</span>` : ''}</td>
+      <td>${escapeHtml((f.description || '').slice(0, 60))}${(f.description || '').length > 60 ? '…' : ''}</td>
+      <td><span class="bo-badge ${severityClass[f.severity] || ''}">${FAULT_SEVERITY_LABELS[f.severity] || f.severity}</span></td>
+      <td><span class="bo-badge ${statusClass}">${FAULT_STATUS_LABELS[f.status] || f.status}</span></td>
+      <td class="num">${new Date(f.reported_at).toLocaleDateString('ar-EG')}</td>
+      <td>
+        <div class="bo-row-actions">
+          <button class="bo-icon-btn" data-action="edit">تعديل</button>
+          <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+        </div>
+      </td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openAssetFaultModal(f));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteAssetFault(f));
+    applyRowActionPerm(tr, 'asset-faults');
+    tbody.appendChild(tr);
+  });
+}
+
+function applyAssetFaultStatusVisibility() {
+  const status = document.getElementById('assetFaultStatus').value;
+  document.getElementById('assetFaultResolutionField').style.display = status === 'resolved' ? '' : 'none';
+}
+
+async function openAssetFaultModal(fault) {
+  if (boAssets.length === 0) await loadBoAssets();
+
+  document.getElementById('assetFaultModalTitle').textContent = fault ? `تعديل عطل #${fault.fault_number}` : 'عطل جديد';
+  document.getElementById('assetFaultId').value = fault ? fault.id : '';
+  document.getElementById('assetFaultSeverity').value = fault?.severity || 'medium';
+  document.getElementById('assetFaultStatus').value = fault?.status || 'open';
+  document.getElementById('assetFaultDescription').value = fault?.description || '';
+  document.getElementById('assetFaultResolutionNotes').value = fault?.resolution_notes || '';
+  applyAssetFaultStatusVisibility();
+
+  if (!assetFaultAssetSearch) {
+    assetFaultAssetSearch = createSmartSearch({
+      input: document.getElementById('assetFaultAssetInput'),
+      hidden: document.getElementById('assetFaultAsset'),
+      dropdown: document.getElementById('assetFaultAssetDropdown'),
+      getItems: () => boAssets.map(a => ({ value: a.id, label: a.name, sublabel: a.customers?.name || '', search: `${a.name} ${a.customers?.name || ''}` })),
+    });
+  }
+  document.getElementById('assetFaultAssetInput').value = fault?.assets?.name || '';
+  document.getElementById('assetFaultAsset').value = fault ? fault.asset_id : '';
+
+  document.getElementById('assetFaultModalError').classList.remove('show');
+  document.getElementById('assetFaultModalOverlay').classList.add('show');
+}
+
+function closeAssetFaultModal() {
+  document.getElementById('assetFaultModalOverlay').classList.remove('show');
+}
+
+async function saveAssetFault(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('assetFaultModalError');
+  errEl.classList.remove('show');
+
+  const assetId = document.getElementById('assetFaultAsset').value || null;
+  if (!assetId) {
+    errEl.textContent = 'اختر الأصل المرتبط بالعطل أولًا';
+    errEl.classList.add('show');
+    return;
+  }
+
+  const saveBtn = document.getElementById('saveAssetFaultBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('assetFaultId').value || null;
+  const existingFault = id ? boAssetFaults.find(f => f.id === id) : null;
+  const status = document.getElementById('assetFaultStatus').value;
+  const asset = boAssets.find(a => a.id === assetId);
+  const payload = {
+    asset_id: assetId,
+    branch_id: asset?.branch_id || currentProfile.branch_id,
+    severity: document.getElementById('assetFaultSeverity').value,
+    status,
+    description: document.getElementById('assetFaultDescription').value.trim(),
+    resolution_notes: document.getElementById('assetFaultResolutionNotes').value.trim() || null,
+    // نحافظ على تاريخ الحل الأصلي لو كان محلول بالفعل، بدل ما نحدّثه في كل حفظ
+    resolved_at: status === 'resolved' ? (existingFault?.resolved_at || new Date().toISOString()) : null,
+  };
+
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('asset_faults').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('asset_faults').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث العطل' : 'تم تسجيل العطل بنجاح');
+    closeAssetFaultModal();
+    await loadAssetFaults();
+    renderAssetFaultsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ';
+  }
+}
+
+async function deleteAssetFault(fault) {
+  if (!hasBoActionPermission('asset-faults', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف العطل رقم #${fault.fault_number}؟`)) return;
+  const { error } = await supabaseClient.from('asset_faults').delete().eq('id', fault.id);
+  if (error) {
+    console.error(error);
+    showToast('تعذر حذف العطل', true);
+    return;
+  }
+  showToast('تم حذف العطل');
+  await loadAssetFaults();
+  renderAssetFaultsTable();
 }
 
 // ---- طلبات الشراء الداخلية (purchase_requisitions) ----
