@@ -482,6 +482,7 @@ a { color: inherit; }
 .bo-outline-btn { background: var(--surface); color: var(--teal-700); border: 1px solid var(--teal-700); padding: 9px 16px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 600; }
 .bo-outline-btn:hover { background: var(--teal-100); }
 .bo-outline-btn:disabled { opacity: .6; cursor: not-allowed; }
+.variants-view-toggle.active { background: var(--teal-700); border-color: var(--teal-700); color: #fff; }
 .bo-table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; position: relative; }
 .smart-table-toolbar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
 .smart-table-toolbar label { font-size:12.5px; color:var(--ink-soft); }
@@ -789,6 +790,14 @@ a { color: inherit; }
 .unit-picker-option { width: 100%; display: flex; justify-content: space-between; align-items: center; background: var(--surface-sunken); border: 1px solid var(--border); padding: 12px 14px; border-radius: var(--radius-sm); margin-bottom: 8px; font-size: 13.5px; font-weight: 600; }
 .unit-picker-option:hover { border-color: var(--teal-500); background: var(--teal-100); }
 .unit-picker-option .num { font-weight: 700; color: var(--teal-700); }
+.pos-variant-grid { overflow-x: auto; }
+.pos-variant-grid-table { border-collapse: collapse; width: 100%; }
+.pos-variant-grid-table th { font-size: 12px; color: var(--ink-soft); padding: 4px 6px; text-align: center; }
+.pos-variant-grid-table td { padding: 4px; text-align: center; }
+.pvg-color-label { font-weight: 700; font-size: 13px; white-space: nowrap; padding-inline-end: 10px; text-align: right; }
+.pvg-cell { min-width: 54px; min-height: 44px; padding: 8px 6px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-sunken); font-weight: 700; font-size: 13px; cursor: pointer; }
+.pvg-cell:hover { border-color: var(--teal-500); background: var(--teal-100); }
+.pvg-cell.out { opacity: .5; }
 .unit-picker-cancel { width: 100%; text-align: center; background: none; color: var(--ink-soft); font-size: 12.5px; padding: 8px; margin-top: 4px; }
 
 /* -------- Reports -------- */
@@ -3592,6 +3601,10 @@ a { color: inherit; }
               <div class="report-type-icon">⚠️</div>
               <div class="report-type-label">تنبيهات نقص المخزون</div>
             </button>
+            <button type="button" class="report-type-card" data-report="missing-sizes">
+              <div class="report-type-icon">👟</div>
+              <div class="report-type-label">المقاسات الناقصة</div>
+            </button>
             <button type="button" class="report-type-card" data-report="valuation">
               <div class="report-type-icon">💰</div>
               <div class="report-type-label">تقييم قيمة المخزون</div>
@@ -3730,6 +3743,42 @@ a { color: inherit; }
                   <thead><tr><th><input type="checkbox" id="invLowStockSelectAll" style="width:auto;"></th><th>الصنف</th><th>الفئة</th><th>الكمية المتاحة</th><th>حد الطلب</th><th>النقص</th><th>الكمية المقترحة للطلب</th></tr></thead>
                   <tbody id="invLowStockTableBody">
                     <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- المقاسات الناقصة -->
+            <div id="inventoryReportDetail-missing-sizes" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">موديلات فيها ألوان لسه موجودة بس بعض المقاسات نفدت منها</div>
+                <div class="report-subtitle-actions">
+                  <select id="msWarehouseFilter" class="report-inline-select"><option value="">كل المخازن</option></select>
+                  <label style="display:flex;align-items:center;gap:6px;font-size:13px;">حد اعتبار المقاس ناقص (≤)
+                    <input type="number" id="msThresholdInput" value="0" min="0" step="1" style="width:60px;">
+                  </label>
+                  <button class="bo-outline-btn" id="refreshMsBtn">تحديث</button>
+                  <button class="bo-icon-btn" id="exportMsBtn">تصدير إكسل</button>
+                </div>
+              </div>
+              <div class="report-cards">
+                <div class="report-card">
+                  <div class="report-card-label">عدد الموديلات المتأثرة</div>
+                  <div class="report-card-value num negative" id="msAffectedModelsCount">0</div>
+                </div>
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي المقاسات الناقصة</div>
+                  <div class="report-card-value num negative" id="msMissingCount">0</div>
+                </div>
+              </div>
+              <div class="search-row" style="margin-bottom:14px;">
+                <input type="text" id="msSearchInput" placeholder="ابحث باسم الموديل...">
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>الموديل</th><th>اللون</th><th>المقاس الناقص</th><th>الرصيد الحالي</th><th>المقاسات المتاحة لنفس اللون</th></tr></thead>
+                  <tbody id="msTableBody">
+                    <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -5168,6 +5217,10 @@ a { color: inherit; }
               <div class="report-type-icon">🧾</div>
               <div class="report-type-label">سجل إرسال الفواتير للفاتورة الإلكترونية (ETA)</div>
             </button>
+            <button type="button" class="report-type-card" data-report="service-management">
+              <div class="report-type-icon">🛠️</div>
+              <div class="report-type-label">نظرة عامة على إدارة الخدمات</div>
+            </button>
           </div>
 
           <div id="otherReportDetailWrap" style="display:none;">
@@ -5805,6 +5858,48 @@ a { color: inherit; }
               </div>
               <div class="bo-empty" style="padding:12px; text-align:center; font-size:12.5px; margin-top:8px;">
                 هذا السجل لعرض ومتابعة حالة إرسال كل فاتورة للفاتورة الإلكترونية. تحديث الحالة (بعد الإرسال الفعلي من خلال منظومة ETA أو أي تكامل خارجي) يتم يدويًا من زر "تحديث الحالة" أمام كل فاتورة.
+              </div>
+            </div>
+
+            <!-- نظرة عامة على إدارة الخدمات -->
+            <div id="otherReportDetail-service-management" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">نظرة عامة على إدارة الخدمات</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-add-btn" id="refreshServiceMgmtReportBtn" type="button">تحديث</button>
+                </div>
+              </div>
+
+              <div class="report-subtitle" style="font-size:13px; margin:14px 0 8px;">أوامر الخدمة حسب النوع والحالة</div>
+              <div class="bo-table-wrap" style="margin-bottom:20px;">
+                <table class="bo-table">
+                  <thead><tr><th>النوع</th><th>مسودة</th><th>قيد التنفيذ</th><th>منتهي</th><th>ملغي</th><th>الإجمالي</th></tr></thead>
+                  <tbody id="smReportOrdersBody"><tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr></tbody>
+                </table>
+              </div>
+
+              <div class="report-subtitle" style="font-size:13px; margin-bottom:8px;">أداء الفنيين (كل الوقت)</div>
+              <div class="bo-table-wrap" style="margin-bottom:20px;">
+                <table class="bo-table">
+                  <thead><tr><th>الفني</th><th>إجمالي الزيارات</th><th>زيارات مكتملة</th><th>أوامر خدمة مسندة له</th></tr></thead>
+                  <tbody id="smReportTechniciansBody"><tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr></tbody>
+                </table>
+              </div>
+
+              <div class="report-subtitle" style="font-size:13px; margin-bottom:8px;">حالة العقود</div>
+              <div class="report-cards" style="margin-bottom:20px;">
+                <div class="report-card"><div class="report-card-label">عقود نشطة</div><div class="report-card-value num" id="smReportContractsActive">0</div></div>
+                <div class="report-card"><div class="report-card-label">عقود منتهية</div><div class="report-card-value num" id="smReportContractsExpired">0</div></div>
+                <div class="report-card"><div class="report-card-label">عقود ملغاة</div><div class="report-card-value num" id="smReportContractsCancelled">0</div></div>
+                <div class="report-card"><div class="report-card-label">قرّبت على الانتهاء (14 يوم)</div><div class="report-card-value num negative" id="smReportContractsExpiring">0</div></div>
+              </div>
+
+              <div class="report-subtitle" style="font-size:13px; margin-bottom:8px;">الأعطال المفتوحة حسب الخطورة</div>
+              <div class="report-cards">
+                <div class="report-card"><div class="report-card-label">منخفضة</div><div class="report-card-value num" id="smReportFaultsLow">0</div></div>
+                <div class="report-card"><div class="report-card-label">متوسطة</div><div class="report-card-value num" id="smReportFaultsMedium">0</div></div>
+                <div class="report-card"><div class="report-card-label">عالية</div><div class="report-card-value num negative" id="smReportFaultsHigh">0</div></div>
+                <div class="report-card"><div class="report-card-label">حرجة</div><div class="report-card-value num negative" id="smReportFaultsCritical">0</div></div>
               </div>
             </div>
           </div>
@@ -7027,6 +7122,11 @@ a { color: inherit; }
             <input type="checkbox" id="productSellByWeight" style="width:auto;"> يباع بالوزن (كجم) — سعر البيع أعلاه يُعتبر سعر الكيلوجرام
           </label>
         </div>
+        <div class="field field-full" id="productHourlyServiceField" style="display:none;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="productIsHourlyService" style="width:auto;"> خدمة بالساعة — سعر البيع أعلاه يُعتبر سعر الساعة الواحدة
+          </label>
+        </div>
         <div class="field field-full" id="productVariantsSuggestHint" style="display:none; font-size:11.5px; color:var(--ink-soft); margin-top:-6px;">
           💡 نشاط الفرع ده بيستخدم المتغيرات (مقاسات/ألوان) — احفظ الصنف الأول، وبعدين تقدر تضيف المتغيرات من تاب "المتغيرات".
         </div>
@@ -8188,7 +8288,10 @@ a { color: inherit; }
           <div>الصنف</div><div>الوحدة</div><div>الكمية</div><div>سعر الشراء المتوقع</div><div>الإجمالي</div><div></div>
         </div>
         <div class="purchase-lines-wrap" id="purchaseOrderLinesWrap"></div>
-        <button type="button" class="add-line-btn" id="addPurchaseOrderLineBtn">+ إضافة صنف</button>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button type="button" class="add-line-btn" id="addPurchaseOrderLineBtn">+ إضافة صنف</button>
+          <button type="button" class="add-line-btn" id="openSizeRunFromPurchaseOrderBtn">+ إضافة مجموعة مقاسات</button>
+        </div>
       </div>
 
       <div class="purchase-totals-row">
@@ -8275,7 +8378,10 @@ a { color: inherit; }
           <div>الصنف</div><div>الوحدة</div><div>الكمية</div><div>سعر الشراء</div><div>الإجمالي</div><div></div>
         </div>
         <div class="purchase-lines-wrap" id="purchaseLinesWrap"></div>
-        <button type="button" class="add-line-btn" id="addPurchaseLineBtn">+ إضافة صنف</button>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button type="button" class="add-line-btn" id="addPurchaseLineBtn">+ إضافة صنف</button>
+          <button type="button" class="add-line-btn" id="openSizeRunFromPurchaseBtn">+ إضافة مجموعة مقاسات</button>
+        </div>
       </div>
 
       <div class="purchase-totals-row">
@@ -8416,6 +8522,52 @@ a { color: inherit; }
           <div id="saleReturnSplitRows"></div>
           <button type="button" class="btn-secondary split-add-btn" id="saleReturnSplitAddBtn">+ إضافة طريقة استرداد</button>
           <div id="saleReturnSplitDiffRow" class="split-diff-row balanced"><span id="saleReturnSplitDiffLabel">إجمالي المدخل</span><span class="num" id="saleReturnSplitDiffValue">0.00</span></div>
+        </div>
+
+        <div id="saleReturnExchangeSection" style="display:none; border:1px solid var(--border-soft); border-radius:10px; padding:12px; margin-top:10px;">
+          <div id="exchangeValidationMsg" class="ret-items-empty" style="display:none;"></div>
+          <div id="exchangePickerWrap">
+            <div style="font-weight:600; margin-bottom:6px;">اختار المقاس/الصنف البديل لـ: <span id="exchangeOriginalItemLabel"></span></div>
+            <div id="exchangeSiblingOptions" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;"></div>
+            <div class="field">
+              <label>أو ابحث عن صنف تاني</label>
+              <div class="smart-search" id="exchangeProductWrap">
+                <input type="text" id="exchangeProductInput" autocomplete="off" placeholder="اكتب اسم الصنف...">
+                <input type="hidden" id="exchangeProductValue">
+                <div class="smart-search-dropdown" id="exchangeProductDropdown"></div>
+              </div>
+            </div>
+            <div id="exchangeSelectedInfo" style="display:none; margin-top:10px;">
+              <div class="split-diff-row balanced" id="exchangeDiffRow">
+                <span id="exchangeDiffLabel">الفرق</span><span class="num" id="exchangeDiffValue">0.00</span>
+              </div>
+              <div class="field" id="exchangeExtraPaymentField" style="display:none;">
+                <label>طريقة تحصيل الفرق من العميل</label>
+                <select id="exchangeExtraPaymentMethod">
+                  <option value="cash">نقدي</option>
+                  <option value="card">بطاقة</option>
+                  <option value="transfer">تحويل</option>
+                  <option value="other">أخرى</option>
+                </select>
+              </div>
+              <div class="field" id="exchangeRefundChoiceField" style="display:none;">
+                <label>رد الفرق للعميل عن طريق</label>
+                <select id="exchangeRefundChoice">
+                  <option value="now">رد فوري</option>
+                  <option value="credit">رصيد على حساب العميل</option>
+                </select>
+              </div>
+              <div class="field" id="exchangeRefundMethodField" style="display:none;">
+                <label>طريقة الرد الفوري</label>
+                <select id="exchangeRefundMethod">
+                  <option value="cash">نقدي</option>
+                  <option value="card">بطاقة</option>
+                  <option value="transfer">تحويل</option>
+                  <option value="other">أخرى</option>
+                </select>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -10204,7 +10356,14 @@ a { color: inherit; }
     <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
       <button type="button" class="bo-add-btn" id="addVariantBtn">+ متغير جديد</button>
     </div>
-    <div class="bo-table-wrap">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
+      <div style="display:flex; gap:6px;">
+        <button type="button" class="bo-outline-btn variants-view-toggle active" id="variantsViewListBtn" data-view="list">قائمة</button>
+        <button type="button" class="bo-outline-btn variants-view-toggle" id="variantsViewMatrixBtn" data-view="matrix">شبكة (مقاس × لون)</button>
+      </div>
+      <select id="variantsMatrixWarehouseFilter" class="report-inline-select" style="display:none;"><option value="">كل المخازن</option></select>
+    </div>
+    <div class="bo-table-wrap" id="variantsListTableWrap">
       <table class="bo-table">
         <thead>
           <tr>
@@ -10220,8 +10379,53 @@ a { color: inherit; }
         </tbody>
       </table>
     </div>
+    <div class="bo-table-wrap" id="variantsMatrixWrap" style="display:none; overflow-x:auto;">
+      <table class="bo-table" id="variantsMatrixTable"></table>
+      <div style="color:var(--ink-soft); font-size:12px; margin-top:8px;">
+        الرقم في كل خانة هو الرصيد الحالي. اضغط على أي خانة لتعديل المتغير مباشرة.
+      </div>
+    </div>
     <div class="modal-actions">
       <button type="button" class="modal-cancel-btn" id="closeVariantsListBtn">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: إضافة مجموعة مقاسات دفعة واحدة لفاتورة/طلب شراء -->
+<div class="modal-overlay" id="sizeRunModalOverlay">
+  <div class="modal-box" style="max-width:640px;">
+    <div class="modal-title">إضافة مجموعة مقاسات</div>
+    <div style="color:var(--ink-soft); font-size:13px; margin-bottom:12px;">
+      اختار الموديل (ولون معيّن لو موجود)، وحدد المقاسات والكمية المطلوبة من كل مقاس، وهتتضاف كلها كأصناف منفصلة دفعة واحدة.
+    </div>
+    <div class="modal-grid">
+      <div class="field">
+        <label>الموديل</label>
+        <div class="smart-search" id="sizeRunProductWrap">
+          <input type="text" id="sizeRunProductInput" autocomplete="off" placeholder="اكتب اسم الموديل...">
+          <input type="hidden" id="sizeRunProductValue">
+          <div class="smart-search-dropdown" id="sizeRunProductDropdown"></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>اللون</label>
+        <select id="sizeRunColorSelect" disabled><option value="">اختر الموديل أولاً</option></select>
+      </div>
+    </div>
+    <div class="field" style="margin-top:6px;">
+      <label>كمية موحّدة لكل المقاسات (تقدر تعدّل كل مقاس لوحده تحت)</label>
+      <input type="number" id="sizeRunDefaultQty" value="1" min="0" step="1" style="max-width:140px;">
+    </div>
+    <div class="bo-table-wrap" style="margin-top:10px;">
+      <table class="bo-table">
+        <thead><tr><th style="width:36px;"><input type="checkbox" id="sizeRunSelectAll"></th><th>المقاس</th><th>الرصيد الحالي</th><th>الكمية المطلوبة</th></tr></thead>
+        <tbody id="sizeRunTableBody"><tr><td colspan="4" class="bo-empty">اختار موديل عنده متغيرات (مقاسات) الأول</td></tr></tbody>
+      </table>
+    </div>
+    <div class="error-msg" id="sizeRunModalError"></div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="closeSizeRunBtn">إلغاء</button>
+      <button type="button" class="submit-btn" id="confirmSizeRunBtn">إضافة المحدد</button>
     </div>
   </div>
 </div>
@@ -10241,6 +10445,7 @@ a { color: inherit; }
       <div class="modal-grid">
         <div class="field"><label>سعر البيع</label><input type="number" id="variantSalePrice" step="0.01" min="0" required></div>
         <div class="field"><label>سعر الشراء</label><input type="number" id="variantCostPrice" step="0.01" min="0" value="0"></div>
+        <div class="field"><label>حد إعادة الطلب (تنبيه نقص خاص بهذا المقاس)</label><input type="number" id="variantReorderLevel" step="1" min="0" value="0"></div>
         <div class="field field-full"><label>الباركود (اختياري)</label><input type="text" id="variantBarcode" placeholder="اتركه فارغًا للتوليد لاحقًا"></div>
       </div>
       <div class="field field-full">
@@ -13225,6 +13430,7 @@ function bindPosEvents() {
       document.getElementById('saleReturnMethodField').style.display = '';
       saleReturnSplitLines = [];
     }
+    updateExchangeSectionVisibility();
   });
   document.getElementById('saleReturnSplitToggle').addEventListener('change', (e) => {
     const on = e.target.checked;
@@ -13238,6 +13444,19 @@ function bindPosEvents() {
     updateSaleReturnSplitDiffIndicator();
   });
   document.getElementById('saleReturnSplitAddBtn').addEventListener('click', () => addSaleReturnSplitRow('cash', 0));
+
+  // ---- بحث عن صنف بديل (fallback) في مودال الاستبدال ----
+  createSmartSearch({
+    input: document.getElementById('exchangeProductInput'),
+    hidden: document.getElementById('exchangeProductValue'),
+    dropdown: document.getElementById('exchangeProductDropdown'),
+    getItems: () => boProducts.filter(p => p.is_active && p.id !== (exchangeReturnLine && exchangeReturnLine.productId)).map(p => ({ value: p.id, label: p.name + (p.sale_price != null ? ' — ' + Number(p.sale_price).toFixed(2) : '') })),
+    onChange: (item) => {
+      const product = boProducts.find(p => p.id === item.value);
+      if (product) selectExchangeVariant(product);
+    },
+  });
+  document.getElementById('exchangeRefundChoice').addEventListener('change', () => updateExchangeDiffUI());
 }
 
 async function loadCategories() {
@@ -13613,19 +13832,60 @@ function openVariantPicker(product, variants) {
   document.getElementById('variantPickerTitle').textContent = `اختر المتغير — ${product.name}`;
   optionsWrap.innerHTML = '';
 
+  const hasSize = variants.some(v => v.variant_attributes && v.variant_attributes.size);
+  if (!hasSize) {
+    // شكل قايمة عادي — مناسب لمتغيرات مش من نوع مقاس (زي النكهات مثلًا)
+    variants.forEach(v => {
+      const stock = availableStock(v.id);
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'unit-picker-option';
+      const label = formatPosVariantAttrs(v.variant_attributes) || v.name;
+      const stockNote = stock <= 0 ? ' — لا يوجد رصيد' : '';
+      btn.innerHTML = `<span>${escapeHtml(label)}${stockNote}</span><span class="num">${resolveProductPrice(v).toFixed(2)}</span>`;
+      if (stock <= 0) btn.style.opacity = '0.55';
+      btn.addEventListener('click', () => { closeVariantPicker(); addToCart(v); });
+      optionsWrap.appendChild(btn);
+    });
+    overlay.classList.add('show');
+    return;
+  }
+
+  // عرض شبكي (مقاس × لون) — أسرع بكتير للكاشير في أنشطة زي الأحذية والملابس
+  const sizes = [...new Set(variants.map(v => v.variant_attributes.size))].sort(naturalCompare);
+  const hasColors = variants.some(v => v.variant_attributes && v.variant_attributes.color);
+  const colors = hasColors
+    ? [...new Set(variants.map(v => v.variant_attributes.color || '—'))].sort((a, b) => a.localeCompare(b, 'ar'))
+    : ['الكل'];
+  const cellMap = {};
   variants.forEach(v => {
-    const stock = availableStock(v.id);
-    const btn = document.createElement('button');
-    btn.type = 'button'; btn.className = 'unit-picker-option';
-    const label = formatPosVariantAttrs(v.variant_attributes) || v.name;
-    const stockNote = stock <= 0 ? ' — لا يوجد رصيد' : '';
-    btn.innerHTML = `<span>${escapeHtml(label)}${stockNote}</span><span class="num">${resolveProductPrice(v).toFixed(2)}</span>`;
-    if (stock <= 0) btn.style.opacity = '0.55';
+    const color = hasColors ? (v.variant_attributes.color || '—') : 'الكل';
+    cellMap[color + '|' + v.variant_attributes.size] = v;
+  });
+
+  const grid = document.createElement('div');
+  grid.className = 'pos-variant-grid';
+  let html = `<table class="pos-variant-grid-table"><thead><tr><th></th>${sizes.map(s => `<th>${escapeHtml(s)}</th>`).join('')}</tr></thead><tbody>`;
+  colors.forEach(color => {
+    html += `<tr><td class="pvg-color-label">${escapeHtml(color)}</td>`;
+    sizes.forEach(size => {
+      const v = cellMap[color + '|' + size];
+      if (!v) { html += '<td></td>'; return; }
+      const stock = availableStock(v.id);
+      const outMark = stock <= 0 ? '<br><span style="font-size:9px;">خلص</span>' : '';
+      html += `<td><button type="button" class="pvg-cell${stock <= 0 ? ' out' : ''}" data-id="${v.id}" title="${resolveProductPrice(v).toFixed(2)}">${escapeHtml(size)}${outMark}</button></td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  grid.innerHTML = html;
+  optionsWrap.appendChild(grid);
+  grid.querySelectorAll('.pvg-cell').forEach(btn => {
     btn.addEventListener('click', () => {
+      const v = variants.find(x => String(x.id) === btn.dataset.id);
+      if (!v) return;
       closeVariantPicker();
       addToCart(v);
     });
-    optionsWrap.appendChild(btn);
   });
 
   overlay.classList.add('show');
@@ -16152,6 +16412,8 @@ function showReceipt(sale) {
 let saleReturnSale = null;
 let saleReturnLines = []; // [{ saleItemId, productId, name, soldQty, alreadyReturnedQty, availableQty, unitPrice, returnQty }]
 let saleReturnSplitLines = []; // [{ method, amount }] — لاسترداد قيمة المرتجع بأكثر من طريقة فى نفس العملية
+let exchangeReturnLine = null; // سطر المرتجع الوحيد المختار للاستبدال (لازم يكون واحد بالظبط)
+let exchangeSelectedVariant = null; // المنتج/المتغير البديل المختار
 let saleReturnItemFilterText = '';
 let saleReturnRecentSales = []; // آخر الفواتير — تُستخدم في اقتراحات البحث السريع
 let saleReturnInvoiceSearch = null;
@@ -16189,6 +16451,9 @@ function openSaleReturnModal() {
   document.getElementById('saleReturnSplitToggleRow').style.display = 'block';
   document.getElementById('saleReturnSplitToggle').checked = false;
   document.getElementById('saleReturnSplitBlock').style.display = 'none';
+  exchangeReturnLine = null;
+  exchangeSelectedVariant = null;
+  document.getElementById('saleReturnExchangeSection').style.display = 'none';
   renderSaleReturnSplitRows();
   renderSaleReturnLines();
   document.getElementById('saleReturnModalError').classList.remove('show');
@@ -16546,6 +16811,98 @@ function updateSaleReturnTotal() {
   const selectedCount = saleReturnLines.filter(l => l.returnQty > 0).length;
   document.getElementById('saleReturnSelectedCount').textContent = selectedCount > 0 ? `تم تحديد ${selectedCount} صنف` : '';
   if (document.getElementById('saleReturnSplitToggle').checked) updateSaleReturnSplitDiffIndicator();
+  updateExchangeSectionVisibility();
+}
+
+// ---- استبدال صنف (مرتجع + بيع بديل مربوطين في عملية واحدة) ----
+function updateExchangeSectionVisibility() {
+  const section = document.getElementById('saleReturnExchangeSection');
+  const method = document.getElementById('saleReturnMethodSelect').value;
+  if (method !== 'exchange') { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+
+  const selectedLines = saleReturnLines.filter(l => l.returnQty > 0);
+  const msgEl = document.getElementById('exchangeValidationMsg');
+  const pickerWrap = document.getElementById('exchangePickerWrap');
+  if (selectedLines.length !== 1) {
+    msgEl.textContent = 'الاستبدال بيدعم صنف واحد بالظبط في كل مرة — حدد صنف واحد فقط بكمية أكبر من صفر عشان تقدر تختار له البديل';
+    msgEl.style.display = 'block';
+    pickerWrap.style.display = 'none';
+    exchangeReturnLine = null;
+    return;
+  }
+  msgEl.style.display = 'none';
+  pickerWrap.style.display = 'block';
+
+  const newLine = selectedLines[0];
+  const lineChanged = !exchangeReturnLine || exchangeReturnLine.saleItemId !== newLine.saleItemId || exchangeReturnLine.returnQty !== newLine.returnQty;
+  exchangeReturnLine = newLine;
+  document.getElementById('exchangeOriginalItemLabel').textContent = `${newLine.name} × ${newLine.returnQty}`;
+  if (lineChanged) {
+    exchangeSelectedVariant = null;
+    renderExchangeSiblingOptions();
+    document.getElementById('exchangeSelectedInfo').style.display = 'none';
+  }
+}
+
+function renderExchangeSiblingOptions() {
+  const wrap = document.getElementById('exchangeSiblingOptions');
+  wrap.innerHTML = '';
+  if (!exchangeReturnLine) return;
+  const currentProduct = boProducts.find(p => p.id === exchangeReturnLine.productId);
+  if (!currentProduct || !currentProduct.parent_product_id) return; // مش متغير (مفيش موديل مرتبط بيه)، مفيش اقتراحات مقاسات جاهزة
+  const siblings = getProductVariants(currentProduct.parent_product_id)
+    .filter(v => v.is_active && v.id !== currentProduct.id)
+    .sort((a, b) => naturalCompare(
+      (a.variant_attributes && a.variant_attributes.size) || a.name,
+      (b.variant_attributes && b.variant_attributes.size) || b.name));
+  siblings.forEach(v => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'bo-outline-btn';
+    btn.textContent = formatVariantAttrs(v.variant_attributes) + ' — ' + Number(v.sale_price).toFixed(2);
+    btn.addEventListener('click', () => selectExchangeVariant(v));
+    wrap.appendChild(btn);
+  });
+}
+
+function selectExchangeVariant(product) {
+  exchangeSelectedVariant = product;
+  document.getElementById('exchangeSelectedInfo').style.display = 'block';
+  updateExchangeDiffUI();
+}
+
+function updateExchangeDiffUI() {
+  if (!exchangeReturnLine || !exchangeSelectedVariant) return;
+  const returnTotal = exchangeReturnLine.returnQty * exchangeReturnLine.unitPrice;
+  const newTotal = exchangeReturnLine.returnQty * Number(exchangeSelectedVariant.sale_price || 0);
+  const diff = Math.round((newTotal - returnTotal) * 100) / 100;
+
+  const row = document.getElementById('exchangeDiffRow');
+  const label = document.getElementById('exchangeDiffLabel');
+  const valueEl = document.getElementById('exchangeDiffValue');
+  const extraPaymentField = document.getElementById('exchangeExtraPaymentField');
+  const refundChoiceField = document.getElementById('exchangeRefundChoiceField');
+  const refundMethodField = document.getElementById('exchangeRefundMethodField');
+
+  valueEl.textContent = Math.abs(diff).toFixed(2);
+  extraPaymentField.style.display = 'none';
+  refundChoiceField.style.display = 'none';
+  refundMethodField.style.display = 'none';
+  row.className = 'split-diff-row balanced';
+
+  if (diff > 0) {
+    label.textContent = 'المطلوب من العميل (فرق السعر)';
+    row.className = 'split-diff-row unbalanced';
+    extraPaymentField.style.display = '';
+  } else if (diff < 0) {
+    label.textContent = 'المسترد للعميل (فرق السعر)';
+    row.className = 'split-diff-row unbalanced';
+    refundChoiceField.style.display = '';
+    refundMethodField.style.display = document.getElementById('exchangeRefundChoice').value === 'now' ? '' : 'none';
+  } else {
+    label.textContent = 'السعرين متساويين — لا فرق مطلوب';
+  }
 }
 
 // مرتجع بيع أونلاين: يتبعت لسوباابيز على طول (بما فيه سطور الاسترداد المتعدد لو موجودة)، وبيرجع سجل المرتجع المحفوظ عشان نطبع إيصاله
@@ -16633,6 +16990,11 @@ async function saveSaleReturn(e) {
   const validLines = saleReturnLines.filter(l => l.returnQty > 0);
   if (validLines.length === 0) { errEl.textContent = 'حدد كمية مرتجعة لصنف واحد على الأقل'; errEl.classList.add('show'); return; }
 
+  if (document.getElementById('saleReturnMethodSelect').value === 'exchange') {
+    await saveSaleExchange();
+    return;
+  }
+
   const total = calcSaleReturnTotal();
   const splitOn = document.getElementById('saleReturnSplitToggle').checked;
   let refundMethod = document.getElementById('saleReturnMethodSelect').value;
@@ -16704,6 +17066,127 @@ async function saveSaleReturn(e) {
   } catch (err) {
     console.error(err);
     errEl.textContent = 'حدث خطأ أثناء حفظ المرتجع، يرجى المحاولة مرة أخرى';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ المرتجع';
+  }
+}
+
+// استبدال صنف: بيسجل مرتجع للصنف الأصلي (بقيمته الكاملة) + فاتورة جديدة كاملة القيمة
+// للصنف البديل (مدفوعة بالكامل، طريقة الدفع "exchange")، وبيحرّك فعليًا بس فرق السعر
+// (دفعة إضافية / استرداد فعلي / تعديل رصيد) — بالتفصيل اللي اتفقنا عليه.
+// ملحوظة: العملية دي أونلاين فقط لأنها بتربط بين فاتورتين مختلفتين في خطوة واحدة.
+async function saveSaleExchange() {
+  const errEl = document.getElementById('saleReturnModalError');
+  errEl.classList.remove('show');
+
+  if (!exchangeReturnLine) {
+    errEl.textContent = 'الاستبدال بيدعم صنف واحد بالظبط — حدد صنف واحد فقط بكمية أكبر من صفر';
+    errEl.classList.add('show');
+    return;
+  }
+  if (!exchangeSelectedVariant) {
+    errEl.textContent = 'اختار المقاس أو الصنف البديل أولاً';
+    errEl.classList.add('show');
+    return;
+  }
+  if (!appIsOnline || !sessionUsable()) {
+    errEl.textContent = 'عملية الاستبدال تتطلب اتصالاً بالإنترنت لأنها بتربط بين فاتورتين دفعة واحدة — يرجى المحاولة عند توفر الاتصال';
+    errEl.classList.add('show');
+    return;
+  }
+
+  const returnQty = exchangeReturnLine.returnQty;
+  const returnTotal = Math.round(returnQty * exchangeReturnLine.unitPrice * 100) / 100;
+  const newTotal = Math.round(returnQty * Number(exchangeSelectedVariant.sale_price || 0) * 100) / 100;
+  const diff = Math.round((newTotal - returnTotal) * 100) / 100;
+
+  let extraPaymentMethod = null, refundChoice = null, refundMethodNow = null;
+  if (diff > 0) {
+    extraPaymentMethod = document.getElementById('exchangeExtraPaymentMethod').value;
+  } else if (diff < 0) {
+    refundChoice = document.getElementById('exchangeRefundChoice').value; // 'now' | 'credit'
+    if (refundChoice === 'credit' && !saleReturnSale.customer_id) {
+      errEl.textContent = 'الفاتورة الأصلية مسجلة بدون عميل، فمينفعش يتضاف رصيد — اختار "رد فوري" بدلًا من ذلك';
+      errEl.classList.add('show');
+      return;
+    }
+    if (refundChoice === 'now') refundMethodNow = document.getElementById('exchangeRefundMethod').value;
+  }
+
+  const saveBtn = document.getElementById('saveSaleReturnBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+
+  try {
+    const reasonBase = document.getElementById('saleReturnReasonInput').value.trim();
+    const variantLabel = formatVariantAttrs(exchangeSelectedVariant.variant_attributes);
+    const exchangeLabel = exchangeSelectedVariant.name + (variantLabel !== '—' ? ` (${variantLabel})` : '');
+
+    // ١) الفاتورة الجديدة أولاً (بالصنف/المقاس البديل)، مدفوعة بالكامل بطريقة "استبدال"
+    const { data: newSale, error: saleError } = await supabaseClient
+      .from('sales')
+      .insert({
+        branch_id: currentProfile.branch_id, user_id: currentProfile.id, customer_id: saleReturnSale.customer_id,
+        status: 'completed', subtotal: newTotal, discount: 0, tax: 0, total: newTotal,
+        paid_amount: newTotal, remaining: 0, payment_method: 'exchange',
+        shift_id: (currentShift && !currentShift.pending) ? currentShift.id : null,
+      }).select().single();
+    if (saleError) throw saleError;
+
+    const { error: newItemsError } = await supabaseClient.from('sale_items').insert([{
+      sale_id: newSale.id, product_id: exchangeSelectedVariant.id, product_unit_id: null, quantity: returnQty,
+      unit_price: Number(exchangeSelectedVariant.sale_price || 0), discount: 0, total: newTotal,
+      warehouse_id: exchangeReturnLine.warehouseId, selected_modifiers: [],
+    }]);
+    if (newItemsError) throw newItemsError;
+
+    // ٢) مرتجع الصنف الأصلي بقيمته الكاملة، بدون أي أثر تلقائي على الخزينة أو رصيد العميل (refund_method = exchange)
+    const reasonNote = `استبدال — الفاتورة البديلة رقم ${newSale.invoice_number} (${exchangeLabel})`;
+    const reason = reasonBase ? `${reasonBase} — ${reasonNote}` : reasonNote;
+    const { data: saleReturn, error: srError } = await supabaseClient
+      .from('sale_returns')
+      .insert({
+        sale_id: saleReturnSale.id, branch_id: currentProfile.branch_id, user_id: currentProfile.id,
+        customer_id: saleReturnSale.customer_id, reason, refund_method: 'exchange', total: returnTotal,
+        shift_id: (currentShift && !currentShift.pending) ? currentShift.id : null,
+      }).select().single();
+    if (srError) throw srError;
+
+    const { error: itemsError } = await supabaseClient.from('sale_return_items').insert([{
+      sale_return_id: saleReturn.id, sale_item_id: exchangeReturnLine.saleItemId, product_id: exchangeReturnLine.productId,
+      quantity: returnQty, unit_price: exchangeReturnLine.unitPrice, total: returnTotal,
+    }]);
+    if (itemsError) throw itemsError;
+
+    // ٣) الفرق فقط هو اللي بيتحرك فعليًا: دفعة إضافية حقيقية / استرداد فعلي بقيمة الفرق / تعديل رصيد بقيمة الفرق
+    if (diff > 0) {
+      const { error: payErr } = await supabaseClient.from('sale_payments').insert([{ sale_id: newSale.id, method: extraPaymentMethod, amount: diff }]);
+      if (payErr) throw payErr;
+    } else if (diff < 0) {
+      const refundAmount = Math.abs(diff);
+      if (refundChoice === 'credit') {
+        const { data: customer } = await supabaseClient.from('customers').select('balance').eq('id', saleReturnSale.customer_id).single();
+        const newBalance = (Number(customer?.balance) || 0) - refundAmount;
+        const { error: balErr } = await supabaseClient.from('customers').update({ balance: newBalance }).eq('id', saleReturnSale.customer_id);
+        if (balErr) throw balErr;
+      } else {
+        const { error: refErr } = await supabaseClient.from('sale_return_payments').insert([{ sale_return_id: saleReturn.id, method: refundMethodNow, amount: refundAmount }]);
+        if (refErr) throw refErr;
+      }
+    }
+
+    showToast(`تم الاستبدال بنجاح — الفاتورة البديلة رقم ${newSale.invoice_number}`);
+    closeSaleReturnModal();
+    await loadStockBalances();
+    renderProducts();
+    if (document.getElementById('bo-section-sale-returns')?.style.display === 'block') {
+      await loadBoSaleReturns(); renderSaleReturnsTable();
+    }
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = 'حدث خطأ أثناء تنفيذ الاستبدال، يرجى المحاولة مرة أخرى. لو جزء من العملية اتسجل بالفعل، راجع فاتورة العميل قبل ما تعيد المحاولة';
     errEl.classList.add('show');
   } finally {
     saveBtn.disabled = false;
@@ -16917,6 +17400,7 @@ const REPORT_TABS = {
     { key: 'levels', title: 'مستوى المخزون الحالي' },
     { key: 'stocktake-items', title: 'تقرير جرد الأصناف (المتحركة فقط)' },
     { key: 'low-stock', title: 'تنبيهات نقص المخزون' },
+    { key: 'missing-sizes', title: 'المقاسات الناقصة' },
     { key: 'valuation', title: 'تقييم قيمة المخزون' },
     { key: 'top-movers', title: 'الأصناف الأكثر حركة' },
     { key: 'slow-movers', title: 'الأصناف الراكدة' },
@@ -18609,6 +19093,7 @@ function bindBackofficeEvents() {
       if (key === 'levels') refreshInventoryLevelsReport();
       if (key === 'stocktake-items') refreshStocktakeItemsReport();
       if (key === 'low-stock') refreshInventoryLowStockReport();
+      if (key === 'missing-sizes') refreshMissingSizesReport();
       if (key === 'valuation') refreshInventoryValuationReport();
       if (key === 'movement') refreshInventoryMovementReport();
       if (key === 'product-ledger') populateProductLedgerFilters();
@@ -18666,6 +19151,7 @@ function bindBackofficeEvents() {
       if (key === 'loyalty-points') { setInventoryDateRange('30days', 'loyaltyReportFromDate', 'loyaltyReportToDate'); runLoyaltyReport(); }
       if (key === 'coupons-usage') { setInventoryDateRange('30days', 'couponsReportFromDate', 'couponsReportToDate'); runCouponsReport(); }
       if (key === 'eta-log') { populateEtaLogBranchFilter(); setInventoryDateRange('today', 'etaLogFromDate', 'etaLogToDate'); runEtaLogReport(); }
+      if (key === 'service-management') { runServiceManagementReport(); }
     });
   });
   document.getElementById('runLoyaltyReportBtn').addEventListener('click', runLoyaltyReport);
@@ -18699,6 +19185,7 @@ function bindBackofficeEvents() {
     document.getElementById('otherReportTypeGrid').style.display = 'grid';
     document.getElementById('otherReportsCrumbCurrent').textContent = 'تقارير اخرى';
   });
+  document.getElementById('refreshServiceMgmtReportBtn').addEventListener('click', runServiceManagementReport);
 
   // ---- Product modal ----
   document.getElementById('addProductBtn').addEventListener('click', () => openProductModal(null));
@@ -18809,6 +19296,10 @@ function bindBackofficeEvents() {
   // ---- Product variants ----
   document.getElementById('addVariantBtn').addEventListener('click', () => openVariantFormModal(currentVariantsParent, null));
   document.getElementById('closeVariantsListBtn').addEventListener('click', closeVariantsListModal);
+  document.querySelectorAll('.variants-view-toggle').forEach(btn => {
+    btn.addEventListener('click', () => switchVariantsView(btn.dataset.view));
+  });
+  document.getElementById('variantsMatrixWarehouseFilter').addEventListener('change', () => renderVariantsMatrix());
   document.getElementById('variantsListModalOverlay').addEventListener('click', (e) => {
     if (e.target.id === 'variantsListModalOverlay') closeVariantsListModal();
   });
@@ -19186,6 +19677,32 @@ function bindBackofficeEvents() {
     dropdown: document.getElementById('purchaseOrderSupplierDropdown'),
     getItems: () => boSuppliers.map(s => ({ value: s.id, label: s.name })),
   });
+
+  // ---- Size run modal (إضافة مجموعة مقاسات دفعة واحدة للشراء/طلب الشراء) ----
+  createSmartSearch({
+    input: document.getElementById('sizeRunProductInput'),
+    hidden: document.getElementById('sizeRunProductValue'),
+    dropdown: document.getElementById('sizeRunProductDropdown'),
+    getItems: () => boProducts.filter(p => p.is_active && !p.parent_product_id && getProductVariants(p.id).length > 0).map(p => ({ value: p.id, label: p.name })),
+    onChange: (item) => onSizeRunProductChange(boProducts.find(p => p.id === item.value) || null),
+  });
+  document.getElementById('sizeRunColorSelect').addEventListener('change', () => renderSizeRunTable());
+  document.getElementById('sizeRunDefaultQty').addEventListener('change', () => {
+    const q = Number(document.getElementById('sizeRunDefaultQty').value) || 0;
+    sizeRunRows.forEach(r => { r.qty = q; });
+    document.querySelectorAll('.size-run-qty').forEach(inp => { inp.value = q; });
+  });
+  document.getElementById('sizeRunSelectAll').addEventListener('change', (e) => {
+    sizeRunRows.forEach(r => { r.checked = e.target.checked; });
+    document.querySelectorAll('.size-run-check').forEach(cb => { cb.checked = e.target.checked; });
+  });
+  document.getElementById('openSizeRunFromPurchaseBtn').addEventListener('click', () => openSizeRunModal('purchase'));
+  document.getElementById('openSizeRunFromPurchaseOrderBtn').addEventListener('click', () => openSizeRunModal('purchaseOrder'));
+  document.getElementById('closeSizeRunBtn').addEventListener('click', closeSizeRunModal);
+  document.getElementById('sizeRunModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'sizeRunModalOverlay') closeSizeRunModal();
+  });
+  document.getElementById('confirmSizeRunBtn').addEventListener('click', confirmSizeRun);
 
   // ---- Receive purchase order modal ----
   document.getElementById('cancelReceivePOBtn').addEventListener('click', closeReceivePOModal);
@@ -19847,6 +20364,12 @@ function bindBackofficeEvents() {
   document.getElementById('invValuationWarehouseFilter').addEventListener('change', () => refreshInventoryValuationReport());
   document.getElementById('exportInvValuationBtn').addEventListener('click', () => exportInvValuationToExcel());
 
+  document.getElementById('msWarehouseFilter').addEventListener('change', () => refreshMissingSizesReport());
+  document.getElementById('refreshMsBtn').addEventListener('click', () => refreshMissingSizesReport());
+  document.getElementById('msThresholdInput').addEventListener('change', () => refreshMissingSizesReport());
+  document.getElementById('msSearchInput').addEventListener('input', () => refreshMissingSizesReport());
+  document.getElementById('exportMsBtn').addEventListener('click', () => exportMsToExcel());
+
   document.getElementById('runInvMovementBtn').addEventListener('click', () => refreshInventoryMovementReport());
   document.getElementById('invMovementWarehouseFilter').addEventListener('change', () => refreshInventoryMovementReport());
   document.getElementById('invMovementTypeFilter').addEventListener('change', () => refreshInventoryMovementReport());
@@ -20381,6 +20904,9 @@ async function applyQuickTemplateToNewProduct(template) {
   const kind = template.kind === 'service' ? 'service' : 'product';
   document.getElementById('productItemKind').value = kind;
   applyProductKindUI(kind);
+  if (kind === 'service' && template.is_hourly) {
+    document.getElementById('productIsHourlyService').checked = true;
+  }
   document.getElementById('productName').focus();
   document.getElementById('productName').select();
 }
@@ -21151,6 +21677,7 @@ async function openProductModal(product, initialTab, isDuplicate) {
   document.getElementById('productKitchenAlias').value = product?.kitchen_alias || '';
   document.getElementById('productReorder').value = product ? product.reorder_level : 0;
   document.getElementById('productItemKind').value = (product && product.item_kind === 'service') ? 'service' : 'product';
+  document.getElementById('productIsHourlyService').checked = product ? !!product.is_hourly_service : false;
   setImageUploadFieldValue('productImage', product?.image_url || '', 'productImagePreview', 'productImagePlaceholder', 'productImageRemoveBtn', 'productImageSizeLabel');
   document.getElementById('productActive').checked = product ? product.is_active : true;
   // تعبئة ذكية حسب نوع نشاط الفرع الحالي — لصنف جديد فاضي فقط (مش عند التعديل أو النسخ)
@@ -21224,6 +21751,13 @@ function applyProductKindUI(kind) {
   const isService = kind === 'service';
   const reorderField = document.getElementById('productReorderField');
   if (reorderField) reorderField.style.display = isService ? 'none' : '';
+  const hourlyField = document.getElementById('productHourlyServiceField');
+  if (hourlyField) hourlyField.style.display = isService ? '' : 'none';
+  if (!isService) {
+    // منتج مادي عادي مايصحش يتفوتر بالساعة — نرجّع العلم لقيمته الافتراضية
+    const hourlyCb = document.getElementById('productIsHourlyService');
+    if (hourlyCb) hourlyCb.checked = false;
+  }
   ['batches', 'serials', 'stock'].forEach(tabName => {
     const btn = document.querySelector(`.pm-tab-btn[data-pm-tab="${tabName}"]`);
     if (btn && isService) btn.style.display = 'none';
@@ -22072,6 +22606,7 @@ async function saveProduct(e) {
     sell_by: document.getElementById('productSellByWeight').checked ? 'weight' : 'unit',
     is_bundle: document.getElementById('productIsBundle').checked,
     item_kind: document.getElementById('productItemKind').value === 'service' ? 'service' : 'product',
+    is_hourly_service: document.getElementById('productItemKind').value === 'service' && document.getElementById('productIsHourlyService').checked,
   };
   // لو مفيش صلاحية رؤية التكلفة، الحقل أصلاً مخفي في الفورم؛ منشيلش cost_price
   // من الـ payload إلا لو التعديل على صنف موجود بالفعل، عشان ميتصفرش سعر
@@ -22236,6 +22771,7 @@ async function toggleProductActive(product) {
 // ---- متغيرات المنتج (product variants: صفوف "products" مرتبطة بـ parent_product_id) ----
 let currentVariantsParent = null; // الصنف الأساسي المفتوح حاليًا في مودال المتغيرات
 let currentVariantAttrs = []; // [{key, value}] لخصائص المتغير المفتوح حاليًا في الفورم
+let variantsListViewMode = 'list'; // وضع عرض مودال المتغيرات: list أو matrix
 
 function getProductVariants(parentId) {
   return boProducts.filter(v => v.parent_product_id === parentId);
@@ -22250,6 +22786,10 @@ function formatVariantAttrs(attrs) {
 function openVariantsListModal(product) {
   currentVariantsParent = product;
   document.getElementById('variantsListProductName').textContent = product.name;
+  switchVariantsView('list');
+  const wOpts = '<option value="">كل المخازن</option>' +
+    boWarehouses.filter(w => w.is_active).map(w => `<option value="${w.id}">${escapeHtml(warehouseLabel(w))}</option>`).join('');
+  document.getElementById('variantsMatrixWarehouseFilter').innerHTML = wOpts;
   renderVariantsListTable();
   document.getElementById('variantsListModalOverlay').classList.add('show');
 }
@@ -22289,6 +22829,77 @@ function renderVariantsListTable() {
   });
 }
 
+// ---- عرض شبكي (مقاس × لون) لمتغيرات نفس الموديل — مفيد بشكل خاص لأنشطة زي الأحذية والملابس ----
+function switchVariantsView(mode) {
+  variantsListViewMode = mode;
+  document.querySelectorAll('.variants-view-toggle').forEach(btn => btn.classList.toggle('active', btn.dataset.view === mode));
+  document.getElementById('variantsListTableWrap').style.display = mode === 'list' ? 'block' : 'none';
+  document.getElementById('variantsMatrixWrap').style.display = mode === 'matrix' ? 'block' : 'none';
+  document.getElementById('variantsMatrixWarehouseFilter').style.display = mode === 'matrix' ? 'block' : 'none';
+  if (mode === 'matrix') renderVariantsMatrix();
+}
+
+// ترتيب طبيعي للمقاسات: أرقام هتتقارن رقميًا (٣٩، ٤٠، ٤١...)، ونصوص هتتقارن أبجديًا (S, M, L...)
+function naturalCompare(a, b) {
+  const na = parseFloat(a), nb = parseFloat(b);
+  if (!isNaN(na) && !isNaN(nb) && String(na) === a.trim() && String(nb) === b.trim()) return na - nb;
+  if (!isNaN(na) && !isNaN(nb)) return na - nb;
+  return String(a).localeCompare(String(b), 'ar');
+}
+
+async function renderVariantsMatrix() {
+  const wrap = document.getElementById('variantsMatrixTable');
+  if (!currentVariantsParent) return;
+  const variants = getProductVariants(currentVariantsParent.id);
+  if (variants.length === 0) {
+    wrap.innerHTML = `<tbody><tr><td class="bo-empty">لا توجد متغيرات مضافة حتى الآن</td></tr></tbody>`;
+    return;
+  }
+  wrap.innerHTML = `<tbody><tr><td class="bo-empty">جاري التحميل...</td></tr></tbody>`;
+  try {
+    const warehouseId = document.getElementById('variantsMatrixWarehouseFilter').value || null;
+    const stockByProduct = await fetchStockByProduct(warehouseId);
+
+    // بناء قوائم المقاسات والألوان الفريدة (لو مفيش لون مسجل، بنستخدم عمود واحد "الكل")
+    const sizes = [...new Set(variants.map(v => (v.variant_attributes && v.variant_attributes.size) || v.name))].sort(naturalCompare);
+    const hasColors = variants.some(v => v.variant_attributes && v.variant_attributes.color);
+    const colors = hasColors ? [...new Set(variants.map(v => (v.variant_attributes && v.variant_attributes.color) || '—'))].sort((a, b) => a.localeCompare(b, 'ar')) : ['الكل'];
+
+    const cellMap = {}; // key: color|size -> variant
+    variants.forEach(v => {
+      const size = (v.variant_attributes && v.variant_attributes.size) || v.name;
+      const color = hasColors ? ((v.variant_attributes && v.variant_attributes.color) || '—') : 'الكل';
+      cellMap[color + '|' + size] = v;
+    });
+
+    let html = '<thead><tr><th>اللون \\ المقاس</th>' + sizes.map(s => `<th class="num">${escapeHtml(s)}</th>`).join('') + '</tr></thead><tbody>';
+    colors.forEach(color => {
+      html += `<tr><td>${escapeHtml(color)}</td>`;
+      sizes.forEach(size => {
+        const v = cellMap[color + '|' + size];
+        if (!v) { html += `<td class="num" style="color:var(--ink-soft);">—</td>`; return; }
+        const qty = stockByProduct[v.id] || 0;
+        const cellClass = qty <= 0 ? 'negative' : (qty <= (Number(v.reorder_level) || 0) ? '' : 'positive');
+        const bg = qty <= 0 ? 'background:rgba(239,68,68,.08);' : '';
+        html += `<td class="num variant-matrix-cell ${cellClass}" data-variant-id="${v.id}" style="cursor:pointer;${bg}" title="${escapeHtml(formatVariantAttrs(v.variant_attributes))} — اضغط للتعديل">${formatQty(qty)}</td>`;
+      });
+      html += '</tr>';
+    });
+    html += '</tbody>';
+    wrap.innerHTML = html;
+
+    wrap.querySelectorAll('.variant-matrix-cell').forEach(td => {
+      td.addEventListener('click', () => {
+        const v = variants.find(x => String(x.id) === td.dataset.variantId);
+        if (v) openVariantFormModal(currentVariantsParent, v);
+      });
+    });
+  } catch (err) {
+    console.error(err);
+    wrap.innerHTML = `<tbody><tr><td class="bo-empty">تعذر تحميل الشبكة</td></tr></tbody>`;
+  }
+}
+
 function renderVariantAttributesRows() {
   const wrap = document.getElementById('variantAttributesList');
   wrap.innerHTML = '';
@@ -22321,6 +22932,7 @@ function openVariantFormModal(parentProduct, variant) {
   document.getElementById('variantParentId').value = parentProduct.id;
   document.getElementById('variantSalePrice').value = variant ? variant.sale_price : parentProduct.sale_price;
   document.getElementById('variantCostPrice').value = variant ? variant.cost_price : parentProduct.cost_price;
+  document.getElementById('variantReorderLevel').value = variant ? (variant.reorder_level || 0) : (parentProduct.reorder_level || 0);
   document.getElementById('variantBarcode').value = variant ? ((variant.product_barcodes || [])[0]?.barcode || '') : '';
   document.getElementById('variantActive').checked = variant ? variant.is_active : true;
 
@@ -22371,6 +22983,7 @@ async function saveVariant(e) {
     variant_attributes: attrsObj,
     sale_price: Number(document.getElementById('variantSalePrice').value) || 0,
     cost_price: Number(document.getElementById('variantCostPrice').value) || 0,
+    reorder_level: Number(document.getElementById('variantReorderLevel').value) || 0,
     is_active: document.getElementById('variantActive').checked,
   };
 
@@ -30288,6 +30901,92 @@ function populateFieldVisitsReportFilters() {
   fieldVisitsReportFiltersPopulated = true;
 }
 
+// نظرة عامة على إدارة الخدمات — ملخص أوامر الخدمة، أداء الفنيين، حالة
+// العقود، والأعطال المفتوحة. بيستعلم مباشرة من قاعدة البيانات (مش من
+// المصفوفات المحمّلة مسبقًا) عشان يشتغل صح حتى لو الشاشات التانية لسه ما
+// اتفتحتش في نفس الجلسة.
+async function runServiceManagementReport() {
+  const [ordersRes, visitsRes, contractsRes, faultsRes] = await Promise.all([
+    supabaseClient.from('service_orders').select('order_type, status, technician_employee_id, employees(full_name)'),
+    supabaseClient.from('service_visits').select('technician_employee_id, ended_at, employees(full_name)'),
+    supabaseClient.from('contracts').select('status, end_date'),
+    supabaseClient.from('asset_faults').select('severity, status'),
+  ]);
+
+  // ---- أوامر الخدمة حسب النوع والحالة ----
+  const orders = ordersRes.data || [];
+  const orderMatrix = {};
+  orders.forEach(o => {
+    const t = o.order_type || 'installation';
+    if (!orderMatrix[t]) orderMatrix[t] = { draft: 0, in_progress: 0, completed: 0, cancelled: 0, total: 0 };
+    if (orderMatrix[t][o.status] !== undefined) orderMatrix[t][o.status]++;
+    orderMatrix[t].total++;
+  });
+  const ordersBody = document.getElementById('smReportOrdersBody');
+  const orderTypeKeys = Object.keys(orderMatrix);
+  ordersBody.innerHTML = orderTypeKeys.length === 0
+    ? '<tr><td colspan="6" class="bo-empty">لا توجد أوامر خدمة مسجّلة حتى الآن</td></tr>'
+    : orderTypeKeys.map(t => {
+        const r = orderMatrix[t];
+        return `<tr>
+          <td>${SERVICE_ORDER_TYPE_LABELS[t] || t}</td>
+          <td class="num">${r.draft}</td><td class="num">${r.in_progress}</td>
+          <td class="num">${r.completed}</td><td class="num">${r.cancelled}</td>
+          <td class="num"><strong>${r.total}</strong></td>
+        </tr>`;
+      }).join('');
+
+  // ---- أداء الفنيين ----
+  const visits = visitsRes.data || [];
+  const techMap = {};
+  const ensureTech = (id, name) => {
+    if (!id) return null;
+    if (!techMap[id]) techMap[id] = { name: name || '—', visitsTotal: 0, visitsCompleted: 0, ordersAssigned: 0 };
+    return techMap[id];
+  };
+  visits.forEach(v => {
+    const t = ensureTech(v.technician_employee_id, v.employees?.full_name);
+    if (!t) return;
+    t.visitsTotal++;
+    if (v.ended_at) t.visitsCompleted++;
+  });
+  orders.forEach(o => {
+    const t = ensureTech(o.technician_employee_id, o.employees?.full_name);
+    if (t) t.ordersAssigned++;
+  });
+  const techniciansBody = document.getElementById('smReportTechniciansBody');
+  const techIds = Object.keys(techMap);
+  techniciansBody.innerHTML = techIds.length === 0
+    ? '<tr><td colspan="4" class="bo-empty">لا يوجد فنيين لهم زيارات أو أوامر مسندة حتى الآن</td></tr>'
+    : techIds.map(id => {
+        const t = techMap[id];
+        return `<tr>
+          <td>${escapeHtml(t.name)}</td>
+          <td class="num">${t.visitsTotal}</td>
+          <td class="num">${t.visitsCompleted}</td>
+          <td class="num">${t.ordersAssigned}</td>
+        </tr>`;
+      }).join('');
+
+  // ---- حالة العقود ----
+  const contracts = contractsRes.data || [];
+  const in14days = new Date();
+  in14days.setDate(in14days.getDate() + 14);
+  document.getElementById('smReportContractsActive').textContent = contracts.filter(c => c.status === 'active').length;
+  document.getElementById('smReportContractsExpired').textContent = contracts.filter(c => c.status === 'expired').length;
+  document.getElementById('smReportContractsCancelled').textContent = contracts.filter(c => c.status === 'cancelled').length;
+  document.getElementById('smReportContractsExpiring').textContent = contracts.filter(c =>
+    c.status === 'active' && c.end_date && new Date(c.end_date) <= in14days
+  ).length;
+
+  // ---- الأعطال المفتوحة حسب الخطورة ----
+  const openFaults = (faultsRes.data || []).filter(f => f.status !== 'resolved');
+  document.getElementById('smReportFaultsLow').textContent = openFaults.filter(f => f.severity === 'low').length;
+  document.getElementById('smReportFaultsMedium').textContent = openFaults.filter(f => f.severity === 'medium').length;
+  document.getElementById('smReportFaultsHigh').textContent = openFaults.filter(f => f.severity === 'high').length;
+  document.getElementById('smReportFaultsCritical').textContent = openFaults.filter(f => f.severity === 'critical').length;
+}
+
 async function runFieldVisitsReport() {
   const fromDate = document.getElementById('fieldVisitsReportFromDate').value;
   const toDate = document.getElementById('fieldVisitsReportToDate').value;
@@ -32697,7 +33396,11 @@ function renderServiceOrderLines() {
 
     const productSearch = createSmartSearch({
       input: productInput, hidden: productHidden, dropdown: productDropdown,
-      getItems: () => boProducts.filter(p => p.is_active !== false).map(p => ({ value: p.id, label: p.name + (p.item_kind === 'service' ? ' (خدمة)' : ''), search: p.name })),
+      getItems: () => boProducts.filter(p => p.is_active !== false).map(p => ({
+        value: p.id,
+        label: p.name + (p.item_kind === 'service' ? ' (خدمة)' : '') + (p.is_hourly_service ? ' ⏱ بالساعة' : ''),
+        search: p.name,
+      })),
       onChange: (item) => {
         line.productId = item.value;
         const prod = boProducts.find(p => p.id === line.productId);
@@ -32707,12 +33410,18 @@ function renderServiceOrderLines() {
     });
     if (line.productId) productSearch.setValue(line.productId);
 
+    const selectedProduct = boProducts.find(p => p.id === line.productId);
+    const isHourlyLine = !!selectedProduct?.is_hourly_service;
+
     const qtyInput = document.createElement('input');
     qtyInput.type = 'number'; qtyInput.min = '0.001'; qtyInput.step = '0.001'; qtyInput.value = line.quantity;
+    qtyInput.title = isHourlyLine ? 'عدد الساعات' : 'الكمية';
+    qtyInput.placeholder = isHourlyLine ? 'عدد الساعات' : '';
     qtyInput.addEventListener('input', () => { line.quantity = Number(qtyInput.value) || 0; updateSOLineTotal(row, line); updateServiceOrderTotals(); });
 
     const priceInput = document.createElement('input');
     priceInput.type = 'number'; priceInput.min = '0'; priceInput.step = '0.01'; priceInput.value = line.unitPrice;
+    priceInput.title = isHourlyLine ? 'السعر للساعة الواحدة' : 'السعر للوحدة';
     priceInput.addEventListener('input', () => { line.unitPrice = Number(priceInput.value) || 0; updateSOLineTotal(row, line); updateServiceOrderTotals(); });
 
     const totalDiv = document.createElement('div');
@@ -34733,6 +35442,117 @@ function closePurchaseOrderModal() {
   convertingRequisitionId = null;
 }
 
+// ---- إضافة مجموعة مقاسات دفعة واحدة (لفاتورة الشراء المباشرة أو طلب الشراء) ----
+let sizeRunTargetContext = null; // 'purchase' | 'purchaseOrder'
+let sizeRunSelectedProduct = null;
+let sizeRunRows = []; // [{ variant, checked, qty }]
+
+function openSizeRunModal(context) {
+  sizeRunTargetContext = context;
+  sizeRunSelectedProduct = null;
+  sizeRunRows = [];
+  document.getElementById('sizeRunProductInput').value = '';
+  document.getElementById('sizeRunProductValue').value = '';
+  document.getElementById('sizeRunColorSelect').innerHTML = '<option value="">اختر الموديل أولاً</option>';
+  document.getElementById('sizeRunColorSelect').disabled = true;
+  document.getElementById('sizeRunDefaultQty').value = 1;
+  document.getElementById('sizeRunTableBody').innerHTML = '<tr><td colspan="4" class="bo-empty">اختار موديل عنده متغيرات (مقاسات) الأول</td></tr>';
+  document.getElementById('sizeRunModalError').classList.remove('show');
+  document.getElementById('sizeRunModalOverlay').classList.add('show');
+}
+
+function closeSizeRunModal() {
+  document.getElementById('sizeRunModalOverlay').classList.remove('show');
+}
+
+function onSizeRunProductChange(product) {
+  sizeRunSelectedProduct = product;
+  const colorSelect = document.getElementById('sizeRunColorSelect');
+  if (!product) {
+    colorSelect.innerHTML = '<option value="">اختر الموديل أولاً</option>';
+    colorSelect.disabled = true;
+    renderSizeRunTable();
+    return;
+  }
+  const variants = getProductVariants(product.id);
+  const colors = [...new Set(variants.map(v => v.variant_attributes && v.variant_attributes.color).filter(Boolean))];
+  if (colors.length === 0) {
+    colorSelect.innerHTML = '<option value="">كل المقاسات</option>';
+    colorSelect.disabled = true;
+  } else {
+    colorSelect.innerHTML = '<option value="">كل الألوان</option>' + colors.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+    colorSelect.disabled = false;
+  }
+  renderSizeRunTable();
+}
+
+async function renderSizeRunTable() {
+  const tbody = document.getElementById('sizeRunTableBody');
+  if (!sizeRunSelectedProduct) {
+    tbody.innerHTML = '<tr><td colspan="4" class="bo-empty">اختار موديل عنده متغيرات (مقاسات) الأول</td></tr>';
+    return;
+  }
+  const colorFilter = document.getElementById('sizeRunColorSelect').value;
+  let variants = getProductVariants(sizeRunSelectedProduct.id).filter(v => v.is_active);
+  if (colorFilter) variants = variants.filter(v => (v.variant_attributes && v.variant_attributes.color) === colorFilter);
+  variants = variants.slice().sort((a, b) => naturalCompare(
+    (a.variant_attributes && a.variant_attributes.size) || a.name,
+    (b.variant_attributes && b.variant_attributes.size) || b.name));
+
+  if (variants.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="bo-empty">لا توجد مقاسات مطابقة</td></tr>';
+    sizeRunRows = [];
+    return;
+  }
+  tbody.innerHTML = '<tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>';
+  const stockByProduct = await fetchStockByProduct(null);
+  const defaultQty = Number(document.getElementById('sizeRunDefaultQty').value) || 1;
+  sizeRunRows = variants.map(v => ({ variant: v, checked: true, qty: defaultQty }));
+
+  tbody.innerHTML = '';
+  sizeRunRows.forEach((row, idx) => {
+    const tr = document.createElement('tr');
+    const label = formatVariantAttrs(row.variant.variant_attributes);
+    tr.innerHTML = `
+      <td><input type="checkbox" data-idx="${idx}" class="size-run-check" checked></td>
+      <td>${escapeHtml(label)}</td>
+      <td class="num">${formatQty(stockByProduct[row.variant.id] || 0)}</td>
+      <td><input type="number" data-idx="${idx}" class="size-run-qty" value="${row.qty}" min="0" step="1" style="width:80px;"></td>`;
+    tr.querySelector('.size-run-check').addEventListener('change', (e) => { sizeRunRows[idx].checked = e.target.checked; });
+    tr.querySelector('.size-run-qty').addEventListener('input', (e) => { sizeRunRows[idx].qty = Number(e.target.value) || 0; });
+    tbody.appendChild(tr);
+  });
+}
+
+function confirmSizeRun() {
+  const errEl = document.getElementById('sizeRunModalError');
+  const selected = sizeRunRows.filter(r => r.checked && r.qty > 0);
+  if (selected.length === 0) {
+    errEl.textContent = 'اختار مقاس واحد على الأقل وحدد كمية أكبر من صفر';
+    errEl.classList.add('show');
+    return;
+  }
+  const isOrder = sizeRunTargetContext === 'purchaseOrder';
+  const targetArray = isOrder ? purchaseOrderLines : purchaseLines;
+  // بنشيل أي سطر فاضي (لسه محددش فيه صنف) قبل ما نضيف الدفعة، عشان ما يفضلش سطر فاضي محتاج مسح يدوي
+  for (let i = targetArray.length - 1; i >= 0; i--) {
+    if (!targetArray[i].productId) targetArray.splice(i, 1);
+  }
+  selected.forEach(row => {
+    targetArray.push({
+      productId: row.variant.id,
+      quantity: row.qty,
+      unitCost: Number(row.variant.cost_price) || 0,
+      productUnitId: null,
+      unitFactor: 1,
+      unitLabel: sizeRunSelectedProduct.unit_type || null,
+    });
+  });
+  if (targetArray.length === 0) targetArray.push({ productId: '', quantity: 1, unitCost: 0, productUnitId: null, unitFactor: 1, unitLabel: null });
+  if (isOrder) renderPurchaseOrderLines(); else renderPurchaseLines();
+  closeSizeRunModal();
+}
+
 function addPurchaseOrderLine() {
   purchaseOrderLines.push({ productId: '', quantity: 1, unitCost: 0, productUnitId: null, unitFactor: 1, unitLabel: null });
   renderPurchaseOrderLines();
@@ -35788,6 +36608,7 @@ let salesCommissionsLoadedOnce = false;
 let lastInvLevelsRows = [];
 let lastInvLowStockRows = [];
 let lastInvValuationRows = [];
+let lastMsRows = [];
 let lastInvMovementRows = [];
 let lastInvTransfersRows = [];
 let lastInvAdjustmentsRows = [];
@@ -40501,7 +41322,7 @@ function initInventoryQuickRanges() {
 function populateInventoryReportFilters() {
   const opts = '<option value="">كل المخازن</option>' +
     boWarehouses.filter(w => w.is_active).map(w => `<option value="${w.id}">${escapeHtml(warehouseLabel(w))}</option>`).join('');
-  ['invLevelsWarehouseFilter', 'invLowStockWarehouseFilter', 'invValuationWarehouseFilter', 'invMovementWarehouseFilter', 'invAdjustWarehouseFilter', 'stItemsWarehouseFilter', 'invTopMoversWarehouseFilter', 'invSlowMoversWarehouseFilter']
+  ['invLevelsWarehouseFilter', 'invLowStockWarehouseFilter', 'invValuationWarehouseFilter', 'invMovementWarehouseFilter', 'invAdjustWarehouseFilter', 'stItemsWarehouseFilter', 'invTopMoversWarehouseFilter', 'invSlowMoversWarehouseFilter', 'msWarehouseFilter']
     .forEach(id => {
       const el = document.getElementById(id);
       if (el) el.innerHTML = opts;
@@ -40725,6 +41546,79 @@ function exportInvLowStockToExcel() {
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'نقص المخزون');
   const dateStr = new Date().toISOString().split('T')[0];
   XLSX.writeFile(wb, `تقرير-نقص-المخزون-${dateStr}.xlsx`);
+}
+
+// ---- المقاسات الناقصة (لأنشطة زي الأحذية: موديل بيتباع بلون معين، بس بعض المقاسات نفدت) ----
+async function refreshMissingSizesReport() {
+  const warehouseId = document.getElementById('msWarehouseFilter').value || null;
+  const threshold = Math.max(0, Number(document.getElementById('msThresholdInput').value) || 0);
+  const q = (document.getElementById('msSearchInput').value || '').trim().toLowerCase();
+  const tbody = document.getElementById('msTableBody');
+  tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>`;
+  try {
+    const stockByProduct = await fetchStockByProduct(warehouseId);
+    // موديلات (أصناف أساسية) عندها متغيرات فعّالة على الأقل
+    const parents = boProducts.filter(p => p.is_active && !p.parent_product_id
+      && (!q || p.name.toLowerCase().includes(q)) && getProductVariants(p.id).length > 0);
+
+    const rows = [];
+    parents.forEach(parent => {
+      const variants = getProductVariants(parent.id).filter(v => v.is_active);
+      // بنجمّع متغيرات كل موديل حسب اللون (لو موجود خاصية color)، ولو مفيش لون
+      // مسجل على الإطلاق بنقارن كل مقاسات الموديل مع بعض كمجموعة واحدة
+      const groups = {};
+      variants.forEach(v => {
+        const colorVal = v.variant_attributes && v.variant_attributes.color;
+        const groupKey = colorVal || '__all__';
+        (groups[groupKey] = groups[groupKey] || []).push(v);
+      });
+      Object.entries(groups).forEach(([groupKey, groupVariants]) => {
+        const available = groupVariants.filter(v => (stockByProduct[v.id] || 0) > threshold);
+        const missing = groupVariants.filter(v => (stockByProduct[v.id] || 0) <= threshold);
+        // نعتبرها "مقاس ناقص" فقط لو الموديل/اللون لسه بيتباع (فيه مقاسات متاحة)،
+        // مش لو الموديل كله نافد (ده تكفله تنبيهات نقص المخزون العادية)
+        if (available.length === 0 || missing.length === 0) return;
+        const availableSizesLabel = available
+          .map(v => (v.variant_attributes && v.variant_attributes.size) || v.name).join('، ');
+        missing.forEach(v => {
+          rows.push({
+            model: parent.name,
+            color: groupKey === '__all__' ? '—' : groupKey,
+            size: (v.variant_attributes && v.variant_attributes.size) || v.name,
+            qty: stockByProduct[v.id] || 0,
+            availableSizes: availableSizesLabel,
+          });
+        });
+      });
+    });
+    rows.sort((a, b) => a.model.localeCompare(b.model, 'ar') || a.color.localeCompare(b.color, 'ar'));
+
+    document.getElementById('msAffectedModelsCount').textContent = new Set(rows.map(r => r.model)).size;
+    document.getElementById('msMissingCount').textContent = rows.length;
+
+    renderBreakdownTable('msTableBody', rows, 5, row => `
+      <td>${escapeHtml(row.model)}</td>
+      <td>${escapeHtml(row.color)}</td>
+      <td>${escapeHtml(row.size)}</td>
+      <td class="num">${formatQty(row.qty)}</td>
+      <td>${escapeHtml(row.availableSizes)}</td>`);
+    lastMsRows = rows;
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحميل تقرير المقاسات الناقصة', true);
+  }
+}
+
+function exportMsToExcel() {
+  if (lastMsRows.length === 0) { showToast('لا توجد بيانات لتصديرها', true); return; }
+  const rows = lastMsRows.map(r => ({
+    'الموديل': r.model, 'اللون': r.color, 'المقاس الناقص': r.size,
+    'الرصيد الحالي': r.qty, 'المقاسات المتاحة لنفس اللون': r.availableSizes,
+  }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'المقاسات الناقصة');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `تقرير-المقاسات-الناقصة-${dateStr}.xlsx`);
 }
 
 // ---- تقييم قيمة المخزون ----
