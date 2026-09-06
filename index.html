@@ -1404,6 +1404,7 @@ a { color: inherit; }
         <div class="search-row">
           <input type="text" id="searchInput" placeholder="ابحث بالاسم أو امسح الباركود...">
           <button type="button" id="openMissedSizeBtn" class="btn-secondary" style="flex:none; width:auto; padding:0 14px;" title="تسجيل طلب مقاس غير متوفر">📋</button>
+        <button type="button" id="openLaundryOrdersBtn" class="btn-secondary" style="flex:none; width:auto; padding:0 14px;" title="أوامر المغسلة">🧺</button>
         </div>
         <div class="categories" id="categoriesRow"><button class="cat-chip active" data-cat="all">الكل</button></div>
         <div class="product-grid" id="productGrid"><div class="empty-state">جاري تحميل الأصناف...</div></div>
@@ -10659,6 +10660,72 @@ a { color: inherit; }
   </div>
 </div>
 
+<!-- أوامر المغسلة -->
+<div class="modal-overlay" id="laundryOrdersModalOverlay">
+  <div class="modal-box" style="max-width:720px;">
+    <div class="modal-title">أوامر المغسلة</div>
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
+      <select id="laundryOrdersFilter">
+        <option value="active">نشطة (لسه ماتسلمتش)</option>
+        <option value="all">الكل</option>
+        <option value="delivered">تم التسليم</option>
+      </select>
+      <button type="button" class="bo-add-btn" id="openNewLaundryOrderBtn">+ أمر جديد</button>
+    </div>
+    <div class="bo-table-wrap">
+      <table class="bo-table">
+        <thead><tr><th>العميل</th><th>الأصناف</th><th>الحالة</th><th>جاهز في</th><th></th></tr></thead>
+        <tbody id="laundryOrdersTableBody"><tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr></tbody>
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="closeLaundryOrdersBtn">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- أمر مغسلة جديد -->
+<div class="modal-overlay" id="laundryOrderFormModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">أمر مغسلة جديد</div>
+    <div class="field">
+      <label>العميل (اختياري)</label>
+      <div class="smart-search" id="laundryOrderCustomerWrap">
+        <input type="text" id="laundryOrderCustomerInput" autocomplete="off" placeholder="ابحث عن عميل مسجّل...">
+        <input type="hidden" id="laundryOrderCustomerValue">
+        <div class="smart-search-dropdown" id="laundryOrderCustomerDropdown"></div>
+      </div>
+    </div>
+    <div class="modal-grid">
+      <div class="field"><label>اسم العميل</label><input type="text" id="laundryOrderCustomerName"></div>
+      <div class="field"><label>رقم الهاتف</label><input type="text" id="laundryOrderCustomerPhone" style="direction:ltr; text-align:right;"></div>
+    </div>
+    <div class="field"><label>وصف الأصناف</label><textarea id="laundryOrderItemsDesc" rows="3" placeholder="مثلاً: 3 قمصان، بنطلون جينز، فستان سهرة"></textarea></div>
+    <div class="modal-grid">
+      <div class="field"><label>عدد القطع (اختياري)</label><input type="number" id="laundryOrderItemCount" min="1" step="1"></div>
+      <div class="field"><label>موعد الجاهزية المتوقع (اختياري)</label><input type="datetime-local" id="laundryOrderReadyAt"></div>
+    </div>
+    <div class="error-msg" id="laundryOrderFormError"></div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="closeLaundryOrderFormBtn">إلغاء</button>
+      <button type="button" class="submit-btn" id="saveLaundryOrderBtn">حفظ الأمر</button>
+    </div>
+  </div>
+</div>
+
+<!-- ربط أمر مغسلة برقم فاتورة (بعد التحصيل الفعلي في نقطة البيع) -->
+<div class="modal-overlay" id="laundryLinkSaleModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">ربط الأمر بفاتورة</div>
+    <div class="field"><label>رقم الفاتورة</label><input type="text" id="laundryLinkInvoiceInput" placeholder="مثلاً 1042"></div>
+    <div class="error-msg" id="laundryLinkSaleError"></div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="closeLaundryLinkSaleBtn">إلغاء</button>
+      <button type="button" class="submit-btn" id="confirmLaundryLinkSaleBtn">ربط</button>
+    </div>
+  </div>
+</div>
+
 <div class="unit-picker-overlay" id="posModifierPickerOverlay">
   <div class="unit-picker-box" style="max-width:420px;">
     <div class="unit-picker-title" id="posModifierPickerTitle">اختر الإضافات</div>
@@ -13231,6 +13298,8 @@ async function enterPos() {
   if (appIsOnline) {
     try { await Promise.all([loadBoBranches(), loadBoBusinessTypes()]); } catch (err) { console.error(err); }
     applyShoeFeatureVisibility();
+    const laundryBtn = document.getElementById('openLaundryOrdersBtn');
+    if (laundryBtn) laundryBtn.style.display = isLaundryBranch() ? '' : 'none';
   }
   // شاشة الطاولات مش شاشة دخول إجبارية — أوردر التيك أواي/الدليفري ميحتاجش
   // طاولة أصلًا، فالكاشير بيدخل على شاشة المنتجات العادية زي أي فرع تاني،
@@ -13521,6 +13590,38 @@ function bindPosEvents() {
     if (e.target.id === 'missedSizeModalOverlay') closeMissedSizeModal();
   });
   document.getElementById('saveMissedSizeBtn').addEventListener('click', saveMissedSizeRequest);
+
+  // ---- أوامر المغسلة (POS) ----
+  document.getElementById('openLaundryOrdersBtn').addEventListener('click', openLaundryOrdersModal);
+  document.getElementById('closeLaundryOrdersBtn').addEventListener('click', closeLaundryOrdersModal);
+  document.getElementById('laundryOrdersModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'laundryOrdersModalOverlay') closeLaundryOrdersModal();
+  });
+  document.getElementById('laundryOrdersFilter').addEventListener('change', () => refreshLaundryOrdersList());
+  document.getElementById('openNewLaundryOrderBtn').addEventListener('click', openNewLaundryOrderModal);
+  document.getElementById('closeLaundryOrderFormBtn').addEventListener('click', closeLaundryOrderFormModal);
+  document.getElementById('laundryOrderFormModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'laundryOrderFormModalOverlay') closeLaundryOrderFormModal();
+  });
+  document.getElementById('saveLaundryOrderBtn').addEventListener('click', saveLaundryOrder);
+  document.getElementById('closeLaundryLinkSaleBtn').addEventListener('click', closeLaundryLinkSaleModal);
+  document.getElementById('laundryLinkSaleModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'laundryLinkSaleModalOverlay') closeLaundryLinkSaleModal();
+  });
+  document.getElementById('confirmLaundryLinkSaleBtn').addEventListener('click', confirmLaundryLinkSale);
+  createSmartSearch({
+    input: document.getElementById('laundryOrderCustomerInput'),
+    hidden: document.getElementById('laundryOrderCustomerValue'),
+    dropdown: document.getElementById('laundryOrderCustomerDropdown'),
+    getItems: () => allCustomers.map(c => ({ value: c.id, label: c.name + (c.phone ? ' — ' + c.phone : '') })),
+    onChange: (item) => {
+      const c = allCustomers.find(x => x.id === item.value);
+      if (c) {
+        document.getElementById('laundryOrderCustomerName').value = c.name || '';
+        document.getElementById('laundryOrderCustomerPhone').value = c.phone || '';
+      }
+    },
+  });
   document.getElementById('msrFulfilledFilter').addEventListener('change', () => refreshMissedSizeRequestsReport());
   document.getElementById('refreshMsrBtn').addEventListener('click', () => refreshMissedSizeRequestsReport());
   document.getElementById('exportMsrBtn').addEventListener('click', () => exportMsrToExcel());
@@ -14239,6 +14340,154 @@ async function saveMissedSizeRequest() {
   } finally {
     saveBtn.disabled = false;
     saveBtn.textContent = 'حفظ الطلب';
+  }
+}
+
+// ---- أوامر المغسلة ----
+const LAUNDRY_STATUS_LABELS = { received: 'تم الاستلام', in_progress: 'قيد الغسيل', ready: 'جاهز للاستلام', delivered: 'تم التسليم', cancelled: 'ملغي' };
+const LAUNDRY_STATUS_NEXT = { received: 'in_progress', in_progress: 'ready', ready: 'delivered' };
+const LAUNDRY_STATUS_NEXT_LABEL = { received: 'بدء الغسيل', in_progress: 'جاهز للاستلام', ready: 'تسليم للعميل' };
+let lastLaundryOrders = [];
+let laundryLinkTargetOrderId = null;
+
+function isLaundryBranch() {
+  return getCurrentBranchBusinessType()?.name === 'مغسلة ملابس / سجاد';
+}
+
+function openLaundryOrdersModal() {
+  document.getElementById('laundryOrdersModalOverlay').classList.add('show');
+  refreshLaundryOrdersList();
+}
+function closeLaundryOrdersModal() { document.getElementById('laundryOrdersModalOverlay').classList.remove('show'); }
+
+async function refreshLaundryOrdersList() {
+  const filter = document.getElementById('laundryOrdersFilter').value; // 'active' | 'all' | 'delivered'
+  const tbody = document.getElementById('laundryOrdersTableBody');
+  tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>`;
+  try {
+    let query = supabaseClient.from('laundry_orders')
+      .select('id, customer_name, customer_phone, items_description, item_count, status, expected_ready_at, sale_id')
+      .eq('branch_id', currentProfile.branch_id)
+      .order('created_at', { ascending: false });
+    if (filter === 'active') query = query.not('status', 'in', '("delivered","cancelled")');
+    if (filter === 'delivered') query = query.eq('status', 'delivered');
+    const { data, error } = await query;
+    if (error) throw error;
+    lastLaundryOrders = data || [];
+    renderBreakdownTable('laundryOrdersTableBody', lastLaundryOrders, 5, row => {
+      const nextStatus = LAUNDRY_STATUS_NEXT[row.status];
+      const readyLabel = row.expected_ready_at ? new Date(row.expected_ready_at).toLocaleString('ar-EG') : '—';
+      const custLabel = [row.customer_name, row.customer_phone].filter(Boolean).join(' — ') || '—';
+      const itemsLabel = row.items_description + (row.item_count ? ` (${row.item_count} قطعة)` : '');
+      let actions = '';
+      if (nextStatus) actions += `<button class="bo-icon-btn" data-action="advance" data-id="${row.id}" data-next="${nextStatus}">${LAUNDRY_STATUS_NEXT_LABEL[row.status]}</button>`;
+      if (row.status === 'delivered' && !row.sale_id) actions += ` <button class="bo-icon-btn" data-action="link" data-id="${row.id}">ربط بفاتورة</button>`;
+      if (row.sale_id) actions += ' <span class="bo-badge active">مربوط بفاتورة</span>';
+      return `
+        <td>${escapeHtml(custLabel)}</td>
+        <td>${escapeHtml(itemsLabel)}</td>
+        <td><span class="bo-badge">${LAUNDRY_STATUS_LABELS[row.status] || row.status}</span></td>
+        <td class="num">${readyLabel}</td>
+        <td>${actions}</td>`;
+    });
+    tbody.querySelectorAll('[data-action="advance"]').forEach(btn => {
+      btn.addEventListener('click', () => advanceLaundryOrderStatus(btn.dataset.id, btn.dataset.next));
+    });
+    tbody.querySelectorAll('[data-action="link"]').forEach(btn => {
+      btn.addEventListener('click', () => openLaundryLinkSaleModal(btn.dataset.id));
+    });
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحميل أوامر المغسلة — تأكد إن جدول laundry_orders موجود', true);
+  }
+}
+
+async function advanceLaundryOrderStatus(id, nextStatus) {
+  try {
+    const { error } = await supabaseClient.from('laundry_orders')
+      .update({ status: nextStatus, updated_at: new Date().toISOString() }).eq('id', id);
+    if (error) throw error;
+    showToast(`الحالة اتحدثت: ${LAUNDRY_STATUS_LABELS[nextStatus]}`);
+    refreshLaundryOrdersList();
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحديث الحالة', true);
+  }
+}
+
+function openNewLaundryOrderModal() {
+  document.getElementById('laundryOrderCustomerInput').value = '';
+  document.getElementById('laundryOrderCustomerValue').value = '';
+  document.getElementById('laundryOrderCustomerName').value = '';
+  document.getElementById('laundryOrderCustomerPhone').value = '';
+  document.getElementById('laundryOrderItemsDesc').value = '';
+  document.getElementById('laundryOrderItemCount').value = '';
+  document.getElementById('laundryOrderReadyAt').value = '';
+  document.getElementById('laundryOrderFormError').classList.remove('show');
+  document.getElementById('laundryOrderFormModalOverlay').classList.add('show');
+}
+function closeLaundryOrderFormModal() { document.getElementById('laundryOrderFormModalOverlay').classList.remove('show'); }
+
+async function saveLaundryOrder() {
+  const errEl = document.getElementById('laundryOrderFormError');
+  errEl.classList.remove('show');
+  const itemsDesc = document.getElementById('laundryOrderItemsDesc').value.trim();
+  if (!itemsDesc) { errEl.textContent = 'اكتب وصف الأصناف'; errEl.classList.add('show'); return; }
+
+  const saveBtn = document.getElementById('saveLaundryOrderBtn');
+  saveBtn.disabled = true; saveBtn.textContent = 'جاري الحفظ...';
+  try {
+    const readyAtVal = document.getElementById('laundryOrderReadyAt').value;
+    const { error } = await supabaseClient.from('laundry_orders').insert({
+      branch_id: currentProfile.branch_id,
+      customer_id: document.getElementById('laundryOrderCustomerValue').value || null,
+      customer_name: document.getElementById('laundryOrderCustomerName').value.trim() || null,
+      customer_phone: document.getElementById('laundryOrderCustomerPhone').value.trim() || null,
+      items_description: itemsDesc,
+      item_count: Number(document.getElementById('laundryOrderItemCount').value) || null,
+      expected_ready_at: readyAtVal ? new Date(readyAtVal).toISOString() : null,
+      created_by: currentProfile.id,
+    });
+    if (error) throw error;
+    showToast('تم إنشاء أمر المغسلة');
+    closeLaundryOrderFormModal();
+    refreshLaundryOrdersList();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = 'تعذر حفظ الأمر — تأكد إن جدول laundry_orders موجود';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false; saveBtn.textContent = 'حفظ الأمر';
+  }
+}
+
+function openLaundryLinkSaleModal(orderId) {
+  laundryLinkTargetOrderId = orderId;
+  document.getElementById('laundryLinkInvoiceInput').value = '';
+  document.getElementById('laundryLinkSaleError').classList.remove('show');
+  document.getElementById('laundryLinkSaleModalOverlay').classList.add('show');
+}
+function closeLaundryLinkSaleModal() { document.getElementById('laundryLinkSaleModalOverlay').classList.remove('show'); }
+
+async function confirmLaundryLinkSale() {
+  const errEl = document.getElementById('laundryLinkSaleError');
+  errEl.classList.remove('show');
+  const invoiceNumber = Number(document.getElementById('laundryLinkInvoiceInput').value.trim());
+  if (!invoiceNumber || isNaN(invoiceNumber)) { errEl.textContent = 'اكتب رقم فاتورة صحيح'; errEl.classList.add('show'); return; }
+  try {
+    const { data: sale, error: saleErr } = await supabaseClient.from('sales')
+      .select('id, invoice_number').eq('invoice_number', invoiceNumber).eq('branch_id', currentProfile.branch_id).maybeSingle();
+    if (saleErr) throw saleErr;
+    if (!sale) { errEl.textContent = 'مفيش فاتورة بهذا الرقم في نفس الفرع'; errEl.classList.add('show'); return; }
+    const { error } = await supabaseClient.from('laundry_orders').update({ sale_id: sale.id }).eq('id', laundryLinkTargetOrderId);
+    if (error) throw error;
+    showToast('تم الربط بالفاتورة بنجاح');
+    closeLaundryLinkSaleModal();
+    refreshLaundryOrdersList();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = 'تعذر الربط، حاول تاني';
+    errEl.classList.add('show');
   }
 }
 
