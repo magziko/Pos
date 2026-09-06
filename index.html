@@ -1401,7 +1401,10 @@ a { color: inherit; }
     <div class="main" id="posMainView">
       <div class="product-side">
         <button type="button" class="back-to-tables-btn" id="backToTablesBtn">‹ <span id="backToTablesLabel">رجوع للطاولات</span></button>
-        <div class="search-row"><input type="text" id="searchInput" placeholder="ابحث بالاسم أو امسح الباركود..."></div>
+        <div class="search-row">
+          <input type="text" id="searchInput" placeholder="ابحث بالاسم أو امسح الباركود...">
+          <button type="button" id="openMissedSizeBtn" class="btn-secondary" style="flex:none; width:auto; padding:0 14px;" title="تسجيل طلب مقاس غير متوفر">📋</button>
+        </div>
         <div class="categories" id="categoriesRow"><button class="cat-chip active" data-cat="all">الكل</button></div>
         <div class="product-grid" id="productGrid"><div class="empty-state">جاري تحميل الأصناف...</div></div>
       </div>
@@ -1912,6 +1915,9 @@ a { color: inherit; }
                   <option value="no_barcode">بلا باركود</option>
                   <option value="no_image">بلا صورة</option>
                   <option value="no_cost">بلا سعر شراء</option>
+                </select>
+                <select id="productCollectionFilter">
+                  <option value="">كل المواسم/الكولكشنز</option>
                 </select>
                 <select id="productSortSelect">
                   <option value="name_asc">الاسم (أ - ي)</option>
@@ -3092,6 +3098,10 @@ a { color: inherit; }
               <div class="report-type-icon">🏆</div>
               <div class="report-type-label">الأصناف الأكثر مبيعًا</div>
             </button>
+            <button type="button" class="report-type-card" data-report="model-profitability">
+              <div class="report-type-icon">💹</div>
+              <div class="report-type-label">ربحية الموديل</div>
+            </button>
             <button type="button" class="report-type-card" data-report="topcustomers">
               <div class="report-type-icon">⭐</div>
               <div class="report-type-label">أفضل العملاء</div>
@@ -3184,6 +3194,26 @@ a { color: inherit; }
                   <thead><tr><th>الصنف</th><th>الكمية المباعة</th><th>الإيراد</th></tr></thead>
                   <tbody id="topProductsTableBody">
                     <tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="salesReportDetail-model-profitability" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">ربحية كل موديل (بتجميع كل مقاساته/ألوانه مع بعض) في الفترة المحددة فوق</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-icon-btn" id="exportModelProfitBtn">تصدير إكسل</button>
+                </div>
+              </div>
+              <div class="bo-empty" style="padding:8px 12px; text-align:right; font-size:12px; margin-bottom:10px;">
+                ملحوظة: تكلفة البضاعة بتتحسب بسعر التكلفة الحالي للصنف، مش بسعر التكلفة وقت البيع فعليًا لو كان اتغيّر بعد كده.
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>الموديل</th><th>الكمية المباعة</th><th>الإيراد</th><th>تكلفة البضاعة</th><th>إجمالي الربح</th><th>هامش الربح</th></tr></thead>
+                  <tbody id="modelProfitTableBody">
+                    <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -5217,6 +5247,14 @@ a { color: inherit; }
               <div class="report-type-icon">🧾</div>
               <div class="report-type-label">سجل إرسال الفواتير للفاتورة الإلكترونية (ETA)</div>
             </button>
+            <button type="button" class="report-type-card" data-report="missed-size-requests">
+              <div class="report-type-icon">🙋</div>
+              <div class="report-type-label">طلبات العملاء على مقاسات غير متوفرة</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="stock-holds">
+              <div class="report-type-icon">🔒</div>
+              <div class="report-type-label">الحجوزات المؤقتة</div>
+            </button>
             <button type="button" class="report-type-card" data-report="service-management">
               <div class="report-type-icon">🛠️</div>
               <div class="report-type-label">نظرة عامة على إدارة الخدمات</div>
@@ -5663,6 +5701,28 @@ a { color: inherit; }
                 </table>
               </div>
 
+              <div id="returnRateShoeSection">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle" style="font-size:14px;">معدل الاسترجاع حسب الموديل (مرتجعات المبيعات فقط)</div>
+                <div class="report-subtitle-actions">
+                  <label style="display:flex; align-items:center; gap:6px; font-size:13px;">أظهر بس اللي باعت (قطع) ≥
+                    <input type="number" id="returnRateMinSold" value="3" min="0" step="1" style="width:60px;">
+                  </label>
+                </div>
+              </div>
+              <div class="bo-empty" style="padding:8px 12px; text-align:right; font-size:12px; margin-bottom:10px;">
+                معدل الاسترجاع = الكمية المرتجعة ÷ الكمية المباعة في نفس الفترة. المعدل العالي على موديل بيتباع قليل مش بالضرورة مشكلة — علشان كده فيه حد أدنى للمبيعات فوق يقدر يتغيّر.
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>الموديل</th><th>الكمية المباعة</th><th>الكمية المرتجعة</th><th>معدل الاسترجاع</th></tr></thead>
+                  <tbody id="returnRateTableBody">
+                    <tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              </div>
+
               <div class="report-subtitle-row">
                 <div class="report-subtitle" style="font-size:14px;">أسباب الإرجاع</div>
               </div>
@@ -5858,6 +5918,63 @@ a { color: inherit; }
               </div>
               <div class="bo-empty" style="padding:12px; text-align:center; font-size:12.5px; margin-top:8px;">
                 هذا السجل لعرض ومتابعة حالة إرسال كل فاتورة للفاتورة الإلكترونية. تحديث الحالة (بعد الإرسال الفعلي من خلال منظومة ETA أو أي تكامل خارجي) يتم يدويًا من زر "تحديث الحالة" أمام كل فاتورة.
+              </div>
+            </div>
+
+            <!-- طلبات العملاء على مقاسات غير متوفرة -->
+            <div id="otherReportDetail-missed-size-requests" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">مقاسات وألوان طلبها عملاء ومكانتش متاحة — استخدمها لتوجيه قرارات الشراء</div>
+                <div class="report-subtitle-actions">
+                  <select id="msrFulfilledFilter">
+                    <option value="pending">لسه مش متوفرة</option>
+                    <option value="all">الكل</option>
+                    <option value="fulfilled">اتوفرت بالفعل</option>
+                  </select>
+                  <button class="bo-outline-btn" id="refreshMsrBtn">تحديث</button>
+                  <button class="bo-icon-btn" id="exportMsrBtn">تصدير إكسل</button>
+                </div>
+              </div>
+              <div class="report-cards">
+                <div class="report-card">
+                  <div class="report-card-label">إجمالي الطلبات المعروضة</div>
+                  <div class="report-card-value num" id="msrCount">0</div>
+                </div>
+              </div>
+              <div style="font-weight:600; margin:10px 0 6px;">الأكثر طلبًا (موديل + مقاس)</div>
+              <div class="bo-table-wrap" style="margin-bottom:16px;">
+                <table class="bo-table">
+                  <thead><tr><th>الموديل</th><th>المقاس</th><th>اللون</th><th>عدد مرات الطلب</th></tr></thead>
+                  <tbody id="msrTopTableBody"><tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr></tbody>
+                </table>
+              </div>
+              <div style="font-weight:600; margin-bottom:6px;">كل الطلبات</div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>التاريخ</th><th>الموديل</th><th>المقاس</th><th>اللون</th><th>العميل</th><th>ملاحظة</th><th>بواسطة</th><th></th></tr></thead>
+                  <tbody id="msrTableBody"><tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- الحجوزات المؤقتة -->
+            <div id="otherReportDetail-stock-holds" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">حجوزات مؤقتة لمقاسات/أصناف لعملاء</div>
+                <div class="report-subtitle-actions">
+                  <select id="holdsStatusFilter">
+                    <option value="active">نشطة الآن</option>
+                    <option value="all">الكل</option>
+                    <option value="expired">منتهية</option>
+                  </select>
+                  <button class="bo-outline-btn" id="refreshHoldsBtn">تحديث</button>
+                </div>
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>الصنف</th><th>الكمية</th><th>العميل</th><th>ينتهي في</th><th>بواسطة</th><th></th></tr></thead>
+                  <tbody id="holdsTableBody"><tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr></tbody>
+                </table>
               </div>
             </div>
 
@@ -7117,6 +7234,7 @@ a { color: inherit; }
       <div class="ci-section-subtitle">المخزون والوحدات</div>
       <div class="modal-grid">
         <div class="field" id="productReorderField"><label>حد إعادة الطلب</label><input type="number" id="productReorder" step="0.01" min="0" value="0"></div>
+        <div class="field" id="productCollectionTagField"><label>الموسم/الكولكشن (اختياري)</label><input type="text" id="productCollectionTag" list="collectionTagList" placeholder="مثلاً: صيف 2026"><datalist id="collectionTagList"></datalist></div>
         <div class="field field-full" id="productSellByWeightField">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
             <input type="checkbox" id="productSellByWeight" style="width:auto;"> يباع بالوزن (كجم) — سعر البيع أعلاه يُعتبر سعر الكيلوجرام
@@ -10356,7 +10474,7 @@ a { color: inherit; }
     <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
       <button type="button" class="bo-add-btn" id="addVariantBtn">+ متغير جديد</button>
     </div>
-    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap;">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap;" id="variantsViewToggleRow">
       <div style="display:flex; gap:6px;">
         <button type="button" class="bo-outline-btn variants-view-toggle active" id="variantsViewListBtn" data-view="list">قائمة</button>
         <button type="button" class="bo-outline-btn variants-view-toggle" id="variantsViewMatrixBtn" data-view="matrix">شبكة (مقاس × لون)</button>
@@ -10445,7 +10563,7 @@ a { color: inherit; }
       <div class="modal-grid">
         <div class="field"><label>سعر البيع</label><input type="number" id="variantSalePrice" step="0.01" min="0" required></div>
         <div class="field"><label>سعر الشراء</label><input type="number" id="variantCostPrice" step="0.01" min="0" value="0"></div>
-        <div class="field"><label>حد إعادة الطلب (تنبيه نقص خاص بهذا المقاس)</label><input type="number" id="variantReorderLevel" step="1" min="0" value="0"></div>
+        <div class="field" id="variantReorderLevelField"><label>حد إعادة الطلب (تنبيه نقص خاص بهذا المقاس)</label><input type="number" id="variantReorderLevel" step="1" min="0" value="0"></div>
         <div class="field field-full"><label>الباركود (اختياري)</label><input type="text" id="variantBarcode" placeholder="اتركه فارغًا للتوليد لاحقًا"></div>
       </div>
       <div class="field field-full">
@@ -10475,8 +10593,69 @@ a { color: inherit; }
 <div class="unit-picker-overlay" id="variantPickerOverlay">
   <div class="unit-picker-box">
     <div class="unit-picker-title" id="variantPickerTitle">اختر المتغير</div>
+    <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; margin-bottom:8px; cursor:pointer;">
+      <input type="checkbox" id="variantPickerHoldMode"> وضع الحجز المؤقت — اضغط على المقاس عشان تحجزه بدل ما يتضاف للسلة
+    </label>
     <div id="variantPickerOptions"></div>
     <button type="button" class="unit-picker-cancel" id="variantPickerCancelBtn">إلغاء</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="stockHoldModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">حجز مؤقت</div>
+    <div style="font-weight:600; margin-bottom:10px;">الصنف: <span id="stockHoldProductLabel"></span></div>
+    <div class="modal-grid">
+      <div class="field"><label>الكمية</label><input type="number" id="stockHoldQty" value="1" min="1" step="1"></div>
+      <div class="field"><label>مدة الحجز</label>
+        <select id="stockHoldDuration">
+          <option value="1">ساعة</option>
+          <option value="2" selected>ساعتين</option>
+          <option value="4">4 ساعات</option>
+          <option value="eod">لحد آخر اليوم</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-grid">
+      <div class="field"><label>اسم العميل (اختياري)</label><input type="text" id="stockHoldCustomerName"></div>
+      <div class="field"><label>رقم الهاتف (اختياري)</label><input type="text" id="stockHoldCustomerPhone" style="direction:ltr; text-align:right;"></div>
+    </div>
+    <div class="error-msg" id="stockHoldModalError"></div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="closeStockHoldBtn">إلغاء</button>
+      <button type="button" class="submit-btn" id="saveStockHoldBtn">تأكيد الحجز</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="missedSizeModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">تسجيل طلب مقاس غير متوفر</div>
+    <div style="color:var(--ink-soft); font-size:13px; margin-bottom:10px;">
+      سجّل أي مقاس أو لون طلبه عميل ومكانش متاح — ده بيدّينا صورة حقيقية عن الطلب الفعلي عشان نشتري صح المرة الجاية.
+    </div>
+    <div class="field">
+      <label>الموديل</label>
+      <div class="smart-search" id="missedSizeProductWrap">
+        <input type="text" id="missedSizeProductInput" autocomplete="off" placeholder="اكتب اسم الموديل...">
+        <input type="hidden" id="missedSizeProductValue">
+        <div class="smart-search-dropdown" id="missedSizeProductDropdown"></div>
+      </div>
+    </div>
+    <div class="modal-grid">
+      <div class="field"><label>المقاس المطلوب</label><input type="text" id="missedSizeSizeInput" placeholder="مثلاً 43"></div>
+      <div class="field"><label>اللون (اختياري)</label><input type="text" id="missedSizeColorInput"></div>
+    </div>
+    <div class="modal-grid">
+      <div class="field"><label>اسم العميل (اختياري)</label><input type="text" id="missedSizeCustomerName"></div>
+      <div class="field"><label>رقم الهاتف (اختياري)</label><input type="text" id="missedSizeCustomerPhone" style="direction:ltr; text-align:right;"></div>
+    </div>
+    <div class="field"><label>ملاحظة (اختياري)</label><input type="text" id="missedSizeNote"></div>
+    <div class="error-msg" id="missedSizeModalError"></div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="closeMissedSizeBtn">إلغاء</button>
+      <button type="button" class="submit-btn" id="saveMissedSizeBtn">حفظ الطلب</button>
+    </div>
   </div>
 </div>
 
@@ -13051,6 +13230,7 @@ async function enterPos() {
   // ومحتاجينها في الكاشير عشان نعرف هل الفرع بيستخدم طاولات/كراسي
   if (appIsOnline) {
     try { await Promise.all([loadBoBranches(), loadBoBusinessTypes()]); } catch (err) { console.error(err); }
+    applyShoeFeatureVisibility();
   }
   // شاشة الطاولات مش شاشة دخول إجبارية — أوردر التيك أواي/الدليفري ميحتاجش
   // طاولة أصلًا، فالكاشير بيدخل على شاشة المنتجات العادية زي أي فرع تاني،
@@ -13321,6 +13501,31 @@ function bindPosEvents() {
   });
 
   document.getElementById('variantPickerCancelBtn').addEventListener('click', closeVariantPicker);
+  document.getElementById('variantPickerHoldMode').addEventListener('change', () => renderVariantPickerOptions(variantPickerCurrentProduct, variantPickerCurrentVariants));
+  document.getElementById('closeStockHoldBtn').addEventListener('click', closeStockHoldModal);
+  document.getElementById('stockHoldModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'stockHoldModalOverlay') closeStockHoldModal();
+  });
+  document.getElementById('saveStockHoldBtn').addEventListener('click', saveStockHold);
+
+  // ---- تسجيل طلب مقاس غير متوفر (POS) ----
+  createSmartSearch({
+    input: document.getElementById('missedSizeProductInput'),
+    hidden: document.getElementById('missedSizeProductValue'),
+    dropdown: document.getElementById('missedSizeProductDropdown'),
+    getItems: () => (typeof allProducts !== 'undefined' ? allProducts : []).filter(p => p.is_active && !p.parent_product_id).map(p => ({ value: p.id, label: p.name })),
+  });
+  document.getElementById('openMissedSizeBtn').addEventListener('click', openMissedSizeModal);
+  document.getElementById('closeMissedSizeBtn').addEventListener('click', closeMissedSizeModal);
+  document.getElementById('missedSizeModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'missedSizeModalOverlay') closeMissedSizeModal();
+  });
+  document.getElementById('saveMissedSizeBtn').addEventListener('click', saveMissedSizeRequest);
+  document.getElementById('msrFulfilledFilter').addEventListener('change', () => refreshMissedSizeRequestsReport());
+  document.getElementById('refreshMsrBtn').addEventListener('click', () => refreshMissedSizeRequestsReport());
+  document.getElementById('exportMsrBtn').addEventListener('click', () => exportMsrToExcel());
+  document.getElementById('holdsStatusFilter').addEventListener('change', () => refreshStockHoldsReport());
+  document.getElementById('refreshHoldsBtn').addEventListener('click', () => refreshStockHoldsReport());
   document.getElementById('variantPickerOverlay').addEventListener('click', (e) => {
     if (e.target.id === 'variantPickerOverlay') closeVariantPicker();
   });
@@ -13826,27 +14031,65 @@ function formatPosVariantAttrs(attrs) {
   return Object.values(attrs).filter(Boolean).join(' / ');
 }
 
-function openVariantPicker(product, variants) {
+let variantPickerActiveHolds = {}; // productId -> {quantity, customer_name, expires_at}
+let variantPickerCurrentVariants = [];
+let variantPickerCurrentProduct = null;
+let stockHoldTargetProduct = null;
+
+async function openVariantPicker(product, variants) {
   const overlay = document.getElementById('variantPickerOverlay');
   const optionsWrap = document.getElementById('variantPickerOptions');
   document.getElementById('variantPickerTitle').textContent = `اختر المتغير — ${product.name}`;
+  document.getElementById('variantPickerHoldMode').checked = false;
+  document.getElementById('variantPickerHoldMode').closest('label').style.display = isShoeBranch() ? 'flex' : 'none';
+  optionsWrap.innerHTML = '<div class="bo-empty">جاري التحميل...</div>';
+  overlay.classList.add('show');
+  variantPickerCurrentVariants = variants;
+  variantPickerCurrentProduct = product;
+
+  // نجيب أي حجوزات نشطة (لسه سارية ومتحررتش) على متغيرات الصنف ده عشان نوريها كـ badge
+  variantPickerActiveHolds = {};
+  try {
+    const { data: holds } = await supabaseClient
+      .from('stock_holds')
+      .select('product_id, quantity, customer_name, expires_at')
+      .in('product_id', variants.map(v => v.id))
+      .eq('released', false)
+      .gt('expires_at', new Date().toISOString());
+    (holds || []).forEach(h => { variantPickerActiveHolds[h.product_id] = h; });
+  } catch (err) { console.error(err); }
+
+  renderVariantPickerOptions(product, variants);
+}
+
+function renderVariantPickerOptions(product, variants) {
+  const overlay = document.getElementById('variantPickerOverlay');
+  const optionsWrap = document.getElementById('variantPickerOptions');
+  const holdMode = document.getElementById('variantPickerHoldMode').checked;
   optionsWrap.innerHTML = '';
+
+  const onCellPicked = (v) => {
+    if (holdMode) { openStockHoldModal(v); return; }
+    closeVariantPicker();
+    addToCart(v);
+  };
 
   const hasSize = variants.some(v => v.variant_attributes && v.variant_attributes.size);
   if (!hasSize) {
     // شكل قايمة عادي — مناسب لمتغيرات مش من نوع مقاس (زي النكهات مثلًا)
     variants.forEach(v => {
       const stock = availableStock(v.id);
+      const hold = variantPickerActiveHolds[v.id];
       const btn = document.createElement('button');
       btn.type = 'button'; btn.className = 'unit-picker-option';
       const label = formatPosVariantAttrs(v.variant_attributes) || v.name;
       const stockNote = stock <= 0 ? ' — لا يوجد رصيد' : '';
-      btn.innerHTML = `<span>${escapeHtml(label)}${stockNote}</span><span class="num">${resolveProductPrice(v).toFixed(2)}</span>`;
+      const holdNote = hold ? ` — 🔒 محجوز (${hold.quantity})` : '';
+      btn.innerHTML = `<span>${escapeHtml(label)}${stockNote}${holdNote}</span><span class="num">${resolveProductPrice(v).toFixed(2)}</span>`;
       if (stock <= 0) btn.style.opacity = '0.55';
-      btn.addEventListener('click', () => { closeVariantPicker(); addToCart(v); });
+      btn.addEventListener('click', () => onCellPicked(v));
       optionsWrap.appendChild(btn);
     });
-    overlay.classList.add('show');
     return;
   }
 
@@ -13871,8 +14114,10 @@ function openVariantPicker(product, variants) {
       const v = cellMap[color + '|' + size];
       if (!v) { html += '<td></td>'; return; }
       const stock = availableStock(v.id);
+      const hold = variantPickerActiveHolds[v.id];
       const outMark = stock <= 0 ? '<br><span style="font-size:9px;">خلص</span>' : '';
-      html += `<td><button type="button" class="pvg-cell${stock <= 0 ? ' out' : ''}" data-id="${v.id}" title="${resolveProductPrice(v).toFixed(2)}">${escapeHtml(size)}${outMark}</button></td>`;
+      const holdMark = hold ? '<br><span style="font-size:9px;">🔒 محجوز</span>' : '';
+      html += `<td><button type="button" class="pvg-cell${stock <= 0 ? ' out' : ''}" data-id="${v.id}" title="${resolveProductPrice(v).toFixed(2)}${hold ? ' — محجوز لـ ' + (hold.customer_name || 'عميل') : ''}">${escapeHtml(size)}${outMark}${holdMark}</button></td>`;
     });
     html += '</tr>';
   });
@@ -13882,15 +14127,120 @@ function openVariantPicker(product, variants) {
   grid.querySelectorAll('.pvg-cell').forEach(btn => {
     btn.addEventListener('click', () => {
       const v = variants.find(x => String(x.id) === btn.dataset.id);
-      if (!v) return;
-      closeVariantPicker();
-      addToCart(v);
+      if (v) onCellPicked(v);
     });
   });
-
-  overlay.classList.add('show');
 }
 function closeVariantPicker() { document.getElementById('variantPickerOverlay').classList.remove('show'); }
+
+function openStockHoldModal(product) {
+  stockHoldTargetProduct = product;
+  document.getElementById('stockHoldProductLabel').textContent = product.name;
+  document.getElementById('stockHoldQty').value = 1;
+  document.getElementById('stockHoldDuration').value = '2';
+  document.getElementById('stockHoldCustomerName').value = '';
+  document.getElementById('stockHoldCustomerPhone').value = '';
+  document.getElementById('stockHoldModalError').classList.remove('show');
+  document.getElementById('stockHoldModalOverlay').classList.add('show');
+}
+function closeStockHoldModal() { document.getElementById('stockHoldModalOverlay').classList.remove('show'); }
+
+async function saveStockHold() {
+  const errEl = document.getElementById('stockHoldModalError');
+  errEl.classList.remove('show');
+  if (!stockHoldTargetProduct) return;
+  const qty = Number(document.getElementById('stockHoldQty').value) || 0;
+  if (qty <= 0) { errEl.textContent = 'اكتب كمية أكبر من صفر'; errEl.classList.add('show'); return; }
+
+  const durationVal = document.getElementById('stockHoldDuration').value;
+  let expiresAt;
+  if (durationVal === 'eod') {
+    expiresAt = new Date(); expiresAt.setHours(23, 59, 59, 999);
+  } else {
+    expiresAt = new Date(Date.now() + Number(durationVal) * 60 * 60 * 1000);
+  }
+
+  const saveBtn = document.getElementById('saveStockHoldBtn');
+  saveBtn.disabled = true; saveBtn.textContent = 'جاري الحجز...';
+  try {
+    const { error } = await supabaseClient.from('stock_holds').insert({
+      branch_id: currentProfile.branch_id,
+      product_id: stockHoldTargetProduct.id,
+      quantity: qty,
+      customer_name: document.getElementById('stockHoldCustomerName').value.trim() || null,
+      customer_phone: document.getElementById('stockHoldCustomerPhone').value.trim() || null,
+      held_by: currentProfile.id,
+      expires_at: expiresAt.toISOString(),
+    });
+    if (error) throw error;
+    showToast('تم حجز الصنف مؤقتًا');
+    closeStockHoldModal();
+    // نحدّث البادچ في نفس شاشة اختيار المتغير من غير ما نقفلها
+    const { data: holds } = await supabaseClient
+      .from('stock_holds')
+      .select('product_id, quantity, customer_name, expires_at')
+      .in('product_id', variantPickerCurrentVariants.map(v => v.id))
+      .eq('released', false)
+      .gt('expires_at', new Date().toISOString());
+    variantPickerActiveHolds = {};
+    (holds || []).forEach(h => { variantPickerActiveHolds[h.product_id] = h; });
+    renderVariantPickerOptions(variantPickerCurrentProduct, variantPickerCurrentVariants);
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = 'تعذر حفظ الحجز — تأكد إن جدول stock_holds موجود';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false; saveBtn.textContent = 'تأكيد الحجز';
+  }
+}
+
+function openMissedSizeModal() {
+  document.getElementById('missedSizeProductInput').value = '';
+  document.getElementById('missedSizeProductValue').value = '';
+  document.getElementById('missedSizeSizeInput').value = '';
+  document.getElementById('missedSizeColorInput').value = '';
+  document.getElementById('missedSizeCustomerName').value = '';
+  document.getElementById('missedSizeCustomerPhone').value = '';
+  document.getElementById('missedSizeNote').value = '';
+  document.getElementById('missedSizeModalError').classList.remove('show');
+  document.getElementById('missedSizeModalOverlay').classList.add('show');
+}
+function closeMissedSizeModal() { document.getElementById('missedSizeModalOverlay').classList.remove('show'); }
+
+async function saveMissedSizeRequest() {
+  const errEl = document.getElementById('missedSizeModalError');
+  errEl.classList.remove('show');
+  const parentProductId = document.getElementById('missedSizeProductValue').value || null;
+  const size = document.getElementById('missedSizeSizeInput').value.trim();
+  if (!parentProductId) { errEl.textContent = 'اختار الموديل أولاً من نتائج البحث'; errEl.classList.add('show'); return; }
+  if (!size) { errEl.textContent = 'اكتب المقاس المطلوب'; errEl.classList.add('show'); return; }
+
+  const saveBtn = document.getElementById('saveMissedSizeBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'جاري الحفظ...';
+  try {
+    const { error } = await supabaseClient.from('missed_size_requests').insert({
+      branch_id: currentProfile.branch_id,
+      parent_product_id: parentProductId,
+      requested_size: size,
+      requested_color: document.getElementById('missedSizeColorInput').value.trim() || null,
+      customer_name: document.getElementById('missedSizeCustomerName').value.trim() || null,
+      customer_phone: document.getElementById('missedSizeCustomerPhone').value.trim() || null,
+      note: document.getElementById('missedSizeNote').value.trim() || null,
+      user_id: currentProfile.id,
+    });
+    if (error) throw error;
+    showToast('تم تسجيل الطلب، هيساعدنا نشتري صح المرة الجاية');
+    closeMissedSizeModal();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = 'تعذر حفظ الطلب — تأكد إن جدول missed_size_requests اتعمل صح في قاعدة البيانات';
+    errEl.classList.add('show');
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'حفظ الطلب';
+  }
+}
 
 let modifierPickerProduct = null;
 let modifierPickerGroups = [];
@@ -14635,6 +14985,58 @@ let posTablesActiveTab = 'floors';
 function getCurrentBranchBusinessType() {
   const branch = boBranchesList.find(b => b.id === currentProfile.branch_id);
   return boBusinessTypes.find(bt => bt.id === branch?.business_type_id) || null;
+}
+
+// إضافات نشاط "محل أحذية" (تقارير المقاسات، مصفوفة المقاس×اللون، الحجز المؤقت،
+// مجموعة المقاسات عند الشراء، الكولكشن..) بتتحدد ظهورها بناءً على نوع نشاط
+// الفرع الحالي بس — عشان الأنشطة التانية (مطعم، صيدلية..) ماتتشوشش بحاجات
+// مش ليها لازمة عندها.
+function isShoeBranch() {
+  return getCurrentBranchBusinessType()?.name === 'محل أحذية';
+}
+
+function applyShoeFeatureVisibility() {
+  const show = isShoeBranch() ? '' : 'none';
+  // تقارير المخزون
+  const missingSizesCard = document.querySelector('[data-report="missing-sizes"]');
+  if (missingSizesCard) missingSizesCard.style.display = show;
+  const missingSizesDetail = document.getElementById('inventoryReportDetail-missing-sizes');
+  if (missingSizesDetail && !isShoeBranch()) missingSizesDetail.style.display = 'none';
+  // تقارير المبيعات
+  const modelProfitCard = document.querySelector('[data-report="model-profitability"]');
+  if (modelProfitCard) modelProfitCard.style.display = show;
+  const modelProfitDetail = document.getElementById('salesReportDetail-model-profitability');
+  if (modelProfitDetail && !isShoeBranch()) modelProfitDetail.style.display = 'none';
+  // معدل الاسترجاع حسب الموديل (جزء من تحليل المرتجعات)
+  const returnRateSection = document.getElementById('returnRateShoeSection');
+  if (returnRateSection) returnRateSection.style.display = show;
+  // تقارير أخرى
+  const msrCard = document.querySelector('[data-report="missed-size-requests"]');
+  if (msrCard) msrCard.style.display = show;
+  const msrDetail = document.getElementById('otherReportDetail-missed-size-requests');
+  if (msrDetail && !isShoeBranch()) msrDetail.style.display = 'none';
+  const holdsCard = document.querySelector('[data-report="stock-holds"]');
+  if (holdsCard) holdsCard.style.display = show;
+  const holdsDetail = document.getElementById('otherReportDetail-stock-holds');
+  if (holdsDetail && !isShoeBranch()) holdsDetail.style.display = 'none';
+  // فورم الصنف/المتغير
+  const collectionField = document.getElementById('productCollectionTagField');
+  if (collectionField) collectionField.style.display = show;
+  const reorderVariantField = document.getElementById('variantReorderLevelField');
+  if (reorderVariantField) reorderVariantField.style.display = show;
+  const collectionFilter = document.getElementById('productCollectionFilter');
+  if (collectionFilter) collectionFilter.style.display = show;
+  // مودال متغيرات الصنف (تبديل قائمة/شبكة)
+  const variantsViewToggleRow = document.getElementById('variantsViewToggleRow');
+  if (variantsViewToggleRow) variantsViewToggleRow.style.display = show;
+  // أزرار "مجموعة مقاسات" في الشراء المباشر وطلب الشراء
+  const sizeRunPurchaseBtn = document.getElementById('openSizeRunFromPurchaseBtn');
+  if (sizeRunPurchaseBtn) sizeRunPurchaseBtn.style.display = show;
+  const sizeRunPoBtn = document.getElementById('openSizeRunFromPurchaseOrderBtn');
+  if (sizeRunPoBtn) sizeRunPoBtn.style.display = show;
+  // زرار تسجيل طلب مقاس غير متوفر في الكاشير
+  const missedSizeBtn = document.getElementById('openMissedSizeBtn');
+  if (missedSizeBtn) missedSizeBtn.style.display = show;
 }
 
 function businessTypeForBranch(branchId) {
@@ -17278,6 +17680,8 @@ async function enterBackoffice() {
     loadPrintSettings(), loadDebtReminderSettings(),
     loadBoBusinessTypes(), loadBoPosDevices(), loadBoModifierGroups(), loadBoProductModifierLinks()
   ]);
+  applyShoeFeatureVisibility();
+  applyReportActivityGating();
   renderProductsTable();
   renderCategoriesTable();
   renderCustomersTable();
@@ -17382,6 +17786,7 @@ const REPORT_TABS = {
     { key: 'trend', title: 'اتجاه المبيعات اليومي' },
     { key: 'category', title: 'المبيعات حسب الفئة' },
     { key: 'topproducts', title: 'الأصناف الأكثر مبيعًا' },
+    { key: 'model-profitability', title: 'ربحية الموديل' },
     { key: 'topcustomers', title: 'أفضل العملاء' },
     { key: 'table-performance', title: 'أداء الطاولات/الكراسي' },
     { key: 'branch', title: 'المبيعات حسب الفرع' },
@@ -17437,7 +17842,9 @@ const REPORT_TABS = {
     { key: 'returns-analysis', title: 'تحليل المرتجعات' },
     { key: 'loyalty-points', title: 'نقاط الولاء' },
     { key: 'coupons-usage', title: 'استخدام الكوبونات' },
-    { key: 'eta-log', title: 'سجل إرسال الفواتير للفاتورة الإلكترونية (ETA)' }
+    { key: 'eta-log', title: 'سجل إرسال الفواتير للفاتورة الإلكترونية (ETA)' },
+    { key: 'missed-size-requests', title: 'طلبات العملاء على مقاسات غير متوفرة' },
+    { key: 'stock-holds', title: 'الحجوزات المؤقتة' }
   ]}
 };
 
@@ -17920,6 +18327,35 @@ function isBoSectionEnabledForActivity(section) {
   const enabledSections = businessType.settings?.enabled_sections;
   if (!Array.isArray(enabledSections)) return true;
   return enabledSections.includes(section);
+}
+
+// تقارير معيّنة مرتبطة فعليًا بموديول اختياري (زي الطاولات/الدليفري/الوصفات..)
+// مش بنوع نشاط بعينه — فبنستخدم نفس آلية enabled_sections الموجودة أصلاً بدل
+// ما نخترع فحص جديد لكل نشاط. كارت التقرير (وتفاصيله لو مفتوحة) بيتخفوا لو
+// الموديول ده مش مفعّل لنشاط الفرع الحالي.
+const REPORT_SECTION_REQUIREMENTS = {
+  'table-performance': 'pos-tables',
+  'delivery': 'delivery',
+  'bom-cost': 'recipes',
+  'loyalty-points': 'promotions',
+  'coupons-usage': 'coupons',
+  'field-visits': 'service-visits',
+};
+const REPORT_DETAIL_PREFIXES = {
+  'table-performance': 'salesReportDetail-', 'delivery': 'salesReportDetail-',
+  'bom-cost': 'inventoryReportDetail-', 'loyalty-points': 'otherReportDetail-',
+  'coupons-usage': 'otherReportDetail-', 'field-visits': 'otherReportDetail-',
+};
+function applyReportActivityGating() {
+  Object.entries(REPORT_SECTION_REQUIREMENTS).forEach(([reportKey, sectionKey]) => {
+    const enabled = isBoSectionEnabledForActivity(sectionKey);
+    const card = document.querySelector(`[data-report="${reportKey}"]`);
+    if (card) card.style.display = enabled ? '' : 'none';
+    if (!enabled) {
+      const detail = document.getElementById(`${REPORT_DETAIL_PREFIXES[reportKey]}${reportKey}`);
+      if (detail) detail.style.display = 'none';
+    }
+  });
 }
 
 // ---- صلاحيات دقيقة على مستوى العملية (إضافة / تعديل / حذف) داخل كل شاشة ----
@@ -19151,6 +19587,8 @@ function bindBackofficeEvents() {
       if (key === 'loyalty-points') { setInventoryDateRange('30days', 'loyaltyReportFromDate', 'loyaltyReportToDate'); runLoyaltyReport(); }
       if (key === 'coupons-usage') { setInventoryDateRange('30days', 'couponsReportFromDate', 'couponsReportToDate'); runCouponsReport(); }
       if (key === 'eta-log') { populateEtaLogBranchFilter(); setInventoryDateRange('today', 'etaLogFromDate', 'etaLogToDate'); runEtaLogReport(); }
+      if (key === 'missed-size-requests') refreshMissedSizeRequestsReport();
+      if (key === 'stock-holds') refreshStockHoldsReport();
       if (key === 'service-management') { runServiceManagementReport(); }
     });
   });
@@ -19213,6 +19651,7 @@ function bindBackofficeEvents() {
   document.getElementById('productStatusFilter').addEventListener('change', filterProductsTableFromStart);
   document.getElementById('productStockFilter').addEventListener('change', filterProductsTableFromStart);
   document.getElementById('productDataFilter').addEventListener('change', filterProductsTableFromStart);
+  document.getElementById('productCollectionFilter').addEventListener('change', filterProductsTableFromStart);
   document.getElementById('productSortSelect').addEventListener('change', filterProductsTableFromStart);
   const productsPageSizeSelect = document.getElementById('productsPageSizeSelect');
   productsPageSizeSelect.value = String(productsPageSize);
@@ -20344,6 +20783,7 @@ function bindBackofficeEvents() {
   document.getElementById('exportBranchReportBtn').addEventListener('click', () => exportBranchReportToExcel());
   document.getElementById('exportDeliveryZoneReportBtn').addEventListener('click', () => exportDeliveryZoneReportToExcel());
   document.getElementById('exportCategoryReportBtn').addEventListener('click', () => exportCategoryReportToExcel());
+  document.getElementById('exportModelProfitBtn').addEventListener('click', () => exportModelProfitToExcel());
 
   // ---- تقارير المخزون ----
   document.getElementById('invLevelsWarehouseFilter').addEventListener('change', () => refreshInventoryLevelsReport());
@@ -20432,6 +20872,7 @@ function bindBackofficeEvents() {
   document.getElementById('exportReturnsAnalysisBtn').addEventListener('click', () => exportReturnsAnalysisToExcel());
   document.getElementById('otherReturnsTypeFilter').addEventListener('change', () => refreshReturnsAnalysisReport());
   document.getElementById('otherReturnsBranchFilter').addEventListener('change', () => refreshReturnsAnalysisReport());
+  document.getElementById('returnRateMinSold').addEventListener('change', () => refreshReturnsAnalysisReport());
 
   document.getElementById('backupExcelBtn').addEventListener('click', () => runBackup('excel'));
   document.getElementById('backupJsonBtn').addEventListener('click', () => runBackup('json'));
@@ -20492,6 +20933,7 @@ function populateProductCategorySelect() {
     sel.appendChild(opt);
   });
   populateProductCategoryFilter();
+  populateProductCollectionFilter();
   populateBulkMoveCategorySelect();
 }
 
@@ -20504,6 +20946,15 @@ function populateProductCategoryFilter() {
     opt.value = c.id; opt.textContent = c.name;
     sel.appendChild(opt);
   });
+  sel.value = prevValue || '';
+}
+
+function populateProductCollectionFilter() {
+  const sel = document.getElementById('productCollectionFilter');
+  if (!sel) return;
+  const prevValue = sel.value;
+  const tags = [...new Set(boProducts.map(p => p.collection_tag).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ar'));
+  sel.innerHTML = '<option value="">كل المواسم/الكولكشنز</option>' + tags.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
   sel.value = prevValue || '';
 }
 
@@ -20821,6 +21272,7 @@ function getFilteredProductsList() {
   const statusFilter = document.getElementById('productStatusFilter')?.value || '';
   const stockFilter = document.getElementById('productStockFilter')?.value || '';
   const dataFilter = document.getElementById('productDataFilter')?.value || '';
+  const collectionFilter = document.getElementById('productCollectionFilter')?.value || '';
   const sortBy = document.getElementById('productSortSelect')?.value || 'name_asc';
 
   let filtered = topLevelProducts.filter(p => {
@@ -20837,7 +21289,8 @@ function getFilteredProductsList() {
       || (dataFilter === 'no_barcode' && (p.product_barcodes || []).length === 0)
       || (dataFilter === 'no_image' && !p.image_url)
       || (dataFilter === 'no_cost' && !(Number(p.cost_price) > 0));
-    return matchesSearch && matchesCategory && matchesStatus && matchesStock && matchesData;
+    const matchesCollection = !collectionFilter || (p.collection_tag || '') === collectionFilter;
+    return matchesSearch && matchesCategory && matchesStatus && matchesStock && matchesData && matchesCollection;
   });
 
   filtered.sort((a, b) => {
@@ -21603,6 +22056,10 @@ function renderProductsFilterChips() {
     const labels = { no_barcode: 'بلا باركود', no_image: 'بلا صورة', no_cost: 'بلا سعر شراء' };
     chips.push({ label: `بيانات ناقصة: ${labels[dataSel.value] || dataSel.value}`, clear: () => { dataSel.value = ''; } });
   }
+  const collectionSel = document.getElementById('productCollectionFilter');
+  if (collectionSel && collectionSel.value) {
+    chips.push({ label: `الكولكشن: ${collectionSel.value}`, clear: () => { collectionSel.value = ''; } });
+  }
 
   if (chips.length === 0) {
     wrap.style.display = 'none';
@@ -21676,6 +22133,9 @@ async function openProductModal(product, initialTab, isDuplicate) {
   document.getElementById('productCommissionRate').value = product ? (product.commission_rate ?? 0) : 0;
   document.getElementById('productKitchenAlias').value = product?.kitchen_alias || '';
   document.getElementById('productReorder').value = product ? product.reorder_level : 0;
+  document.getElementById('productCollectionTag').value = product?.collection_tag || '';
+  document.getElementById('collectionTagList').innerHTML = [...new Set(boProducts.map(p => p.collection_tag).filter(Boolean))]
+    .map(t => `<option value="${escapeHtml(t)}">`).join('');
   document.getElementById('productItemKind').value = (product && product.item_kind === 'service') ? 'service' : 'product';
   document.getElementById('productIsHourlyService').checked = product ? !!product.is_hourly_service : false;
   setImageUploadFieldValue('productImage', product?.image_url || '', 'productImagePreview', 'productImagePlaceholder', 'productImageRemoveBtn', 'productImageSizeLabel');
@@ -22601,6 +23061,7 @@ async function saveProduct(e) {
     commission_rate: Number(document.getElementById('productCommissionRate').value) || 0,
     kitchen_alias: document.getElementById('productKitchenAlias').value.trim() || null,
     reorder_level: document.getElementById('productItemKind').value === 'service' ? 0 : (Number(document.getElementById('productReorder').value) || 0),
+    collection_tag: document.getElementById('productCollectionTag').value.trim() || null,
     image_url: document.getElementById('productImage').value.trim() || null,
     is_active: document.getElementById('productActive').checked,
     sell_by: document.getElementById('productSellByWeight').checked ? 'weight' : 'unit',
@@ -36665,6 +37126,7 @@ let lastPaymentMethodReportRows = [];
 let lastDailyTrendReportRows = [];
 let lastBranchReportRows = [];
 let lastCategoryReportRows = [];
+let lastModelProfitRows = [];
 let lastMixedPaymentReportRows = [];
 let lastDeliveryZoneReportRows = [];
 let lastReportSalesForFilter = [];
@@ -37322,7 +37784,7 @@ async function runReport() {
     // الأصناف الأكثر مبيعًا + الربح التقريبي + المبيعات حسب الفئة
     let itemsQuery = supabaseClient
       .from('sale_items')
-      .select('quantity, total, product_id, products(name, cost_price, categories(name)), sales!inner(created_at, status, branch_id)')
+      .select('quantity, total, product_id, products(name, cost_price, parent_product_id, categories(name)), sales!inner(created_at, status, branch_id)')
       .eq('sales.status', 'completed')
       .gte('sales.created_at', fromISO)
       .lte('sales.created_at', toISO);
@@ -37332,6 +37794,7 @@ async function runReport() {
 
     const grouped = {};
     const categoryGrouped = {};
+    const modelGrouped = {};
     let totalCost = 0;
     (items || []).forEach(it => {
       const key = it.product_id;
@@ -37348,7 +37811,34 @@ async function runReport() {
       }
       categoryGrouped[catName].quantity += Number(it.quantity);
       categoryGrouped[catName].revenue += Number(it.total);
+
+      // ربحية الموديل: بنجمّع كل متغيرات نفس الموديل (المقاسات/الألوان) مع بعض
+      // تحت اسم الصنف الأساسي (parent_product_id)، ولو الصنف مش متغير بنستخدمه لوحده
+      const modelKey = it.products?.parent_product_id || key;
+      if (!modelGrouped[modelKey]) {
+        const modelName = it.products?.parent_product_id
+          ? (boProducts.find(p => p.id === modelKey)?.name || it.products?.name || 'صنف محذوف')
+          : (it.products?.name || 'صنف محذوف');
+        modelGrouped[modelKey] = { name: modelName, quantity: 0, revenue: 0, cost: 0 };
+      }
+      modelGrouped[modelKey].quantity += Number(it.quantity);
+      modelGrouped[modelKey].revenue += Number(it.total);
+      modelGrouped[modelKey].cost += Number(it.quantity) * Number(it.products?.cost_price || 0);
     });
+
+    const modelProfitRows = Object.values(modelGrouped).map(m => {
+      const profit = m.revenue - m.cost;
+      const margin = m.revenue > 0 ? (profit / m.revenue * 100) : 0;
+      return { ...m, profit, margin };
+    }).sort((a, b) => b.profit - a.profit);
+    lastModelProfitRows = modelProfitRows;
+    renderBreakdownTable('modelProfitTableBody', modelProfitRows, 6, row => `
+      <td>${escapeHtml(row.name)}</td>
+      <td class="num">${formatQty(row.quantity)}</td>
+      <td class="num">${row.revenue.toFixed(2)}</td>
+      <td class="num">${row.cost.toFixed(2)}</td>
+      <td class="num ${row.profit >= 0 ? 'positive' : 'negative'}">${row.profit.toFixed(2)}</td>
+      <td class="num ${row.margin >= 0 ? 'positive' : 'negative'}">${row.margin.toFixed(1)}%</td>`);
 
     const categoryRows = Object.values(categoryGrouped).sort((a, b) => b.revenue - a.revenue);
     const categoryRevenueTotal = categoryRows.reduce((sum, c) => sum + c.revenue, 0);
@@ -38249,6 +38739,131 @@ function exportEtaLogToExcel() {
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'سجل ETA');
   const dateStr = new Date().toISOString().split('T')[0];
   XLSX.writeFile(wb, `سجل-الفاتورة-الإلكترونية-${dateStr}.xlsx`);
+}
+
+// ---- طلبات العملاء على مقاسات غير متوفرة ----
+let lastMsrRows = [];
+
+async function refreshMissedSizeRequestsReport() {
+  const filter = document.getElementById('msrFulfilledFilter').value; // 'pending' | 'all' | 'fulfilled'
+  const tbody = document.getElementById('msrTableBody');
+  const topTbody = document.getElementById('msrTopTableBody');
+  tbody.innerHTML = `<tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr>`;
+  topTbody.innerHTML = `<tr><td colspan="4" class="bo-empty">جاري التحميل...</td></tr>`;
+  try {
+    let query = supabaseClient.from('missed_size_requests')
+      .select('id, requested_size, requested_color, customer_name, customer_phone, note, fulfilled, created_at, products(name), users_profile(full_name)')
+      .order('created_at', { ascending: false });
+    if (filter === 'pending') query = query.eq('fulfilled', false);
+    if (filter === 'fulfilled') query = query.eq('fulfilled', true);
+    const { data, error } = await query;
+    if (error) throw error;
+    const rows = data || [];
+    lastMsrRows = rows;
+
+    document.getElementById('msrCount').textContent = rows.length;
+
+    // الأكثر طلبًا: تجميع حسب الموديل + المقاس + اللون
+    const topMap = {};
+    rows.forEach(r => {
+      const key = (r.products?.name || '—') + '|' + r.requested_size + '|' + (r.requested_color || '—');
+      if (!topMap[key]) topMap[key] = { model: r.products?.name || '—', size: r.requested_size, color: r.requested_color || '—', count: 0 };
+      topMap[key].count += 1;
+    });
+    const topRows = Object.values(topMap).sort((a, b) => b.count - a.count).slice(0, 20);
+    renderBreakdownTable('msrTopTableBody', topRows, 4, row => `
+      <td>${escapeHtml(row.model)}</td><td>${escapeHtml(row.size)}</td><td>${escapeHtml(row.color)}</td><td class="num">${row.count}</td>`);
+
+    renderBreakdownTable('msrTableBody', rows, 8, row => `
+      <td class="num">${new Date(row.created_at).toLocaleDateString('ar-EG')}</td>
+      <td>${escapeHtml(row.products?.name || '—')}</td>
+      <td>${escapeHtml(row.requested_size)}</td>
+      <td>${escapeHtml(row.requested_color || '—')}</td>
+      <td>${escapeHtml([row.customer_name, row.customer_phone].filter(Boolean).join(' — ') || '—')}</td>
+      <td class="wrap-cell">${escapeHtml(row.note || '—')}</td>
+      <td>${escapeHtml(row.users_profile?.full_name || '—')}</td>
+      <td>${row.fulfilled ? '<span class="bo-badge active">تم التوفير</span>' : `<button class="bo-icon-btn" data-action="fulfill" data-id="${row.id}">تحديد كمتوفر</button>`}</td>`);
+
+    tbody.querySelectorAll('[data-action="fulfill"]').forEach(btn => {
+      btn.addEventListener('click', () => markMsrFulfilled(btn.dataset.id));
+    });
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحميل تقرير طلبات المقاسات — تأكد إن جدول missed_size_requests موجود', true);
+  }
+}
+
+async function markMsrFulfilled(id) {
+  try {
+    const { error } = await supabaseClient.from('missed_size_requests').update({ fulfilled: true }).eq('id', id);
+    if (error) throw error;
+    showToast('تم تحديد الطلب كمتوفر');
+    refreshMissedSizeRequestsReport();
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحديث الطلب', true);
+  }
+}
+
+function exportMsrToExcel() {
+  if (lastMsrRows.length === 0) { showToast('لا توجد بيانات لتصديرها', true); return; }
+  const rows = lastMsrRows.map(r => ({
+    'التاريخ': new Date(r.created_at).toLocaleString('ar-EG'), 'الموديل': r.products?.name || '—',
+    'المقاس': r.requested_size, 'اللون': r.requested_color || '—', 'اسم العميل': r.customer_name || '—',
+    'هاتف العميل': r.customer_phone || '—', 'ملاحظة': r.note || '—', 'بواسطة': r.users_profile?.full_name || '—',
+    'الحالة': r.fulfilled ? 'تم التوفير' : 'لسه مش متوفرة',
+  }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'طلبات مقاسات غير متوفرة');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `طلبات-مقاسات-غير-متوفرة-${dateStr}.xlsx`);
+}
+
+// ---- الحجوزات المؤقتة ----
+async function refreshStockHoldsReport() {
+  const filter = document.getElementById('holdsStatusFilter').value; // 'active' | 'all' | 'expired'
+  const tbody = document.getElementById('holdsTableBody');
+  tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>`;
+  try {
+    let query = supabaseClient.from('stock_holds')
+      .select('id, quantity, customer_name, customer_phone, expires_at, released, products(name), users_profile(full_name)')
+      .order('expires_at', { ascending: true });
+    const nowISO = new Date().toISOString();
+    if (filter === 'active') query = query.eq('released', false).gt('expires_at', nowISO);
+    if (filter === 'expired') query = query.or(`released.eq.true,expires_at.lte.${nowISO}`);
+    const { data, error } = await query;
+    if (error) throw error;
+    const rows = data || [];
+    const nowMs = Date.now();
+    renderBreakdownTable('holdsTableBody', rows, 6, row => {
+      const isActive = !row.released && new Date(row.expires_at).getTime() > nowMs;
+      return `
+        <td>${escapeHtml(row.products?.name || '—')}</td>
+        <td class="num">${formatQty(row.quantity)}</td>
+        <td>${escapeHtml([row.customer_name, row.customer_phone].filter(Boolean).join(' — ') || '—')}</td>
+        <td class="num">${new Date(row.expires_at).toLocaleString('ar-EG')}</td>
+        <td>${escapeHtml(row.users_profile?.full_name || '—')}</td>
+        <td>${isActive ? `<button class="bo-icon-btn" data-action="release" data-id="${row.id}">إلغاء الحجز</button>` : `<span class="bo-badge">${row.released ? 'اتلغى' : 'انتهى'}</span>`}</td>`;
+    });
+    tbody.querySelectorAll('[data-action="release"]').forEach(btn => {
+      btn.addEventListener('click', () => releaseStockHold(btn.dataset.id));
+    });
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحميل الحجوزات — تأكد إن جدول stock_holds موجود', true);
+  }
+}
+
+async function releaseStockHold(id) {
+  try {
+    const { error } = await supabaseClient.from('stock_holds').update({ released: true }).eq('id', id);
+    if (error) throw error;
+    showToast('تم إلغاء الحجز');
+    refreshStockHoldsReport();
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر إلغاء الحجز', true);
+  }
 }
 
 async function runDiscountsReport() {
@@ -40116,6 +40731,7 @@ let lastReturnsTopProductsRows = [];
 let lastReturnsReasonsRows = [];
 let lastReturnsTrendRows = [];
 let lastReturnsAnalysisTotals = { salesTotal: 0, purchaseTotal: 0, grandTotal: 0, count: 0 };
+let lastReturnRateRows = [];
 
 async function refreshReturnsAnalysisReport() {
   const fromDate = document.getElementById('otherReturnsFromDate').value;
@@ -40148,7 +40764,7 @@ async function refreshReturnsAnalysisReport() {
 
       let srItemsQuery = supabaseClient
         .from('sale_return_items')
-        .select('quantity, total, product_id, products(name), sale_returns!inner(created_at, branch_id)')
+        .select('quantity, total, product_id, products(name, parent_product_id), sale_returns!inner(created_at, branch_id)')
         .gte('sale_returns.created_at', fromISO).lte('sale_returns.created_at', toISO);
       srItemsQuery = applyBranchScope(srItemsQuery, branchId, 'sale_returns.branch_id');
       const { data: srItems, error: srItemsErr } = await srItemsQuery;
@@ -40231,6 +40847,54 @@ async function refreshReturnsAnalysisReport() {
        <td class="num">${row.quantity}</td>
        <td class="num">${row.total.toFixed(2)}</td>`);
 
+    // معدل الاسترجاع حسب الموديل (مرتجعات المبيعات بس — مقارنة بالكمية المباعة في نفس الفترة)
+    if (includeSales) {
+      const returnedByModel = {};
+      saleItems.forEach(it => {
+        const modelKey = it.products?.parent_product_id || it.product_id;
+        if (!returnedByModel[modelKey]) {
+          const modelName = it.products?.parent_product_id
+            ? (boProducts.find(p => p.id === modelKey)?.name || it.products?.name || 'صنف محذوف')
+            : (it.products?.name || 'صنف محذوف');
+          returnedByModel[modelKey] = { name: modelName, returnedQty: 0 };
+        }
+        returnedByModel[modelKey].returnedQty += Number(it.quantity);
+      });
+
+      let soldQuery = supabaseClient
+        .from('sale_items')
+        .select('quantity, product_id, products(parent_product_id), sales!inner(created_at, status, branch_id)')
+        .eq('sales.status', 'completed')
+        .gte('sales.created_at', fromISO).lte('sales.created_at', toISO);
+      soldQuery = applyBranchScope(soldQuery, branchId, 'sales.branch_id');
+      const { data: soldItems, error: soldErr } = await soldQuery;
+      if (soldErr) throw soldErr;
+
+      const soldByModel = {};
+      (soldItems || []).forEach(it => {
+        const modelKey = it.products?.parent_product_id || it.product_id;
+        soldByModel[modelKey] = (soldByModel[modelKey] || 0) + Number(it.quantity);
+      });
+
+      const minSold = Number(document.getElementById('returnRateMinSold').value) || 0;
+      const returnRateRows = Object.keys(returnedByModel).map(key => {
+        const soldQty = soldByModel[key] || 0;
+        const returnedQty = returnedByModel[key].returnedQty;
+        const rate = soldQty > 0 ? (returnedQty / soldQty * 100) : null;
+        return { name: returnedByModel[key].name, soldQty, returnedQty, rate };
+      }).filter(r => r.soldQty >= minSold).sort((a, b) => (b.rate ?? -1) - (a.rate ?? -1));
+
+      lastReturnRateRows = returnRateRows;
+      renderBreakdownTable('returnRateTableBody', returnRateRows, 4, row => `
+        <td>${escapeHtml(row.name)}</td>
+        <td class="num">${formatQty(row.soldQty)}</td>
+        <td class="num">${formatQty(row.returnedQty)}</td>
+        <td class="num">${row.rate === null ? '—' : row.rate.toFixed(1) + '%'}</td>`);
+    } else {
+      document.getElementById('returnRateTableBody').innerHTML = '<tr><td colspan="4" class="bo-empty">فعّل مرتجعات المبيعات في الفلتر فوق لعرض المعدل</td></tr>';
+      lastReturnRateRows = [];
+    }
+
     // أسباب الإرجاع
     const byReason = {};
     saleHeaders.forEach(x => {
@@ -40291,11 +40955,16 @@ function exportReturnsAnalysisToExcel() {
     'عدد عمليات الإرجاع': r.count,
     'القيمة': Number(r.total.toFixed(2)),
   }));
+  const returnRateSheet = lastReturnRateRows.map(r => ({
+    'الموديل': r.name, 'الكمية المباعة': r.soldQty, 'الكمية المرتجعة': r.returnedQty,
+    'معدل الاسترجاع%': r.rate === null ? null : Number(r.rate.toFixed(1)),
+  }));
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summaryRows), 'الملخص');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(trendSheet), 'الاتجاه اليومي');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(topProductsSheet), 'الأصناف الأكثر إرجاعًا');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(returnRateSheet), 'معدل الاسترجاع حسب الموديل');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reasonsSheet), 'أسباب الإرجاع');
   const dateStr = new Date().toISOString().split('T')[0];
   XLSX.writeFile(wb, `تحليل-المرتجعات-${dateStr}.xlsx`);
@@ -41229,6 +41898,18 @@ function exportCategoryReportToExcel() {
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'المبيعات حسب الفئة');
   const dateStr = new Date().toISOString().split('T')[0];
   XLSX.writeFile(wb, `تقرير-المبيعات-حسب-الفئة-${dateStr}.xlsx`);
+}
+
+function exportModelProfitToExcel() {
+  if (lastModelProfitRows.length === 0) { showToast('لا توجد بيانات لتصديرها', true); return; }
+  const rows = lastModelProfitRows.map(r => ({
+    'الموديل': r.name, 'الكمية المباعة': r.quantity, 'الإيراد': Number(r.revenue.toFixed(2)),
+    'تكلفة البضاعة': Number(r.cost.toFixed(2)), 'إجمالي الربح': Number(r.profit.toFixed(2)), 'هامش الربح %': Number(r.margin.toFixed(1)),
+  }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'ربحية الموديل');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `تقرير-ربحية-الموديل-${dateStr}.xlsx`);
 }
 
 function exportDebtsToExcel() {
