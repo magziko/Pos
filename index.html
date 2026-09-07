@@ -5256,6 +5256,10 @@ a { color: inherit; }
               <div class="report-type-icon">🔒</div>
               <div class="report-type-label">الحجوزات المؤقتة</div>
             </button>
+            <button type="button" class="report-type-card" data-report="laundry-orders">
+              <div class="report-type-icon">🧺</div>
+              <div class="report-type-label">أوامر المغسلة</div>
+            </button>
             <button type="button" class="report-type-card" data-report="service-management">
               <div class="report-type-icon">🛠️</div>
               <div class="report-type-label">نظرة عامة على إدارة الخدمات</div>
@@ -5975,6 +5979,39 @@ a { color: inherit; }
                 <table class="bo-table">
                   <thead><tr><th>الصنف</th><th>الكمية</th><th>العميل</th><th>ينتهي في</th><th>بواسطة</th><th></th></tr></thead>
                   <tbody id="holdsTableBody"><tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- أوامر المغسلة -->
+            <div id="otherReportDetail-laundry-orders" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">كل أوامر المغسلة (كل الفروع اللي ليك صلاحية عليها)</div>
+                <div class="report-subtitle-actions">
+                  <select id="loReportStatusFilter">
+                    <option value="all">كل الحالات</option>
+                    <option value="received">تم الاستلام</option>
+                    <option value="in_progress">قيد الغسيل</option>
+                    <option value="ready">جاهز للاستلام</option>
+                    <option value="delivered">تم التسليم</option>
+                    <option value="cancelled">ملغي</option>
+                  </select>
+                  <input type="date" id="loReportFromDate">
+                  <input type="date" id="loReportToDate">
+                  <button class="bo-outline-btn" id="refreshLoReportBtn">تحديث</button>
+                  <button class="bo-icon-btn" id="exportLoReportBtn">تصدير إكسل</button>
+                </div>
+              </div>
+              <div class="report-cards">
+                <div class="report-card"><div class="report-card-label">تم الاستلام</div><div class="report-card-value num" id="loCountReceived">0</div></div>
+                <div class="report-card"><div class="report-card-label">قيد الغسيل</div><div class="report-card-value num" id="loCountInProgress">0</div></div>
+                <div class="report-card"><div class="report-card-label">جاهز للاستلام</div><div class="report-card-value num" id="loCountReady">0</div></div>
+                <div class="report-card"><div class="report-card-label">تم التسليم</div><div class="report-card-value num" id="loCountDelivered">0</div></div>
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>تاريخ الإنشاء</th><th>الفرع</th><th>العميل</th><th>الأصناف</th><th>الحالة</th><th>جاهز في</th><th>رقم الفاتورة المربوطة</th></tr></thead>
+                  <tbody id="loReportTableBody"><tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr></tbody>
                 </table>
               </div>
             </div>
@@ -13627,6 +13664,11 @@ function bindPosEvents() {
   document.getElementById('exportMsrBtn').addEventListener('click', () => exportMsrToExcel());
   document.getElementById('holdsStatusFilter').addEventListener('change', () => refreshStockHoldsReport());
   document.getElementById('refreshHoldsBtn').addEventListener('click', () => refreshStockHoldsReport());
+  document.getElementById('loReportStatusFilter').addEventListener('change', () => refreshLaundryOrdersReport());
+  document.getElementById('loReportFromDate').addEventListener('change', () => refreshLaundryOrdersReport());
+  document.getElementById('loReportToDate').addEventListener('change', () => refreshLaundryOrdersReport());
+  document.getElementById('refreshLoReportBtn').addEventListener('click', () => refreshLaundryOrdersReport());
+  document.getElementById('exportLoReportBtn').addEventListener('click', () => exportLoReportToExcel());
   document.getElementById('variantPickerOverlay').addEventListener('click', (e) => {
     if (e.target.id === 'variantPickerOverlay') closeVariantPicker();
   });
@@ -15268,7 +15310,12 @@ function applyShoeFeatureVisibility() {
   if (holdsCard) holdsCard.style.display = show;
   const holdsDetail = document.getElementById('otherReportDetail-stock-holds');
   if (holdsDetail && !isShoeBranch()) holdsDetail.style.display = 'none';
-  // فورم الصنف/المتغير
+  // تقرير أوامر المغسلة (نفس فكرة البوابة بس لنشاط تاني — مغسلة الملابس)
+  const laundryShow = isLaundryBranch() ? '' : 'none';
+  const laundryCard = document.querySelector('[data-report="laundry-orders"]');
+  if (laundryCard) laundryCard.style.display = laundryShow;
+  const laundryDetail = document.getElementById('otherReportDetail-laundry-orders');
+  if (laundryDetail && !isLaundryBranch()) laundryDetail.style.display = 'none';  // فورم الصنف/المتغير
   const collectionField = document.getElementById('productCollectionTagField');
   if (collectionField) collectionField.style.display = show;
   const reorderVariantField = document.getElementById('variantReorderLevelField');
@@ -18093,7 +18140,8 @@ const REPORT_TABS = {
     { key: 'coupons-usage', title: 'استخدام الكوبونات' },
     { key: 'eta-log', title: 'سجل إرسال الفواتير للفاتورة الإلكترونية (ETA)' },
     { key: 'missed-size-requests', title: 'طلبات العملاء على مقاسات غير متوفرة' },
-    { key: 'stock-holds', title: 'الحجوزات المؤقتة' }
+    { key: 'stock-holds', title: 'الحجوزات المؤقتة' },
+    { key: 'laundry-orders', title: 'أوامر المغسلة' }
   ]}
 };
 
@@ -19838,6 +19886,7 @@ function bindBackofficeEvents() {
       if (key === 'eta-log') { populateEtaLogBranchFilter(); setInventoryDateRange('today', 'etaLogFromDate', 'etaLogToDate'); runEtaLogReport(); }
       if (key === 'missed-size-requests') refreshMissedSizeRequestsReport();
       if (key === 'stock-holds') refreshStockHoldsReport();
+      if (key === 'laundry-orders') refreshLaundryOrdersReport();
       if (key === 'service-management') { runServiceManagementReport(); }
     });
   });
@@ -39113,6 +39162,69 @@ async function releaseStockHold(id) {
     console.error(err);
     showToast('تعذر إلغاء الحجز', true);
   }
+}
+
+// ---- تقرير أوامر المغسلة (نظرة شاملة على كل الفروع المسموح بيها) ----
+let lastLoReportRows = [];
+async function refreshLaundryOrdersReport() {
+  const fromDate = document.getElementById('loReportFromDate').value;
+  const toDate = document.getElementById('loReportToDate').value;
+  const statusFilter = document.getElementById('loReportStatusFilter').value;
+  const tbody = document.getElementById('loReportTableBody');
+  tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>`;
+  try {
+    let query = supabaseClient.from('laundry_orders')
+      .select('created_at, customer_name, customer_phone, items_description, item_count, status, expected_ready_at, branches(name), sales(invoice_number)')
+      .order('created_at', { ascending: false });
+    query = applyBranchScope(query, null, 'branch_id');
+    if (statusFilter !== 'all') query = query.eq('status', statusFilter);
+    if (fromDate) query = query.gte('created_at', `${fromDate}T00:00:00`);
+    if (toDate) query = query.lte('created_at', `${toDate}T23:59:59`);
+    const { data, error } = await query;
+    if (error) throw error;
+    const rows = data || [];
+    lastLoReportRows = rows;
+
+    const counts = { received: 0, in_progress: 0, ready: 0, delivered: 0 };
+    rows.forEach(r => { if (counts[r.status] !== undefined) counts[r.status]++; });
+    document.getElementById('loCountReceived').textContent = counts.received;
+    document.getElementById('loCountInProgress').textContent = counts.in_progress;
+    document.getElementById('loCountReady').textContent = counts.ready;
+    document.getElementById('loCountDelivered').textContent = counts.delivered;
+
+    renderBreakdownTable('loReportTableBody', rows, 7, row => {
+      const custLabel = [row.customer_name, row.customer_phone].filter(Boolean).join(' — ') || '—';
+      const itemsLabel = row.items_description + (row.item_count ? ` (${row.item_count} قطعة)` : '');
+      const readyLabel = row.expected_ready_at ? new Date(row.expected_ready_at).toLocaleString('ar-EG') : '—';
+      return `
+        <td class="num">${new Date(row.created_at).toLocaleString('ar-EG')}</td>
+        <td>${escapeHtml(row.branches?.name || '—')}</td>
+        <td>${escapeHtml(custLabel)}</td>
+        <td>${escapeHtml(itemsLabel)}</td>
+        <td><span class="bo-badge">${LAUNDRY_STATUS_LABELS[row.status] || row.status}</span></td>
+        <td class="num">${readyLabel}</td>
+        <td class="num">${row.sales?.invoice_number || '—'}</td>`;
+    });
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحميل تقرير أوامر المغسلة', true);
+  }
+}
+
+function exportLoReportToExcel() {
+  if (lastLoReportRows.length === 0) { showToast('لا توجد بيانات لتصديرها', true); return; }
+  const rows = lastLoReportRows.map(r => ({
+    'تاريخ الإنشاء': new Date(r.created_at).toLocaleString('ar-EG'), 'الفرع': r.branches?.name || '—',
+    'اسم العميل': r.customer_name || '—', 'هاتف العميل': r.customer_phone || '—',
+    'الأصناف': r.items_description, 'عدد القطع': r.item_count || '—',
+    'الحالة': LAUNDRY_STATUS_LABELS[r.status] || r.status,
+    'جاهز في': r.expected_ready_at ? new Date(r.expected_ready_at).toLocaleString('ar-EG') : '—',
+    'رقم الفاتورة': r.sales?.invoice_number || '—',
+  }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'أوامر المغسلة');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `تقرير-أوامر-المغسلة-${dateStr}.xlsx`);
 }
 
 async function runDiscountsReport() {
