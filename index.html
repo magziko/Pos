@@ -5260,6 +5260,10 @@ a { color: inherit; }
               <div class="report-type-icon">🧺</div>
               <div class="report-type-label">أوامر المغسلة</div>
             </button>
+            <button type="button" class="report-type-card" data-report="price-change-log">
+              <div class="report-type-icon">💲</div>
+              <div class="report-type-label">سجل تعديلات الأسعار</div>
+            </button>
             <button type="button" class="report-type-card" data-report="service-management">
               <div class="report-type-icon">🛠️</div>
               <div class="report-type-label">نظرة عامة على إدارة الخدمات</div>
@@ -6012,6 +6016,31 @@ a { color: inherit; }
                 <table class="bo-table">
                   <thead><tr><th>تاريخ الإنشاء</th><th>الفرع</th><th>العميل</th><th>الأصناف</th><th>الحالة</th><th>جاهز في</th><th>رقم الفاتورة المربوطة</th></tr></thead>
                   <tbody id="loReportTableBody"><tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- سجل تعديلات الأسعار -->
+            <div id="otherReportDetail-price-change-log" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">كل تعديل حصل على سعر البيع أو سعر التكلفة لأي صنف — بيتسجل تلقائيًا من قاعدة البيانات نفسها مهما كان مصدر التعديل</div>
+                <div class="report-subtitle-actions">
+                  <input type="text" id="pclSearchInput" placeholder="ابحث باسم الصنف...">
+                  <select id="pclFieldFilter">
+                    <option value="all">الكل</option>
+                    <option value="sale_price">سعر البيع بس</option>
+                    <option value="cost_price">سعر التكلفة بس</option>
+                  </select>
+                  <input type="date" id="pclFromDate">
+                  <input type="date" id="pclToDate">
+                  <button class="bo-outline-btn" id="refreshPclBtn">تحديث</button>
+                  <button class="bo-icon-btn" id="exportPclBtn">تصدير إكسل</button>
+                </div>
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>التاريخ والوقت</th><th>الصنف</th><th>الحقل</th><th>القيمة القديمة</th><th>القيمة الجديدة</th><th>الفرق</th><th>بواسطة</th></tr></thead>
+                  <tbody id="pclTableBody"><tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr></tbody>
                 </table>
               </div>
             </div>
@@ -6829,6 +6858,7 @@ a { color: inherit; }
           <div class="bo-section-header">
             <div class="bo-section-title">إدارة الفروع</div>
             <button class="bo-add-btn" id="addBranchBtn">+ فرع جديد</button>
+            <button class="bo-outline-btn" id="openSetupWizardBtn">🧙 معالج إعداد نشاط جديد</button>
           </div>
           <div class="bo-table-wrap">
             <table class="bo-table">
@@ -10768,6 +10798,52 @@ a { color: inherit; }
   </div>
 </div>
 
+<!-- معالج إعداد نشاط جديد -->
+<div class="modal-overlay" id="setupWizardModalOverlay">
+  <div class="modal-box" style="max-width:760px;">
+    <div class="modal-title">معالج إعداد نشاط جديد</div>
+    <div style="display:flex; gap:6px; margin-bottom:16px;">
+      <div class="bo-badge active" id="swStepDot1">1. النشاط</div>
+      <div class="bo-badge" id="swStepDot2">2. الفرع</div>
+      <div class="bo-badge" id="swStepDot3">3. المراجعة والتفعيل</div>
+    </div>
+
+    <div id="swStep1">
+      <div class="field">
+        <label>نوع النشاط</label>
+        <select id="swBusinessTypeSelect"><option value="">اختار نوع النشاط...</option></select>
+      </div>
+      <div id="swTypePreview" class="bo-empty" style="display:none; padding:12px; text-align:right; font-size:13px; margin-top:8px;"></div>
+    </div>
+
+    <div id="swStep2" style="display:none;">
+      <div class="field"><label>اسم الفرع الجديد</label><input type="text" id="swBranchName" placeholder="مثلاً: فرع مدينة نصر"></div>
+      <div class="bo-empty" style="padding:10px 12px; text-align:right; font-size:12.5px;">
+        هتقدر تكمّل بيانات الفرع (العنوان، رقم الهاتف، بيانات الفاتورة الإلكترونية...) بعدين من شاشة "الفروع" العادية — هنا بس الأساسيات عشان نبدأ بسرعة.
+      </div>
+    </div>
+
+    <div id="swStep3" style="display:none;">
+      <div id="swModifiersPreview" style="margin-bottom:14px;"></div>
+      <div style="font-weight:600; margin-bottom:8px;">الأصناف المقترحة — راجع الأسعار وعدّلها لسعرك الفعلي، وشيل أي صنف مش محتاجه</div>
+      <div class="bo-table-wrap">
+        <table class="bo-table">
+          <thead><tr><th style="width:36px;"><input type="checkbox" id="swItemsSelectAll" checked></th><th>الصنف</th><th>السعر</th></tr></thead>
+          <tbody id="swItemsTableBody"><tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="error-msg" id="setupWizardError"></div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="closeSetupWizardBtn">إلغاء</button>
+      <button type="button" class="bo-outline-btn" id="swBackBtn" style="display:none;">السابق</button>
+      <button type="button" class="submit-btn" id="swNextBtn">التالي</button>
+      <button type="button" class="submit-btn" id="swFinishBtn" style="display:none;">إنهاء الإعداد</button>
+    </div>
+  </div>
+</div>
+
 <div class="unit-picker-overlay" id="posModifierPickerOverlay">
   <div class="unit-picker-box" style="max-width:420px;">
     <div class="unit-picker-title" id="posModifierPickerTitle">اختر الإضافات</div>
@@ -13680,6 +13756,12 @@ function bindPosEvents() {
   document.getElementById('loReportToDate').addEventListener('change', () => refreshLaundryOrdersReport());
   document.getElementById('refreshLoReportBtn').addEventListener('click', () => refreshLaundryOrdersReport());
   document.getElementById('exportLoReportBtn').addEventListener('click', () => exportLoReportToExcel());
+  document.getElementById('pclSearchInput').addEventListener('input', () => refreshPriceChangeLogReport());
+  document.getElementById('pclFieldFilter').addEventListener('change', () => refreshPriceChangeLogReport());
+  document.getElementById('pclFromDate').addEventListener('change', () => refreshPriceChangeLogReport());
+  document.getElementById('pclToDate').addEventListener('change', () => refreshPriceChangeLogReport());
+  document.getElementById('refreshPclBtn').addEventListener('click', () => refreshPriceChangeLogReport());
+  document.getElementById('exportPclBtn').addEventListener('click', () => exportPclToExcel());
   document.getElementById('variantPickerOverlay').addEventListener('click', (e) => {
     if (e.target.id === 'variantPickerOverlay') closeVariantPicker();
   });
@@ -18182,7 +18264,8 @@ const REPORT_TABS = {
     { key: 'eta-log', title: 'سجل إرسال الفواتير للفاتورة الإلكترونية (ETA)' },
     { key: 'missed-size-requests', title: 'طلبات العملاء على مقاسات غير متوفرة' },
     { key: 'stock-holds', title: 'الحجوزات المؤقتة' },
-    { key: 'laundry-orders', title: 'أوامر المغسلة' }
+    { key: 'laundry-orders', title: 'أوامر المغسلة' },
+    { key: 'price-change-log', title: 'سجل تعديلات الأسعار' }
   ]}
 };
 
@@ -19928,6 +20011,7 @@ function bindBackofficeEvents() {
       if (key === 'missed-size-requests') refreshMissedSizeRequestsReport();
       if (key === 'stock-holds') refreshStockHoldsReport();
       if (key === 'laundry-orders') refreshLaundryOrdersReport();
+      if (key === 'price-change-log') refreshPriceChangeLogReport();
       if (key === 'service-management') { runServiceManagementReport(); }
     });
   });
@@ -20191,6 +20275,18 @@ function bindBackofficeEvents() {
 
   // ---- Branch modal ----
   document.getElementById('addBranchBtn').addEventListener('click', () => openBranchModal(null));
+  document.getElementById('openSetupWizardBtn').addEventListener('click', openSetupWizard);
+  document.getElementById('closeSetupWizardBtn').addEventListener('click', closeSetupWizard);
+  document.getElementById('setupWizardModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'setupWizardModalOverlay') closeSetupWizard();
+  });
+  document.getElementById('swBackBtn').addEventListener('click', () => swGoToStep(swCurrentStep - 1));
+  document.getElementById('swNextBtn').addEventListener('click', () => swNext());
+  document.getElementById('swFinishBtn').addEventListener('click', () => swFinish());
+  document.getElementById('swItemsSelectAll').addEventListener('change', (e) => {
+    swItemsData.forEach(i => { i.selected = e.target.checked; });
+    renderSwItemsTable();
+  });
   document.getElementById('cancelBranchBtn').addEventListener('click', closeBranchModal);
   document.getElementById('branchModalOverlay').addEventListener('click', (e) => {
     if (e.target.id === 'branchModalOverlay') closeBranchModal();
@@ -27795,6 +27891,134 @@ function openBranchModal(branch) {
 
 function closeBranchModal() {
   document.getElementById('branchModalOverlay').classList.remove('show');
+}
+
+// ---- معالج إعداد نشاط جديد ----
+let swCurrentStep = 1;
+let swItemsData = []; // [{id, name, price, selected}]
+
+function openSetupWizard() {
+  swCurrentStep = 1;
+  swItemsData = [];
+  document.getElementById('swBusinessTypeSelect').innerHTML = '<option value="">اختار نوع النشاط...</option>' +
+    boBusinessTypes.map(bt => `<option value="${bt.id}">${escapeHtml(bt.name)}</option>`).join('');
+  document.getElementById('swBranchName').value = '';
+  document.getElementById('setupWizardError').classList.remove('show');
+  swGoToStep(1);
+  document.getElementById('setupWizardModalOverlay').classList.add('show');
+}
+function closeSetupWizard() { document.getElementById('setupWizardModalOverlay').classList.remove('show'); }
+
+function swGoToStep(n) {
+  swCurrentStep = n;
+  [1, 2, 3].forEach(i => {
+    document.getElementById('swStep' + i).style.display = i === n ? 'block' : 'none';
+    document.getElementById('swStepDot' + i).className = 'bo-badge' + (i === n ? ' active' : '');
+  });
+  document.getElementById('swBackBtn').style.display = n === 1 ? 'none' : '';
+  document.getElementById('swNextBtn').style.display = n === 3 ? 'none' : '';
+  document.getElementById('swFinishBtn').style.display = n === 3 ? '' : 'none';
+}
+
+async function swNext() {
+  const errEl = document.getElementById('setupWizardError');
+  errEl.classList.remove('show');
+  if (swCurrentStep === 1) {
+    const btId = document.getElementById('swBusinessTypeSelect').value;
+    if (!btId) { errEl.textContent = 'اختار نوع النشاط الأول'; errEl.classList.add('show'); return; }
+    swGoToStep(2);
+  } else if (swCurrentStep === 2) {
+    const name = document.getElementById('swBranchName').value.trim();
+    if (!name) { errEl.textContent = 'اكتب اسم الفرع'; errEl.classList.add('show'); return; }
+    await swLoadPreview();
+    swGoToStep(3);
+  }
+}
+
+async function swLoadPreview() {
+  const btId = document.getElementById('swBusinessTypeSelect').value;
+  const tbody = document.getElementById('swItemsTableBody');
+  tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>`;
+  document.getElementById('swModifiersPreview').innerHTML = '';
+  try {
+    const { data: items, error } = await supabaseClient
+      .from('products')
+      .select('id, name, sale_price, product_business_type_prices(business_type_id, price), product_modifier_groups(modifier_groups(name))')
+      .eq('business_type_id', btId)
+      .eq('is_active', true)
+      .is('parent_product_id', null);
+    if (error) throw error;
+
+    swItemsData = (items || []).map(p => {
+      const btRow = (p.product_business_type_prices || []).find(r => r.business_type_id === btId);
+      return { id: p.id, name: p.name, price: btRow?.price ?? p.sale_price, selected: true };
+    });
+
+    const modifierNames = [...new Set((items || []).flatMap(p => (p.product_modifier_groups || []).map(g => g.modifier_groups?.name).filter(Boolean)))];
+    if (modifierNames.length > 0) {
+      document.getElementById('swModifiersPreview').innerHTML = `<div class="bo-empty" style="padding:10px 12px; text-align:right; font-size:13px;">مجموعات خيارات جاهزة مرتبطة بالأصناف دي: <strong>${modifierNames.map(escapeHtml).join('، ')}</strong> — هتفضل شغالة تلقائي، وتقدر تعدّل فيها بعدين من شاشة "الموديفايرز".</div>`;
+    }
+
+    renderSwItemsTable();
+  } catch (err) {
+    console.error(err);
+    tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">تعذر تحميل الأصناف المقترحة</td></tr>`;
+  }
+}
+
+function renderSwItemsTable() {
+  const tbody = document.getElementById('swItemsTableBody');
+  if (swItemsData.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="3" class="bo-empty">مفيش أصناف جاهزة لنوع النشاط ده دلوقتي</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  swItemsData.forEach((item, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="checkbox" data-idx="${idx}" class="sw-item-check" ${item.selected ? 'checked' : ''}></td>
+      <td>${escapeHtml(item.name)}</td>
+      <td><input type="number" data-idx="${idx}" class="sw-item-price" step="0.01" value="${item.price}" style="width:100px;"></td>`;
+    tr.querySelector('.sw-item-check').addEventListener('change', (e) => { swItemsData[idx].selected = e.target.checked; });
+    tr.querySelector('.sw-item-price').addEventListener('input', (e) => { swItemsData[idx].price = Number(e.target.value) || 0; });
+    tbody.appendChild(tr);
+  });
+}
+
+async function swFinish() {
+  const errEl = document.getElementById('setupWizardError');
+  errEl.classList.remove('show');
+  const btId = document.getElementById('swBusinessTypeSelect').value;
+  const branchName = document.getElementById('swBranchName').value.trim();
+  const selectedItems = swItemsData.filter(i => i.selected);
+
+  const finishBtn = document.getElementById('swFinishBtn');
+  finishBtn.disabled = true;
+  finishBtn.textContent = 'جاري الإعداد...';
+  try {
+    const { data: newBranch, error: branchErr } = await supabaseClient.from('branches')
+      .insert({ name: branchName, business_type_id: btId }).select().single();
+    if (branchErr) throw branchErr;
+
+    if (selectedItems.length > 0) {
+      const { error: priceErr } = await supabaseClient.from('product_business_type_prices')
+        .upsert(selectedItems.map(i => ({ product_id: i.id, business_type_id: btId, price: i.price })), { onConflict: 'product_id,business_type_id' });
+      if (priceErr) throw priceErr;
+    }
+
+    showToast(`تم إنشاء "${branchName}" بـ${selectedItems.length} صنف جاهز`);
+    closeSetupWizard();
+    await loadBoBranches();
+    renderBranchesTable();
+    populateUserSelects();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = 'حدث خطأ أثناء الإعداد، حاول تاني';
+    errEl.classList.add('show');
+  } finally {
+    finishBtn.disabled = false;
+    finishBtn.textContent = 'إنهاء الإعداد';
+  }
 }
 
 async function saveBranch(e) {
@@ -39264,6 +39488,63 @@ async function releaseStockHold(id) {
     console.error(err);
     showToast('تعذر إلغاء الحجز', true);
   }
+}
+
+// ---- سجل تعديلات الأسعار ----
+let lastPclRows = [];
+async function refreshPriceChangeLogReport() {
+  const search = document.getElementById('pclSearchInput').value.trim().toLowerCase();
+  const fieldFilter = document.getElementById('pclFieldFilter').value;
+  const fromDate = document.getElementById('pclFromDate').value;
+  const toDate = document.getElementById('pclToDate').value;
+  const tbody = document.getElementById('pclTableBody');
+  tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>`;
+  try {
+    let query = supabaseClient.from('price_change_log')
+      .select('changed_at, field, old_value, new_value, products(name), users_profile(full_name)')
+      .order('changed_at', { ascending: false })
+      .limit(500);
+    if (fieldFilter !== 'all') query = query.eq('field', fieldFilter);
+    if (fromDate) query = query.gte('changed_at', `${fromDate}T00:00:00`);
+    if (toDate) query = query.lte('changed_at', `${toDate}T23:59:59`);
+    const { data, error } = await query;
+    if (error) throw error;
+    let rows = data || [];
+    if (search) rows = rows.filter(r => (r.products?.name || '').toLowerCase().includes(search));
+    lastPclRows = rows;
+
+    const fieldLabels = { sale_price: 'سعر البيع', cost_price: 'سعر التكلفة' };
+    renderBreakdownTable('pclTableBody', rows, 7, row => {
+      const oldV = Number(row.old_value) || 0;
+      const newV = Number(row.new_value) || 0;
+      const diff = newV - oldV;
+      return `
+        <td class="num">${new Date(row.changed_at).toLocaleString('ar-EG')}</td>
+        <td>${escapeHtml(row.products?.name || 'صنف محذوف')}</td>
+        <td>${fieldLabels[row.field] || row.field}</td>
+        <td class="num">${oldV.toFixed(2)}</td>
+        <td class="num">${newV.toFixed(2)}</td>
+        <td class="num ${diff >= 0 ? 'positive' : 'negative'}">${diff >= 0 ? '+' : ''}${diff.toFixed(2)}</td>
+        <td>${escapeHtml(row.users_profile?.full_name || '—')}</td>`;
+    });
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحميل سجل تعديلات الأسعار', true);
+  }
+}
+
+function exportPclToExcel() {
+  if (lastPclRows.length === 0) { showToast('لا توجد بيانات لتصديرها', true); return; }
+  const fieldLabels = { sale_price: 'سعر البيع', cost_price: 'سعر التكلفة' };
+  const rows = lastPclRows.map(r => ({
+    'التاريخ والوقت': new Date(r.changed_at).toLocaleString('ar-EG'), 'الصنف': r.products?.name || 'صنف محذوف',
+    'الحقل': fieldLabels[r.field] || r.field, 'القيمة القديمة': Number(r.old_value) || 0, 'القيمة الجديدة': Number(r.new_value) || 0,
+    'الفرق': (Number(r.new_value) || 0) - (Number(r.old_value) || 0), 'بواسطة': r.users_profile?.full_name || '—',
+  }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'سجل تعديلات الأسعار');
+  const dateStr = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `سجل-تعديلات-الأسعار-${dateStr}.xlsx`);
 }
 
 // ---- تقرير أوامر المغسلة (نظرة شاملة على كل الفروع المسموح بيها) ----
