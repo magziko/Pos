@@ -7273,6 +7273,11 @@ a { color: inherit; }
       <div class="modal-grid">
         <div class="field" id="productReorderField"><label>حد إعادة الطلب</label><input type="number" id="productReorder" step="0.01" min="0" value="0"></div>
         <div class="field" id="productCollectionTagField"><label>الموسم/الكولكشن (اختياري)</label><input type="text" id="productCollectionTag" list="collectionTagList" placeholder="مثلاً: صيف 2026"><datalist id="collectionTagList"></datalist></div>
+        <div class="field">
+          <label>الأنشطة المرتبطة (اختياري — لو فاضي، الصنف يظهر لكل الأنشطة)</label>
+          <div id="productBusinessTypeRows"></div>
+          <button type="button" class="btn-secondary" id="addProductBusinessTypeRowBtn" style="margin-top:6px; width:auto; padding:8px 14px;">+ إضافة نشاط</button>
+        </div>
         <div class="field field-full" id="productSellByWeightField">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
             <input type="checkbox" id="productSellByWeight" style="width:auto;"> يباع بالوزن (كجم) — سعر البيع أعلاه يُعتبر سعر الكيلوجرام
@@ -13335,6 +13340,12 @@ async function enterPos() {
   if (appIsOnline) {
     try { await Promise.all([loadBoBranches(), loadBoBusinessTypes()]); } catch (err) { console.error(err); }
     applyShoeFeatureVisibility();
+    filterProductsForCurrentBusinessType();
+    if (activeCategory !== 'all' && !allProducts.some(p => !p.parent_product_id && p.category_id === activeCategory)) {
+      activeCategory = 'all';
+    }
+    renderCategories();
+    renderProducts();
     const laundryBtn = document.getElementById('openLaundryOrdersBtn');
     if (laundryBtn) laundryBtn.style.display = isLaundryBranch() ? '' : 'none';
   }
@@ -13825,7 +13836,7 @@ async function loadProducts() {
     if (!sessionUsable()) throw new Error('offline');
     const { data, error } = await supabaseClient
       .from('products')
-      .select('id, name, category_id, sale_price, unit_type, sell_by, image_url, tax_rate_id, parent_product_id, variant_attributes, tax_rates(rate), product_barcodes(barcode), product_units(id, unit_type_id, factor_to_base, sale_price, is_active, unit_types(name)), product_modifier_groups(group_id, modifier_groups(id, name, selection_type, is_required, price_mode, is_active, modifier_options(id, name, price_delta, is_default, is_active))), product_modifier_option_prices(option_id, price), product_prices(price_tier_id, price)')
+      .select('id, name, category_id, sale_price, unit_type, sell_by, image_url, tax_rate_id, parent_product_id, variant_attributes, business_type_id, product_business_type_prices(business_type_id, price), tax_rates(rate), product_barcodes(barcode), product_units(id, unit_type_id, factor_to_base, sale_price, is_active, unit_types(name)), product_modifier_groups(group_id, modifier_groups(id, name, selection_type, is_required, price_mode, is_active, modifier_options(id, name, price_delta, is_default, is_active))), product_modifier_option_prices(option_id, price), product_prices(price_tier_id, price)')
       .eq('is_active', true).order('name');
     if (error) throw error;
     allProducts = data || [];
@@ -14023,7 +14034,11 @@ function availableStock(productId) {
 function renderCategories() {
   posEls.categoriesRow.innerHTML = '';
   posEls.categoriesRow.appendChild(makeCatChip('الكل', 'all'));
-  allCategories.forEach(cat => posEls.categoriesRow.appendChild(makeCatChip(cat.name, cat.id)));
+  // بنعرض بس الفئات اللي فيها صنف واحد على الأقل ظاهر فعلاً بعد فلترة نوع
+  // النشاط (allProducts هنا بالفعل مفلترة)، عشان مفيش فئات فاضية تظهر
+  // للكاشير من غير أي أصناف جواها
+  const categoryIdsWithProducts = new Set(allProducts.filter(p => !p.parent_product_id).map(p => p.category_id).filter(Boolean));
+  allCategories.filter(cat => categoryIdsWithProducts.has(cat.id)).forEach(cat => posEls.categoriesRow.appendChild(makeCatChip(cat.name, cat.id)));
 }
 
 function makeCatChip(label, id) {
@@ -14126,6 +14141,11 @@ function resolveProductPrice(product) {
   if (tierId) {
     const row = (product.product_prices || []).find(pp => pp.price_tier_id === tierId && pp.price != null);
     if (row) return Number(row.price);
+  }
+  const btId = getCurrentBranchBusinessType()?.id;
+  if (btId) {
+    const btRow = (product.product_business_type_prices || []).find(r => r.business_type_id === btId && r.price != null);
+    if (btRow) return Number(btRow.price);
   }
   return Number(product.sale_price);
 }
@@ -14394,6 +14414,27 @@ let laundryLinkTargetOrderId = null;
 
 function isLaundryBranch() {
   return getCurrentBranchBusinessType()?.name === 'مغسلة ملابس / سجاد';
+}
+
+// أصناف العرض التوضيحي بتتفلتر بنفس منطق بوابة الشاشات بالظبط: صنف من غير
+// أي نشاط مسجّل (لا business_type_id القديم ولا صفوف في product_business_type_prices)
+// يفضل عام يظهر لأي نشاط. صنف عنده نشاط واحد أو أكتر مسجّل يظهر بس لو نشاط
+// الفرع الحالي من ضمنهم — وده اللي بيسمح لنفس الصنف يظهر في أكتر من نشاط
+// (زي "لحم بقري" يظهر في الجزارة والماركت والمطعم مع بعض) وبسعر مستقل لكل
+// نشاط لو محدد (يتحسب في resolveProductPrice).
+function effectiveBusinessTypeIds(p) {
+  const ids = (p.product_business_type_prices || []).map(r => r.business_type_id);
+  if (p.business_type_id && !ids.includes(p.business_type_id)) ids.push(p.business_type_id);
+  return ids;
+}
+function filterProductsForCurrentBusinessType() {
+  const btId = getCurrentBranchBusinessType()?.id || null;
+  const parentTypesMap = {};
+  allProducts.forEach(p => { if (!p.parent_product_id) parentTypesMap[p.id] = effectiveBusinessTypeIds(p); });
+  allProducts = allProducts.filter(p => {
+    const types = p.parent_product_id ? (parentTypesMap[p.parent_product_id] ?? effectiveBusinessTypeIds(p)) : effectiveBusinessTypeIds(p);
+    return types.length === 0 || types.includes(btId);
+  });
 }
 
 function openLaundryOrdersModal() {
@@ -20029,6 +20070,13 @@ function bindBackofficeEvents() {
     window.print();
   });
   document.getElementById('productForm').addEventListener('submit', saveProduct);
+  document.getElementById('addProductBusinessTypeRowBtn').addEventListener('click', () => {
+    const usedIds = currentProductBusinessTypeRows.map(r => r.business_type_id);
+    const nextType = boBusinessTypes.find(bt => !usedIds.includes(bt.id));
+    if (!nextType) { showToast('كل الأنشطة متضافة بالفعل', true); return; }
+    currentProductBusinessTypeRows.push({ business_type_id: nextType.id, price: null });
+    renderProductBusinessTypeRows();
+  });
 
   // ---- Product variants ----
   document.getElementById('addVariantBtn').addEventListener('click', () => openVariantFormModal(currentVariantsParent, null));
@@ -21203,7 +21251,7 @@ function bindBackofficeEvents() {
 async function loadBoProducts() {
   const { data, error } = await supabaseClient
     .from('products')
-    .select('*, categories(name), tax_rates(name, rate), product_barcodes(id, barcode), product_units(id, unit_type_id, factor_to_base, sale_price, is_active, unit_types(name)), product_bundle_items!product_bundle_items_bundle_product_id_fkey(id, component_product_id, quantity, component:component_product_id(name, cost_price, is_active)), product_prices(price_tier_id, price)')
+    .select('*, categories(name), tax_rates(name, rate), product_barcodes(id, barcode), product_units(id, unit_type_id, factor_to_base, sale_price, is_active, unit_types(name)), product_bundle_items!product_bundle_items_bundle_product_id_fkey(id, component_product_id, quantity, component:component_product_id(name, cost_price, is_active)), product_prices(price_tier_id, price), product_business_type_prices(id, business_type_id, price)')
     .order('name')
   if (error) { console.error(error); showToast('تعذر تحميل الأصناف', true); return; }
   boProducts = data || [];
@@ -22432,6 +22480,8 @@ async function openProductModal(product, initialTab, isDuplicate) {
   document.getElementById('productKitchenAlias').value = product?.kitchen_alias || '';
   document.getElementById('productReorder').value = product ? product.reorder_level : 0;
   document.getElementById('productCollectionTag').value = product?.collection_tag || '';
+  currentProductBusinessTypeRows = (product?.product_business_type_prices || []).map(r => ({ business_type_id: r.business_type_id, price: r.price }));
+  renderProductBusinessTypeRows();
   document.getElementById('collectionTagList').innerHTML = [...new Set(boProducts.map(p => p.collection_tag).filter(Boolean))]
     .map(t => `<option value="${escapeHtml(t)}">`).join('');
   document.getElementById('productItemKind').value = (product && product.item_kind === 'service') ? 'service' : 'product';
@@ -23360,6 +23410,7 @@ async function saveProduct(e) {
     kitchen_alias: document.getElementById('productKitchenAlias').value.trim() || null,
     reorder_level: document.getElementById('productItemKind').value === 'service' ? 0 : (Number(document.getElementById('productReorder').value) || 0),
     collection_tag: document.getElementById('productCollectionTag').value.trim() || null,
+    business_type_id: currentProductBusinessTypeRows[0]?.business_type_id || null,
     image_url: document.getElementById('productImage').value.trim() || null,
     is_active: document.getElementById('productActive').checked,
     sell_by: document.getElementById('productSellByWeight').checked ? 'weight' : 'unit',
@@ -23396,6 +23447,17 @@ async function saveProduct(e) {
     if (newOnes.length > 0) {
       const { error: bcError } = await supabaseClient.from('product_barcodes').insert(newOnes);
       if (bcError) throw bcError;
+    }
+
+    // مزامنة الأنشطة المرتبطة بالصنف (وأسعارها المستقلة لو محددة): استبدال كامل
+    // بسيط بدل الحساب الفرقي، لأن العدد صغير عادةً
+    await supabaseClient.from('product_business_type_prices').delete().eq('product_id', productId);
+    const validBtRows = currentProductBusinessTypeRows.filter(r => r.business_type_id);
+    if (validBtRows.length > 0) {
+      const { error: btError } = await supabaseClient.from('product_business_type_prices').insert(
+        validBtRows.map(r => ({ product_id: productId, business_type_id: r.business_type_id, price: r.price }))
+      );
+      if (btError) throw btError;
     }
 
     // مزامنة وحدات البيع الإضافية (متاحة فقط لصنف موجود بالفعل)
@@ -23531,6 +23593,46 @@ async function toggleProductActive(product) {
 let currentVariantsParent = null; // الصنف الأساسي المفتوح حاليًا في مودال المتغيرات
 let currentVariantAttrs = []; // [{key, value}] لخصائص المتغير المفتوح حاليًا في الفورم
 let variantsListViewMode = 'list'; // وضع عرض مودال المتغيرات: list أو matrix
+let currentProductBusinessTypeRows = []; // [{business_type_id, price}] الأنشطة المرتبطة بالصنف المفتوح حاليًا في الفورم
+
+function renderProductBusinessTypeRows() {
+  const wrap = document.getElementById('productBusinessTypeRows');
+  wrap.innerHTML = '';
+  currentProductBusinessTypeRows.forEach((row, idx) => {
+    const usedIds = currentProductBusinessTypeRows.map((r, i) => i !== idx ? r.business_type_id : null).filter(Boolean);
+    const div = document.createElement('div');
+    div.style.cssText = 'display:grid; grid-template-columns: 2fr 1fr auto; gap:8px; align-items:end; margin-bottom:8px;';
+    div.innerHTML = `
+      <div class="field" style="margin-bottom:0;"><label>النشاط</label>
+        <select data-idx="${idx}" class="pbt-type-select">
+          ${boBusinessTypes.filter(bt => !usedIds.includes(bt.id)).map(bt => `<option value="${bt.id}" ${bt.id === row.business_type_id ? 'selected' : ''}>${escapeHtml(bt.name)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:0;"><label>سعر مخصص (اختياري)</label>
+        <input type="number" data-idx="${idx}" class="pbt-price-input" step="0.01" placeholder="سعر الصنف الافتراضي" value="${row.price ?? ''}">
+      </div>
+      <button type="button" data-idx="${idx}" class="bo-icon-btn danger pbt-remove-btn">حذف</button>`;
+    wrap.appendChild(div);
+  });
+  wrap.querySelectorAll('.pbt-type-select').forEach(sel => {
+    sel.addEventListener('change', (e) => {
+      currentProductBusinessTypeRows[Number(e.target.dataset.idx)].business_type_id = e.target.value;
+      renderProductBusinessTypeRows();
+    });
+  });
+  wrap.querySelectorAll('.pbt-price-input').forEach(inp => {
+    inp.addEventListener('input', (e) => {
+      const v = e.target.value.trim();
+      currentProductBusinessTypeRows[Number(e.target.dataset.idx)].price = v === '' ? null : Number(v);
+    });
+  });
+  wrap.querySelectorAll('.pbt-remove-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      currentProductBusinessTypeRows.splice(Number(e.target.dataset.idx), 1);
+      renderProductBusinessTypeRows();
+    });
+  });
+}
 
 function getProductVariants(parentId) {
   return boProducts.filter(v => v.parent_product_id === parentId);
