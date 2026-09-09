@@ -7308,6 +7308,11 @@ a { color: inherit; }
           <div id="productBusinessTypeRows"></div>
           <button type="button" class="btn-secondary" id="addProductBusinessTypeRowBtn" style="margin-top:6px; width:auto; padding:8px 14px;">+ إضافة نشاط</button>
         </div>
+        <div class="field">
+          <label>أسعار خاصة بفروع معيّنة (اختياري — بتاخد أولوية أعلى من سعر النشاط المشترك فوق)</label>
+          <div id="productBranchPriceRows"></div>
+          <button type="button" class="btn-secondary" id="addProductBranchPriceRowBtn" style="margin-top:6px; width:auto; padding:8px 14px;">+ إضافة سعر فرع</button>
+        </div>
         <div class="field field-full" id="productSellByWeightField">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
             <input type="checkbox" id="productSellByWeight" style="width:auto;"> يباع بالوزن (كجم) — سعر البيع أعلاه يُعتبر سعر الكيلوجرام
@@ -10802,10 +10807,11 @@ a { color: inherit; }
 <div class="modal-overlay" id="setupWizardModalOverlay">
   <div class="modal-box" style="max-width:760px;">
     <div class="modal-title">معالج إعداد نشاط جديد</div>
-    <div style="display:flex; gap:6px; margin-bottom:16px;">
+    <div style="display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap;">
       <div class="bo-badge active" id="swStepDot1">1. النشاط</div>
       <div class="bo-badge" id="swStepDot2">2. الفرع</div>
       <div class="bo-badge" id="swStepDot3">3. المراجعة والتفعيل</div>
+      <div class="bo-badge" id="swStepDot4">4. تعيين مستخدم</div>
     </div>
 
     <div id="swStep1">
@@ -10831,6 +10837,17 @@ a { color: inherit; }
           <thead><tr><th style="width:36px;"><input type="checkbox" id="swItemsSelectAll" checked></th><th>الصنف</th><th>السعر</th></tr></thead>
           <tbody id="swItemsTableBody"><tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr></tbody>
         </table>
+      </div>
+    </div>
+
+    <div id="swStep4" style="display:none;">
+      <div class="field">
+        <label>عيّن مستخدم موجود على الفرع الجديد (اختياري)</label>
+        <select id="swUserSelect"><option value="">من غير تعيين دلوقتي</option></select>
+      </div>
+      <div id="swUserWarning" class="bo-empty" style="display:none; padding:10px 12px; text-align:right; font-size:12.5px; color:var(--red-600, #c0392b);"></div>
+      <div class="bo-empty" style="padding:10px 12px; text-align:right; font-size:12.5px; margin-top:8px;">
+        المستخدم بيتبع فرع واحد بس في نفس الوقت — لو اخترت مستخدم موجود، هيتنقل بالكامل للفرع الجديد ومش هيقدر يشتغل على فرعه الحالي تاني. تقدر برضه تسيب الخطوة دي فاضية وتعيّن حد بعدين من شاشة المستخدمين العادية.
       </div>
     </div>
 
@@ -13918,7 +13935,7 @@ async function loadProducts() {
     if (!sessionUsable()) throw new Error('offline');
     const { data, error } = await supabaseClient
       .from('products')
-      .select('id, name, category_id, sale_price, unit_type, sell_by, image_url, tax_rate_id, parent_product_id, variant_attributes, business_type_id, product_business_type_prices(business_type_id, price), tax_rates(rate), product_barcodes(barcode), product_units(id, unit_type_id, factor_to_base, sale_price, is_active, unit_types(name)), product_modifier_groups(group_id, modifier_groups(id, name, selection_type, is_required, price_mode, is_active, modifier_options(id, name, price_delta, is_default, is_active))), product_modifier_option_prices(option_id, price), product_prices(price_tier_id, price)')
+      .select('id, name, category_id, sale_price, unit_type, sell_by, image_url, tax_rate_id, parent_product_id, variant_attributes, business_type_id, product_business_type_prices(business_type_id, price), product_branch_prices(branch_id, price), tax_rates(rate), product_barcodes(barcode), product_units(id, unit_type_id, factor_to_base, sale_price, is_active, unit_types(name)), product_modifier_groups(group_id, modifier_groups(id, name, selection_type, is_required, price_mode, is_active, modifier_options(id, name, price_delta, is_default, is_active))), product_modifier_option_prices(option_id, price), product_prices(price_tier_id, price)')
       .eq('is_active', true).order('name');
     if (error) throw error;
     allProducts = data || [];
@@ -14224,6 +14241,10 @@ function resolveProductPrice(product) {
     const row = (product.product_prices || []).find(pp => pp.price_tier_id === tierId && pp.price != null);
     if (row) return Number(row.price);
   }
+  // سعر خاص بالفرع الحالي بالذات (لو محدد) بياخد أولوية أعلى من سعر النشاط
+  // المشترك بين كل فروع نفس النشاط
+  const branchRow = (product.product_branch_prices || []).find(r => r.branch_id === currentProfile.branch_id && r.price != null);
+  if (branchRow) return Number(branchRow.price);
   const btId = getCurrentBranchBusinessType()?.id;
   if (btId) {
     const btRow = (product.product_business_type_prices || []).find(r => r.business_type_id === btId && r.price != null);
@@ -20161,6 +20182,13 @@ function bindBackofficeEvents() {
     currentProductBusinessTypeRows.push({ business_type_id: nextType.id, price: null });
     renderProductBusinessTypeRows();
   });
+  document.getElementById('addProductBranchPriceRowBtn').addEventListener('click', () => {
+    const usedIds = currentProductBranchPriceRows.map(r => r.branch_id);
+    const nextBranch = boBranchesList.find(b => !usedIds.includes(b.id));
+    if (!nextBranch) { showToast('كل الفروع متضافة بالفعل', true); return; }
+    currentProductBranchPriceRows.push({ branch_id: nextBranch.id, price: null });
+    renderProductBranchPriceRows();
+  });
 
   // ---- Product variants ----
   document.getElementById('addVariantBtn').addEventListener('click', () => openVariantFormModal(currentVariantsParent, null));
@@ -21347,7 +21375,7 @@ function bindBackofficeEvents() {
 async function loadBoProducts() {
   const { data, error } = await supabaseClient
     .from('products')
-    .select('*, categories(name), tax_rates(name, rate), product_barcodes(id, barcode), product_units(id, unit_type_id, factor_to_base, sale_price, is_active, unit_types(name)), product_bundle_items!product_bundle_items_bundle_product_id_fkey(id, component_product_id, quantity, component:component_product_id(name, cost_price, is_active)), product_prices(price_tier_id, price), product_business_type_prices(id, business_type_id, price)')
+    .select('*, categories(name), tax_rates(name, rate), product_barcodes(id, barcode), product_units(id, unit_type_id, factor_to_base, sale_price, is_active, unit_types(name)), product_bundle_items!product_bundle_items_bundle_product_id_fkey(id, component_product_id, quantity, component:component_product_id(name, cost_price, is_active)), product_prices(price_tier_id, price), product_business_type_prices(id, business_type_id, price), product_branch_prices(id, branch_id, price)')
     .order('name')
   if (error) { console.error(error); showToast('تعذر تحميل الأصناف', true); return; }
   boProducts = data || [];
@@ -22578,6 +22606,8 @@ async function openProductModal(product, initialTab, isDuplicate) {
   document.getElementById('productCollectionTag').value = product?.collection_tag || '';
   currentProductBusinessTypeRows = (product?.product_business_type_prices || []).map(r => ({ business_type_id: r.business_type_id, price: r.price }));
   renderProductBusinessTypeRows();
+  currentProductBranchPriceRows = (product?.product_branch_prices || []).map(r => ({ branch_id: r.branch_id, price: r.price }));
+  renderProductBranchPriceRows();
   document.getElementById('collectionTagList').innerHTML = [...new Set(boProducts.map(p => p.collection_tag).filter(Boolean))]
     .map(t => `<option value="${escapeHtml(t)}">`).join('');
   document.getElementById('productItemKind').value = (product && product.item_kind === 'service') ? 'service' : 'product';
@@ -23556,6 +23586,16 @@ async function saveProduct(e) {
       if (btError) throw btError;
     }
 
+    // مزامنة أسعار الفروع المستقلة بنفس الطريقة
+    await supabaseClient.from('product_branch_prices').delete().eq('product_id', productId);
+    const validBranchRows = currentProductBranchPriceRows.filter(r => r.branch_id);
+    if (validBranchRows.length > 0) {
+      const { error: bpError } = await supabaseClient.from('product_branch_prices').insert(
+        validBranchRows.map(r => ({ product_id: productId, branch_id: r.branch_id, price: r.price }))
+      );
+      if (bpError) throw bpError;
+    }
+
     // مزامنة وحدات البيع الإضافية (متاحة فقط لصنف موجود بالفعل)
     if (id) {
       for (const u of currentUnits) {
@@ -23690,6 +23730,46 @@ let currentVariantsParent = null; // الصنف الأساسي المفتوح ح
 let currentVariantAttrs = []; // [{key, value}] لخصائص المتغير المفتوح حاليًا في الفورم
 let variantsListViewMode = 'list'; // وضع عرض مودال المتغيرات: list أو matrix
 let currentProductBusinessTypeRows = []; // [{business_type_id, price}] الأنشطة المرتبطة بالصنف المفتوح حاليًا في الفورم
+let currentProductBranchPriceRows = []; // [{branch_id, price}] أسعار الفروع الخاصة بالصنف المفتوح حاليًا في الفورم
+
+function renderProductBranchPriceRows() {
+  const wrap = document.getElementById('productBranchPriceRows');
+  wrap.innerHTML = '';
+  currentProductBranchPriceRows.forEach((row, idx) => {
+    const usedIds = currentProductBranchPriceRows.map((r, i) => i !== idx ? r.branch_id : null).filter(Boolean);
+    const div = document.createElement('div');
+    div.style.cssText = 'display:grid; grid-template-columns: 2fr 1fr auto; gap:8px; align-items:end; margin-bottom:8px;';
+    div.innerHTML = `
+      <div class="field" style="margin-bottom:0;"><label>الفرع</label>
+        <select data-idx="${idx}" class="pbp-branch-select">
+          ${boBranchesList.filter(b => !usedIds.includes(b.id)).map(b => `<option value="${b.id}" ${b.id === row.branch_id ? 'selected' : ''}>${escapeHtml(b.name)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:0;"><label>السعر في الفرع ده</label>
+        <input type="number" data-idx="${idx}" class="pbp-price-input" step="0.01" value="${row.price ?? ''}">
+      </div>
+      <button type="button" data-idx="${idx}" class="bo-icon-btn danger pbp-remove-btn">حذف</button>`;
+    wrap.appendChild(div);
+  });
+  wrap.querySelectorAll('.pbp-branch-select').forEach(sel => {
+    sel.addEventListener('change', (e) => {
+      currentProductBranchPriceRows[Number(e.target.dataset.idx)].branch_id = e.target.value;
+      renderProductBranchPriceRows();
+    });
+  });
+  wrap.querySelectorAll('.pbp-price-input').forEach(inp => {
+    inp.addEventListener('input', (e) => {
+      const v = e.target.value.trim();
+      currentProductBranchPriceRows[Number(e.target.dataset.idx)].price = v === '' ? null : Number(v);
+    });
+  });
+  wrap.querySelectorAll('.pbp-remove-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      currentProductBranchPriceRows.splice(Number(e.target.dataset.idx), 1);
+      renderProductBranchPriceRows();
+    });
+  });
+}
 
 function renderProductBusinessTypeRows() {
   const wrap = document.getElementById('productBusinessTypeRows');
@@ -27903,6 +27983,7 @@ function openSetupWizard() {
   document.getElementById('swBusinessTypeSelect').innerHTML = '<option value="">اختار نوع النشاط...</option>' +
     boBusinessTypes.map(bt => `<option value="${bt.id}">${escapeHtml(bt.name)}</option>`).join('');
   document.getElementById('swBranchName').value = '';
+  document.getElementById('swUserWarning').style.display = 'none';
   document.getElementById('setupWizardError').classList.remove('show');
   swGoToStep(1);
   document.getElementById('setupWizardModalOverlay').classList.add('show');
@@ -27911,13 +27992,13 @@ function closeSetupWizard() { document.getElementById('setupWizardModalOverlay')
 
 function swGoToStep(n) {
   swCurrentStep = n;
-  [1, 2, 3].forEach(i => {
+  [1, 2, 3, 4].forEach(i => {
     document.getElementById('swStep' + i).style.display = i === n ? 'block' : 'none';
     document.getElementById('swStepDot' + i).className = 'bo-badge' + (i === n ? ' active' : '');
   });
   document.getElementById('swBackBtn').style.display = n === 1 ? 'none' : '';
-  document.getElementById('swNextBtn').style.display = n === 3 ? 'none' : '';
-  document.getElementById('swFinishBtn').style.display = n === 3 ? '' : 'none';
+  document.getElementById('swNextBtn').style.display = n === 4 ? 'none' : '';
+  document.getElementById('swFinishBtn').style.display = n === 4 ? '' : 'none';
 }
 
 async function swNext() {
@@ -27932,7 +28013,27 @@ async function swNext() {
     if (!name) { errEl.textContent = 'اكتب اسم الفرع'; errEl.classList.add('show'); return; }
     await swLoadPreview();
     swGoToStep(3);
+  } else if (swCurrentStep === 3) {
+    swPopulateUserSelect();
+    swGoToStep(4);
   }
+}
+
+function swPopulateUserSelect() {
+  const sel = document.getElementById('swUserSelect');
+  sel.innerHTML = '<option value="">من غير تعيين دلوقتي</option>' +
+    boUsers.filter(u => u.is_active).map(u => `<option value="${u.id}">${escapeHtml(u.full_name)} (حاليًا: ${escapeHtml(u.branches?.name || 'بدون فرع')})</option>`).join('');
+  sel.onchange = () => {
+    const warnEl = document.getElementById('swUserWarning');
+    if (sel.value) {
+      const u = boUsers.find(x => x.id === sel.value);
+      warnEl.textContent = `تنبيه: "${u?.full_name}" هينتقل من "${u?.branches?.name || 'بدون فرع حاليًا'}" لهذا الفرع الجديد.`;
+      warnEl.style.display = 'block';
+    } else {
+      warnEl.style.display = 'none';
+    }
+  };
+  document.getElementById('swUserWarning').style.display = 'none';
 }
 
 async function swLoadPreview() {
@@ -28006,10 +28107,20 @@ async function swFinish() {
       if (priceErr) throw priceErr;
     }
 
-    showToast(`تم إنشاء "${branchName}" بـ${selectedItems.length} صنف جاهز`);
+    const selectedUserId = document.getElementById('swUserSelect').value;
+    let userMsg = '';
+    if (selectedUserId) {
+      const { error: userErr } = await supabaseClient.from('users_profile').update({ branch_id: newBranch.id }).eq('id', selectedUserId);
+      if (userErr) throw userErr;
+      const u = boUsers.find(x => x.id === selectedUserId);
+      userMsg = ` وعيّنت "${u?.full_name || ''}" عليه`;
+    }
+
+    showToast(`تم إنشاء "${branchName}" بـ${selectedItems.length} صنف جاهز${userMsg}`);
     closeSetupWizard();
-    await loadBoBranches();
+    await Promise.all([loadBoBranches(), loadBoUsers()]);
     renderBranchesTable();
+    if (typeof renderUsersTable === 'function') renderUsersTable();
     populateUserSelects();
   } catch (err) {
     console.error(err);
