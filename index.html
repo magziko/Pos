@@ -1422,6 +1422,7 @@ a { color: inherit; }
             <div class="customer-dropdown" id="customerDropdown"></div>
             <select id="customerSelect" style="display:none;"><option value="">عميل نقدي (بدون تسجيل)</option></select>
           </div>
+          <div id="customerPreferredSizeNote" style="display:none; font-size:12px; color:var(--teal-700); padding:4px 2px 0;"></div>
         </div>
         <div class="cart-scroll-area">
           <div class="cart-items" id="cartItems"><div class="cart-empty">لا توجد أصناف مضافة للفاتورة حتى الآن</div></div>
@@ -3807,9 +3808,9 @@ a { color: inherit; }
               </div>
               <div class="bo-table-wrap">
                 <table class="bo-table">
-                  <thead><tr><th>الموديل</th><th>اللون</th><th>المقاس الناقص</th><th>الرصيد الحالي</th><th>المقاسات المتاحة لنفس اللون</th></tr></thead>
+                  <thead><tr><th>الموديل</th><th>اللون</th><th>المقاس الناقص</th><th>الرصيد الحالي</th><th>المقاسات المتاحة لنفس اللون</th><th>اقتراح تحويل</th></tr></thead>
                   <tbody id="msTableBody">
-                    <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
+                    <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -7122,7 +7123,11 @@ a { color: inherit; }
             <div class="search-row" style="margin-bottom:14px;">
               <input type="text" id="stocktakeCountSearchInput" placeholder="ابحث باسم الصنف...">
             </div>
-            <div class="bo-table-wrap">
+            <div id="stocktakeViewToggleRow" style="display:none; gap:6px; margin-bottom:12px;">
+              <button type="button" class="bo-outline-btn variants-view-toggle active" id="stocktakeViewListBtn" data-view="list">قائمة</button>
+              <button type="button" class="bo-outline-btn variants-view-toggle" id="stocktakeViewMatrixBtn" data-view="matrix">شبكة (مقاس × لون)</button>
+            </div>
+            <div class="bo-table-wrap" id="stocktakeListWrap">
               <table class="bo-table">
                 <thead>
                   <tr>
@@ -7138,6 +7143,7 @@ a { color: inherit; }
                 </tbody>
               </table>
             </div>
+            <div id="stocktakeMatrixWrap" style="display:none;"></div>
           </div>
         </div>
 
@@ -13579,6 +13585,7 @@ function bindPosEvents() {
     recalcCartPricesForCustomer();
     renderCart();
     renderProducts();
+    showCustomerPreferredSize();
     const deliveryToggleEl = document.getElementById('posDeliveryToggle');
     if (deliveryToggleEl && deliveryToggleEl.checked) {
       const customer = allCustomers.find(c => c.id === posEls.customerSelect.value);
@@ -15008,6 +15015,36 @@ function selectedCustomerObject() {
   const id = posEls.customerSelect.value;
   if (!id) return null;
   return allCustomers.find(c => c.id === id) || null;
+}
+
+// مقاس العميل المفضّل: بنستخدمه بس في نشاط الأحذية، وبيوريله آخر مقاس
+// اشتراه العميل ده عشان الكاشير يعرضه عليه على طول من غير ما يسأله
+async function showCustomerPreferredSize() {
+  const noteEl = document.getElementById('customerPreferredSizeNote');
+  if (!isShoeBranch()) { noteEl.style.display = 'none'; return; }
+  const customer = selectedCustomerObject();
+  if (!customer) { noteEl.style.display = 'none'; return; }
+  noteEl.style.display = 'block';
+  noteEl.textContent = 'جاري البحث عن آخر مقاس...';
+  try {
+    const { data, error } = await supabaseClient
+      .from('sale_items')
+      .select('products(name, variant_attributes), sales!inner(customer_id, created_at)')
+      .eq('sales.customer_id', customer.id)
+      .order('created_at', { foreignTable: 'sales', ascending: false })
+      .limit(30);
+    if (error) throw error;
+    const withSize = (data || []).find(it => it.products?.variant_attributes?.size);
+    if (withSize) {
+      const attrs = formatPosVariantAttrs(withSize.products.variant_attributes);
+      noteEl.textContent = `👟 آخر مقاس اشتراه: ${attrs} — ${withSize.products.name.split(' - ')[0]}`;
+    } else {
+      noteEl.style.display = 'none';
+    }
+  } catch (err) {
+    console.error(err);
+    noteEl.style.display = 'none';
+  }
 }
 
 // أقصى عدد نقاط ممكن استردادها: محدود برصيد العميل، وبألا يخلي الإجمالي بعد
@@ -21166,6 +21203,8 @@ function bindBackofficeEvents() {
     loadBoStocktakeSessions().then(renderStocktakeSessionsTable);
   });
   document.getElementById('stocktakeCountSearchInput').addEventListener('input', renderStocktakeCountTable);
+  document.getElementById('stocktakeViewListBtn').addEventListener('click', () => switchStocktakeView('list'));
+  document.getElementById('stocktakeViewMatrixBtn').addEventListener('click', () => switchStocktakeView('matrix'));
 
   // ---- Reports ----
   setQuickRange('today');
@@ -30688,6 +30727,21 @@ function openTransferModal() {
   document.getElementById('transferModalOverlay').classList.add('show');
 }
 
+// فتح مودال التحويل جاهز بصنف وكمية ومخزن مصدر مقترحين (من تقرير المقاسات
+// الناقصة)، وموجّه تلقائي لمخزن الفرع الحالي كوجهة — المستخدم لسه يقدر
+// يعدّل أي حاجة قبل التنفيذ
+async function openTransferModalPrefilled(fromWarehouseId, productId, suggestedQty) {
+  document.getElementById('transferModalError').classList.remove('show');
+  document.getElementById('transferNote').value = 'تحويل مقترح تلقائيًا لتغطية نقص مقاس';
+  currentTransferItems = [{ product_id: productId, quantity: suggestedQty }];
+  populateStockWarehouseSelects();
+  document.getElementById('transferFromWarehouse').value = fromWarehouseId;
+  const toWarehouseId = await getMainWarehouseId(currentProfile.branch_id);
+  if (toWarehouseId) document.getElementById('transferToWarehouse').value = toWarehouseId;
+  renderTransferItemsList();
+  document.getElementById('transferModalOverlay').classList.add('show');
+}
+
 function closeTransferModal() {
   document.getElementById('transferModalOverlay').classList.remove('show');
 }
@@ -33662,6 +33716,7 @@ function renderLeaveBalancesTable() {
 let boStocktakeSessions = [];
 let currentStocktakeSession = null;
 let stocktakeCountRows = [];
+let stocktakeViewMode = 'list';
 const STOCKTAKE_STATUS_LABELS = { draft: 'مسودة', in_progress: 'جاري العد', completed: 'مكتملة', cancelled: 'ملغاة' };
 const STOCKTAKE_STATUS_BADGE = { draft: 'info', in_progress: 'info', completed: 'active', cancelled: 'inactive' };
 
@@ -33815,6 +33870,8 @@ async function loadStocktakeCountRows(session) {
       return {
         product_id: p.id,
         name: p.name,
+        parent_product_id: p.parent_product_id || null,
+        variant_attributes: p.variant_attributes || null,
         item_id: existing?.id || null,
         system_quantity: systemQty,
         counted_quantity: existing && existing.counted_quantity !== null ? Number(existing.counted_quantity) : null,
@@ -33824,6 +33881,13 @@ async function loadStocktakeCountRows(session) {
 }
 
 function renderStocktakeCountTable() {
+  const hasSizedVariants = stocktakeCountRows.some(r => r.variant_attributes?.size);
+  document.getElementById('stocktakeViewToggleRow').style.display = hasSizedVariants ? 'flex' : 'none';
+  if (!hasSizedVariants && stocktakeViewMode === 'matrix') stocktakeViewMode = 'list';
+  document.getElementById('stocktakeListWrap').style.display = stocktakeViewMode === 'matrix' ? 'none' : 'block';
+  document.getElementById('stocktakeMatrixWrap').style.display = stocktakeViewMode === 'matrix' ? 'block' : 'none';
+  if (stocktakeViewMode === 'matrix') { renderStocktakeMatrix(); return; }
+
   const tbody = document.getElementById('stocktakeCountTableBody');
   const q = (document.getElementById('stocktakeCountSearchInput').value || '').trim().toLowerCase();
   const rows = stocktakeCountRows.filter(r => !q || r.name.toLowerCase().includes(q));
@@ -33853,6 +33917,79 @@ function renderStocktakeCountTable() {
       input.addEventListener('change', (e) => saveStocktakeCountRow(row, e.target.value, diffId));
     }
     tbody.appendChild(tr);
+  });
+}
+
+function switchStocktakeView(mode) {
+  stocktakeViewMode = mode;
+  document.querySelectorAll('#stocktakeViewToggleRow .variants-view-toggle').forEach(btn => btn.classList.toggle('active', btn.dataset.view === mode));
+  renderStocktakeCountTable();
+}
+
+function renderStocktakeMatrix() {
+  const wrap = document.getElementById('stocktakeMatrixWrap');
+  const q = (document.getElementById('stocktakeCountSearchInput').value || '').trim().toLowerCase();
+  const canEdit = currentStocktakeSession?.status === 'in_progress' && hasBoActionPermission('stocktake', 'edit');
+  const rows = stocktakeCountRows.filter(r => !q || r.name.toLowerCase().includes(q));
+
+  const groups = {}; // parentId -> [rows]
+  const standalone = [];
+  rows.forEach(r => {
+    if (r.parent_product_id) { (groups[r.parent_product_id] = groups[r.parent_product_id] || []).push(r); }
+    else if (!r.variant_attributes?.size) { standalone.push(r); }
+  });
+
+  if (Object.keys(groups).length === 0 && standalone.length === 0) {
+    wrap.innerHTML = '<div class="bo-empty">لا توجد أصناف مطابقة</div>';
+    return;
+  }
+
+  let html = '';
+  Object.entries(groups).forEach(([parentId, groupRows]) => {
+    const parentName = boProducts.find(p => p.id === parentId)?.name || 'موديل';
+    const sizes = [...new Set(groupRows.map(r => r.variant_attributes.size))].sort(naturalCompare);
+    const hasColors = groupRows.some(r => r.variant_attributes.color);
+    const colors = hasColors ? [...new Set(groupRows.map(r => r.variant_attributes.color || '—'))].sort((a, b) => a.localeCompare(b, 'ar')) : ['الكل'];
+    const cellMap = {};
+    groupRows.forEach(r => { cellMap[(hasColors ? (r.variant_attributes.color || '—') : 'الكل') + '|' + r.variant_attributes.size] = r; });
+
+    html += `<div style="margin-bottom:20px;"><div style="font-weight:700; margin-bottom:8px;">${escapeHtml(parentName)}</div>
+      <div class="pos-variant-grid"><table class="pos-variant-grid-table"><thead><tr><th></th>${sizes.map(s => `<th>${escapeHtml(s)}</th>`).join('')}</tr></thead><tbody>`;
+    colors.forEach(color => {
+      html += `<tr><td class="pvg-color-label">${escapeHtml(color)}</td>`;
+      sizes.forEach(size => {
+        const r = cellMap[color + '|' + size];
+        if (!r) { html += '<td></td>'; return; }
+        const idx = stocktakeCountRows.indexOf(r);
+        const diffId = `stocktakeDiff-${idx}`;
+        const cellContent = canEdit
+          ? `<input type="number" step="0.001" min="0" data-idx="${idx}" data-diffid="${diffId}" class="stocktake-matrix-input" value="${r.counted_quantity ?? ''}" placeholder="${r.system_quantity}" style="width:64px; text-align:center; padding:6px 2px;">`
+          : `${r.counted_quantity ?? '—'}`;
+        html += `<td title="الرصيد بالنظام: ${r.system_quantity}">${cellContent}</td>`;
+      });
+      html += '</tr>';
+    });
+    html += '</tbody></table></div></div>';
+  });
+
+  if (standalone.length > 0) {
+    html += `<div style="font-weight:700; margin:14px 0 8px;">أصناف بدون مقاسات</div><div class="bo-table-wrap"><table class="bo-table"><thead><tr><th>الصنف</th><th>الرصيد بالنظام</th><th>الرصيد المعدود</th></tr></thead><tbody>`;
+    standalone.forEach(r => {
+      const idx = stocktakeCountRows.indexOf(r);
+      const diffId = `stocktakeDiff-${idx}`;
+      html += `<tr><td>${escapeHtml(r.name)}</td><td class="num">${r.system_quantity}</td><td>${canEdit
+        ? `<input type="number" step="0.001" min="0" data-idx="${idx}" data-diffid="${diffId}" class="stocktake-matrix-input" value="${r.counted_quantity ?? ''}" style="width:100px;">`
+        : (r.counted_quantity ?? '—')}</td></tr>`;
+    });
+    html += '</tbody></table></div>';
+  }
+
+  wrap.innerHTML = html;
+  wrap.querySelectorAll('.stocktake-matrix-input').forEach(inp => {
+    inp.addEventListener('change', (e) => {
+      const row = stocktakeCountRows[Number(e.target.dataset.idx)];
+      saveStocktakeCountRow(row, e.target.value, e.target.dataset.diffid);
+    });
   });
 }
 
@@ -43123,21 +43260,51 @@ async function refreshMissingSizesReport() {
             size: (v.variant_attributes && v.variant_attributes.size) || v.name,
             qty: stockByProduct[v.id] || 0,
             availableSizes: availableSizesLabel,
+            variantId: v.id,
           });
         });
       });
     });
     rows.sort((a, b) => a.model.localeCompare(b.model, 'ar') || a.color.localeCompare(b.color, 'ar'));
 
+    // اقتراح تحويل من فرع تاني: بنجيب أرصدة المقاسات الناقصة دي في كل المخازن
+    // (مش بس المخزن المفلتر عليه التقرير) عشان نلاقي مخزن تاني عنده رصيد فعلي
+    if (rows.length > 0) {
+      const missingIds = [...new Set(rows.map(r => r.variantId))];
+      const { data: allBalances } = await supabaseClient
+        .from('stock_balances').select('product_id, quantity, warehouse_id').in('product_id', missingIds).gt('quantity', 0);
+      const byProduct = {};
+      (allBalances || []).forEach(b => { (byProduct[b.product_id] = byProduct[b.product_id] || []).push(b); });
+      rows.forEach(r => {
+        const candidates = (byProduct[r.variantId] || [])
+          .filter(b => b.warehouse_id !== warehouseId) // مش نفس المخزن المفلتر عليه التقرير
+          .map(b => ({ ...b, wh: boWarehouses.find(w => w.id === b.warehouse_id) }))
+          .filter(b => b.wh && b.wh.branch_id !== currentProfile.branch_id) // مش نفس فرعي الحالي
+          .sort((a, b2) => Number(b2.quantity) - Number(a.quantity));
+        r.transferSuggestion = candidates[0] || null;
+      });
+    }
+
     document.getElementById('msAffectedModelsCount').textContent = new Set(rows.map(r => r.model)).size;
     document.getElementById('msMissingCount').textContent = rows.length;
 
-    renderBreakdownTable('msTableBody', rows, 5, row => `
+    renderBreakdownTable('msTableBody', rows, 6, row => `
       <td>${escapeHtml(row.model)}</td>
       <td>${escapeHtml(row.color)}</td>
       <td>${escapeHtml(row.size)}</td>
       <td class="num">${formatQty(row.qty)}</td>
-      <td>${escapeHtml(row.availableSizes)}</td>`);
+      <td>${escapeHtml(row.availableSizes)}</td>
+      <td>${row.transferSuggestion
+        ? `<button class="bo-icon-btn" data-variantid="${row.variantId}">🔄 من ${escapeHtml(row.transferSuggestion.wh.branches?.name || row.transferSuggestion.wh.name)} (${formatQty(row.transferSuggestion.quantity)})</button>`
+        : '—'}</td>`);
+    document.querySelectorAll('#msTableBody [data-variantid]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const row = rows.find(r => r.variantId === btn.dataset.variantid);
+        if (row?.transferSuggestion) {
+          openTransferModalPrefilled(row.transferSuggestion.warehouse_id, row.variantId, Math.min(Number(row.transferSuggestion.quantity), 5));
+        }
+      });
+    });
     lastMsRows = rows;
   } catch (err) {
     console.error(err);
