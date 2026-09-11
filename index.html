@@ -1666,6 +1666,21 @@ a { color: inherit; }
           </div>
         </div>
 
+        <div class="bo-nav-group" id="gymNavGroup">
+          <button class="bo-nav-item bo-nav-parent" id="gymNavToggle" type="button">
+            <span>الجيم والصالات الرياضية</span>
+            <span class="bo-nav-chevron">‹</span>
+          </button>
+          <div class="bo-nav-sub" id="gymNavSub">
+            <button class="bo-nav-sub-item" data-section="gym-members">الأعضاء</button>
+            <button class="bo-nav-sub-item" data-section="gym-packages">الباقات</button>
+            <button class="bo-nav-sub-item" data-section="gym-subscriptions">الاشتراكات</button>
+            <button class="bo-nav-sub-item" data-section="gym-attendance">تسجيل الحضور</button>
+            <button class="bo-nav-sub-item" data-section="gym-trainers">المدربين</button>
+            <button class="bo-nav-sub-item" data-section="gym-classes">الحصص التدريبية</button>
+          </div>
+        </div>
+
         <!-- 4. التقارير -->
         <div class="bo-nav-group" id="reportsNavGroup">
           <button class="bo-nav-item bo-nav-parent" id="reportsNavToggle" type="button">
@@ -2506,6 +2521,180 @@ a { color: inherit; }
               </thead>
               <tbody id="assetFaultsTableBody">
                 <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم أعضاء الجيم -->
+        <div id="bo-section-gym-members" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">أعضاء الجيم</div>
+            <button class="bo-add-btn" id="addGymMemberBtn">+ عضو جديد</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="gymMemberSearchInput" placeholder="ابحث بالاسم أو رقم الهاتف...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>الاسم</th>
+                  <th>الهاتف</th>
+                  <th>الفرع</th>
+                  <th>تاريخ الانضمام</th>
+                  <th>الحالة</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="gymMembersTableBody">
+                <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم باقات الجيم -->
+        <div id="bo-section-gym-packages" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">باقات الاشتراك</div>
+            <button class="bo-add-btn" id="addGymPackageBtn">+ باقة جديدة</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="gymPackageSearchInput" placeholder="ابحث باسم الباقة...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>اسم الباقة</th>
+                  <th>المدة (يوم)</th>
+                  <th>عدد الحصص</th>
+                  <th>السعر</th>
+                  <th>الفرع</th>
+                  <th>الحالة</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="gymPackagesTableBody">
+                <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم اشتراكات الجيم -->
+        <div id="bo-section-gym-subscriptions" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">اشتراكات الأعضاء</div>
+            <button class="bo-add-btn" id="addGymSubscriptionBtn">+ اشتراك جديد</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="gymSubscriptionSearchInput" placeholder="ابحث باسم العضو...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>العضو</th>
+                  <th>الباقة</th>
+                  <th>الفرع</th>
+                  <th>البداية</th>
+                  <th>النهاية</th>
+                  <th>الإجمالي</th>
+                  <th>المدفوع</th>
+                  <th>المتبقي</th>
+                  <th>الحالة</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="gymSubscriptionsTableBody">
+                <tr><td colspan="10" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم تسجيل حضور الجيم -->
+        <div id="bo-section-gym-attendance" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">تسجيل الحضور</div>
+            <button class="bo-add-btn" id="addGymAttendanceBtn">+ تسجيل حضور</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="gymAttendanceSearchInput" placeholder="ابحث باسم العضو...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>العضو</th>
+                  <th>الفرع</th>
+                  <th>طريقة التسجيل</th>
+                  <th>وقت الدخول</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="gymAttendanceTableBody">
+                <tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم مدربي الجيم -->
+        <div id="bo-section-gym-trainers" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">المدربين</div>
+            <button class="bo-add-btn" id="addGymTrainerBtn">+ مدرب جديد</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="gymTrainerSearchInput" placeholder="ابحث بالاسم...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>الاسم</th>
+                  <th>التخصص</th>
+                  <th>الهاتف</th>
+                  <th>الفرع</th>
+                  <th>الحالة</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="gymTrainersTableBody">
+                <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم الحصص التدريبية -->
+        <div id="bo-section-gym-classes" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">الحصص التدريبية</div>
+            <button class="bo-add-btn" id="addGymClassBtn">+ حصة جديدة</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="gymClassSearchInput" placeholder="ابحث باسم الحصة أو المدرب...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>الحصة</th>
+                  <th>المدرب</th>
+                  <th>الفرع</th>
+                  <th>التاريخ</th>
+                  <th>الوقت</th>
+                  <th>الحجوزات</th>
+                  <th>الحالة</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="gymClassesTableBody">
+                <tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
@@ -7639,6 +7828,261 @@ a { color: inherit; }
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelAssetBtn">إلغاء</button>
         <button type="submit" class="submit-btn" id="saveAssetBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: عضو جيم جديد -->
+<div class="modal-overlay" id="gymMemberModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="gymMemberModalTitle">عضو جديد</div>
+    <form id="gymMemberForm">
+      <input type="hidden" id="gymMemberId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>الاسم</label><input type="text" id="gymMemberName" required></div>
+        <div class="field"><label>الهاتف</label><input type="text" id="gymMemberPhone" style="direction:ltr; text-align:right;"></div>
+        <div class="field"><label>الرقم القومي</label><input type="text" id="gymMemberNationalId" style="direction:ltr; text-align:right;"></div>
+        <div class="field">
+          <label>الفرع</label>
+          <select id="gymMemberBranch" required></select>
+        </div>
+        <div class="field">
+          <label>النوع</label>
+          <select id="gymMemberGender">
+            <option value="">— غير محدد —</option>
+            <option value="male">ذكر</option>
+            <option value="female">أنثى</option>
+          </select>
+        </div>
+        <div class="field"><label>تاريخ الميلاد</label><input type="date" id="gymMemberBirthDate"></div>
+        <div class="field" style="display:flex; align-items:flex-end;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="gymMemberIsActive" checked style="width:auto;"> العضو نشط</label>
+        </div>
+        <div class="field field-full"><label>ملاحظات</label><textarea id="gymMemberNotes" rows="2"></textarea></div>
+      </div>
+      <div class="error-msg" id="gymMemberModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelGymMemberBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveGymMemberBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: باقة اشتراك جديدة -->
+<div class="modal-overlay" id="gymPackageModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="gymPackageModalTitle">باقة جديدة</div>
+    <form id="gymPackageForm">
+      <input type="hidden" id="gymPackageId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>اسم الباقة</label><input type="text" id="gymPackageName" required placeholder="مثال: اشتراك شهري، ربع سنوي..."></div>
+        <div class="field"><label>المدة (بالأيام)</label><input type="number" id="gymPackageDurationDays" min="1" required></div>
+        <div class="field"><label>عدد الحصص (اختياري)</label><input type="number" id="gymPackageSessionsCount" min="0" placeholder="اتركه فارغًا لو مفتوح"></div>
+        <div class="field"><label>السعر</label><input type="number" id="gymPackagePrice" min="0" step="0.01" required></div>
+        <div class="field">
+          <label>الفرع (اختياري)</label>
+          <select id="gymPackageBranch"><option value="">— كل الفروع —</option></select>
+        </div>
+        <div class="field" style="display:flex; align-items:flex-end;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="gymPackageIsActive" checked style="width:auto;"> الباقة نشطة</label>
+        </div>
+      </div>
+      <div class="error-msg" id="gymPackageModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelGymPackageBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveGymPackageBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: اشتراك جديد -->
+<div class="modal-overlay" id="gymSubscriptionModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title" id="gymSubscriptionModalTitle">اشتراك جديد</div>
+    <form id="gymSubscriptionForm">
+      <input type="hidden" id="gymSubscriptionId">
+      <div class="modal-grid">
+        <div class="field field-full">
+          <label>العضو</label>
+          <div class="smart-search">
+            <input type="text" id="gymSubMemberInput" autocomplete="off" placeholder="اكتب اسم العضو..." required>
+            <input type="hidden" id="gymSubMember">
+            <div class="smart-search-dropdown" id="gymSubMemberDropdown"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>الباقة</label>
+          <select id="gymSubPackage" required></select>
+        </div>
+        <div class="field">
+          <label>الفرع</label>
+          <select id="gymSubBranch" required></select>
+        </div>
+        <div class="field"><label>تاريخ البداية</label><input type="date" id="gymSubStartDate" required></div>
+        <div class="field"><label>تاريخ النهاية</label><input type="date" id="gymSubEndDate" required></div>
+        <div class="field"><label>إجمالي السعر</label><input type="number" id="gymSubTotalPrice" min="0" step="0.01" required></div>
+        <div class="field"><label>المبلغ المدفوع مقدمًا</label><input type="number" id="gymSubPaidAmount" min="0" step="0.01" value="0"></div>
+        <div class="field">
+          <label>الحالة</label>
+          <select id="gymSubStatus">
+            <option value="active">نشط</option>
+            <option value="frozen">موقوف</option>
+            <option value="expired">منتهي</option>
+            <option value="cancelled">ملغي</option>
+          </select>
+        </div>
+      </div>
+      <div class="error-msg" id="gymSubscriptionModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelGymSubscriptionBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveGymSubscriptionBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: مدفوعات/أقساط الاشتراك -->
+<div class="modal-overlay" id="gymSubPaymentsModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="gymSubPaymentsModalTitle">مدفوعات الاشتراك</div>
+    <div class="bo-table-wrap" style="margin-bottom:14px;">
+      <table class="bo-table">
+        <thead><tr><th>التاريخ</th><th>المبلغ</th><th>طريقة الدفع</th><th>ملاحظات</th></tr></thead>
+        <tbody id="gymSubPaymentsList"><tr><td colspan="4" class="bo-empty">لا توجد مدفوعات</td></tr></tbody>
+      </table>
+    </div>
+    <form id="gymSubPaymentForm">
+      <input type="hidden" id="gymSubPaymentSubscriptionId">
+      <div class="modal-grid">
+        <div class="field"><label>المبلغ</label><input type="number" id="gymSubPaymentAmount" min="0.01" step="0.01" required></div>
+        <div class="field"><label>تاريخ الدفع</label><input type="date" id="gymSubPaymentDate" required></div>
+        <div class="field"><label>طريقة الدفع</label>
+          <select id="gymSubPaymentMethod">
+            <option value="cash">نقدي</option>
+            <option value="card">بطاقة</option>
+            <option value="transfer">تحويل</option>
+          </select>
+        </div>
+        <div class="field field-full"><label>ملاحظات</label><input type="text" id="gymSubPaymentNotes"></div>
+      </div>
+      <div class="error-msg" id="gymSubPaymentModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelGymSubPaymentsBtn">إغلاق</button>
+        <button type="submit" class="submit-btn" id="saveGymSubPaymentBtn">تسجيل دفعة</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: تسجيل حضور -->
+<div class="modal-overlay" id="gymAttendanceModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">تسجيل حضور</div>
+    <form id="gymAttendanceForm">
+      <div class="modal-grid">
+        <div class="field field-full">
+          <label>العضو</label>
+          <div class="smart-search">
+            <input type="text" id="gymAttendanceMemberInput" autocomplete="off" placeholder="اكتب اسم العضو أو امسح الباركود..." required>
+            <input type="hidden" id="gymAttendanceMember">
+            <div class="smart-search-dropdown" id="gymAttendanceMemberDropdown"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>الفرع</label>
+          <select id="gymAttendanceBranch" required></select>
+        </div>
+        <div class="field">
+          <label>طريقة التسجيل</label>
+          <select id="gymAttendanceMethod">
+            <option value="manual">يدوي</option>
+            <option value="barcode">باركود</option>
+            <option value="qr">QR</option>
+          </select>
+        </div>
+      </div>
+      <div class="error-msg" id="gymAttendanceModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelGymAttendanceBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveGymAttendanceBtn">تسجيل</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: مدرب جديد -->
+<div class="modal-overlay" id="gymTrainerModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="gymTrainerModalTitle">مدرب جديد</div>
+    <form id="gymTrainerForm">
+      <input type="hidden" id="gymTrainerId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>الاسم</label><input type="text" id="gymTrainerName" required></div>
+        <div class="field"><label>الهاتف</label><input type="text" id="gymTrainerPhone" style="direction:ltr; text-align:right;"></div>
+        <div class="field"><label>التخصص</label><input type="text" id="gymTrainerSpecialty" placeholder="مثال: كروس فيت، سباحة..."></div>
+        <div class="field">
+          <label>الفرع</label>
+          <select id="gymTrainerBranch" required></select>
+        </div>
+        <div class="field" style="display:flex; align-items:flex-end;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="gymTrainerIsActive" checked style="width:auto;"> المدرب نشط</label>
+        </div>
+      </div>
+      <div class="error-msg" id="gymTrainerModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelGymTrainerBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveGymTrainerBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: حصة تدريبية جديدة -->
+<div class="modal-overlay" id="gymClassModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title" id="gymClassModalTitle">حصة جديدة</div>
+    <form id="gymClassForm">
+      <input type="hidden" id="gymClassId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>اسم الحصة</label><input type="text" id="gymClassName" required placeholder="مثال: يوجا، كروس فيت..."></div>
+        <div class="field">
+          <label>المدرب</label>
+          <select id="gymClassTrainer"><option value="">— بدون —</option></select>
+        </div>
+        <div class="field">
+          <label>الفرع</label>
+          <select id="gymClassBranch" required></select>
+        </div>
+        <div class="field"><label>التاريخ</label><input type="date" id="gymClassDate" required></div>
+        <div class="field"><label>من الساعة</label><input type="time" id="gymClassStartTime" required></div>
+        <div class="field"><label>إلى الساعة</label><input type="time" id="gymClassEndTime" required></div>
+        <div class="field"><label>السعة القصوى</label><input type="number" id="gymClassCapacity" min="1" value="20" required></div>
+        <div class="field" style="display:flex; align-items:flex-end;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="gymClassIsActive" checked style="width:auto;"> الحصة نشطة</label>
+        </div>
+      </div>
+      <div class="ci-section-subtitle" style="margin-top:6px;">الأعضاء المحجوزين</div>
+      <div class="bo-table-wrap" style="margin-bottom:10px;">
+        <table class="bo-table">
+          <thead><tr><th>العضو</th><th>الحالة</th><th></th></tr></thead>
+          <tbody id="gymClassBookingsList"><tr><td colspan="3" class="bo-empty">— احفظ الحصة أولًا لإضافة حجوزات —</td></tr></tbody>
+        </table>
+      </div>
+      <div class="field field-full" id="gymClassBookMemberWrap" style="display:none;">
+        <label>حجز عضو جديد</label>
+        <div class="smart-search">
+          <input type="text" id="gymClassBookMemberInput" autocomplete="off" placeholder="اكتب اسم العضو...">
+          <input type="hidden" id="gymClassBookMember">
+          <div class="smart-search-dropdown" id="gymClassBookMemberDropdown"></div>
+        </div>
+      </div>
+      <div class="error-msg" id="gymClassModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelGymClassBtn">إغلاق</button>
+        <button type="submit" class="submit-btn" id="saveGymClassBtn">حفظ</button>
       </div>
     </form>
   </div>
@@ -18212,6 +18656,7 @@ const boAllSections = ['dashboard','products','categories','unit-types','tax-rat
   'contracts',
   'my-visits',
   'asset-faults',
+  'gym-members','gym-packages','gym-subscriptions','gym-attendance','gym-trainers','gym-classes',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
   'soon','company-info','permissions','users','branches','business-types','pos-devices','branch-settings','pos-tables','print-settings','stock','stocktake','product-batches','product-serials','backup','reset-data','employees','attendance','leave-requests','expense-items','expenses','salaries','sales-commissions','treasuries','capital','fixed-assets','promotions','coupons','modifier-groups','recipes'];
 
@@ -18221,6 +18666,7 @@ const boNavGroups = [
   { toggle: 'salesNavToggle', group: 'salesNavGroup', sections: ['sales-list','sale-orders','delivery','delivery-zones','delivery-companies','sales-channels','driver-settlements','customers','customer-types','sale-returns'] },
   { toggle: 'purchasesNavToggle', group: 'purchasesNavGroup', sections: ['suppliers','supplier-prices','purchase-requisitions','purchase-orders','purchases','purchase-returns'] },
   { toggle: 'serviceMgmtNavToggle', group: 'serviceMgmtNavGroup', sections: ['assets', 'service-orders', 'service-visits', 'contracts', 'my-visits', 'asset-faults'] },
+  { toggle: 'gymNavToggle', group: 'gymNavGroup', sections: ['gym-members', 'gym-packages', 'gym-subscriptions', 'gym-attendance', 'gym-trainers', 'gym-classes'] },
   { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
   { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['treasuries','payments','expense-items','expenses','capital','fixed-assets'] },
   { toggle: 'hrNavToggle', group: 'hrNavGroup', sections: ['employees','attendance','leave-requests','salaries','sales-commissions'] },
@@ -18245,6 +18691,8 @@ const SECTION_PERMISSION_MAP = {
   'contracts': 'service_management',
   'my-visits': 'technician',
   'asset-faults': 'service_management',
+  'gym-members': 'gym_management', 'gym-packages': 'gym_management', 'gym-subscriptions': 'gym_management',
+  'gym-attendance': 'gym_management', 'gym-trainers': 'gym_management', 'gym-classes': 'gym_management',
   'reports-sales': 'reports', 'reports-purchases': 'reports', 'reports-inventory': 'reports', 'reports-accounting': 'reports', 'reports-other': 'reports',
   'treasuries': 'finance', 'payments': 'finance', 'expense-items': 'finance', 'expenses': 'finance', 'capital': 'admin', 'fixed-assets': 'finance',
   'employees': 'hr', 'attendance': 'hr', 'leave-requests': 'hr', 'salaries': 'hr', 'sales-commissions': 'hr',
@@ -18351,7 +18799,9 @@ const SCREEN_LABELS = {
   'branches': 'الفروع', 'business-types': 'أنواع الأنشطة التجارية', 'pos-devices': 'أجهزة نقاط البيع',
   'branch-settings': 'إعدادات الفرع', 'pos-tables': 'الطاولات والكراسي', 'print-settings': 'إعدادات الطباعة',
   'backup': 'نسخة احتياطية', 'reset-data': 'تهيئة البيانات', 'capital': 'رأس المال وحقوق الملكية',
-  'assets': 'الأصول/الأجهزة', 'service-orders': 'أوامر الخدمة', 'service-visits': 'الزيارات', 'contracts': 'العقود', 'my-visits': 'زياراتي (الفني)', 'asset-faults': 'الأعطال'
+  'assets': 'الأصول/الأجهزة', 'service-orders': 'أوامر الخدمة', 'service-visits': 'الزيارات', 'contracts': 'العقود', 'my-visits': 'زياراتي (الفني)', 'asset-faults': 'الأعطال',
+  'gym-members': 'الأعضاء', 'gym-packages': 'الباقات', 'gym-subscriptions': 'الاشتراكات',
+  'gym-attendance': 'تسجيل الحضور', 'gym-trainers': 'المدربين', 'gym-classes': 'الحصص التدريبية'
 };
 
 // بناء قائمة الشاشات التفصيلية لكل وحدة رئيسية تلقائيًا من SECTION_PERMISSION_MAP
@@ -18870,6 +19320,12 @@ const ACTION_CAPABLE_SCREENS = {
   'service-visits': { add: true, edit: true, delete: true },
   'contracts': { add: true, edit: true, delete: true },
   'asset-faults': { add: true, edit: true, delete: true },
+  'gym-members': { add: true, edit: true, delete: true },
+  'gym-packages': { add: true, edit: true, delete: true },
+  'gym-subscriptions': { add: true, edit: true, delete: true },
+  'gym-attendance': { add: true, delete: true },
+  'gym-trainers': { add: true, edit: true, delete: true },
+  'gym-classes': { add: true, edit: true, delete: true },
   'purchase-requisitions': { add: true, edit: true },
   'purchase-orders': { add: true, edit: true, delete: true },
   'sales-list': { edit: true },
@@ -18917,6 +19373,8 @@ const ADD_BUTTON_MAP = {
   'service-visits': 'addServiceVisitBtn',
   'contracts': 'addContractBtn',
   'asset-faults': 'addAssetFaultBtn',
+  'gym-members': 'addGymMemberBtn', 'gym-packages': 'addGymPackageBtn', 'gym-subscriptions': 'addGymSubscriptionBtn',
+  'gym-attendance': 'addGymAttendanceBtn', 'gym-trainers': 'addGymTrainerBtn', 'gym-classes': 'addGymClassBtn',
   'purchase-orders': 'addPurchaseOrderBtn', 'purchases': 'addPurchaseBtn', 'purchase-returns': 'addPurchaseReturnBtn', 'sale-returns': 'addSaleReturnFromBoBtn',
   'stocktake': 'addStocktakeSessionBtn', 'product-batches': 'addProductBatchBtn', 'product-serials': 'addProductSerialBtn',
   'delivery': 'addDeliveryOrderBtn', 'delivery-zones': 'addDeliveryZoneBtn', 'delivery-companies': 'addDeliveryCompanyBtn', 'sales-channels': 'addSalesChannelBtn',
@@ -19095,6 +19553,21 @@ function activateBoSection(section, btn) {
   if (section === 'contracts' && !boContractsLoadedOnce) { loadBoContractsFull().then(renderContractsTable); boContractsLoadedOnce = true; }
   if (section === 'my-visits' && !boMyVisitsLoadedOnce) { loadMyVisits().then(renderMyVisits); boMyVisitsLoadedOnce = true; }
   if (section === 'asset-faults' && !boAssetFaultsLoadedOnce) { loadAssetFaults().then(renderAssetFaultsTable); boAssetFaultsLoadedOnce = true; }
+  if (section === 'gym-members' && !boGymMembersLoadedOnce) { loadBoGymMembers().then(renderGymMembersTable); boGymMembersLoadedOnce = true; }
+  if (section === 'gym-packages' && !boGymPackagesLoadedOnce) { loadBoGymPackages().then(renderGymPackagesTable); boGymPackagesLoadedOnce = true; }
+  if (section === 'gym-subscriptions' && !boGymSubscriptionsLoadedOnce) {
+    Promise.all([loadBoGymMembers(), loadBoGymPackages(), loadBoGymSubscriptions()]).then(renderGymSubscriptionsTable);
+    boGymSubscriptionsLoadedOnce = true;
+  }
+  if (section === 'gym-attendance' && !boGymAttendanceLoadedOnce) {
+    Promise.all([loadBoGymMembers(), loadBoGymAttendance()]).then(renderGymAttendanceTable);
+    boGymAttendanceLoadedOnce = true;
+  }
+  if (section === 'gym-trainers' && !boGymTrainersLoadedOnce) { loadBoGymTrainers().then(renderGymTrainersTable); boGymTrainersLoadedOnce = true; }
+  if (section === 'gym-classes' && !boGymClassesLoadedOnce) {
+    Promise.all([loadBoGymTrainers(), loadBoGymMembers(), loadBoGymClasses()]).then(renderGymClassesTable);
+    boGymClassesLoadedOnce = true;
+  }
   if (section === 'purchase-orders') { loadBoPurchaseOrders().then(renderPurchaseOrdersTable); }
   if (section === 'purchase-requisitions') { loadBoRequisitions().then(renderRequisitionsTable); }
   if (section === 'purchase-returns') { loadBoPurchaseReturns().then(renderPurchaseReturnsTable); }
@@ -20493,6 +20966,69 @@ function bindBackofficeEvents() {
   document.getElementById('supplierBalance').addEventListener('input', updateSupplierCreditWarning);
   document.getElementById('supplierCreditLimit').addEventListener('input', updateSupplierCreditWarning);
   document.getElementById('supplierSearchInput').addEventListener('input', renderSuppliersTable);
+
+  // ---- Gym Member modal ----
+  document.getElementById('addGymMemberBtn').addEventListener('click', () => openGymMemberModal(null));
+  document.getElementById('cancelGymMemberBtn').addEventListener('click', closeGymMemberModal);
+  document.getElementById('gymMemberModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'gymMemberModalOverlay') closeGymMemberModal();
+  });
+  document.getElementById('gymMemberForm').addEventListener('submit', saveGymMember);
+  document.getElementById('gymMemberSearchInput').addEventListener('input', renderGymMembersTable);
+
+  // ---- Gym Package modal ----
+  document.getElementById('addGymPackageBtn').addEventListener('click', () => openGymPackageModal(null));
+  document.getElementById('cancelGymPackageBtn').addEventListener('click', closeGymPackageModal);
+  document.getElementById('gymPackageModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'gymPackageModalOverlay') closeGymPackageModal();
+  });
+  document.getElementById('gymPackageForm').addEventListener('submit', saveGymPackage);
+  document.getElementById('gymPackageSearchInput').addEventListener('input', renderGymPackagesTable);
+
+  // ---- Gym Subscription modal ----
+  document.getElementById('addGymSubscriptionBtn').addEventListener('click', () => openGymSubscriptionModal(null));
+  document.getElementById('cancelGymSubscriptionBtn').addEventListener('click', closeGymSubscriptionModal);
+  document.getElementById('gymSubscriptionModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'gymSubscriptionModalOverlay') closeGymSubscriptionModal();
+  });
+  document.getElementById('gymSubscriptionForm').addEventListener('submit', saveGymSubscription);
+  document.getElementById('gymSubPackage').addEventListener('change', applyGymSubPackageDefaults);
+  document.getElementById('gymSubStartDate').addEventListener('change', applyGymSubPackageDefaults);
+  document.getElementById('gymSubscriptionSearchInput').addEventListener('input', renderGymSubscriptionsTable);
+
+  // ---- Gym Subscription Payments modal ----
+  document.getElementById('cancelGymSubPaymentsBtn').addEventListener('click', closeGymSubPaymentsModal);
+  document.getElementById('gymSubPaymentsModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'gymSubPaymentsModalOverlay') closeGymSubPaymentsModal();
+  });
+  document.getElementById('gymSubPaymentForm').addEventListener('submit', saveGymSubPayment);
+
+  // ---- Gym Attendance modal ----
+  document.getElementById('addGymAttendanceBtn').addEventListener('click', () => openGymAttendanceModal());
+  document.getElementById('cancelGymAttendanceBtn').addEventListener('click', closeGymAttendanceModal);
+  document.getElementById('gymAttendanceModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'gymAttendanceModalOverlay') closeGymAttendanceModal();
+  });
+  document.getElementById('gymAttendanceForm').addEventListener('submit', saveGymAttendance);
+  document.getElementById('gymAttendanceSearchInput').addEventListener('input', renderGymAttendanceTable);
+
+  // ---- Gym Trainer modal ----
+  document.getElementById('addGymTrainerBtn').addEventListener('click', () => openGymTrainerModal(null));
+  document.getElementById('cancelGymTrainerBtn').addEventListener('click', closeGymTrainerModal);
+  document.getElementById('gymTrainerModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'gymTrainerModalOverlay') closeGymTrainerModal();
+  });
+  document.getElementById('gymTrainerForm').addEventListener('submit', saveGymTrainer);
+  document.getElementById('gymTrainerSearchInput').addEventListener('input', renderGymTrainersTable);
+
+  // ---- Gym Class modal ----
+  document.getElementById('addGymClassBtn').addEventListener('click', () => openGymClassModal(null));
+  document.getElementById('cancelGymClassBtn').addEventListener('click', closeGymClassModal);
+  document.getElementById('gymClassModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'gymClassModalOverlay') closeGymClassModal();
+  });
+  document.getElementById('gymClassForm').addEventListener('submit', saveGymClass);
+  document.getElementById('gymClassSearchInput').addEventListener('input', renderGymClassesTable);
 
   // ---- Asset modal ----
   document.getElementById('addAssetBtn').addEventListener('click', () => openAssetModal(null));
@@ -29273,6 +29809,7 @@ const PERMISSION_GROUPS = [
   { key: 'sales_management', title: 'المبيعات', desc: 'فواتير البيع، العملاء، أنواع العملاء، مرتجعات البيع', children: buildModuleScreens('sales_management') },
   { key: 'purchases_management', title: 'المشتريات', desc: 'الموردون، فواتير الشراء، مرتجعات الشراء', children: buildModuleScreens('purchases_management') },
   { key: 'service_management', title: 'إدارة الخدمات', desc: 'الأصول/الأجهزة، أوامر الخدمة، الفنيين، الزيارات، العقود (تحت الإنشاء تدريجيًا)', children: buildModuleScreens('service_management') },
+  { key: 'gym_management', title: 'الجيم والصالات الرياضية', desc: 'الأعضاء، الباقات، الاشتراكات، الحضور، المدربين، الحصص التدريبية', children: buildModuleScreens('gym_management') },
   { key: 'technician', title: 'الفني الميداني (وصول محدود)', desc: 'وصول مقتصر على الزيارات المسندة للموظف المرتبط بحساب المستخدم نفسه فقط — منفصل عن إدارة الخدمات الكاملة', children: buildModuleScreens('technician') },
   { key: 'reports', title: 'التقارير', desc: 'تقارير المبيعات والمشتريات والمخزون والمحاسبة والتقارير الأخرى', reportGroups: REPORT_TABS },
   { key: 'finance', title: 'المالية', desc: 'الخزائن والحسابات البنكية، سجل المدفوعات، بنود المصروفات، المصروفات، الأصول الثابتة', children: buildModuleScreens('finance') },
@@ -34209,6 +34746,874 @@ async function deleteSupplier(supplier) {
   showToast('تم حذف المورد');
   await loadBoSuppliers();
   renderSuppliersTable();
+}
+
+// ==================== الجيم والصالات الرياضية ====================
+let boGymMembers = [];
+let boGymPackages = [];
+let boGymSubscriptions = [];
+let boGymMembersLoadedOnce = false;
+let boGymPackagesLoadedOnce = false;
+let boGymSubscriptionsLoadedOnce = false;
+let gymSubMemberSearch = null;
+
+function populateBranchSelect(selectEl, selectedId, includeAllOption) {
+  selectEl.innerHTML = (includeAllOption ? '<option value="">— كل الفروع —</option>' : '')
+    + boBranchesList.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+  selectEl.value = selectedId || '';
+}
+
+// ---- الأعضاء ----
+async function loadBoGymMembers() {
+  const { data, error } = await supabaseClient.from('gym_members').select('*, branches(name)').order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل الأعضاء', true); return; }
+  boGymMembers = data || [];
+}
+
+function renderGymMembersTable() {
+  const tbody = document.getElementById('gymMembersTableBody');
+  const q = (document.getElementById('gymMemberSearchInput').value || '').trim().toLowerCase();
+  const filtered = boGymMembers.filter(m => !q || m.name.toLowerCase().includes(q) || (m.phone || '').includes(q));
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">${boGymMembers.length === 0 ? 'لا يوجد أعضاء مسجلين حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(m => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(m.name)}</td>
+      <td style="direction:ltr; text-align:right;">${escapeHtml(m.phone || '—')}</td>
+      <td>${escapeHtml(m.branches?.name || '—')}</td>
+      <td class="num">${m.created_at ? new Date(m.created_at).toLocaleDateString('ar-EG') : '—'}</td>
+      <td>${m.is_active ? '<span class="bo-badge active">نشط</span>' : '<span class="bo-badge inactive">غير نشط</span>'}</td>
+      <td><div class="bo-row-actions">
+        <button class="bo-icon-btn" data-action="edit">تعديل</button>
+        <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+      </div></td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openGymMemberModal(m));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteGymMember(m));
+    applyRowActionPerm(tr, 'gym-members');
+    tbody.appendChild(tr);
+  });
+}
+
+function openGymMemberModal(member) {
+  document.getElementById('gymMemberModalTitle').textContent = member ? 'تعديل عضو' : 'عضو جديد';
+  document.getElementById('gymMemberId').value = member ? member.id : '';
+  document.getElementById('gymMemberName').value = member?.name || '';
+  document.getElementById('gymMemberPhone').value = member?.phone || '';
+  document.getElementById('gymMemberNationalId').value = member?.national_id || '';
+  document.getElementById('gymMemberGender').value = member?.gender || '';
+  document.getElementById('gymMemberBirthDate').value = member?.birth_date || '';
+  document.getElementById('gymMemberNotes').value = member?.notes || '';
+  document.getElementById('gymMemberIsActive').checked = member ? !!member.is_active : true;
+  populateBranchSelect(document.getElementById('gymMemberBranch'), member?.branch_id || currentProfile.branch_id, false);
+  document.getElementById('gymMemberModalError').classList.remove('show');
+  document.getElementById('gymMemberModalOverlay').classList.add('show');
+}
+
+function closeGymMemberModal() {
+  document.getElementById('gymMemberModalOverlay').classList.remove('show');
+}
+
+async function saveGymMember(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('gymMemberModalError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('saveGymMemberBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('gymMemberId').value || null;
+  const payload = {
+    name: document.getElementById('gymMemberName').value.trim(),
+    phone: document.getElementById('gymMemberPhone').value.trim() || null,
+    national_id: document.getElementById('gymMemberNationalId').value.trim() || null,
+    branch_id: document.getElementById('gymMemberBranch').value,
+    gender: document.getElementById('gymMemberGender').value || null,
+    birth_date: document.getElementById('gymMemberBirthDate').value || null,
+    notes: document.getElementById('gymMemberNotes').value.trim() || null,
+    is_active: document.getElementById('gymMemberIsActive').checked,
+  };
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('gym_members').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('gym_members').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث بيانات العضو' : 'تمت إضافة العضو بنجاح');
+    closeGymMemberModal();
+    await loadBoGymMembers();
+    renderGymMembersTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ';
+  }
+}
+
+async function deleteGymMember(member) {
+  if (!hasBoActionPermission('gym-members', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف العضو "${member.name}"؟`)) return;
+  const { error } = await supabaseClient.from('gym_members').delete().eq('id', member.id);
+  if (error) { console.error(error); showToast('تعذر حذف العضو — على الأرجح مرتبط باشتراكات', true); return; }
+  showToast('تم حذف العضو');
+  await loadBoGymMembers();
+  renderGymMembersTable();
+}
+
+// ---- الباقات ----
+async function loadBoGymPackages() {
+  const { data, error } = await supabaseClient.from('gym_packages').select('*, branches(name)').order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل الباقات', true); return; }
+  boGymPackages = data || [];
+}
+
+function renderGymPackagesTable() {
+  const tbody = document.getElementById('gymPackagesTableBody');
+  const q = (document.getElementById('gymPackageSearchInput').value || '').trim().toLowerCase();
+  const filtered = boGymPackages.filter(p => !q || p.name.toLowerCase().includes(q));
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">${boGymPackages.length === 0 ? 'لا توجد باقات مضافة حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(p => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(p.name)}</td>
+      <td class="num">${p.duration_days}</td>
+      <td class="num">${p.sessions_count ?? 'مفتوح'}</td>
+      <td class="num">${Number(p.price).toFixed(2)}</td>
+      <td>${escapeHtml(p.branches?.name || 'كل الفروع')}</td>
+      <td>${p.is_active ? '<span class="bo-badge active">نشط</span>' : '<span class="bo-badge inactive">غير نشط</span>'}</td>
+      <td><div class="bo-row-actions">
+        <button class="bo-icon-btn" data-action="edit">تعديل</button>
+        <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+      </div></td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openGymPackageModal(p));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteGymPackage(p));
+    applyRowActionPerm(tr, 'gym-packages');
+    tbody.appendChild(tr);
+  });
+}
+
+function openGymPackageModal(pkg) {
+  document.getElementById('gymPackageModalTitle').textContent = pkg ? 'تعديل باقة' : 'باقة جديدة';
+  document.getElementById('gymPackageId').value = pkg ? pkg.id : '';
+  document.getElementById('gymPackageName').value = pkg?.name || '';
+  document.getElementById('gymPackageDurationDays').value = pkg?.duration_days || '';
+  document.getElementById('gymPackageSessionsCount').value = pkg?.sessions_count ?? '';
+  document.getElementById('gymPackagePrice').value = pkg?.price || '';
+  document.getElementById('gymPackageIsActive').checked = pkg ? !!pkg.is_active : true;
+  populateBranchSelect(document.getElementById('gymPackageBranch'), pkg?.branch_id || '', true);
+  document.getElementById('gymPackageModalError').classList.remove('show');
+  document.getElementById('gymPackageModalOverlay').classList.add('show');
+}
+
+function closeGymPackageModal() {
+  document.getElementById('gymPackageModalOverlay').classList.remove('show');
+}
+
+async function saveGymPackage(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('gymPackageModalError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('saveGymPackageBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('gymPackageId').value || null;
+  const sessionsVal = document.getElementById('gymPackageSessionsCount').value;
+  const payload = {
+    name: document.getElementById('gymPackageName').value.trim(),
+    duration_days: Number(document.getElementById('gymPackageDurationDays').value),
+    sessions_count: sessionsVal === '' ? null : Number(sessionsVal),
+    price: Number(document.getElementById('gymPackagePrice').value),
+    branch_id: document.getElementById('gymPackageBranch').value || null,
+    is_active: document.getElementById('gymPackageIsActive').checked,
+  };
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('gym_packages').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('gym_packages').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث الباقة' : 'تمت إضافة الباقة بنجاح');
+    closeGymPackageModal();
+    await loadBoGymPackages();
+    renderGymPackagesTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ';
+  }
+}
+
+async function deleteGymPackage(pkg) {
+  if (!hasBoActionPermission('gym-packages', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف باقة "${pkg.name}"؟`)) return;
+  const { error } = await supabaseClient.from('gym_packages').delete().eq('id', pkg.id);
+  if (error) { console.error(error); showToast('تعذر حذف الباقة — على الأرجح مرتبطة باشتراكات', true); return; }
+  showToast('تم حذف الباقة');
+  await loadBoGymPackages();
+  renderGymPackagesTable();
+}
+
+// ---- الاشتراكات ----
+async function loadBoGymSubscriptions() {
+  const { data, error } = await supabaseClient
+    .from('gym_subscriptions')
+    .select('*, gym_members(name), gym_packages(name), branches(name)')
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل الاشتراكات', true); return; }
+  boGymSubscriptions = data || [];
+}
+
+function gymSubStatusBadge(sub) {
+  const map = {
+    active: '<span class="bo-badge active">نشط</span>',
+    expired: '<span class="bo-badge inactive">منتهي</span>',
+    frozen: '<span class="bo-badge inactive">موقوف</span>',
+    cancelled: '<span class="bo-badge inactive">ملغي</span>',
+  };
+  return map[sub.status] || sub.status;
+}
+
+function renderGymSubscriptionsTable() {
+  const tbody = document.getElementById('gymSubscriptionsTableBody');
+  const q = (document.getElementById('gymSubscriptionSearchInput').value || '').trim().toLowerCase();
+  const filtered = boGymSubscriptions.filter(s => !q || (s.gym_members?.name || '').toLowerCase().includes(q));
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="10" class="bo-empty">${boGymSubscriptions.length === 0 ? 'لا توجد اشتراكات مسجلة حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(s => {
+    const remaining = Number(s.total_price) - Number(s.paid_amount);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(s.gym_members?.name || '—')}</td>
+      <td>${escapeHtml(s.gym_packages?.name || '—')}</td>
+      <td>${escapeHtml(s.branches?.name || '—')}</td>
+      <td class="num">${s.start_date || '—'}</td>
+      <td class="num">${s.end_date || '—'}</td>
+      <td class="num">${Number(s.total_price).toFixed(2)}</td>
+      <td class="num">${Number(s.paid_amount).toFixed(2)}</td>
+      <td class="num">${remaining.toFixed(2)}</td>
+      <td>${gymSubStatusBadge(s)}</td>
+      <td><div class="bo-row-actions">
+        <button class="bo-icon-btn" data-action="payments" style="color:var(--teal-700);">المدفوعات</button>
+        <button class="bo-icon-btn" data-action="edit">تعديل</button>
+        <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+      </div></td>`;
+    tr.querySelector('[data-action="payments"]').addEventListener('click', () => openGymSubPaymentsModal(s));
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openGymSubscriptionModal(s));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteGymSubscription(s));
+    applyRowActionPerm(tr, 'gym-subscriptions');
+    tbody.appendChild(tr);
+  });
+}
+
+async function openGymSubscriptionModal(sub) {
+  if (boGymMembers.length === 0) await loadBoGymMembers();
+  if (boGymPackages.length === 0) await loadBoGymPackages();
+
+  document.getElementById('gymSubscriptionModalTitle').textContent = sub ? 'تعديل اشتراك' : 'اشتراك جديد';
+  document.getElementById('gymSubscriptionId').value = sub ? sub.id : '';
+  document.getElementById('gymSubStartDate').value = sub?.start_date || new Date().toISOString().slice(0, 10);
+  document.getElementById('gymSubEndDate').value = sub?.end_date || '';
+  document.getElementById('gymSubTotalPrice').value = sub?.total_price ?? '';
+  document.getElementById('gymSubPaidAmount').value = sub?.paid_amount ?? 0;
+  document.getElementById('gymSubStatus').value = sub?.status || 'active';
+
+  if (!gymSubMemberSearch) {
+    gymSubMemberSearch = createSmartSearch({
+      input: document.getElementById('gymSubMemberInput'),
+      hidden: document.getElementById('gymSubMember'),
+      dropdown: document.getElementById('gymSubMemberDropdown'),
+      getItems: () => boGymMembers.map(m => ({ value: m.id, label: m.name, sublabel: m.phone || '', search: `${m.name} ${m.phone || ''}` })),
+    });
+  }
+  document.getElementById('gymSubMemberInput').value = sub?.gym_members?.name || '';
+  document.getElementById('gymSubMember').value = sub ? sub.member_id : '';
+
+  const packageSelect = document.getElementById('gymSubPackage');
+  packageSelect.innerHTML = boGymPackages.filter(p => p.is_active || p.id === sub?.package_id)
+    .map(p => `<option value="${p.id}" data-duration="${p.duration_days}" data-price="${p.price}">${escapeHtml(p.name)}</option>`).join('');
+  packageSelect.value = sub?.package_id || (boGymPackages[0]?.id || '');
+
+  populateBranchSelect(document.getElementById('gymSubBranch'), sub?.branch_id || currentProfile.branch_id, false);
+
+  document.getElementById('gymSubscriptionModalError').classList.remove('show');
+  document.getElementById('gymSubscriptionModalOverlay').classList.add('show');
+}
+
+// عند اختيار باقة جديدة في فورم الاشتراك (لعضو جديد) نملأ تاريخ النهاية
+// والسعر تلقائيًا بناءً على مدة وسعر الباقة، مع ترك الحرية للمستخدم للتعديل
+function applyGymSubPackageDefaults() {
+  const select = document.getElementById('gymSubPackage');
+  const opt = select.selectedOptions[0];
+  if (!opt) return;
+  const isNew = !document.getElementById('gymSubscriptionId').value;
+  if (!isNew) return;
+  const startDate = document.getElementById('gymSubStartDate').value || new Date().toISOString().slice(0, 10);
+  const durationDays = Number(opt.dataset.duration || 0);
+  const end = new Date(startDate);
+  end.setDate(end.getDate() + durationDays);
+  document.getElementById('gymSubEndDate').value = end.toISOString().slice(0, 10);
+  document.getElementById('gymSubTotalPrice').value = opt.dataset.price || '';
+}
+
+function closeGymSubscriptionModal() {
+  document.getElementById('gymSubscriptionModalOverlay').classList.remove('show');
+}
+
+async function saveGymSubscription(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('gymSubscriptionModalError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('saveGymSubscriptionBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+
+  const memberId = document.getElementById('gymSubMember').value || null;
+  if (!memberId) {
+    errEl.textContent = 'اختر العضو أولًا';
+    errEl.classList.add('show');
+    btn.disabled = false; btn.textContent = 'حفظ';
+    return;
+  }
+
+  const id = document.getElementById('gymSubscriptionId').value || null;
+  const payload = {
+    member_id: memberId,
+    package_id: document.getElementById('gymSubPackage').value,
+    branch_id: document.getElementById('gymSubBranch').value,
+    start_date: document.getElementById('gymSubStartDate').value,
+    end_date: document.getElementById('gymSubEndDate').value,
+    total_price: Number(document.getElementById('gymSubTotalPrice').value),
+    paid_amount: Number(document.getElementById('gymSubPaidAmount').value || 0),
+    status: document.getElementById('gymSubStatus').value,
+  };
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('gym_subscriptions').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      payload.created_by = currentProfile.id;
+      const { error } = await supabaseClient.from('gym_subscriptions').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث الاشتراك' : 'تمت إضافة الاشتراك بنجاح');
+    closeGymSubscriptionModal();
+    await loadBoGymSubscriptions();
+    renderGymSubscriptionsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ';
+  }
+}
+
+async function deleteGymSubscription(sub) {
+  if (!hasBoActionPermission('gym-subscriptions', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف اشتراك "${sub.gym_members?.name || ''}"؟`)) return;
+  const { error } = await supabaseClient.from('gym_subscriptions').delete().eq('id', sub.id);
+  if (error) { console.error(error); showToast('تعذر حذف الاشتراك', true); return; }
+  showToast('تم حذف الاشتراك');
+  await loadBoGymSubscriptions();
+  renderGymSubscriptionsTable();
+}
+
+// ---- مدفوعات/أقساط الاشتراك ----
+let currentGymSubForPayments = null;
+
+async function openGymSubPaymentsModal(sub) {
+  currentGymSubForPayments = sub;
+  document.getElementById('gymSubPaymentsModalTitle').textContent = `مدفوعات اشتراك: ${sub.gym_members?.name || ''}`;
+  document.getElementById('gymSubPaymentSubscriptionId').value = sub.id;
+  document.getElementById('gymSubPaymentDate').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('gymSubPaymentAmount').value = '';
+  document.getElementById('gymSubPaymentNotes').value = '';
+  document.getElementById('gymSubPaymentModalError').classList.remove('show');
+  await renderGymSubPaymentsList(sub.id);
+  document.getElementById('gymSubPaymentsModalOverlay').classList.add('show');
+}
+
+async function renderGymSubPaymentsList(subscriptionId) {
+  const tbody = document.getElementById('gymSubPaymentsList');
+  const { data, error } = await supabaseClient.from('gym_subscription_payments').select('*').eq('subscription_id', subscriptionId).order('payment_date', { ascending: false });
+  if (error) { console.error(error); return; }
+  if (!data || data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="bo-empty">لا توجد مدفوعات مسجلة بعد</td></tr>';
+    return;
+  }
+  const methodLabels = { cash: 'نقدي', card: 'بطاقة', transfer: 'تحويل' };
+  tbody.innerHTML = data.map(p => `
+    <tr>
+      <td class="num">${p.payment_date}</td>
+      <td class="num">${Number(p.amount).toFixed(2)}</td>
+      <td>${methodLabels[p.payment_method] || escapeHtml(p.payment_method || '—')}</td>
+      <td>${escapeHtml(p.notes || '—')}</td>
+    </tr>`).join('');
+}
+
+function closeGymSubPaymentsModal() {
+  document.getElementById('gymSubPaymentsModalOverlay').classList.remove('show');
+  currentGymSubForPayments = null;
+}
+
+async function saveGymSubPayment(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('gymSubPaymentModalError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('saveGymSubPaymentBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+
+  const subscriptionId = document.getElementById('gymSubPaymentSubscriptionId').value;
+  const amount = Number(document.getElementById('gymSubPaymentAmount').value);
+  const payload = {
+    subscription_id: subscriptionId,
+    amount,
+    payment_date: document.getElementById('gymSubPaymentDate').value,
+    payment_method: document.getElementById('gymSubPaymentMethod').value,
+    notes: document.getElementById('gymSubPaymentNotes').value.trim() || null,
+    received_by: currentProfile.id,
+  };
+  try {
+    const { error: payError } = await supabaseClient.from('gym_subscription_payments').insert(payload);
+    if (payError) throw payError;
+
+    // تحديث المبلغ المدفوع إجمالاً على الاشتراك نفسه
+    const sub = boGymSubscriptions.find(s => s.id === subscriptionId);
+    const newPaid = Number(sub?.paid_amount || 0) + amount;
+    const { error: subError } = await supabaseClient.from('gym_subscriptions').update({ paid_amount: newPaid }).eq('id', subscriptionId);
+    if (subError) throw subError;
+
+    showToast('تم تسجيل الدفعة بنجاح');
+    document.getElementById('gymSubPaymentAmount').value = '';
+    document.getElementById('gymSubPaymentNotes').value = '';
+    await renderGymSubPaymentsList(subscriptionId);
+    await loadBoGymSubscriptions();
+    renderGymSubscriptionsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء تسجيل الدفعة';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'تسجيل دفعة';
+  }
+}
+
+// ---- تسجيل الحضور ----
+let boGymAttendance = [];
+let boGymAttendanceLoadedOnce = false;
+let gymAttendanceMemberSearch = null;
+
+async function loadBoGymAttendance() {
+  const { data, error } = await supabaseClient
+    .from('gym_attendance')
+    .select('*, gym_members(name), branches(name)')
+    .order('checked_in_at', { ascending: false })
+    .limit(300);
+  if (error) { console.error(error); showToast('تعذر تحميل سجل الحضور', true); return; }
+  boGymAttendance = data || [];
+}
+
+function renderGymAttendanceTable() {
+  const tbody = document.getElementById('gymAttendanceTableBody');
+  const q = (document.getElementById('gymAttendanceSearchInput').value || '').trim().toLowerCase();
+  const filtered = boGymAttendance.filter(a => !q || (a.gym_members?.name || '').toLowerCase().includes(q));
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">${boGymAttendance.length === 0 ? 'لا يوجد سجل حضور بعد' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+  const methodLabels = { barcode: 'باركود', qr: 'QR', manual: 'يدوي' };
+  tbody.innerHTML = '';
+  filtered.forEach(a => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(a.gym_members?.name || '—')}</td>
+      <td>${escapeHtml(a.branches?.name || '—')}</td>
+      <td>${methodLabels[a.method] || escapeHtml(a.method)}</td>
+      <td class="num">${a.checked_in_at ? new Date(a.checked_in_at).toLocaleString('ar-EG') : '—'}</td>
+      <td><div class="bo-row-actions"><button class="bo-icon-btn danger" data-action="delete">حذف</button></div></td>`;
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteGymAttendance(a));
+    applyRowActionPerm(tr, 'gym-attendance');
+    tbody.appendChild(tr);
+  });
+}
+
+async function openGymAttendanceModal() {
+  if (boGymMembers.length === 0) await loadBoGymMembers();
+  document.getElementById('gymAttendanceMember').value = '';
+  document.getElementById('gymAttendanceMemberInput').value = '';
+  document.getElementById('gymAttendanceMethod').value = 'manual';
+  populateBranchSelect(document.getElementById('gymAttendanceBranch'), currentProfile.branch_id, false);
+  if (!gymAttendanceMemberSearch) {
+    gymAttendanceMemberSearch = createSmartSearch({
+      input: document.getElementById('gymAttendanceMemberInput'),
+      hidden: document.getElementById('gymAttendanceMember'),
+      dropdown: document.getElementById('gymAttendanceMemberDropdown'),
+      getItems: () => boGymMembers.map(m => ({ value: m.id, label: m.name, sublabel: m.phone || '', search: `${m.name} ${m.phone || ''}` })),
+    });
+  }
+  document.getElementById('gymAttendanceModalError').classList.remove('show');
+  document.getElementById('gymAttendanceModalOverlay').classList.add('show');
+}
+
+function closeGymAttendanceModal() {
+  document.getElementById('gymAttendanceModalOverlay').classList.remove('show');
+}
+
+async function saveGymAttendance(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('gymAttendanceModalError');
+  errEl.classList.remove('show');
+  const memberId = document.getElementById('gymAttendanceMember').value;
+  if (!memberId) {
+    errEl.textContent = 'اختر العضو أولًا';
+    errEl.classList.add('show');
+    return;
+  }
+  const branchId = document.getElementById('gymAttendanceBranch').value;
+  const btn = document.getElementById('saveGymAttendanceBtn');
+  btn.disabled = true; btn.textContent = 'جاري التسجيل...';
+  try {
+    // نحاول نربط الحضور تلقائيًا بأحدث اشتراك نشط للعضو (لو موجود)
+    const { data: activeSub } = await supabaseClient
+      .from('gym_subscriptions').select('id').eq('member_id', memberId).eq('status', 'active')
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
+
+    const payload = {
+      member_id: memberId,
+      branch_id: branchId,
+      method: document.getElementById('gymAttendanceMethod').value,
+      subscription_id: activeSub?.id || null,
+    };
+    const { error } = await supabaseClient.from('gym_attendance').insert(payload);
+    if (error) throw error;
+    showToast('تم تسجيل الحضور بنجاح');
+    closeGymAttendanceModal();
+    await loadBoGymAttendance();
+    renderGymAttendanceTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء التسجيل';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'تسجيل';
+  }
+}
+
+async function deleteGymAttendance(record) {
+  if (!hasBoActionPermission('gym-attendance', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm('هل أنت متأكد أنك تريد حذف سجل الحضور هذا؟')) return;
+  const { error } = await supabaseClient.from('gym_attendance').delete().eq('id', record.id);
+  if (error) { console.error(error); showToast('تعذر حذف السجل', true); return; }
+  showToast('تم حذف السجل');
+  await loadBoGymAttendance();
+  renderGymAttendanceTable();
+}
+
+// ---- المدربين ----
+let boGymTrainers = [];
+let boGymTrainersLoadedOnce = false;
+
+async function loadBoGymTrainers() {
+  const { data, error } = await supabaseClient.from('gym_trainers').select('*, branches(name)').order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل المدربين', true); return; }
+  boGymTrainers = data || [];
+}
+
+function renderGymTrainersTable() {
+  const tbody = document.getElementById('gymTrainersTableBody');
+  const q = (document.getElementById('gymTrainerSearchInput').value || '').trim().toLowerCase();
+  const filtered = boGymTrainers.filter(t => !q || t.name.toLowerCase().includes(q));
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">${boGymTrainers.length === 0 ? 'لا يوجد مدربين مضافين حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(t => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(t.name)}</td>
+      <td>${escapeHtml(t.specialty || '—')}</td>
+      <td style="direction:ltr; text-align:right;">${escapeHtml(t.phone || '—')}</td>
+      <td>${escapeHtml(t.branches?.name || '—')}</td>
+      <td>${t.is_active ? '<span class="bo-badge active">نشط</span>' : '<span class="bo-badge inactive">غير نشط</span>'}</td>
+      <td><div class="bo-row-actions">
+        <button class="bo-icon-btn" data-action="edit">تعديل</button>
+        <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+      </div></td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openGymTrainerModal(t));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteGymTrainer(t));
+    applyRowActionPerm(tr, 'gym-trainers');
+    tbody.appendChild(tr);
+  });
+}
+
+function openGymTrainerModal(trainer) {
+  document.getElementById('gymTrainerModalTitle').textContent = trainer ? 'تعديل مدرب' : 'مدرب جديد';
+  document.getElementById('gymTrainerId').value = trainer ? trainer.id : '';
+  document.getElementById('gymTrainerName').value = trainer?.name || '';
+  document.getElementById('gymTrainerPhone').value = trainer?.phone || '';
+  document.getElementById('gymTrainerSpecialty').value = trainer?.specialty || '';
+  document.getElementById('gymTrainerIsActive').checked = trainer ? !!trainer.is_active : true;
+  populateBranchSelect(document.getElementById('gymTrainerBranch'), trainer?.branch_id || currentProfile.branch_id, false);
+  document.getElementById('gymTrainerModalError').classList.remove('show');
+  document.getElementById('gymTrainerModalOverlay').classList.add('show');
+}
+
+function closeGymTrainerModal() {
+  document.getElementById('gymTrainerModalOverlay').classList.remove('show');
+}
+
+async function saveGymTrainer(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('gymTrainerModalError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('saveGymTrainerBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  const id = document.getElementById('gymTrainerId').value || null;
+  const payload = {
+    name: document.getElementById('gymTrainerName').value.trim(),
+    phone: document.getElementById('gymTrainerPhone').value.trim() || null,
+    specialty: document.getElementById('gymTrainerSpecialty').value.trim() || null,
+    branch_id: document.getElementById('gymTrainerBranch').value,
+    is_active: document.getElementById('gymTrainerIsActive').checked,
+  };
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('gym_trainers').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('gym_trainers').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث بيانات المدرب' : 'تمت إضافة المدرب بنجاح');
+    closeGymTrainerModal();
+    await loadBoGymTrainers();
+    renderGymTrainersTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ';
+  }
+}
+
+async function deleteGymTrainer(trainer) {
+  if (!hasBoActionPermission('gym-trainers', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف المدرب "${trainer.name}"؟`)) return;
+  const { error } = await supabaseClient.from('gym_trainers').delete().eq('id', trainer.id);
+  if (error) { console.error(error); showToast('تعذر حذف المدرب — على الأرجح مرتبط بحصص', true); return; }
+  showToast('تم حذف المدرب');
+  await loadBoGymTrainers();
+  renderGymTrainersTable();
+}
+
+// ---- الحصص التدريبية ----
+let boGymClasses = [];
+let boGymClassesLoadedOnce = false;
+let gymClassBookMemberSearch = null;
+let currentGymClassIdForBooking = null;
+let currentGymClassBookings = [];
+
+async function loadBoGymClasses() {
+  const { data, error } = await supabaseClient
+    .from('gym_classes')
+    .select('*, gym_trainers(name), branches(name), gym_class_bookings(id, status)')
+    .order('class_date', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل الحصص', true); return; }
+  boGymClasses = data || [];
+}
+
+function renderGymClassesTable() {
+  const tbody = document.getElementById('gymClassesTableBody');
+  const q = (document.getElementById('gymClassSearchInput').value || '').trim().toLowerCase();
+  const filtered = boGymClasses.filter(c => !q || c.name.toLowerCase().includes(q) || (c.gym_trainers?.name || '').toLowerCase().includes(q));
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" class="bo-empty">${boGymClasses.length === 0 ? 'لا توجد حصص مضافة حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(c => {
+    const bookedCount = (c.gym_class_bookings || []).filter(b => b.status !== 'cancelled').length;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(c.name)}</td>
+      <td>${escapeHtml(c.gym_trainers?.name || '—')}</td>
+      <td>${escapeHtml(c.branches?.name || '—')}</td>
+      <td class="num">${c.class_date}</td>
+      <td class="num">${c.start_time?.slice(0,5)} - ${c.end_time?.slice(0,5)}</td>
+      <td class="num">${bookedCount} / ${c.capacity}</td>
+      <td>${c.is_active ? '<span class="bo-badge active">نشطة</span>' : '<span class="bo-badge inactive">ملغاة</span>'}</td>
+      <td><div class="bo-row-actions">
+        <button class="bo-icon-btn" data-action="edit">تعديل/حجز</button>
+        <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+      </div></td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openGymClassModal(c));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteGymClass(c));
+    applyRowActionPerm(tr, 'gym-classes');
+    tbody.appendChild(tr);
+  });
+}
+
+async function openGymClassModal(cls) {
+  if (boGymTrainers.length === 0) await loadBoGymTrainers();
+  if (boGymMembers.length === 0) await loadBoGymMembers();
+
+  document.getElementById('gymClassModalTitle').textContent = cls ? 'تعديل حصة' : 'حصة جديدة';
+  document.getElementById('gymClassId').value = cls ? cls.id : '';
+  document.getElementById('gymClassName').value = cls?.name || '';
+  document.getElementById('gymClassDate').value = cls?.class_date || new Date().toISOString().slice(0, 10);
+  document.getElementById('gymClassStartTime').value = cls?.start_time?.slice(0, 5) || '';
+  document.getElementById('gymClassEndTime').value = cls?.end_time?.slice(0, 5) || '';
+  document.getElementById('gymClassCapacity').value = cls?.capacity || 20;
+  document.getElementById('gymClassIsActive').checked = cls ? !!cls.is_active : true;
+
+  const trainerSelect = document.getElementById('gymClassTrainer');
+  trainerSelect.innerHTML = '<option value="">— بدون —</option>' + boGymTrainers.map(t => `<option value="${t.id}">${escapeHtml(t.name)}</option>`).join('');
+  trainerSelect.value = cls?.trainer_id || '';
+
+  populateBranchSelect(document.getElementById('gymClassBranch'), cls?.branch_id || currentProfile.branch_id, false);
+
+  const bookWrap = document.getElementById('gymClassBookMemberWrap');
+  if (cls) {
+    currentGymClassIdForBooking = cls.id;
+    bookWrap.style.display = '';
+    currentGymClassBookings = (cls.gym_class_bookings || []).slice();
+    if (!gymClassBookMemberSearch) {
+      gymClassBookMemberSearch = createSmartSearch({
+        input: document.getElementById('gymClassBookMemberInput'),
+        hidden: document.getElementById('gymClassBookMember'),
+        dropdown: document.getElementById('gymClassBookMemberDropdown'),
+        getItems: () => boGymMembers.map(m => ({ value: m.id, label: m.name, sublabel: m.phone || '', search: `${m.name} ${m.phone || ''}` })),
+        onChange: (item) => { if (item?.value) bookGymClassMember(currentGymClassIdForBooking); },
+      });
+    }
+    document.getElementById('gymClassBookMemberInput').value = '';
+    document.getElementById('gymClassBookMember').value = '';
+    await renderGymClassBookingsList(cls.id);
+  } else {
+    bookWrap.style.display = 'none';
+    document.getElementById('gymClassBookingsList').innerHTML = '<tr><td colspan="3" class="bo-empty">— احفظ الحصة أولًا لإضافة حجوزات —</td></tr>';
+  }
+
+  document.getElementById('gymClassModalError').classList.remove('show');
+  document.getElementById('gymClassModalOverlay').classList.add('show');
+}
+
+async function renderGymClassBookingsList(classId) {
+  const tbody = document.getElementById('gymClassBookingsList');
+  const { data, error } = await supabaseClient.from('gym_class_bookings').select('*, gym_members(name)').eq('class_id', classId).order('booked_at');
+  if (error) { console.error(error); return; }
+  if (!data || data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3" class="bo-empty">لا يوجد أعضاء محجوزين بعد</td></tr>';
+    return;
+  }
+  const statusLabels = { booked: 'محجوز', attended: 'حضر', cancelled: 'ملغي' };
+  tbody.innerHTML = data.map(b => `
+    <tr>
+      <td>${escapeHtml(b.gym_members?.name || '—')}</td>
+      <td>${statusLabels[b.status] || b.status}</td>
+      <td><button type="button" class="bo-icon-btn danger" data-booking-id="${b.id}">إلغاء</button></td>
+    </tr>`).join('');
+  tbody.querySelectorAll('[data-booking-id]').forEach(btn => {
+    btn.addEventListener('click', () => cancelGymClassBooking(btn.dataset.bookingId, classId));
+  });
+}
+
+async function bookGymClassMember(classId) {
+  const memberId = document.getElementById('gymClassBookMember').value;
+  if (!memberId) { showToast('اختر عضو للحجز أولًا', true); return; }
+  const { error } = await supabaseClient.from('gym_class_bookings').insert({ class_id: classId, member_id: memberId });
+  if (error) {
+    console.error(error);
+    showToast(error.code === '23505' ? 'العضو محجوز بالفعل في هذه الحصة' : 'تعذر تسجيل الحجز', true);
+    return;
+  }
+  document.getElementById('gymClassBookMemberInput').value = '';
+  document.getElementById('gymClassBookMember').value = '';
+  await renderGymClassBookingsList(classId);
+  showToast('تم حجز العضو في الحصة');
+}
+
+async function cancelGymClassBooking(bookingId, classId) {
+  if (!confirm('إلغاء حجز هذا العضو من الحصة؟')) return;
+  const { error } = await supabaseClient.from('gym_class_bookings').update({ status: 'cancelled' }).eq('id', bookingId);
+  if (error) { console.error(error); showToast('تعذر إلغاء الحجز', true); return; }
+  await renderGymClassBookingsList(classId);
+}
+
+function closeGymClassModal() {
+  document.getElementById('gymClassModalOverlay').classList.remove('show');
+}
+
+async function saveGymClass(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('gymClassModalError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('saveGymClassBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  const id = document.getElementById('gymClassId').value || null;
+  const payload = {
+    name: document.getElementById('gymClassName').value.trim(),
+    trainer_id: document.getElementById('gymClassTrainer').value || null,
+    branch_id: document.getElementById('gymClassBranch').value,
+    class_date: document.getElementById('gymClassDate').value,
+    start_time: document.getElementById('gymClassStartTime').value,
+    end_time: document.getElementById('gymClassEndTime').value,
+    capacity: Number(document.getElementById('gymClassCapacity').value),
+    is_active: document.getElementById('gymClassIsActive').checked,
+  };
+  try {
+    let classId = id;
+    if (id) {
+      const { error } = await supabaseClient.from('gym_classes').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { data, error } = await supabaseClient.from('gym_classes').insert(payload).select().single();
+      if (error) throw error;
+      classId = data.id;
+    }
+    showToast(id ? 'تم تحديث الحصة' : 'تمت إضافة الحصة بنجاح');
+    await loadBoGymClasses();
+    renderGymClassesTable();
+    if (!id) {
+      // بعد إنشاء حصة جديدة نفتحها فورًا تاني عشان يقدر يبدأ يحجز أعضاء فيها
+      const created = boGymClasses.find(c => c.id === classId);
+      if (created) { await openGymClassModal(created); }
+    }
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ';
+  }
+}
+
+async function deleteGymClass(cls) {
+  if (!hasBoActionPermission('gym-classes', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف حصة "${cls.name}"؟`)) return;
+  const { error } = await supabaseClient.from('gym_classes').delete().eq('id', cls.id);
+  if (error) { console.error(error); showToast('تعذر حذف الحصة', true); return; }
+  showToast('تم حذف الحصة');
+  await loadBoGymClasses();
+  renderGymClassesTable();
 }
 
 // ==================== الأصول/الأجهزة (Service Management) ====================
