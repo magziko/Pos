@@ -1672,6 +1672,7 @@ a { color: inherit; }
             <span class="bo-nav-chevron">‹</span>
           </button>
           <div class="bo-nav-sub" id="gymNavSub">
+            <button class="bo-nav-sub-item" data-section="gym-dashboard">لوحة التحكم</button>
             <button class="bo-nav-sub-item" data-section="gym-members">الأعضاء</button>
             <button class="bo-nav-sub-item" data-section="gym-packages">الباقات</button>
             <button class="bo-nav-sub-item" data-section="gym-subscriptions">الاشتراكات</button>
@@ -2526,6 +2527,48 @@ a { color: inherit; }
           </div>
         </div>
 
+        <!-- لوحة تحكم الجيم -->
+        <div id="bo-section-gym-dashboard" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">لوحة تحكم الجيم</div>
+            <button class="bo-outline-btn" id="refreshGymDashboardBtn">تحديث</button>
+          </div>
+          <div class="report-cards">
+            <div class="report-card">
+              <div class="report-card-label">الأعضاء النشطين</div>
+              <div class="report-card-value num" id="gymDashActiveMembers">0</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">إيرادات اليوم</div>
+              <div class="report-card-value num positive" id="gymDashTodayRevenue">0.00</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">اشتراكات نشطة</div>
+              <div class="report-card-value num" id="gymDashActiveSubs">0</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">تنتهي خلال 7 أيام</div>
+              <div class="report-card-value num negative" id="gymDashExpiringSoon">0</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">اشتراكات موقوفة (مجمدة)</div>
+              <div class="report-card-value num" id="gymDashFrozenSubs">0</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">حصص اليوم</div>
+              <div class="report-card-value num" id="gymDashClassesToday">0</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">حضور اليوم</div>
+              <div class="report-card-value num" id="gymDashAttendanceToday">0</div>
+            </div>
+            <div class="report-card">
+              <div class="report-card-label">إجمالي أقساط مستحقة</div>
+              <div class="report-card-value num negative" id="gymDashDueTotal">0.00</div>
+            </div>
+          </div>
+        </div>
+
         <!-- قسم أعضاء الجيم -->
         <div id="bo-section-gym-members" style="display:none;">
           <div class="bo-section-header">
@@ -2540,6 +2583,7 @@ a { color: inherit; }
               <thead>
                 <tr>
                   <th>الاسم</th>
+                  <th>كود العضوية</th>
                   <th>الهاتف</th>
                   <th>الفرع</th>
                   <th>تاريخ الانضمام</th>
@@ -2548,7 +2592,7 @@ a { color: inherit; }
                 </tr>
               </thead>
               <tbody id="gymMembersTableBody">
-                <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+                <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
@@ -5458,6 +5502,18 @@ a { color: inherit; }
               <div class="report-type-icon">🛠️</div>
               <div class="report-type-label">نظرة عامة على إدارة الخدمات</div>
             </button>
+            <button type="button" class="report-type-card" data-report="gym-expiring">
+              <div class="report-type-icon">🏋️</div>
+              <div class="report-type-label">اشتراكات الجيم القريبة من الانتهاء</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="gym-due-payments">
+              <div class="report-type-icon">💳</div>
+              <div class="report-type-label">أقساط الجيم المستحقة</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="gym-trainer-performance">
+              <div class="report-type-icon">🏆</div>
+              <div class="report-type-label">أداء مدربي الجيم</div>
+            </button>
           </div>
 
           <div id="otherReportDetailWrap" style="display:none;">
@@ -6206,6 +6262,66 @@ a { color: inherit; }
                 <table class="bo-table">
                   <thead><tr><th>تاريخ الإنشاء</th><th>الفرع</th><th>العميل</th><th>الأصناف</th><th>الحالة</th><th>جاهز في</th><th>رقم الفاتورة المربوطة</th></tr></thead>
                   <tbody id="loReportTableBody"><tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- اشتراكات الجيم القريبة من الانتهاء -->
+            <div id="otherReportDetail-gym-expiring" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">الاشتراكات النشطة اللي هتنتهي خلال المدة المحددة</div>
+                <div class="report-subtitle-actions">
+                  <select id="gymExpReportDays">
+                    <option value="3">خلال ٣ أيام</option>
+                    <option value="7" selected>خلال ٧ أيام</option>
+                    <option value="15">خلال ١٥ يوم</option>
+                    <option value="30">خلال ٣٠ يوم</option>
+                  </select>
+                  <button class="bo-outline-btn" id="refreshGymExpReportBtn">تحديث</button>
+                </div>
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>العضو</th><th>الهاتف</th><th>الباقة</th><th>الفرع</th><th>تاريخ الانتهاء</th><th>الأيام المتبقية</th><th></th></tr></thead>
+                  <tbody id="gymExpReportTableBody"><tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- أقساط الجيم المستحقة -->
+            <div id="otherReportDetail-gym-due-payments" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">الاشتراكات النشطة اللي لسه فيها مبلغ متبقي غير مدفوع</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-outline-btn" id="refreshGymDueReportBtn">تحديث</button>
+                </div>
+              </div>
+              <div class="report-cards">
+                <div class="report-card"><div class="report-card-label">إجمالي المتبقي</div><div class="report-card-value num" id="gymDueTotalRemaining">0</div></div>
+                <div class="report-card"><div class="report-card-label">عدد الاشتراكات</div><div class="report-card-value num" id="gymDueCount">0</div></div>
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>العضو</th><th>الهاتف</th><th>الباقة</th><th>الفرع</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th></tr></thead>
+                  <tbody id="gymDueReportTableBody"><tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- أداء مدربي الجيم -->
+            <div id="otherReportDetail-gym-trainer-performance" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">عدد الحصص والحجوزات لكل مدرب خلال المدة المحددة</div>
+                <div class="report-subtitle-actions">
+                  <input type="date" id="gymTrainerPerfFromDate">
+                  <input type="date" id="gymTrainerPerfToDate">
+                  <button class="bo-outline-btn" id="refreshGymTrainerPerfBtn">تحديث</button>
+                </div>
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>المدرب</th><th>الفرع</th><th>عدد الحصص</th><th>إجمالي الحجوزات</th><th>متوسط الحجوزات/حصة</th><th>نسبة الإشغال</th></tr></thead>
+                  <tbody id="gymTrainerPerfTableBody"><tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr></tbody>
                 </table>
               </div>
             </div>
@@ -7966,6 +8082,10 @@ a { color: inherit; }
             <option value="transfer">تحويل</option>
           </select>
         </div>
+        <div class="field">
+          <label>الإيداع في خزينة</label>
+          <select id="gymSubPaymentCashAccount" required></select>
+        </div>
         <div class="field field-full"><label>ملاحظات</label><input type="text" id="gymSubPaymentNotes"></div>
       </div>
       <div class="error-msg" id="gymSubPaymentModalError"></div>
@@ -8083,6 +8203,25 @@ a { color: inherit; }
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelGymClassBtn">إغلاق</button>
         <button type="submit" class="submit-btn" id="saveGymClassBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: تجميد اشتراك -->
+<div class="modal-overlay" id="gymFreezeModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="gymFreezeModalTitle">تجميد الاشتراك</div>
+    <form id="gymFreezeForm">
+      <input type="hidden" id="gymFreezeSubscriptionId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>سبب التجميد (اختياري)</label><input type="text" id="gymFreezeNote" placeholder="مثال: سفر، إصابة..."></div>
+      </div>
+      <div class="report-subtitle" style="margin-bottom:10px;">هيتم إيقاف احتساب مدة الاشتراك من النهاردة، ولما تلغي التجميد هيتم تمديد تاريخ الانتهاء تلقائيًا بعدد أيام التجميد.</div>
+      <div class="error-msg" id="gymFreezeModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelGymFreezeBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveGymFreezeBtn">تجميد الآن</button>
       </div>
     </form>
   </div>
@@ -14229,6 +14368,10 @@ function bindPosEvents() {
   document.getElementById('pclFromDate').addEventListener('change', () => refreshPriceChangeLogReport());
   document.getElementById('pclToDate').addEventListener('change', () => refreshPriceChangeLogReport());
   document.getElementById('refreshPclBtn').addEventListener('click', () => refreshPriceChangeLogReport());
+  document.getElementById('refreshGymExpReportBtn').addEventListener('click', () => refreshGymExpiringReport());
+  document.getElementById('gymExpReportDays').addEventListener('change', () => refreshGymExpiringReport());
+  document.getElementById('refreshGymDueReportBtn').addEventListener('click', () => refreshGymDuePaymentsReport());
+  document.getElementById('refreshGymTrainerPerfBtn').addEventListener('click', () => refreshGymTrainerPerformanceReport());
   document.getElementById('exportPclBtn').addEventListener('click', () => exportPclToExcel());
   document.getElementById('variantPickerOverlay').addEventListener('click', (e) => {
     if (e.target.id === 'variantPickerOverlay') closeVariantPicker();
@@ -18656,7 +18799,7 @@ const boAllSections = ['dashboard','products','categories','unit-types','tax-rat
   'contracts',
   'my-visits',
   'asset-faults',
-  'gym-members','gym-packages','gym-subscriptions','gym-attendance','gym-trainers','gym-classes',
+  'gym-members','gym-packages','gym-subscriptions','gym-attendance','gym-trainers','gym-classes','gym-dashboard',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
   'soon','company-info','permissions','users','branches','business-types','pos-devices','branch-settings','pos-tables','print-settings','stock','stocktake','product-batches','product-serials','backup','reset-data','employees','attendance','leave-requests','expense-items','expenses','salaries','sales-commissions','treasuries','capital','fixed-assets','promotions','coupons','modifier-groups','recipes'];
 
@@ -18666,7 +18809,7 @@ const boNavGroups = [
   { toggle: 'salesNavToggle', group: 'salesNavGroup', sections: ['sales-list','sale-orders','delivery','delivery-zones','delivery-companies','sales-channels','driver-settlements','customers','customer-types','sale-returns'] },
   { toggle: 'purchasesNavToggle', group: 'purchasesNavGroup', sections: ['suppliers','supplier-prices','purchase-requisitions','purchase-orders','purchases','purchase-returns'] },
   { toggle: 'serviceMgmtNavToggle', group: 'serviceMgmtNavGroup', sections: ['assets', 'service-orders', 'service-visits', 'contracts', 'my-visits', 'asset-faults'] },
-  { toggle: 'gymNavToggle', group: 'gymNavGroup', sections: ['gym-members', 'gym-packages', 'gym-subscriptions', 'gym-attendance', 'gym-trainers', 'gym-classes'] },
+  { toggle: 'gymNavToggle', group: 'gymNavGroup', sections: ['gym-dashboard', 'gym-members', 'gym-packages', 'gym-subscriptions', 'gym-attendance', 'gym-trainers', 'gym-classes'] },
   { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
   { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['treasuries','payments','expense-items','expenses','capital','fixed-assets'] },
   { toggle: 'hrNavToggle', group: 'hrNavGroup', sections: ['employees','attendance','leave-requests','salaries','sales-commissions'] },
@@ -18693,6 +18836,7 @@ const SECTION_PERMISSION_MAP = {
   'asset-faults': 'service_management',
   'gym-members': 'gym_management', 'gym-packages': 'gym_management', 'gym-subscriptions': 'gym_management',
   'gym-attendance': 'gym_management', 'gym-trainers': 'gym_management', 'gym-classes': 'gym_management',
+  'gym-dashboard': 'gym_management',
   'reports-sales': 'reports', 'reports-purchases': 'reports', 'reports-inventory': 'reports', 'reports-accounting': 'reports', 'reports-other': 'reports',
   'treasuries': 'finance', 'payments': 'finance', 'expense-items': 'finance', 'expenses': 'finance', 'capital': 'admin', 'fixed-assets': 'finance',
   'employees': 'hr', 'attendance': 'hr', 'leave-requests': 'hr', 'salaries': 'hr', 'sales-commissions': 'hr',
@@ -18801,7 +18945,8 @@ const SCREEN_LABELS = {
   'backup': 'نسخة احتياطية', 'reset-data': 'تهيئة البيانات', 'capital': 'رأس المال وحقوق الملكية',
   'assets': 'الأصول/الأجهزة', 'service-orders': 'أوامر الخدمة', 'service-visits': 'الزيارات', 'contracts': 'العقود', 'my-visits': 'زياراتي (الفني)', 'asset-faults': 'الأعطال',
   'gym-members': 'الأعضاء', 'gym-packages': 'الباقات', 'gym-subscriptions': 'الاشتراكات',
-  'gym-attendance': 'تسجيل الحضور', 'gym-trainers': 'المدربين', 'gym-classes': 'الحصص التدريبية'
+  'gym-attendance': 'تسجيل الحضور', 'gym-trainers': 'المدربين', 'gym-classes': 'الحصص التدريبية',
+  'gym-dashboard': 'لوحة تحكم الجيم'
 };
 
 // بناء قائمة الشاشات التفصيلية لكل وحدة رئيسية تلقائيًا من SECTION_PERMISSION_MAP
@@ -19553,6 +19698,7 @@ function activateBoSection(section, btn) {
   if (section === 'contracts' && !boContractsLoadedOnce) { loadBoContractsFull().then(renderContractsTable); boContractsLoadedOnce = true; }
   if (section === 'my-visits' && !boMyVisitsLoadedOnce) { loadMyVisits().then(renderMyVisits); boMyVisitsLoadedOnce = true; }
   if (section === 'asset-faults' && !boAssetFaultsLoadedOnce) { loadAssetFaults().then(renderAssetFaultsTable); boAssetFaultsLoadedOnce = true; }
+  if (section === 'gym-dashboard') { refreshGymDashboard(); }
   if (section === 'gym-members' && !boGymMembersLoadedOnce) { loadBoGymMembers().then(renderGymMembersTable); boGymMembersLoadedOnce = true; }
   if (section === 'gym-packages' && !boGymPackagesLoadedOnce) { loadBoGymPackages().then(renderGymPackagesTable); boGymPackagesLoadedOnce = true; }
   if (section === 'gym-subscriptions' && !boGymSubscriptionsLoadedOnce) {
@@ -20543,6 +20689,9 @@ function bindBackofficeEvents() {
       if (key === 'stock-holds') refreshStockHoldsReport();
       if (key === 'laundry-orders') refreshLaundryOrdersReport();
       if (key === 'price-change-log') refreshPriceChangeLogReport();
+      if (key === 'gym-expiring') refreshGymExpiringReport();
+      if (key === 'gym-due-payments') refreshGymDuePaymentsReport();
+      if (key === 'gym-trainer-performance') runGymTrainerPerformanceReport();
       if (key === 'service-management') { runServiceManagementReport(); }
     });
   });
@@ -20967,6 +21116,9 @@ function bindBackofficeEvents() {
   document.getElementById('supplierCreditLimit').addEventListener('input', updateSupplierCreditWarning);
   document.getElementById('supplierSearchInput').addEventListener('input', renderSuppliersTable);
 
+  // ---- Gym Dashboard ----
+  document.getElementById('refreshGymDashboardBtn').addEventListener('click', () => refreshGymDashboard());
+
   // ---- Gym Member modal ----
   document.getElementById('addGymMemberBtn').addEventListener('click', () => openGymMemberModal(null));
   document.getElementById('cancelGymMemberBtn').addEventListener('click', closeGymMemberModal);
@@ -20995,6 +21147,13 @@ function bindBackofficeEvents() {
   document.getElementById('gymSubPackage').addEventListener('change', applyGymSubPackageDefaults);
   document.getElementById('gymSubStartDate').addEventListener('change', applyGymSubPackageDefaults);
   document.getElementById('gymSubscriptionSearchInput').addEventListener('input', renderGymSubscriptionsTable);
+
+  // ---- Gym Subscription Freeze modal ----
+  document.getElementById('cancelGymFreezeBtn').addEventListener('click', closeGymFreezeModal);
+  document.getElementById('gymFreezeModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'gymFreezeModalOverlay') closeGymFreezeModal();
+  });
+  document.getElementById('gymFreezeForm').addEventListener('submit', saveGymFreeze);
 
   // ---- Gym Subscription Payments modal ----
   document.getElementById('cancelGymSubPaymentsBtn').addEventListener('click', closeGymSubPaymentsModal);
@@ -34763,6 +34922,45 @@ function populateBranchSelect(selectEl, selectedId, includeAllOption) {
   selectEl.value = selectedId || '';
 }
 
+// ---- لوحة تحكم الجيم ----
+async function refreshGymDashboard() {
+  const today = new Date().toISOString().slice(0, 10);
+  const in7Days = new Date(); in7Days.setDate(in7Days.getDate() + 7);
+  const in7DaysStr = in7Days.toISOString().slice(0, 10);
+
+  try {
+    const [
+      activeMembersRes, activeSubsRes, frozenSubsRes, expiringRes,
+      classesTodayRes, attendanceTodayRes, todayPaymentsRes, activeSubsForDueRes,
+    ] = await Promise.all([
+      supabaseClient.from('gym_members').select('id', { count: 'exact', head: true }).eq('is_active', true),
+      supabaseClient.from('gym_subscriptions').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+      supabaseClient.from('gym_subscriptions').select('id', { count: 'exact', head: true }).eq('status', 'frozen'),
+      supabaseClient.from('gym_subscriptions').select('id', { count: 'exact', head: true }).eq('status', 'active').lte('end_date', in7DaysStr),
+      supabaseClient.from('gym_classes').select('id', { count: 'exact', head: true }).eq('class_date', today),
+      supabaseClient.from('gym_attendance').select('id', { count: 'exact', head: true }).gte('checked_in_at', today + 'T00:00:00'),
+      supabaseClient.from('gym_subscription_payments').select('amount').eq('payment_date', today),
+      supabaseClient.from('gym_subscriptions').select('total_price, paid_amount').eq('status', 'active'),
+    ]);
+
+    document.getElementById('gymDashActiveMembers').textContent = activeMembersRes.count || 0;
+    document.getElementById('gymDashActiveSubs').textContent = activeSubsRes.count || 0;
+    document.getElementById('gymDashFrozenSubs').textContent = frozenSubsRes.count || 0;
+    document.getElementById('gymDashExpiringSoon').textContent = expiringRes.count || 0;
+    document.getElementById('gymDashClassesToday').textContent = classesTodayRes.count || 0;
+    document.getElementById('gymDashAttendanceToday').textContent = attendanceTodayRes.count || 0;
+
+    const todayRevenue = (todayPaymentsRes.data || []).reduce((sum, p) => sum + Number(p.amount), 0);
+    document.getElementById('gymDashTodayRevenue').textContent = todayRevenue.toFixed(2);
+
+    const dueTotal = (activeSubsForDueRes.data || []).reduce((sum, s) => sum + Math.max(0, Number(s.total_price) - Number(s.paid_amount)), 0);
+    document.getElementById('gymDashDueTotal').textContent = dueTotal.toFixed(2);
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تحميل لوحة تحكم الجيم', true);
+  }
+}
+
 // ---- الأعضاء ----
 async function loadBoGymMembers() {
   const { data, error } = await supabaseClient.from('gym_members').select('*, branches(name)').order('created_at', { ascending: false });
@@ -34773,9 +34971,9 @@ async function loadBoGymMembers() {
 function renderGymMembersTable() {
   const tbody = document.getElementById('gymMembersTableBody');
   const q = (document.getElementById('gymMemberSearchInput').value || '').trim().toLowerCase();
-  const filtered = boGymMembers.filter(m => !q || m.name.toLowerCase().includes(q) || (m.phone || '').includes(q));
+  const filtered = boGymMembers.filter(m => !q || m.name.toLowerCase().includes(q) || (m.phone || '').includes(q) || (m.member_code || '').toLowerCase().includes(q));
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">${boGymMembers.length === 0 ? 'لا يوجد أعضاء مسجلين حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">${boGymMembers.length === 0 ? 'لا يوجد أعضاء مسجلين حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
@@ -34783,14 +34981,17 @@ function renderGymMembersTable() {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${escapeHtml(m.name)}</td>
+      <td style="direction:ltr; text-align:right; font-family:var(--font-num);">${escapeHtml(m.member_code || '—')}</td>
       <td style="direction:ltr; text-align:right;">${escapeHtml(m.phone || '—')}</td>
       <td>${escapeHtml(m.branches?.name || '—')}</td>
       <td class="num">${m.created_at ? new Date(m.created_at).toLocaleDateString('ar-EG') : '—'}</td>
       <td>${m.is_active ? '<span class="bo-badge active">نشط</span>' : '<span class="bo-badge inactive">غير نشط</span>'}</td>
       <td><div class="bo-row-actions">
+        <button class="bo-icon-btn" data-action="card" style="color:var(--teal-700);">بطاقة العضوية</button>
         <button class="bo-icon-btn" data-action="edit">تعديل</button>
         <button class="bo-icon-btn danger" data-action="delete">حذف</button>
       </div></td>`;
+    tr.querySelector('[data-action="card"]').addEventListener('click', () => printGymMemberCard(m));
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openGymMemberModal(m));
     tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteGymMember(m));
     applyRowActionPerm(tr, 'gym-members');
@@ -35011,10 +35212,14 @@ function renderGymSubscriptionsTable() {
       <td>${gymSubStatusBadge(s)}</td>
       <td><div class="bo-row-actions">
         <button class="bo-icon-btn" data-action="payments" style="color:var(--teal-700);">المدفوعات</button>
+        <button class="bo-icon-btn" data-action="freeze" style="color:#0369a1;">${s.status === 'frozen' ? 'إلغاء التجميد' : 'تجميد'}</button>
         <button class="bo-icon-btn" data-action="edit">تعديل</button>
         <button class="bo-icon-btn danger" data-action="delete">حذف</button>
       </div></td>`;
     tr.querySelector('[data-action="payments"]').addEventListener('click', () => openGymSubPaymentsModal(s));
+    tr.querySelector('[data-action="freeze"]').addEventListener('click', () => {
+      if (s.status === 'frozen') { unfreezeGymSubscription(s); } else { openGymFreezeModal(s); }
+    });
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openGymSubscriptionModal(s));
     tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteGymSubscription(s));
     applyRowActionPerm(tr, 'gym-subscriptions');
@@ -35039,7 +35244,7 @@ async function openGymSubscriptionModal(sub) {
       input: document.getElementById('gymSubMemberInput'),
       hidden: document.getElementById('gymSubMember'),
       dropdown: document.getElementById('gymSubMemberDropdown'),
-      getItems: () => boGymMembers.map(m => ({ value: m.id, label: m.name, sublabel: m.phone || '', search: `${m.name} ${m.phone || ''}` })),
+      getItems: () => boGymMembers.map(m => ({ value: m.id, label: m.name, sublabel: m.phone || '', search: `${m.name} ${m.phone || ''} ${m.member_code || ''}` })),
     });
   }
   document.getElementById('gymSubMemberInput').value = sub?.gym_members?.name || '';
@@ -35134,6 +35339,122 @@ async function deleteGymSubscription(sub) {
   renderGymSubscriptionsTable();
 }
 
+// ---- طباعة بطاقة العضوية بالباركود ----
+function printGymMemberCard(member) {
+  if (!member.member_code) { showToast('لا يوجد كود عضوية مسجّل لهذا العضو', true); return; }
+  const branchName = member.branches?.name || '';
+  const win = window.open('', '_blank', 'width=420,height=320');
+  if (!win) { showToast('تعذر فتح نافذة الطباعة — تأكد إن المتصفح مش شايل الـ popup', true); return; }
+  const closeScriptTag = '<' + '/script>';
+  const html = `<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8">
+    <title>بطاقة عضوية — ${member.name}</title>
+    <style>
+      body { font-family: Tahoma, Arial, sans-serif; margin:0; padding:16px; background:#f3f4f6; }
+      .card { width: 340px; margin: 0 auto; background: #fff; border-radius: 14px; padding: 18px 20px; box-shadow: 0 2px 10px rgba(0,0,0,.12); border: 1px solid #e5e7eb; }
+      .card-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+      .card-brand { font-weight:700; font-size:13px; color:#0f766e; }
+      .card-branch { font-size:11px; color:#6b7280; }
+      .card-name { font-size:18px; font-weight:700; margin:6px 0 2px; }
+      .card-phone { font-size:12.5px; color:#4b5563; margin-bottom:10px; direction:ltr; text-align:right; }
+      .card-barcode { text-align:center; margin-top:6px; }
+      @media print { body { background:#fff; padding:0; } .card { box-shadow:none; border:1px dashed #999; } .no-print { display:none; } }
+    </style>
+  </head><body>
+    <div class="card">
+      <div class="card-top">
+        <div class="card-brand">بطاقة عضوية</div>
+        <div class="card-branch">${escapeHtml(branchName)}</div>
+      </div>
+      <div class="card-name">${escapeHtml(member.name)}</div>
+      ${member.phone ? `<div class="card-phone">${escapeHtml(member.phone)}</div>` : ''}
+      <div class="card-barcode"><svg id="cardBarcodeSvg"></svg></div>
+    </div>
+    <div class="no-print" style="text-align:center; margin-top:14px;">
+      <button onclick="window.print()" style="padding:8px 18px; border-radius:8px; border:none; background:#0f766e; color:#fff; font-size:13px; cursor:pointer;">طباعة</button>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js">${closeScriptTag}
+    <script>
+      JsBarcode("#cardBarcodeSvg", ${JSON.stringify(member.member_code)}, { format: "CODE128", width: 2, height: 55, fontSize: 14, margin: 4, displayValue: true });
+      window.onload = () => { setTimeout(() => window.print(), 300); };
+    ${closeScriptTag}
+  </body></html>`;
+  win.document.write(html);
+  win.document.close();
+}
+
+// ---- تجميد/إلغاء تجميد الاشتراك ----
+function openGymFreezeModal(sub) {
+  if (sub.status !== 'active') { showToast('التجميد متاح فقط للاشتراكات النشطة', true); return; }
+  document.getElementById('gymFreezeSubscriptionId').value = sub.id;
+  document.getElementById('gymFreezeNote').value = '';
+  document.getElementById('gymFreezeModalError').classList.remove('show');
+  document.getElementById('gymFreezeModalOverlay').classList.add('show');
+}
+
+function closeGymFreezeModal() {
+  document.getElementById('gymFreezeModalOverlay').classList.remove('show');
+}
+
+async function saveGymFreeze(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('gymFreezeModalError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('saveGymFreezeBtn');
+  btn.disabled = true; btn.textContent = 'جاري التجميد...';
+  const subscriptionId = document.getElementById('gymFreezeSubscriptionId').value;
+  const note = document.getElementById('gymFreezeNote').value.trim() || null;
+  try {
+    const { error: freezeError } = await supabaseClient.from('gym_subscription_freezes').insert({
+      subscription_id: subscriptionId, note, created_by: currentProfile.id,
+    });
+    if (freezeError) throw freezeError;
+    const { error: subError } = await supabaseClient.from('gym_subscriptions').update({ status: 'frozen' }).eq('id', subscriptionId);
+    if (subError) throw subError;
+    showToast('تم تجميد الاشتراك');
+    closeGymFreezeModal();
+    await loadBoGymSubscriptions();
+    renderGymSubscriptionsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء التجميد';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'تجميد الآن';
+  }
+}
+
+async function unfreezeGymSubscription(sub) {
+  if (!confirm(`هل تريد إلغاء تجميد اشتراك "${sub.gym_members?.name || ''}"؟ هيتم تمديد تاريخ الانتهاء تلقائيًا بعدد أيام التجميد.`)) return;
+  try {
+    const { data: openFreeze, error: findError } = await supabaseClient
+      .from('gym_subscription_freezes').select('*').eq('subscription_id', sub.id).is('freeze_end', null)
+      .order('freeze_start', { ascending: false }).limit(1).maybeSingle();
+    if (findError) throw findError;
+    if (!openFreeze) { showToast('لا يوجد تجميد قائم على هذا الاشتراك', true); return; }
+
+    const today = new Date();
+    const freezeStart = new Date(openFreeze.freeze_start);
+    const daysFrozen = Math.max(1, Math.round((today - freezeStart) / (1000 * 60 * 60 * 24)));
+
+    const { error: closeFreezeError } = await supabaseClient.from('gym_subscription_freezes')
+      .update({ freeze_end: today.toISOString().slice(0, 10), days_frozen: daysFrozen }).eq('id', openFreeze.id);
+    if (closeFreezeError) throw closeFreezeError;
+
+    const newEndDate = new Date(sub.end_date);
+    newEndDate.setDate(newEndDate.getDate() + daysFrozen);
+    const { error: subError } = await supabaseClient.from('gym_subscriptions')
+      .update({ status: 'active', end_date: newEndDate.toISOString().slice(0, 10) }).eq('id', sub.id);
+    if (subError) throw subError;
+
+    showToast(`تم إلغاء التجميد، وتمديد الاشتراك ${daysFrozen} يوم`);
+    await loadBoGymSubscriptions();
+    renderGymSubscriptionsTable();
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر إلغاء التجميد', true);
+  }
+}
+
 // ---- مدفوعات/أقساط الاشتراك ----
 let currentGymSubForPayments = null;
 
@@ -35144,6 +35465,11 @@ async function openGymSubPaymentsModal(sub) {
   document.getElementById('gymSubPaymentDate').value = new Date().toISOString().slice(0, 10);
   document.getElementById('gymSubPaymentAmount').value = '';
   document.getElementById('gymSubPaymentNotes').value = '';
+  if (boTreasuries.length === 0) await loadBoTreasuries();
+  const branchTreasuries = boTreasuries.filter(t => t.is_active && t.branch_id === sub.branch_id);
+  const listForSelect = branchTreasuries.length > 0 ? branchTreasuries : boTreasuries.filter(t => t.is_active);
+  document.getElementById('gymSubPaymentCashAccount').innerHTML = listForSelect
+    .map(t => `<option value="${t.id}">${escapeHtml(t.branches?.name || '')} — ${escapeHtml(t.name)}</option>`).join('');
   document.getElementById('gymSubPaymentModalError').classList.remove('show');
   await renderGymSubPaymentsList(sub.id);
   document.getElementById('gymSubPaymentsModalOverlay').classList.add('show');
@@ -35181,17 +35507,38 @@ async function saveGymSubPayment(e) {
 
   const subscriptionId = document.getElementById('gymSubPaymentSubscriptionId').value;
   const amount = Number(document.getElementById('gymSubPaymentAmount').value);
+  const cashAccountId = document.getElementById('gymSubPaymentCashAccount').value;
+  if (!cashAccountId) {
+    errEl.textContent = 'اختر الخزينة اللي هيتم إيداع المبلغ فيها';
+    errEl.classList.add('show');
+    btn.disabled = false; btn.textContent = 'تسجيل دفعة';
+    return;
+  }
   const payload = {
     subscription_id: subscriptionId,
     amount,
     payment_date: document.getElementById('gymSubPaymentDate').value,
     payment_method: document.getElementById('gymSubPaymentMethod').value,
+    cash_account_id: cashAccountId,
     notes: document.getElementById('gymSubPaymentNotes').value.trim() || null,
     received_by: currentProfile.id,
   };
   try {
-    const { error: payError } = await supabaseClient.from('gym_subscription_payments').insert(payload);
+    const { data: paymentRow, error: payError } = await supabaseClient.from('gym_subscription_payments').insert(payload).select().single();
     if (payError) throw payError;
+
+    // تسجيل الإيداع مباشرة في خزينة/كاشير الفرع، فيظهر تلقائيًا في تقارير
+    // الخزينة والوردية بدل ما يفضل مسجل في نظام الجيم بس
+    const memberName = currentGymSubForPayments?.gym_members?.name || '';
+    const { error: cashError } = await supabaseClient.from('cash_account_transactions').insert({
+      cash_account_id: cashAccountId,
+      type: 'customer_receipt',
+      amount: Math.abs(amount),
+      reference_id: paymentRow.id,
+      note: `دفعة اشتراك جيم${memberName ? ' — ' + memberName : ''}`,
+      user_id: currentProfile.id,
+    });
+    if (cashError) throw cashError;
 
     // تحديث المبلغ المدفوع إجمالاً على الاشتراك نفسه
     const sub = boGymSubscriptions.find(s => s.id === subscriptionId);
@@ -35199,12 +35546,13 @@ async function saveGymSubPayment(e) {
     const { error: subError } = await supabaseClient.from('gym_subscriptions').update({ paid_amount: newPaid }).eq('id', subscriptionId);
     if (subError) throw subError;
 
-    showToast('تم تسجيل الدفعة بنجاح');
+    showToast('تم تسجيل الدفعة وإيداعها في الخزينة بنجاح');
     document.getElementById('gymSubPaymentAmount').value = '';
     document.getElementById('gymSubPaymentNotes').value = '';
     await renderGymSubPaymentsList(subscriptionId);
     await loadBoGymSubscriptions();
     renderGymSubscriptionsTable();
+    await loadBoTreasuries();
   } catch (err) {
     console.error(err);
     errEl.textContent = err.message || 'حدث خطأ أثناء تسجيل الدفعة';
@@ -35264,7 +35612,7 @@ async function openGymAttendanceModal() {
       input: document.getElementById('gymAttendanceMemberInput'),
       hidden: document.getElementById('gymAttendanceMember'),
       dropdown: document.getElementById('gymAttendanceMemberDropdown'),
-      getItems: () => boGymMembers.map(m => ({ value: m.id, label: m.name, sublabel: m.phone || '', search: `${m.name} ${m.phone || ''}` })),
+      getItems: () => boGymMembers.map(m => ({ value: m.id, label: m.name, sublabel: m.phone || '', search: `${m.name} ${m.phone || ''} ${m.member_code || ''}` })),
     });
   }
   document.getElementById('gymAttendanceModalError').classList.remove('show');
@@ -35500,7 +35848,7 @@ async function openGymClassModal(cls) {
         input: document.getElementById('gymClassBookMemberInput'),
         hidden: document.getElementById('gymClassBookMember'),
         dropdown: document.getElementById('gymClassBookMemberDropdown'),
-        getItems: () => boGymMembers.map(m => ({ value: m.id, label: m.name, sublabel: m.phone || '', search: `${m.name} ${m.phone || ''}` })),
+        getItems: () => boGymMembers.map(m => ({ value: m.id, label: m.name, sublabel: m.phone || '', search: `${m.name} ${m.phone || ''} ${m.member_code || ''}` })),
         onChange: (item) => { if (item?.value) bookGymClassMember(currentGymClassIdForBooking); },
       });
     }
@@ -35614,6 +35962,140 @@ async function deleteGymClass(cls) {
   showToast('تم حذف الحصة');
   await loadBoGymClasses();
   renderGymClassesTable();
+}
+
+// ---- تقارير الجيم ----
+async function refreshGymExpiringReport() {
+  const tbody = document.getElementById('gymExpReportTableBody');
+  tbody.innerHTML = '<tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>';
+  const days = Number(document.getElementById('gymExpReportDays').value);
+  const today = new Date();
+  const limitDate = new Date(today);
+  limitDate.setDate(limitDate.getDate() + days);
+  const { data, error } = await supabaseClient
+    .from('gym_subscriptions')
+    .select('*, gym_members(name, phone), gym_packages(name), branches(name)')
+    .eq('status', 'active')
+    .lte('end_date', limitDate.toISOString().slice(0, 10))
+    .order('end_date', { ascending: true });
+  if (error) { console.error(error); tbody.innerHTML = '<tr><td colspan="7" class="bo-empty">تعذر تحميل التقرير</td></tr>'; return; }
+  if (!data || data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="bo-empty">لا توجد اشتراكات قريبة من الانتهاء في هذه المدة</td></tr>';
+    return;
+  }
+  tbody.innerHTML = '';
+  data.forEach(s => {
+    const daysLeft = Math.ceil((new Date(s.end_date) - today) / (1000 * 60 * 60 * 24));
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(s.gym_members?.name || '—')}</td>
+      <td style="direction:ltr; text-align:right;">${escapeHtml(s.gym_members?.phone || '—')}</td>
+      <td>${escapeHtml(s.gym_packages?.name || '—')}</td>
+      <td>${escapeHtml(s.branches?.name || '—')}</td>
+      <td class="num">${s.end_date}</td>
+      <td class="num">${daysLeft <= 0 ? 'منتهي بالفعل' : daysLeft + ' يوم'}</td>
+      <td>${s.gym_members?.phone ? '<button type="button" class="bo-icon-btn" data-action="remind">تذكير واتساب</button>' : ''}</td>`;
+    const remindBtn = tr.querySelector('[data-action="remind"]');
+    if (remindBtn) remindBtn.addEventListener('click', () => sendGymExpiryReminderWhatsapp(s, daysLeft));
+    tbody.appendChild(tr);
+  });
+}
+
+function sendGymExpiryReminderWhatsapp(sub, daysLeft) {
+  const memberName = sub.gym_members?.name || '';
+  const phoneDigits = (sub.gym_members?.phone || '').replace(/[^0-9]/g, '');
+  if (!phoneDigits) { showToast('لا يوجد رقم هاتف مسجّل لهذا العضو', true); return; }
+  const packageName = sub.gym_packages?.name || 'اشتراكك';
+  const message = daysLeft > 0
+    ? `مرحبًا ${memberName}، نود تذكيرك بأن اشتراكك (${packageName}) هينتهي بعد ${daysLeft} يوم بتاريخ ${sub.end_date}. يسعدنا تجديد الاشتراك في أقرب وقت لضمان استمرار استفادتك بالخدمة. شكرًا لاختيارك لنا.`
+    : `مرحبًا ${memberName}، نود إعلامك بأن اشتراكك (${packageName}) قد انتهى بتاريخ ${sub.end_date}. يسعدنا تجديد الاشتراك في أقرب وقت. شكرًا لاختيارك لنا.`;
+  const url = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(message)}`;
+  window.open(url, '_blank');
+}
+
+async function refreshGymDuePaymentsReport() {
+  const tbody = document.getElementById('gymDueReportTableBody');
+  tbody.innerHTML = '<tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>';
+  const { data, error } = await supabaseClient
+    .from('gym_subscriptions')
+    .select('*, gym_members(name, phone), gym_packages(name), branches(name)')
+    .eq('status', 'active')
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); tbody.innerHTML = '<tr><td colspan="7" class="bo-empty">تعذر تحميل التقرير</td></tr>'; return; }
+  const due = (data || []).filter(s => Number(s.total_price) - Number(s.paid_amount) > 0.001);
+  document.getElementById('gymDueCount').textContent = due.length;
+  document.getElementById('gymDueTotalRemaining').textContent = due.reduce((sum, s) => sum + (Number(s.total_price) - Number(s.paid_amount)), 0).toFixed(2);
+  if (due.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="bo-empty">لا توجد أقساط مستحقة حاليًا</td></tr>';
+    return;
+  }
+  tbody.innerHTML = due.map(s => `
+    <tr>
+      <td>${escapeHtml(s.gym_members?.name || '—')}</td>
+      <td style="direction:ltr; text-align:right;">${escapeHtml(s.gym_members?.phone || '—')}</td>
+      <td>${escapeHtml(s.gym_packages?.name || '—')}</td>
+      <td>${escapeHtml(s.branches?.name || '—')}</td>
+      <td class="num">${Number(s.total_price).toFixed(2)}</td>
+      <td class="num">${Number(s.paid_amount).toFixed(2)}</td>
+      <td class="num">${(Number(s.total_price) - Number(s.paid_amount)).toFixed(2)}</td>
+    </tr>`).join('');
+}
+
+async function runGymTrainerPerformanceReport() {
+  const fromInput = document.getElementById('gymTrainerPerfFromDate');
+  const toInput = document.getElementById('gymTrainerPerfToDate');
+  if (!fromInput.value || !toInput.value) {
+    const today = new Date();
+    const monthAgo = new Date(today); monthAgo.setDate(monthAgo.getDate() - 30);
+    fromInput.value = monthAgo.toISOString().slice(0, 10);
+    toInput.value = today.toISOString().slice(0, 10);
+  }
+  await refreshGymTrainerPerformanceReport();
+}
+
+async function refreshGymTrainerPerformanceReport() {
+  const tbody = document.getElementById('gymTrainerPerfTableBody');
+  tbody.innerHTML = '<tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>';
+  const fromDate = document.getElementById('gymTrainerPerfFromDate').value;
+  const toDate = document.getElementById('gymTrainerPerfToDate').value;
+
+  const { data, error } = await supabaseClient
+    .from('gym_classes')
+    .select('*, gym_trainers(name), branches(name), gym_class_bookings(id, status)')
+    .gte('class_date', fromDate)
+    .lte('class_date', toDate);
+  if (error) { console.error(error); tbody.innerHTML = '<tr><td colspan="6" class="bo-empty">تعذر تحميل التقرير</td></tr>'; return; }
+  if (!data || data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="bo-empty">لا توجد حصص مسجلة خلال هذه المدة</td></tr>';
+    return;
+  }
+
+  // تجميع الحصص حسب المدرب + الفرع
+  const grouped = {};
+  data.forEach(c => {
+    const trainerName = c.gym_trainers?.name || '— بدون مدرب —';
+    const branchName = c.branches?.name || '—';
+    const key = trainerName + '|' + branchName;
+    if (!grouped[key]) grouped[key] = { trainerName, branchName, classCount: 0, totalBookings: 0, totalCapacity: 0 };
+    const bookedCount = (c.gym_class_bookings || []).filter(b => b.status !== 'cancelled').length;
+    grouped[key].classCount += 1;
+    grouped[key].totalBookings += bookedCount;
+    grouped[key].totalCapacity += c.capacity;
+  });
+
+  const rows = Object.values(grouped).sort((a, b) => b.totalBookings - a.totalBookings);
+  tbody.innerHTML = rows.map(r => {
+    const avgPerClass = r.classCount > 0 ? (r.totalBookings / r.classCount).toFixed(1) : '0';
+    const utilization = r.totalCapacity > 0 ? ((r.totalBookings / r.totalCapacity) * 100).toFixed(0) : '0';
+    return `<tr>
+      <td>${escapeHtml(r.trainerName)}</td>
+      <td>${escapeHtml(r.branchName)}</td>
+      <td class="num">${r.classCount}</td>
+      <td class="num">${r.totalBookings}</td>
+      <td class="num">${avgPerClass}</td>
+      <td class="num">${utilization}%</td>
+    </tr>`;
+  }).join('');
 }
 
 // ==================== الأصول/الأجهزة (Service Management) ====================
