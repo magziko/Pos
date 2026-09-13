@@ -16054,6 +16054,29 @@ function isShoeBranch() {
   return getCurrentBranchBusinessType()?.name === 'محل أحذية';
 }
 
+// نفس فكرة isShoeBranch/isLaundryBranch: قسم الجيم ما ينفعش يظهر لأي فرع مش
+// نشاطه فعليًا "نادي رياضي / جيم"، حتى لو الدور الحالي معاه صلاحية gym_management
+// (الصلاحية بتتحكم في *مين* يقدر يشوف القسم، ونوع النشاط بيتحكم في *امتى* أصلاً
+// يظهر القسم ده في القائمة، بنفس منطق باقي الأنشطة الخاصة في النظام).
+function isGymBranch() {
+  return getCurrentBranchBusinessType()?.name === 'نادي رياضي / جيم';
+}
+
+function applyGymFeatureVisibility() {
+  const gymGroup = document.getElementById('gymNavGroup');
+  if (gymGroup) {
+    const hasPermission = boNavGroups.find(g => g.group === 'gymNavGroup')?.sections.some(s => hasBoScreenPermission(s));
+    gymGroup.style.display = (hasPermission && isGymBranch()) ? '' : 'none';
+  }
+  const show = isGymBranch() ? '' : 'none';
+  ['gym-expiring', 'gym-due-payments', 'gym-trainer-performance'].forEach(key => {
+    const card = document.querySelector(`[data-report="${key}"]`);
+    if (card) card.style.display = show;
+    const detail = document.getElementById('otherReportDetail-' + key);
+    if (detail && !isGymBranch()) detail.style.display = 'none';
+  });
+}
+
 function applyShoeFeatureVisibility() {
   const show = isShoeBranch() ? '' : 'none';
   // تقارير المخزون
@@ -18777,6 +18800,7 @@ async function enterBackoffice() {
   populateProductCategorySelect();
 
   applyBoPermissions();
+  applyGymFeatureVisibility();
   const landingSection = firstAllowedSection();
   if (!landingSection) {
     alert('ليس لديك صلاحية للوصول إلى أي قسم في لوحة التحكم');
@@ -29351,6 +29375,7 @@ async function toggleBusinessTypeActive(item) {
   await loadBoBusinessTypes();
   renderBusinessTypesTable();
   applyBoPermissions();
+  applyGymFeatureVisibility();
 }
 
 // ---- أجهزة نقاط البيع (pos_devices) ----
@@ -35179,6 +35204,9 @@ async function loadBoGymSubscriptions() {
 }
 
 function gymSubStatusBadge(sub) {
+  if (sub.status === 'active' && sub.end_date < new Date().toISOString().slice(0, 10)) {
+    return '<span class="bo-badge inactive">منتهي (يحتاج تجديد)</span>';
+  }
   const map = {
     active: '<span class="bo-badge active">نشط</span>',
     expired: '<span class="bo-badge inactive">منتهي</span>',
@@ -35186,6 +35214,10 @@ function gymSubStatusBadge(sub) {
     cancelled: '<span class="bo-badge inactive">ملغي</span>',
   };
   return map[sub.status] || sub.status;
+}
+
+function gymSubIsPastDue(sub) {
+  return sub.status === 'active' && sub.end_date < new Date().toISOString().slice(0, 10);
 }
 
 function renderGymSubscriptionsTable() {
@@ -35212,11 +35244,14 @@ function renderGymSubscriptionsTable() {
       <td>${gymSubStatusBadge(s)}</td>
       <td><div class="bo-row-actions">
         <button class="bo-icon-btn" data-action="payments" style="color:var(--teal-700);">المدفوعات</button>
+        ${gymSubIsPastDue(s) ? '<button class="bo-icon-btn" data-action="renew" style="color:#b45309; font-weight:700;">تجديد</button>' : ''}
         <button class="bo-icon-btn" data-action="freeze" style="color:#0369a1;">${s.status === 'frozen' ? 'إلغاء التجميد' : 'تجميد'}</button>
         <button class="bo-icon-btn" data-action="edit">تعديل</button>
         <button class="bo-icon-btn danger" data-action="delete">حذف</button>
       </div></td>`;
     tr.querySelector('[data-action="payments"]').addEventListener('click', () => openGymSubPaymentsModal(s));
+    const renewBtn = tr.querySelector('[data-action="renew"]');
+    if (renewBtn) renewBtn.addEventListener('click', () => renewGymSubscription(s));
     tr.querySelector('[data-action="freeze"]').addEventListener('click', () => {
       if (s.status === 'frozen') { unfreezeGymSubscription(s); } else { openGymFreezeModal(s); }
     });
@@ -35380,6 +35415,18 @@ function printGymMemberCard(member) {
   </body></html>`;
   win.document.write(html);
   win.document.close();
+}
+
+async function renewGymSubscription(sub) {
+  await openGymSubscriptionModal(null);
+  document.getElementById('gymSubscriptionModalTitle').textContent = `تجديد اشتراك: ${sub.gym_members?.name || ''}`;
+  document.getElementById('gymSubMemberInput').value = sub.gym_members?.name || '';
+  document.getElementById('gymSubMember').value = sub.member_id;
+  document.getElementById('gymSubPackage').value = sub.package_id;
+  document.getElementById('gymSubBranch').value = sub.branch_id;
+  document.getElementById('gymSubStartDate').value = new Date().toISOString().slice(0, 10);
+  applyGymSubPackageDefaults();
+  showToast('اتملت بيانات العضو والباقة من الاشتراك السابق — راجع التواريخ والسعر واحفظ');
 }
 
 // ---- تجميد/إلغاء تجميد الاشتراك ----
