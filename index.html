@@ -1682,6 +1682,30 @@ a { color: inherit; }
           </div>
         </div>
 
+        <div class="bo-nav-group" id="salonNavGroup">
+          <button class="bo-nav-item bo-nav-parent" id="salonNavToggle" type="button">
+            <span>الصالون والسبا</span>
+            <span class="bo-nav-chevron">‹</span>
+          </button>
+          <div class="bo-nav-sub" id="salonNavSub">
+            <button class="bo-nav-sub-item" data-section="salon-specialists">الأخصائيين</button>
+            <button class="bo-nav-sub-item" data-section="salon-services">الخدمات</button>
+            <button class="bo-nav-sub-item" data-section="salon-appointments">المواعيد</button>
+          </div>
+        </div>
+
+        <div class="bo-nav-group" id="clinicNavGroup">
+          <button class="bo-nav-item bo-nav-parent" id="clinicNavToggle" type="button">
+            <span>العيادة والمركز الطبي</span>
+            <span class="bo-nav-chevron">‹</span>
+          </button>
+          <div class="bo-nav-sub" id="clinicNavSub">
+            <button class="bo-nav-sub-item" data-section="clinic-patients">المرضى</button>
+            <button class="bo-nav-sub-item" data-section="clinic-doctors">الأطباء</button>
+            <button class="bo-nav-sub-item" data-section="clinic-appointments">المواعيد</button>
+          </div>
+        </div>
+
         <!-- 4. التقارير -->
         <div class="bo-nav-group" id="reportsNavGroup">
           <button class="bo-nav-item bo-nav-parent" id="reportsNavToggle" type="button">
@@ -2740,6 +2764,108 @@ a { color: inherit; }
               <tbody id="gymClassesTableBody">
                 <tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم أخصائيي الصالون -->
+        <div id="bo-section-salon-specialists" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">الأخصائيين</div>
+            <button class="bo-add-btn" id="addSalonSpecialistBtn">+ أخصائي جديد</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="salonSpecialistSearchInput" placeholder="ابحث بالاسم...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>الاسم</th><th>التخصص</th><th>الهاتف</th><th>الفرع</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="salonSpecialistsTableBody"><tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم خدمات الصالون -->
+        <div id="bo-section-salon-services" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">الخدمات</div>
+            <button class="bo-add-btn" id="addSalonServiceBtn">+ خدمة جديدة</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="salonServiceSearchInput" placeholder="ابحث باسم الخدمة...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>اسم الخدمة</th><th>المدة (دقيقة)</th><th>السعر</th><th>الفرع</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="salonServicesTableBody"><tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم مواعيد الصالون -->
+        <div id="bo-section-salon-appointments" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">المواعيد</div>
+            <button class="bo-add-btn" id="addSalonAppointmentBtn">+ موعد جديد</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="salonAppointmentSearchInput" placeholder="ابحث باسم العميل...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>العميل</th><th>الخدمة</th><th>الأخصائي</th><th>التاريخ</th><th>الوقت</th><th>السعر</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="salonAppointmentsTableBody"><tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم مرضى العيادة -->
+        <div id="bo-section-clinic-patients" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">المرضى</div>
+            <button class="bo-add-btn" id="addClinicPatientBtn">+ مريض جديد</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="clinicPatientSearchInput" placeholder="ابحث بالاسم أو رقم الهاتف...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>الاسم</th><th>الهاتف</th><th>الفرع</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="clinicPatientsTableBody"><tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم أطباء العيادة -->
+        <div id="bo-section-clinic-doctors" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">الأطباء</div>
+            <button class="bo-add-btn" id="addClinicDoctorBtn">+ طبيب جديد</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="clinicDoctorSearchInput" placeholder="ابحث بالاسم...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>الاسم</th><th>التخصص</th><th>الهاتف</th><th>الفرع</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="clinicDoctorsTableBody"><tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم مواعيد العيادة -->
+        <div id="bo-section-clinic-appointments" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">المواعيد</div>
+            <button class="bo-add-btn" id="addClinicAppointmentBtn">+ موعد جديد</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="clinicAppointmentSearchInput" placeholder="ابحث باسم المريض...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>المريض</th><th>الطبيب</th><th>التاريخ</th><th>الوقت</th><th>السعر</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="clinicAppointmentsTableBody"><tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -8222,6 +8348,198 @@ a { color: inherit; }
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelGymFreezeBtn">إلغاء</button>
         <button type="submit" class="submit-btn" id="saveGymFreezeBtn">تجميد الآن</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: أخصائي صالون جديد -->
+<div class="modal-overlay" id="salonSpecialistModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="salonSpecialistModalTitle">أخصائي جديد</div>
+    <form id="salonSpecialistForm">
+      <input type="hidden" id="salonSpecialistId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>الاسم</label><input type="text" id="salonSpecialistName" required></div>
+        <div class="field"><label>الهاتف</label><input type="text" id="salonSpecialistPhone" style="direction:ltr; text-align:right;"></div>
+        <div class="field"><label>التخصص</label><input type="text" id="salonSpecialistSpecialty" placeholder="مثال: حلاقة، مكياج، عناية بالبشرة..."></div>
+        <div class="field"><label>الفرع</label><select id="salonSpecialistBranch" required></select></div>
+        <div class="field" style="display:flex; align-items:flex-end;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="salonSpecialistIsActive" checked style="width:auto;"> الأخصائي نشط</label>
+        </div>
+      </div>
+      <div class="error-msg" id="salonSpecialistModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelSalonSpecialistBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveSalonSpecialistBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: خدمة صالون جديدة -->
+<div class="modal-overlay" id="salonServiceModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="salonServiceModalTitle">خدمة جديدة</div>
+    <form id="salonServiceForm">
+      <input type="hidden" id="salonServiceId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>اسم الخدمة</label><input type="text" id="salonServiceName" required placeholder="مثال: قص شعر، مانيكير..."></div>
+        <div class="field"><label>المدة (بالدقائق)</label><input type="number" id="salonServiceDuration" min="5" step="5" value="30" required></div>
+        <div class="field"><label>السعر</label><input type="number" id="salonServicePrice" min="0" step="0.01" required></div>
+        <div class="field"><label>الفرع (اختياري)</label><select id="salonServiceBranch"><option value="">— كل الفروع —</option></select></div>
+        <div class="field" style="display:flex; align-items:flex-end;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="salonServiceIsActive" checked style="width:auto;"> الخدمة نشطة</label>
+        </div>
+      </div>
+      <div class="error-msg" id="salonServiceModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelSalonServiceBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveSalonServiceBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: موعد صالون جديد -->
+<div class="modal-overlay" id="salonAppointmentModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title" id="salonAppointmentModalTitle">موعد جديد</div>
+    <form id="salonAppointmentForm">
+      <input type="hidden" id="salonAppointmentId">
+      <div class="modal-grid">
+        <div class="field"><label>اسم العميل</label><input type="text" id="salonAppointmentClientName" required></div>
+        <div class="field"><label>هاتف العميل</label><input type="text" id="salonAppointmentClientPhone" style="direction:ltr; text-align:right;"></div>
+        <div class="field">
+          <label>الخدمة</label>
+          <select id="salonAppointmentService" required></select>
+        </div>
+        <div class="field">
+          <label>الأخصائي</label>
+          <select id="salonAppointmentSpecialist"><option value="">— بدون —</option></select>
+        </div>
+        <div class="field"><label>الفرع</label><select id="salonAppointmentBranch" required></select></div>
+        <div class="field"><label>التاريخ</label><input type="date" id="salonAppointmentDate" required></div>
+        <div class="field"><label>من الساعة</label><input type="time" id="salonAppointmentStartTime" required></div>
+        <div class="field"><label>إلى الساعة</label><input type="time" id="salonAppointmentEndTime" required></div>
+        <div class="field"><label>السعر</label><input type="number" id="salonAppointmentPrice" min="0" step="0.01" required></div>
+        <div class="field">
+          <label>الحالة</label>
+          <select id="salonAppointmentStatus">
+            <option value="booked">محجوز</option>
+            <option value="completed">تم</option>
+            <option value="cancelled">ملغي</option>
+            <option value="no_show">لم يحضر</option>
+          </select>
+        </div>
+        <div class="field field-full"><label>ملاحظات</label><input type="text" id="salonAppointmentNotes"></div>
+      </div>
+      <div class="error-msg" id="salonAppointmentModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelSalonAppointmentBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveSalonAppointmentBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: مريض جديد -->
+<div class="modal-overlay" id="clinicPatientModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="clinicPatientModalTitle">مريض جديد</div>
+    <form id="clinicPatientForm">
+      <input type="hidden" id="clinicPatientId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>الاسم</label><input type="text" id="clinicPatientName" required></div>
+        <div class="field"><label>الهاتف</label><input type="text" id="clinicPatientPhone" style="direction:ltr; text-align:right;"></div>
+        <div class="field"><label>تاريخ الميلاد</label><input type="date" id="clinicPatientBirthDate"></div>
+        <div class="field">
+          <label>النوع</label>
+          <select id="clinicPatientGender">
+            <option value="">— غير محدد —</option>
+            <option value="male">ذكر</option>
+            <option value="female">أنثى</option>
+          </select>
+        </div>
+        <div class="field"><label>الفرع</label><select id="clinicPatientBranch" required></select></div>
+        <div class="field" style="display:flex; align-items:flex-end;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="clinicPatientIsActive" checked style="width:auto;"> المريض نشط</label>
+        </div>
+        <div class="field field-full"><label>ملاحظات</label><textarea id="clinicPatientNotes" rows="2"></textarea></div>
+      </div>
+      <div class="error-msg" id="clinicPatientModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelClinicPatientBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveClinicPatientBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: طبيب جديد -->
+<div class="modal-overlay" id="clinicDoctorModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="clinicDoctorModalTitle">طبيب جديد</div>
+    <form id="clinicDoctorForm">
+      <input type="hidden" id="clinicDoctorId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>الاسم</label><input type="text" id="clinicDoctorName" required></div>
+        <div class="field"><label>الهاتف</label><input type="text" id="clinicDoctorPhone" style="direction:ltr; text-align:right;"></div>
+        <div class="field"><label>التخصص</label><input type="text" id="clinicDoctorSpecialty" placeholder="مثال: أسنان، جلدية..."></div>
+        <div class="field"><label>الفرع</label><select id="clinicDoctorBranch" required></select></div>
+        <div class="field" style="display:flex; align-items:flex-end;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="clinicDoctorIsActive" checked style="width:auto;"> الطبيب نشط</label>
+        </div>
+      </div>
+      <div class="error-msg" id="clinicDoctorModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelClinicDoctorBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveClinicDoctorBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: موعد عيادة جديد -->
+<div class="modal-overlay" id="clinicAppointmentModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title" id="clinicAppointmentModalTitle">موعد جديد</div>
+    <form id="clinicAppointmentForm">
+      <input type="hidden" id="clinicAppointmentId">
+      <div class="modal-grid">
+        <div class="field field-full">
+          <label>المريض</label>
+          <div class="smart-search">
+            <input type="text" id="clinicAppointmentPatientInput" autocomplete="off" placeholder="اكتب اسم المريض..." required>
+            <input type="hidden" id="clinicAppointmentPatient">
+            <div class="smart-search-dropdown" id="clinicAppointmentPatientDropdown"></div>
+          </div>
+        </div>
+        <div class="field">
+          <label>الطبيب</label>
+          <select id="clinicAppointmentDoctor"><option value="">— بدون —</option></select>
+        </div>
+        <div class="field"><label>الفرع</label><select id="clinicAppointmentBranch" required></select></div>
+        <div class="field"><label>التاريخ</label><input type="date" id="clinicAppointmentDate" required></div>
+        <div class="field"><label>من الساعة</label><input type="time" id="clinicAppointmentStartTime" required></div>
+        <div class="field"><label>إلى الساعة</label><input type="time" id="clinicAppointmentEndTime" required></div>
+        <div class="field"><label>سبب الزيارة</label><input type="text" id="clinicAppointmentReason"></div>
+        <div class="field"><label>السعر</label><input type="number" id="clinicAppointmentPrice" min="0" step="0.01" required></div>
+        <div class="field">
+          <label>الحالة</label>
+          <select id="clinicAppointmentStatus">
+            <option value="booked">محجوز</option>
+            <option value="completed">تم</option>
+            <option value="cancelled">ملغي</option>
+            <option value="no_show">لم يحضر</option>
+          </select>
+        </div>
+        <div class="field field-full"><label>ملاحظات</label><input type="text" id="clinicAppointmentNotes"></div>
+      </div>
+      <div class="error-msg" id="clinicAppointmentModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelClinicAppointmentBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveClinicAppointmentBtn">حفظ</button>
       </div>
     </form>
   </div>
@@ -16077,6 +16395,30 @@ function applyGymFeatureVisibility() {
   });
 }
 
+function isSalonBranch() {
+  return getCurrentBranchBusinessType()?.name === 'صالون حلاقة / تجميل';
+}
+
+function applySalonFeatureVisibility() {
+  const salonGroup = document.getElementById('salonNavGroup');
+  if (salonGroup) {
+    const hasPermission = boNavGroups.find(g => g.group === 'salonNavGroup')?.sections.some(s => hasBoScreenPermission(s));
+    salonGroup.style.display = (hasPermission && isSalonBranch()) ? '' : 'none';
+  }
+}
+
+function isClinicBranch() {
+  return getCurrentBranchBusinessType()?.name === 'عيادة / مركز طبي';
+}
+
+function applyClinicFeatureVisibility() {
+  const clinicGroup = document.getElementById('clinicNavGroup');
+  if (clinicGroup) {
+    const hasPermission = boNavGroups.find(g => g.group === 'clinicNavGroup')?.sections.some(s => hasBoScreenPermission(s));
+    clinicGroup.style.display = (hasPermission && isClinicBranch()) ? '' : 'none';
+  }
+}
+
 function applyShoeFeatureVisibility() {
   const show = isShoeBranch() ? '' : 'none';
   // تقارير المخزون
@@ -18801,6 +19143,8 @@ async function enterBackoffice() {
 
   applyBoPermissions();
   applyGymFeatureVisibility();
+  applySalonFeatureVisibility();
+  applyClinicFeatureVisibility();
   const landingSection = firstAllowedSection();
   if (!landingSection) {
     alert('ليس لديك صلاحية للوصول إلى أي قسم في لوحة التحكم');
@@ -18824,6 +19168,8 @@ const boAllSections = ['dashboard','products','categories','unit-types','tax-rat
   'my-visits',
   'asset-faults',
   'gym-members','gym-packages','gym-subscriptions','gym-attendance','gym-trainers','gym-classes','gym-dashboard',
+  'salon-specialists','salon-services','salon-appointments',
+  'clinic-patients','clinic-doctors','clinic-appointments',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
   'soon','company-info','permissions','users','branches','business-types','pos-devices','branch-settings','pos-tables','print-settings','stock','stocktake','product-batches','product-serials','backup','reset-data','employees','attendance','leave-requests','expense-items','expenses','salaries','sales-commissions','treasuries','capital','fixed-assets','promotions','coupons','modifier-groups','recipes'];
 
@@ -18834,6 +19180,8 @@ const boNavGroups = [
   { toggle: 'purchasesNavToggle', group: 'purchasesNavGroup', sections: ['suppliers','supplier-prices','purchase-requisitions','purchase-orders','purchases','purchase-returns'] },
   { toggle: 'serviceMgmtNavToggle', group: 'serviceMgmtNavGroup', sections: ['assets', 'service-orders', 'service-visits', 'contracts', 'my-visits', 'asset-faults'] },
   { toggle: 'gymNavToggle', group: 'gymNavGroup', sections: ['gym-dashboard', 'gym-members', 'gym-packages', 'gym-subscriptions', 'gym-attendance', 'gym-trainers', 'gym-classes'] },
+  { toggle: 'salonNavToggle', group: 'salonNavGroup', sections: ['salon-specialists', 'salon-services', 'salon-appointments'] },
+  { toggle: 'clinicNavToggle', group: 'clinicNavGroup', sections: ['clinic-patients', 'clinic-doctors', 'clinic-appointments'] },
   { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
   { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['treasuries','payments','expense-items','expenses','capital','fixed-assets'] },
   { toggle: 'hrNavToggle', group: 'hrNavGroup', sections: ['employees','attendance','leave-requests','salaries','sales-commissions'] },
@@ -18861,6 +19209,8 @@ const SECTION_PERMISSION_MAP = {
   'gym-members': 'gym_management', 'gym-packages': 'gym_management', 'gym-subscriptions': 'gym_management',
   'gym-attendance': 'gym_management', 'gym-trainers': 'gym_management', 'gym-classes': 'gym_management',
   'gym-dashboard': 'gym_management',
+  'salon-specialists': 'salon_management', 'salon-services': 'salon_management', 'salon-appointments': 'salon_management',
+  'clinic-patients': 'clinic_management', 'clinic-doctors': 'clinic_management', 'clinic-appointments': 'clinic_management',
   'reports-sales': 'reports', 'reports-purchases': 'reports', 'reports-inventory': 'reports', 'reports-accounting': 'reports', 'reports-other': 'reports',
   'treasuries': 'finance', 'payments': 'finance', 'expense-items': 'finance', 'expenses': 'finance', 'capital': 'admin', 'fixed-assets': 'finance',
   'employees': 'hr', 'attendance': 'hr', 'leave-requests': 'hr', 'salaries': 'hr', 'sales-commissions': 'hr',
@@ -18970,7 +19320,9 @@ const SCREEN_LABELS = {
   'assets': 'الأصول/الأجهزة', 'service-orders': 'أوامر الخدمة', 'service-visits': 'الزيارات', 'contracts': 'العقود', 'my-visits': 'زياراتي (الفني)', 'asset-faults': 'الأعطال',
   'gym-members': 'الأعضاء', 'gym-packages': 'الباقات', 'gym-subscriptions': 'الاشتراكات',
   'gym-attendance': 'تسجيل الحضور', 'gym-trainers': 'المدربين', 'gym-classes': 'الحصص التدريبية',
-  'gym-dashboard': 'لوحة تحكم الجيم'
+  'gym-dashboard': 'لوحة تحكم الجيم',
+  'salon-specialists': 'الأخصائيين', 'salon-services': 'الخدمات', 'salon-appointments': 'المواعيد',
+  'clinic-patients': 'المرضى', 'clinic-doctors': 'الأطباء', 'clinic-appointments': 'مواعيد العيادة'
 };
 
 // بناء قائمة الشاشات التفصيلية لكل وحدة رئيسية تلقائيًا من SECTION_PERMISSION_MAP
@@ -19495,6 +19847,12 @@ const ACTION_CAPABLE_SCREENS = {
   'gym-attendance': { add: true, delete: true },
   'gym-trainers': { add: true, edit: true, delete: true },
   'gym-classes': { add: true, edit: true, delete: true },
+  'salon-specialists': { add: true, edit: true, delete: true },
+  'salon-services': { add: true, edit: true, delete: true },
+  'salon-appointments': { add: true, edit: true, delete: true },
+  'clinic-patients': { add: true, edit: true, delete: true },
+  'clinic-doctors': { add: true, edit: true, delete: true },
+  'clinic-appointments': { add: true, edit: true, delete: true },
   'purchase-requisitions': { add: true, edit: true },
   'purchase-orders': { add: true, edit: true, delete: true },
   'sales-list': { edit: true },
@@ -19544,6 +19902,8 @@ const ADD_BUTTON_MAP = {
   'asset-faults': 'addAssetFaultBtn',
   'gym-members': 'addGymMemberBtn', 'gym-packages': 'addGymPackageBtn', 'gym-subscriptions': 'addGymSubscriptionBtn',
   'gym-attendance': 'addGymAttendanceBtn', 'gym-trainers': 'addGymTrainerBtn', 'gym-classes': 'addGymClassBtn',
+  'salon-specialists': 'addSalonSpecialistBtn', 'salon-services': 'addSalonServiceBtn', 'salon-appointments': 'addSalonAppointmentBtn',
+  'clinic-patients': 'addClinicPatientBtn', 'clinic-doctors': 'addClinicDoctorBtn', 'clinic-appointments': 'addClinicAppointmentBtn',
   'purchase-orders': 'addPurchaseOrderBtn', 'purchases': 'addPurchaseBtn', 'purchase-returns': 'addPurchaseReturnBtn', 'sale-returns': 'addSaleReturnFromBoBtn',
   'stocktake': 'addStocktakeSessionBtn', 'product-batches': 'addProductBatchBtn', 'product-serials': 'addProductSerialBtn',
   'delivery': 'addDeliveryOrderBtn', 'delivery-zones': 'addDeliveryZoneBtn', 'delivery-companies': 'addDeliveryCompanyBtn', 'sales-channels': 'addSalesChannelBtn',
@@ -19737,6 +20097,18 @@ function activateBoSection(section, btn) {
   if (section === 'gym-classes' && !boGymClassesLoadedOnce) {
     Promise.all([loadBoGymTrainers(), loadBoGymMembers(), loadBoGymClasses()]).then(renderGymClassesTable);
     boGymClassesLoadedOnce = true;
+  }
+  if (section === 'salon-specialists' && !boSalonSpecialistsLoadedOnce) { loadBoSalonSpecialists().then(renderSalonSpecialistsTable); boSalonSpecialistsLoadedOnce = true; }
+  if (section === 'salon-services' && !boSalonServicesLoadedOnce) { loadBoSalonServices().then(renderSalonServicesTable); boSalonServicesLoadedOnce = true; }
+  if (section === 'salon-appointments' && !boSalonAppointmentsLoadedOnce) {
+    Promise.all([loadBoSalonSpecialists(), loadBoSalonServices(), loadBoSalonAppointments()]).then(renderSalonAppointmentsTable);
+    boSalonAppointmentsLoadedOnce = true;
+  }
+  if (section === 'clinic-patients' && !boClinicPatientsLoadedOnce) { loadBoClinicPatients().then(renderClinicPatientsTable); boClinicPatientsLoadedOnce = true; }
+  if (section === 'clinic-doctors' && !boClinicDoctorsLoadedOnce) { loadBoClinicDoctors().then(renderClinicDoctorsTable); boClinicDoctorsLoadedOnce = true; }
+  if (section === 'clinic-appointments' && !boClinicAppointmentsLoadedOnce) {
+    Promise.all([loadBoClinicPatients(), loadBoClinicDoctors(), loadBoClinicAppointments()]).then(renderClinicAppointmentsTable);
+    boClinicAppointmentsLoadedOnce = true;
   }
   if (section === 'purchase-orders') { loadBoPurchaseOrders().then(renderPurchaseOrdersTable); }
   if (section === 'purchase-requisitions') { loadBoRequisitions().then(renderRequisitionsTable); }
@@ -21212,6 +21584,62 @@ function bindBackofficeEvents() {
   });
   document.getElementById('gymClassForm').addEventListener('submit', saveGymClass);
   document.getElementById('gymClassSearchInput').addEventListener('input', renderGymClassesTable);
+
+  // ---- Salon Specialist modal ----
+  document.getElementById('addSalonSpecialistBtn').addEventListener('click', () => openSalonSpecialistModal(null));
+  document.getElementById('cancelSalonSpecialistBtn').addEventListener('click', closeSalonSpecialistModal);
+  document.getElementById('salonSpecialistModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'salonSpecialistModalOverlay') closeSalonSpecialistModal();
+  });
+  document.getElementById('salonSpecialistForm').addEventListener('submit', saveSalonSpecialist);
+  document.getElementById('salonSpecialistSearchInput').addEventListener('input', renderSalonSpecialistsTable);
+
+  // ---- Salon Service modal ----
+  document.getElementById('addSalonServiceBtn').addEventListener('click', () => openSalonServiceModal(null));
+  document.getElementById('cancelSalonServiceBtn').addEventListener('click', closeSalonServiceModal);
+  document.getElementById('salonServiceModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'salonServiceModalOverlay') closeSalonServiceModal();
+  });
+  document.getElementById('salonServiceForm').addEventListener('submit', saveSalonService);
+  document.getElementById('salonServiceSearchInput').addEventListener('input', renderSalonServicesTable);
+
+  // ---- Salon Appointment modal ----
+  document.getElementById('addSalonAppointmentBtn').addEventListener('click', () => openSalonAppointmentModal(null));
+  document.getElementById('cancelSalonAppointmentBtn').addEventListener('click', closeSalonAppointmentModal);
+  document.getElementById('salonAppointmentModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'salonAppointmentModalOverlay') closeSalonAppointmentModal();
+  });
+  document.getElementById('salonAppointmentForm').addEventListener('submit', saveSalonAppointment);
+  document.getElementById('salonAppointmentService').addEventListener('change', applySalonServiceDefaults);
+  document.getElementById('salonAppointmentStartTime').addEventListener('change', applySalonServiceDefaults);
+  document.getElementById('salonAppointmentSearchInput').addEventListener('input', renderSalonAppointmentsTable);
+
+  // ---- Clinic Patient modal ----
+  document.getElementById('addClinicPatientBtn').addEventListener('click', () => openClinicPatientModal(null));
+  document.getElementById('cancelClinicPatientBtn').addEventListener('click', closeClinicPatientModal);
+  document.getElementById('clinicPatientModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'clinicPatientModalOverlay') closeClinicPatientModal();
+  });
+  document.getElementById('clinicPatientForm').addEventListener('submit', saveClinicPatient);
+  document.getElementById('clinicPatientSearchInput').addEventListener('input', renderClinicPatientsTable);
+
+  // ---- Clinic Doctor modal ----
+  document.getElementById('addClinicDoctorBtn').addEventListener('click', () => openClinicDoctorModal(null));
+  document.getElementById('cancelClinicDoctorBtn').addEventListener('click', closeClinicDoctorModal);
+  document.getElementById('clinicDoctorModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'clinicDoctorModalOverlay') closeClinicDoctorModal();
+  });
+  document.getElementById('clinicDoctorForm').addEventListener('submit', saveClinicDoctor);
+  document.getElementById('clinicDoctorSearchInput').addEventListener('input', renderClinicDoctorsTable);
+
+  // ---- Clinic Appointment modal ----
+  document.getElementById('addClinicAppointmentBtn').addEventListener('click', () => openClinicAppointmentModal(null));
+  document.getElementById('cancelClinicAppointmentBtn').addEventListener('click', closeClinicAppointmentModal);
+  document.getElementById('clinicAppointmentModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'clinicAppointmentModalOverlay') closeClinicAppointmentModal();
+  });
+  document.getElementById('clinicAppointmentForm').addEventListener('submit', saveClinicAppointment);
+  document.getElementById('clinicAppointmentSearchInput').addEventListener('input', renderClinicAppointmentsTable);
 
   // ---- Asset modal ----
   document.getElementById('addAssetBtn').addEventListener('click', () => openAssetModal(null));
@@ -29376,6 +29804,8 @@ async function toggleBusinessTypeActive(item) {
   renderBusinessTypesTable();
   applyBoPermissions();
   applyGymFeatureVisibility();
+  applySalonFeatureVisibility();
+  applyClinicFeatureVisibility();
 }
 
 // ---- أجهزة نقاط البيع (pos_devices) ----
@@ -29994,6 +30424,8 @@ const PERMISSION_GROUPS = [
   { key: 'purchases_management', title: 'المشتريات', desc: 'الموردون، فواتير الشراء، مرتجعات الشراء', children: buildModuleScreens('purchases_management') },
   { key: 'service_management', title: 'إدارة الخدمات', desc: 'الأصول/الأجهزة، أوامر الخدمة، الفنيين، الزيارات، العقود (تحت الإنشاء تدريجيًا)', children: buildModuleScreens('service_management') },
   { key: 'gym_management', title: 'الجيم والصالات الرياضية', desc: 'الأعضاء، الباقات، الاشتراكات، الحضور، المدربين، الحصص التدريبية', children: buildModuleScreens('gym_management') },
+  { key: 'salon_management', title: 'الصالون والسبا', desc: 'الأخصائيين، الخدمات، حجز المواعيد', children: buildModuleScreens('salon_management') },
+  { key: 'clinic_management', title: 'العيادة والمركز الطبي', desc: 'المرضى، الأطباء، حجز المواعيد', children: buildModuleScreens('clinic_management') },
   { key: 'technician', title: 'الفني الميداني (وصول محدود)', desc: 'وصول مقتصر على الزيارات المسندة للموظف المرتبط بحساب المستخدم نفسه فقط — منفصل عن إدارة الخدمات الكاملة', children: buildModuleScreens('technician') },
   { key: 'reports', title: 'التقارير', desc: 'تقارير المبيعات والمشتريات والمخزون والمحاسبة والتقارير الأخرى', reportGroups: REPORT_TABS },
   { key: 'finance', title: 'المالية', desc: 'الخزائن والحسابات البنكية، سجل المدفوعات، بنود المصروفات، المصروفات، الأصول الثابتة', children: buildModuleScreens('finance') },
@@ -36143,6 +36575,709 @@ async function refreshGymTrainerPerformanceReport() {
       <td class="num">${utilization}%</td>
     </tr>`;
   }).join('');
+}
+
+// ==================== الصالون والسبا ====================
+let boSalonSpecialists = [];
+let boSalonServices = [];
+let boSalonAppointments = [];
+let boSalonSpecialistsLoadedOnce = false;
+let boSalonServicesLoadedOnce = false;
+let boSalonAppointmentsLoadedOnce = false;
+
+// ---- الأخصائيين ----
+async function loadBoSalonSpecialists() {
+  const { data, error } = await supabaseClient.from('salon_specialists').select('*, branches(name)').order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل الأخصائيين', true); return; }
+  boSalonSpecialists = data || [];
+}
+
+function renderSalonSpecialistsTable() {
+  const tbody = document.getElementById('salonSpecialistsTableBody');
+  const q = (document.getElementById('salonSpecialistSearchInput').value || '').trim().toLowerCase();
+  const filtered = boSalonSpecialists.filter(s => !q || s.name.toLowerCase().includes(q));
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">${boSalonSpecialists.length === 0 ? 'لا يوجد أخصائيين مضافين حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(s => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(s.name)}</td>
+      <td>${escapeHtml(s.specialty || '—')}</td>
+      <td style="direction:ltr; text-align:right;">${escapeHtml(s.phone || '—')}</td>
+      <td>${escapeHtml(s.branches?.name || '—')}</td>
+      <td>${s.is_active ? '<span class="bo-badge active">نشط</span>' : '<span class="bo-badge inactive">غير نشط</span>'}</td>
+      <td><div class="bo-row-actions">
+        <button class="bo-icon-btn" data-action="edit">تعديل</button>
+        <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+      </div></td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openSalonSpecialistModal(s));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteSalonSpecialist(s));
+    applyRowActionPerm(tr, 'salon-specialists');
+    tbody.appendChild(tr);
+  });
+}
+
+function openSalonSpecialistModal(specialist) {
+  document.getElementById('salonSpecialistModalTitle').textContent = specialist ? 'تعديل أخصائي' : 'أخصائي جديد';
+  document.getElementById('salonSpecialistId').value = specialist ? specialist.id : '';
+  document.getElementById('salonSpecialistName').value = specialist?.name || '';
+  document.getElementById('salonSpecialistPhone').value = specialist?.phone || '';
+  document.getElementById('salonSpecialistSpecialty').value = specialist?.specialty || '';
+  document.getElementById('salonSpecialistIsActive').checked = specialist ? !!specialist.is_active : true;
+  populateBranchSelect(document.getElementById('salonSpecialistBranch'), specialist?.branch_id || currentProfile.branch_id, false);
+  document.getElementById('salonSpecialistModalError').classList.remove('show');
+  document.getElementById('salonSpecialistModalOverlay').classList.add('show');
+}
+
+function closeSalonSpecialistModal() {
+  document.getElementById('salonSpecialistModalOverlay').classList.remove('show');
+}
+
+async function saveSalonSpecialist(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('salonSpecialistModalError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('saveSalonSpecialistBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  const id = document.getElementById('salonSpecialistId').value || null;
+  const payload = {
+    name: document.getElementById('salonSpecialistName').value.trim(),
+    phone: document.getElementById('salonSpecialistPhone').value.trim() || null,
+    specialty: document.getElementById('salonSpecialistSpecialty').value.trim() || null,
+    branch_id: document.getElementById('salonSpecialistBranch').value,
+    is_active: document.getElementById('salonSpecialistIsActive').checked,
+  };
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('salon_specialists').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('salon_specialists').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث بيانات الأخصائي' : 'تمت إضافة الأخصائي بنجاح');
+    closeSalonSpecialistModal();
+    await loadBoSalonSpecialists();
+    renderSalonSpecialistsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ';
+  }
+}
+
+async function deleteSalonSpecialist(specialist) {
+  if (!hasBoActionPermission('salon-specialists', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف الأخصائي "${specialist.name}"؟`)) return;
+  const { error } = await supabaseClient.from('salon_specialists').delete().eq('id', specialist.id);
+  if (error) { console.error(error); showToast('تعذر حذف الأخصائي — على الأرجح مرتبط بمواعيد', true); return; }
+  showToast('تم حذف الأخصائي');
+  await loadBoSalonSpecialists();
+  renderSalonSpecialistsTable();
+}
+
+// ---- الخدمات ----
+async function loadBoSalonServices() {
+  const { data, error } = await supabaseClient.from('salon_services').select('*, branches(name)').order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل الخدمات', true); return; }
+  boSalonServices = data || [];
+}
+
+function renderSalonServicesTable() {
+  const tbody = document.getElementById('salonServicesTableBody');
+  const q = (document.getElementById('salonServiceSearchInput').value || '').trim().toLowerCase();
+  const filtered = boSalonServices.filter(s => !q || s.name.toLowerCase().includes(q));
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">${boSalonServices.length === 0 ? 'لا توجد خدمات مضافة حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(s => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(s.name)}</td>
+      <td class="num">${s.duration_minutes}</td>
+      <td class="num">${Number(s.price).toFixed(2)}</td>
+      <td>${escapeHtml(s.branches?.name || 'كل الفروع')}</td>
+      <td>${s.is_active ? '<span class="bo-badge active">نشط</span>' : '<span class="bo-badge inactive">غير نشط</span>'}</td>
+      <td><div class="bo-row-actions">
+        <button class="bo-icon-btn" data-action="edit">تعديل</button>
+        <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+      </div></td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openSalonServiceModal(s));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteSalonService(s));
+    applyRowActionPerm(tr, 'salon-services');
+    tbody.appendChild(tr);
+  });
+}
+
+function openSalonServiceModal(service) {
+  document.getElementById('salonServiceModalTitle').textContent = service ? 'تعديل خدمة' : 'خدمة جديدة';
+  document.getElementById('salonServiceId').value = service ? service.id : '';
+  document.getElementById('salonServiceName').value = service?.name || '';
+  document.getElementById('salonServiceDuration').value = service?.duration_minutes || 30;
+  document.getElementById('salonServicePrice').value = service?.price || '';
+  document.getElementById('salonServiceIsActive').checked = service ? !!service.is_active : true;
+  populateBranchSelect(document.getElementById('salonServiceBranch'), service?.branch_id || '', true);
+  document.getElementById('salonServiceModalError').classList.remove('show');
+  document.getElementById('salonServiceModalOverlay').classList.add('show');
+}
+
+function closeSalonServiceModal() {
+  document.getElementById('salonServiceModalOverlay').classList.remove('show');
+}
+
+async function saveSalonService(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('salonServiceModalError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('saveSalonServiceBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  const id = document.getElementById('salonServiceId').value || null;
+  const payload = {
+    name: document.getElementById('salonServiceName').value.trim(),
+    duration_minutes: Number(document.getElementById('salonServiceDuration').value),
+    price: Number(document.getElementById('salonServicePrice').value),
+    branch_id: document.getElementById('salonServiceBranch').value || null,
+    is_active: document.getElementById('salonServiceIsActive').checked,
+  };
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('salon_services').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('salon_services').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث الخدمة' : 'تمت إضافة الخدمة بنجاح');
+    closeSalonServiceModal();
+    await loadBoSalonServices();
+    renderSalonServicesTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ';
+  }
+}
+
+async function deleteSalonService(service) {
+  if (!hasBoActionPermission('salon-services', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف خدمة "${service.name}"؟`)) return;
+  const { error } = await supabaseClient.from('salon_services').delete().eq('id', service.id);
+  if (error) { console.error(error); showToast('تعذر حذف الخدمة — على الأرجح مرتبطة بمواعيد', true); return; }
+  showToast('تم حذف الخدمة');
+  await loadBoSalonServices();
+  renderSalonServicesTable();
+}
+
+// ---- المواعيد ----
+async function loadBoSalonAppointments() {
+  const { data, error } = await supabaseClient
+    .from('salon_appointments')
+    .select('*, salon_services(name, duration_minutes), salon_specialists(name), branches(name)')
+    .order('appointment_date', { ascending: false })
+    .limit(300);
+  if (error) { console.error(error); showToast('تعذر تحميل المواعيد', true); return; }
+  boSalonAppointments = data || [];
+}
+
+function salonAppointmentStatusBadge(appt) {
+  const map = {
+    booked: '<span class="bo-badge active">محجوز</span>',
+    completed: '<span class="bo-badge active">تم</span>',
+    cancelled: '<span class="bo-badge inactive">ملغي</span>',
+    no_show: '<span class="bo-badge inactive">لم يحضر</span>',
+  };
+  return map[appt.status] || appt.status;
+}
+
+function renderSalonAppointmentsTable() {
+  const tbody = document.getElementById('salonAppointmentsTableBody');
+  const q = (document.getElementById('salonAppointmentSearchInput').value || '').trim().toLowerCase();
+  const filtered = boSalonAppointments.filter(a => !q || (a.client_name || '').toLowerCase().includes(q));
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" class="bo-empty">${boSalonAppointments.length === 0 ? 'لا توجد مواعيد مسجلة حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(a => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(a.client_name || '—')}</td>
+      <td>${escapeHtml(a.salon_services?.name || '—')}</td>
+      <td>${escapeHtml(a.salon_specialists?.name || '—')}</td>
+      <td class="num">${a.appointment_date}</td>
+      <td class="num">${a.start_time?.slice(0,5)} - ${a.end_time?.slice(0,5)}</td>
+      <td class="num">${Number(a.price).toFixed(2)}</td>
+      <td>${salonAppointmentStatusBadge(a)}</td>
+      <td><div class="bo-row-actions">
+        <button class="bo-icon-btn" data-action="edit">تعديل</button>
+        <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+      </div></td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openSalonAppointmentModal(a));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteSalonAppointment(a));
+    applyRowActionPerm(tr, 'salon-appointments');
+    tbody.appendChild(tr);
+  });
+}
+
+async function openSalonAppointmentModal(appt) {
+  if (boSalonServices.length === 0) await loadBoSalonServices();
+  if (boSalonSpecialists.length === 0) await loadBoSalonSpecialists();
+
+  document.getElementById('salonAppointmentModalTitle').textContent = appt ? 'تعديل موعد' : 'موعد جديد';
+  document.getElementById('salonAppointmentId').value = appt ? appt.id : '';
+  document.getElementById('salonAppointmentClientName').value = appt?.client_name || '';
+  document.getElementById('salonAppointmentClientPhone').value = appt?.client_phone || '';
+  document.getElementById('salonAppointmentDate').value = appt?.appointment_date || new Date().toISOString().slice(0, 10);
+  document.getElementById('salonAppointmentStartTime').value = appt?.start_time?.slice(0, 5) || '';
+  document.getElementById('salonAppointmentEndTime').value = appt?.end_time?.slice(0, 5) || '';
+  document.getElementById('salonAppointmentPrice').value = appt?.price ?? '';
+  document.getElementById('salonAppointmentStatus').value = appt?.status || 'booked';
+  document.getElementById('salonAppointmentNotes').value = appt?.notes || '';
+
+  const serviceSelect = document.getElementById('salonAppointmentService');
+  serviceSelect.innerHTML = boSalonServices.filter(s => s.is_active || s.id === appt?.service_id)
+    .map(s => `<option value="${s.id}" data-duration="${s.duration_minutes}" data-price="${s.price}">${escapeHtml(s.name)}</option>`).join('');
+  serviceSelect.value = appt?.service_id || (boSalonServices[0]?.id || '');
+
+  const specialistSelect = document.getElementById('salonAppointmentSpecialist');
+  specialistSelect.innerHTML = '<option value="">— بدون —</option>' + boSalonSpecialists.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+  specialistSelect.value = appt?.specialist_id || '';
+
+  populateBranchSelect(document.getElementById('salonAppointmentBranch'), appt?.branch_id || currentProfile.branch_id, false);
+
+  document.getElementById('salonAppointmentModalError').classList.remove('show');
+  document.getElementById('salonAppointmentModalOverlay').classList.add('show');
+}
+
+// لما تختار خدمة (أو تغيّر وقت البداية) لموعد جديد، نحسب وقت النهاية والسعر
+// تلقائيًا بناءً على مدة وسعر الخدمة المختارة
+function applySalonServiceDefaults() {
+  const isNew = !document.getElementById('salonAppointmentId').value;
+  if (!isNew) return;
+  const select = document.getElementById('salonAppointmentService');
+  const opt = select.selectedOptions[0];
+  if (!opt) return;
+  document.getElementById('salonAppointmentPrice').value = opt.dataset.price || '';
+  const startVal = document.getElementById('salonAppointmentStartTime').value;
+  if (!startVal) return;
+  const durationMinutes = Number(opt.dataset.duration || 30);
+  const [h, m] = startVal.split(':').map(Number);
+  const endDate = new Date(2000, 0, 1, h, m + durationMinutes);
+  document.getElementById('salonAppointmentEndTime').value =
+    String(endDate.getHours()).padStart(2, '0') + ':' + String(endDate.getMinutes()).padStart(2, '0');
+}
+
+function closeSalonAppointmentModal() {
+  document.getElementById('salonAppointmentModalOverlay').classList.remove('show');
+}
+
+async function saveSalonAppointment(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('salonAppointmentModalError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('saveSalonAppointmentBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  const id = document.getElementById('salonAppointmentId').value || null;
+  const payload = {
+    client_name: document.getElementById('salonAppointmentClientName').value.trim(),
+    client_phone: document.getElementById('salonAppointmentClientPhone').value.trim() || null,
+    service_id: document.getElementById('salonAppointmentService').value,
+    specialist_id: document.getElementById('salonAppointmentSpecialist').value || null,
+    branch_id: document.getElementById('salonAppointmentBranch').value,
+    appointment_date: document.getElementById('salonAppointmentDate').value,
+    start_time: document.getElementById('salonAppointmentStartTime').value,
+    end_time: document.getElementById('salonAppointmentEndTime').value,
+    price: Number(document.getElementById('salonAppointmentPrice').value),
+    status: document.getElementById('salonAppointmentStatus').value,
+    notes: document.getElementById('salonAppointmentNotes').value.trim() || null,
+  };
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('salon_appointments').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('salon_appointments').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث الموعد' : 'تم حجز الموعد بنجاح');
+    closeSalonAppointmentModal();
+    await loadBoSalonAppointments();
+    renderSalonAppointmentsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ';
+  }
+}
+
+async function deleteSalonAppointment(appt) {
+  if (!hasBoActionPermission('salon-appointments', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف موعد "${appt.client_name || ''}"؟`)) return;
+  const { error } = await supabaseClient.from('salon_appointments').delete().eq('id', appt.id);
+  if (error) { console.error(error); showToast('تعذر حذف الموعد', true); return; }
+  showToast('تم حذف الموعد');
+  await loadBoSalonAppointments();
+  renderSalonAppointmentsTable();
+}
+
+// ==================== العيادة والمركز الطبي ====================
+let boClinicPatients = [];
+let boClinicDoctors = [];
+let boClinicAppointments = [];
+let boClinicPatientsLoadedOnce = false;
+let boClinicDoctorsLoadedOnce = false;
+let boClinicAppointmentsLoadedOnce = false;
+let clinicAppointmentPatientSearch = null;
+
+// ---- المرضى ----
+async function loadBoClinicPatients() {
+  const { data, error } = await supabaseClient.from('clinic_patients').select('*, branches(name)').order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل المرضى', true); return; }
+  boClinicPatients = data || [];
+}
+
+function renderClinicPatientsTable() {
+  const tbody = document.getElementById('clinicPatientsTableBody');
+  const q = (document.getElementById('clinicPatientSearchInput').value || '').trim().toLowerCase();
+  const filtered = boClinicPatients.filter(p => !q || p.name.toLowerCase().includes(q) || (p.phone || '').includes(q));
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">${boClinicPatients.length === 0 ? 'لا يوجد مرضى مسجلين حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(p => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(p.name)}</td>
+      <td style="direction:ltr; text-align:right;">${escapeHtml(p.phone || '—')}</td>
+      <td>${escapeHtml(p.branches?.name || '—')}</td>
+      <td>${p.is_active ? '<span class="bo-badge active">نشط</span>' : '<span class="bo-badge inactive">غير نشط</span>'}</td>
+      <td><div class="bo-row-actions">
+        <button class="bo-icon-btn" data-action="edit">تعديل</button>
+        <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+      </div></td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openClinicPatientModal(p));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteClinicPatient(p));
+    applyRowActionPerm(tr, 'clinic-patients');
+    tbody.appendChild(tr);
+  });
+}
+
+function openClinicPatientModal(patient) {
+  document.getElementById('clinicPatientModalTitle').textContent = patient ? 'تعديل مريض' : 'مريض جديد';
+  document.getElementById('clinicPatientId').value = patient ? patient.id : '';
+  document.getElementById('clinicPatientName').value = patient?.name || '';
+  document.getElementById('clinicPatientPhone').value = patient?.phone || '';
+  document.getElementById('clinicPatientBirthDate').value = patient?.birth_date || '';
+  document.getElementById('clinicPatientGender').value = patient?.gender || '';
+  document.getElementById('clinicPatientNotes').value = patient?.notes || '';
+  document.getElementById('clinicPatientIsActive').checked = patient ? !!patient.is_active : true;
+  populateBranchSelect(document.getElementById('clinicPatientBranch'), patient?.branch_id || currentProfile.branch_id, false);
+  document.getElementById('clinicPatientModalError').classList.remove('show');
+  document.getElementById('clinicPatientModalOverlay').classList.add('show');
+}
+
+function closeClinicPatientModal() {
+  document.getElementById('clinicPatientModalOverlay').classList.remove('show');
+}
+
+async function saveClinicPatient(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('clinicPatientModalError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('saveClinicPatientBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  const id = document.getElementById('clinicPatientId').value || null;
+  const payload = {
+    name: document.getElementById('clinicPatientName').value.trim(),
+    phone: document.getElementById('clinicPatientPhone').value.trim() || null,
+    birth_date: document.getElementById('clinicPatientBirthDate').value || null,
+    gender: document.getElementById('clinicPatientGender').value || null,
+    notes: document.getElementById('clinicPatientNotes').value.trim() || null,
+    branch_id: document.getElementById('clinicPatientBranch').value,
+    is_active: document.getElementById('clinicPatientIsActive').checked,
+  };
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('clinic_patients').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('clinic_patients').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث بيانات المريض' : 'تمت إضافة المريض بنجاح');
+    closeClinicPatientModal();
+    await loadBoClinicPatients();
+    renderClinicPatientsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ';
+  }
+}
+
+async function deleteClinicPatient(patient) {
+  if (!hasBoActionPermission('clinic-patients', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف المريض "${patient.name}"؟`)) return;
+  const { error } = await supabaseClient.from('clinic_patients').delete().eq('id', patient.id);
+  if (error) { console.error(error); showToast('تعذر حذف المريض — على الأرجح مرتبط بمواعيد', true); return; }
+  showToast('تم حذف المريض');
+  await loadBoClinicPatients();
+  renderClinicPatientsTable();
+}
+
+// ---- الأطباء ----
+async function loadBoClinicDoctors() {
+  const { data, error } = await supabaseClient.from('clinic_doctors').select('*, branches(name)').order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل الأطباء', true); return; }
+  boClinicDoctors = data || [];
+}
+
+function renderClinicDoctorsTable() {
+  const tbody = document.getElementById('clinicDoctorsTableBody');
+  const q = (document.getElementById('clinicDoctorSearchInput').value || '').trim().toLowerCase();
+  const filtered = boClinicDoctors.filter(d => !q || d.name.toLowerCase().includes(q));
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">${boClinicDoctors.length === 0 ? 'لا يوجد أطباء مضافين حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(d => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(d.name)}</td>
+      <td>${escapeHtml(d.specialty || '—')}</td>
+      <td style="direction:ltr; text-align:right;">${escapeHtml(d.phone || '—')}</td>
+      <td>${escapeHtml(d.branches?.name || '—')}</td>
+      <td>${d.is_active ? '<span class="bo-badge active">نشط</span>' : '<span class="bo-badge inactive">غير نشط</span>'}</td>
+      <td><div class="bo-row-actions">
+        <button class="bo-icon-btn" data-action="edit">تعديل</button>
+        <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+      </div></td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openClinicDoctorModal(d));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteClinicDoctor(d));
+    applyRowActionPerm(tr, 'clinic-doctors');
+    tbody.appendChild(tr);
+  });
+}
+
+function openClinicDoctorModal(doctor) {
+  document.getElementById('clinicDoctorModalTitle').textContent = doctor ? 'تعديل طبيب' : 'طبيب جديد';
+  document.getElementById('clinicDoctorId').value = doctor ? doctor.id : '';
+  document.getElementById('clinicDoctorName').value = doctor?.name || '';
+  document.getElementById('clinicDoctorPhone').value = doctor?.phone || '';
+  document.getElementById('clinicDoctorSpecialty').value = doctor?.specialty || '';
+  document.getElementById('clinicDoctorIsActive').checked = doctor ? !!doctor.is_active : true;
+  populateBranchSelect(document.getElementById('clinicDoctorBranch'), doctor?.branch_id || currentProfile.branch_id, false);
+  document.getElementById('clinicDoctorModalError').classList.remove('show');
+  document.getElementById('clinicDoctorModalOverlay').classList.add('show');
+}
+
+function closeClinicDoctorModal() {
+  document.getElementById('clinicDoctorModalOverlay').classList.remove('show');
+}
+
+async function saveClinicDoctor(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('clinicDoctorModalError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('saveClinicDoctorBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  const id = document.getElementById('clinicDoctorId').value || null;
+  const payload = {
+    name: document.getElementById('clinicDoctorName').value.trim(),
+    phone: document.getElementById('clinicDoctorPhone').value.trim() || null,
+    specialty: document.getElementById('clinicDoctorSpecialty').value.trim() || null,
+    branch_id: document.getElementById('clinicDoctorBranch').value,
+    is_active: document.getElementById('clinicDoctorIsActive').checked,
+  };
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('clinic_doctors').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('clinic_doctors').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث بيانات الطبيب' : 'تمت إضافة الطبيب بنجاح');
+    closeClinicDoctorModal();
+    await loadBoClinicDoctors();
+    renderClinicDoctorsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ';
+  }
+}
+
+async function deleteClinicDoctor(doctor) {
+  if (!hasBoActionPermission('clinic-doctors', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف الطبيب "${doctor.name}"؟`)) return;
+  const { error } = await supabaseClient.from('clinic_doctors').delete().eq('id', doctor.id);
+  if (error) { console.error(error); showToast('تعذر حذف الطبيب — على الأرجح مرتبط بمواعيد', true); return; }
+  showToast('تم حذف الطبيب');
+  await loadBoClinicDoctors();
+  renderClinicDoctorsTable();
+}
+
+// ---- مواعيد العيادة ----
+async function loadBoClinicAppointments() {
+  const { data, error } = await supabaseClient
+    .from('clinic_appointments')
+    .select('*, clinic_patients(name, phone), clinic_doctors(name), branches(name)')
+    .order('appointment_date', { ascending: false })
+    .limit(300);
+  if (error) { console.error(error); showToast('تعذر تحميل المواعيد', true); return; }
+  boClinicAppointments = data || [];
+}
+
+function clinicAppointmentStatusBadge(appt) {
+  const map = {
+    booked: '<span class="bo-badge active">محجوز</span>',
+    completed: '<span class="bo-badge active">تم</span>',
+    cancelled: '<span class="bo-badge inactive">ملغي</span>',
+    no_show: '<span class="bo-badge inactive">لم يحضر</span>',
+  };
+  return map[appt.status] || appt.status;
+}
+
+function renderClinicAppointmentsTable() {
+  const tbody = document.getElementById('clinicAppointmentsTableBody');
+  const q = (document.getElementById('clinicAppointmentSearchInput').value || '').trim().toLowerCase();
+  const filtered = boClinicAppointments.filter(a => !q || (a.clinic_patients?.name || '').toLowerCase().includes(q));
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">${boClinicAppointments.length === 0 ? 'لا توجد مواعيد مسجلة حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(a => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(a.clinic_patients?.name || '—')}</td>
+      <td>${escapeHtml(a.clinic_doctors?.name || '—')}</td>
+      <td class="num">${a.appointment_date}</td>
+      <td class="num">${a.start_time?.slice(0,5)} - ${a.end_time?.slice(0,5)}</td>
+      <td class="num">${Number(a.price).toFixed(2)}</td>
+      <td>${clinicAppointmentStatusBadge(a)}</td>
+      <td><div class="bo-row-actions">
+        <button class="bo-icon-btn" data-action="edit">تعديل</button>
+        <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+      </div></td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openClinicAppointmentModal(a));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteClinicAppointment(a));
+    applyRowActionPerm(tr, 'clinic-appointments');
+    tbody.appendChild(tr);
+  });
+}
+
+async function openClinicAppointmentModal(appt) {
+  if (boClinicPatients.length === 0) await loadBoClinicPatients();
+  if (boClinicDoctors.length === 0) await loadBoClinicDoctors();
+
+  document.getElementById('clinicAppointmentModalTitle').textContent = appt ? 'تعديل موعد' : 'موعد جديد';
+  document.getElementById('clinicAppointmentId').value = appt ? appt.id : '';
+  document.getElementById('clinicAppointmentDate').value = appt?.appointment_date || new Date().toISOString().slice(0, 10);
+  document.getElementById('clinicAppointmentStartTime').value = appt?.start_time?.slice(0, 5) || '';
+  document.getElementById('clinicAppointmentEndTime').value = appt?.end_time?.slice(0, 5) || '';
+  document.getElementById('clinicAppointmentReason').value = appt?.reason || '';
+  document.getElementById('clinicAppointmentPrice').value = appt?.price ?? '';
+  document.getElementById('clinicAppointmentStatus').value = appt?.status || 'booked';
+  document.getElementById('clinicAppointmentNotes').value = appt?.notes || '';
+
+  if (!clinicAppointmentPatientSearch) {
+    clinicAppointmentPatientSearch = createSmartSearch({
+      input: document.getElementById('clinicAppointmentPatientInput'),
+      hidden: document.getElementById('clinicAppointmentPatient'),
+      dropdown: document.getElementById('clinicAppointmentPatientDropdown'),
+      getItems: () => boClinicPatients.map(p => ({ value: p.id, label: p.name, sublabel: p.phone || '', search: `${p.name} ${p.phone || ''}` })),
+    });
+  }
+  document.getElementById('clinicAppointmentPatientInput').value = appt?.clinic_patients?.name || '';
+  document.getElementById('clinicAppointmentPatient').value = appt ? appt.patient_id : '';
+
+  const doctorSelect = document.getElementById('clinicAppointmentDoctor');
+  doctorSelect.innerHTML = '<option value="">— بدون —</option>' + boClinicDoctors.map(d => `<option value="${d.id}">${escapeHtml(d.name)}</option>`).join('');
+  doctorSelect.value = appt?.doctor_id || '';
+
+  populateBranchSelect(document.getElementById('clinicAppointmentBranch'), appt?.branch_id || currentProfile.branch_id, false);
+
+  document.getElementById('clinicAppointmentModalError').classList.remove('show');
+  document.getElementById('clinicAppointmentModalOverlay').classList.add('show');
+}
+
+function closeClinicAppointmentModal() {
+  document.getElementById('clinicAppointmentModalOverlay').classList.remove('show');
+}
+
+async function saveClinicAppointment(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('clinicAppointmentModalError');
+  errEl.classList.remove('show');
+  const patientId = document.getElementById('clinicAppointmentPatient').value;
+  if (!patientId) {
+    errEl.textContent = 'اختر المريض أولًا';
+    errEl.classList.add('show');
+    return;
+  }
+  const btn = document.getElementById('saveClinicAppointmentBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  const id = document.getElementById('clinicAppointmentId').value || null;
+  const payload = {
+    patient_id: patientId,
+    doctor_id: document.getElementById('clinicAppointmentDoctor').value || null,
+    branch_id: document.getElementById('clinicAppointmentBranch').value,
+    appointment_date: document.getElementById('clinicAppointmentDate').value,
+    start_time: document.getElementById('clinicAppointmentStartTime').value,
+    end_time: document.getElementById('clinicAppointmentEndTime').value,
+    reason: document.getElementById('clinicAppointmentReason').value.trim() || null,
+    price: Number(document.getElementById('clinicAppointmentPrice').value),
+    status: document.getElementById('clinicAppointmentStatus').value,
+    notes: document.getElementById('clinicAppointmentNotes').value.trim() || null,
+  };
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('clinic_appointments').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('clinic_appointments').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث الموعد' : 'تم حجز الموعد بنجاح');
+    closeClinicAppointmentModal();
+    await loadBoClinicAppointments();
+    renderClinicAppointmentsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ';
+  }
+}
+
+async function deleteClinicAppointment(appt) {
+  if (!hasBoActionPermission('clinic-appointments', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف موعد "${appt.clinic_patients?.name || ''}"؟`)) return;
+  const { error } = await supabaseClient.from('clinic_appointments').delete().eq('id', appt.id);
+  if (error) { console.error(error); showToast('تعذر حذف الموعد', true); return; }
+  showToast('تم حذف الموعد');
+  await loadBoClinicAppointments();
+  renderClinicAppointmentsTable();
 }
 
 // ==================== الأصول/الأجهزة (Service Management) ====================
