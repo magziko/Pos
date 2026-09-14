@@ -231,6 +231,7 @@ a { color: inherit; }
 .product-card:hover { border-color: var(--teal-500); }
 .product-card:active { transform: scale(0.98); }
 .product-thumb { width: 100%; aspect-ratio: 1; border-radius: var(--radius-sm); background: var(--surface-sunken); display: grid; place-items: center; font-size: 26px; color: var(--teal-700); overflow: hidden; }
+.mini-thumb { width: 34px; height: 34px; border-radius: 6px; object-fit: cover; display: block; background: var(--surface-sunken); }
 .product-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .product-name { font-size: 13px; font-weight: 500; line-height: 1.35; min-height: 2.6em; }
 .product-price { font-family: var(--font-num); direction: ltr; text-align: right; font-weight: 700; color: var(--teal-700); font-size: 14px; }
@@ -2660,6 +2661,7 @@ a { color: inherit; }
             <table class="bo-table">
               <thead>
                 <tr>
+                  <th></th>
                   <th>اسم الباقة</th>
                   <th>المدة (يوم)</th>
                   <th>عدد الحصص</th>
@@ -2670,7 +2672,7 @@ a { color: inherit; }
                 </tr>
               </thead>
               <tbody id="gymPackagesTableBody">
-                <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
+                <tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
@@ -2821,8 +2823,8 @@ a { color: inherit; }
           </div>
           <div class="bo-table-wrap">
             <table class="bo-table">
-              <thead><tr><th>اسم الخدمة</th><th>المدة (دقيقة)</th><th>السعر</th><th>الفرع</th><th>الحالة</th><th></th></tr></thead>
-              <tbody id="salonServicesTableBody"><tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr></tbody>
+              <thead><tr><th></th><th>اسم الخدمة</th><th>المدة (دقيقة)</th><th>السعر</th><th>الفرع</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="salonServicesTableBody"><tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -2923,8 +2925,8 @@ a { color: inherit; }
           </div>
           <div class="bo-table-wrap">
             <table class="bo-table">
-              <thead><tr><th>اسم الكورس</th><th>المدة (أسابيع)</th><th>السعر</th><th>الفرع</th><th>الحالة</th><th></th></tr></thead>
-              <tbody id="academyCoursesTableBody"><tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr></tbody>
+              <thead><tr><th></th><th>اسم الكورس</th><th>المدة (أسابيع)</th><th>السعر</th><th>الفرع</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="academyCoursesTableBody"><tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -2988,8 +2990,8 @@ a { color: inherit; }
           </div>
           <div class="bo-table-wrap">
             <table class="bo-table">
-              <thead><tr><th>الاسم</th><th>الفرع</th><th>السعر بالساعة</th><th>الحالة</th><th></th></tr></thead>
-              <tbody id="venueCourtsTableBody"><tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr></tbody>
+              <thead><tr><th></th><th>الاسم</th><th>الفرع</th><th>السعر بالساعة</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="venueCourtsTableBody"><tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -8271,6 +8273,7 @@ a { color: inherit; }
         <div class="field" style="display:flex; align-items:flex-end;">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="gymPackageIsActive" checked style="width:auto;"> الباقة نشطة</label>
         </div>
+        <div class="field field-full"><label>رابط الصورة (اختياري)</label><input type="text" id="gymPackageImageUrl" style="direction:ltr; text-align:right;" placeholder="https://..."></div>
       </div>
       <div class="error-msg" id="gymPackageModalError"></div>
       <div class="modal-actions">
@@ -8532,6 +8535,7 @@ a { color: inherit; }
         <div class="field" style="display:flex; align-items:flex-end;">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="salonServiceIsActive" checked style="width:auto;"> الخدمة نشطة</label>
         </div>
+        <div class="field field-full"><label>رابط الصورة (اختياري)</label><input type="text" id="salonServiceImageUrl" style="direction:ltr; text-align:right;" placeholder="https://..."></div>
       </div>
       <div class="error-msg" id="salonServiceModalError"></div>
       <div class="modal-actions">
@@ -8724,6 +8728,7 @@ a { color: inherit; }
         <div class="field" style="display:flex; align-items:flex-end;">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="academyCourseIsActive" checked style="width:auto;"> الكورس نشط</label>
         </div>
+        <div class="field field-full"><label>رابط الصورة (اختياري)</label><input type="text" id="academyCourseImageUrl" style="direction:ltr; text-align:right;" placeholder="https://..."></div>
         <div class="field field-full"><label>الوصف</label><textarea id="academyCourseDescription" rows="2"></textarea></div>
       </div>
       <div class="error-msg" id="academyCourseModalError"></div>
@@ -8836,6 +8841,7 @@ a { color: inherit; }
         <div class="field" style="display:flex; align-items:flex-end;">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="venueCourtIsActive" checked style="width:auto;"> متاح للحجز</label>
         </div>
+        <div class="field field-full"><label>رابط الصورة (اختياري)</label><input type="text" id="venueCourtImageUrl" style="direction:ltr; text-align:right;" placeholder="https://..."></div>
       </div>
       <div class="error-msg" id="venueCourtModalError"></div>
       <div class="modal-actions">
@@ -36010,6 +36016,7 @@ function renderGymPackagesTable() {
   filtered.forEach(p => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
+      <td>${p.image_url ? `<img class="mini-thumb" src="${escapeHtml(p.image_url)}" alt="">` : '<div class="mini-thumb" style="display:grid; place-items:center;">🏋️</div>'}</td>
       <td>${escapeHtml(p.name)}</td>
       <td class="num">${p.duration_days}</td>
       <td class="num">${p.sessions_count ?? 'مفتوح'}</td>
@@ -36035,6 +36042,7 @@ function openGymPackageModal(pkg) {
   document.getElementById('gymPackageSessionsCount').value = pkg?.sessions_count ?? '';
   document.getElementById('gymPackagePrice').value = pkg?.price || '';
   document.getElementById('gymPackageIsActive').checked = pkg ? !!pkg.is_active : true;
+  document.getElementById('gymPackageImageUrl').value = pkg?.image_url || '';
   populateBranchSelect(document.getElementById('gymPackageBranch'), pkg?.branch_id || '', true);
   document.getElementById('gymPackageModalError').classList.remove('show');
   document.getElementById('gymPackageModalOverlay').classList.add('show');
@@ -36060,6 +36068,7 @@ async function saveGymPackage(e) {
     price: Number(document.getElementById('gymPackagePrice').value),
     branch_id: document.getElementById('gymPackageBranch').value || null,
     is_active: document.getElementById('gymPackageIsActive').checked,
+    image_url: document.getElementById('gymPackageImageUrl').value.trim() || null,
   };
   try {
     if (id) {
@@ -37167,6 +37176,7 @@ function renderSalonServicesTable() {
   filtered.forEach(s => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
+      <td>${s.image_url ? `<img class="mini-thumb" src="${escapeHtml(s.image_url)}" alt="">` : '<div class="mini-thumb" style="display:grid; place-items:center;">💇</div>'}</td>
       <td>${escapeHtml(s.name)}</td>
       <td class="num">${s.duration_minutes}</td>
       <td class="num">${Number(s.price).toFixed(2)}</td>
@@ -37190,6 +37200,7 @@ function openSalonServiceModal(service) {
   document.getElementById('salonServiceDuration').value = service?.duration_minutes || 30;
   document.getElementById('salonServicePrice').value = service?.price || '';
   document.getElementById('salonServiceIsActive').checked = service ? !!service.is_active : true;
+  document.getElementById('salonServiceImageUrl').value = service?.image_url || '';
   populateBranchSelect(document.getElementById('salonServiceBranch'), service?.branch_id || '', true);
   document.getElementById('salonServiceModalError').classList.remove('show');
   document.getElementById('salonServiceModalOverlay').classList.add('show');
@@ -37212,6 +37223,7 @@ async function saveSalonService(e) {
     price: Number(document.getElementById('salonServicePrice').value),
     branch_id: document.getElementById('salonServiceBranch').value || null,
     is_active: document.getElementById('salonServiceIsActive').checked,
+    image_url: document.getElementById('salonServiceImageUrl').value.trim() || null,
   };
   try {
     if (id) {
@@ -37874,6 +37886,7 @@ function renderAcademyCoursesTable() {
   filtered.forEach(c => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
+      <td>${c.image_url ? `<img class="mini-thumb" src="${escapeHtml(c.image_url)}" alt="">` : '<div class="mini-thumb" style="display:grid; place-items:center;">📚</div>'}</td>
       <td>${escapeHtml(c.name)}</td>
       <td class="num">${c.duration_weeks ?? '—'}</td>
       <td class="num">${Number(c.price).toFixed(2)}</td>
@@ -37898,6 +37911,7 @@ function openAcademyCourseModal(course) {
   document.getElementById('academyCoursePrice').value = course?.price || '';
   document.getElementById('academyCourseDescription').value = course?.description || '';
   document.getElementById('academyCourseIsActive').checked = course ? !!course.is_active : true;
+  document.getElementById('academyCourseImageUrl').value = course?.image_url || '';
   populateBranchSelect(document.getElementById('academyCourseBranch'), course?.branch_id || '', true);
   document.getElementById('academyCourseModalError').classList.remove('show');
   document.getElementById('academyCourseModalOverlay').classList.add('show');
@@ -37921,6 +37935,7 @@ async function saveAcademyCourse(e) {
     description: document.getElementById('academyCourseDescription').value.trim() || null,
     branch_id: document.getElementById('academyCourseBranch').value || null,
     is_active: document.getElementById('academyCourseIsActive').checked,
+    image_url: document.getElementById('academyCourseImageUrl').value.trim() || null,
   };
   try {
     if (id) {
@@ -38328,13 +38343,14 @@ async function loadBoVenueCourts() {
 function renderVenueCourtsTable() {
   const tbody = document.getElementById('venueCourtsTableBody');
   if (boVenueCourts.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="bo-empty">لا توجد ملاعب/قاعات مضافة حتى الآن</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="bo-empty">لا توجد ملاعب/قاعات مضافة حتى الآن</td></tr>';
     return;
   }
   tbody.innerHTML = '';
   boVenueCourts.forEach(c => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
+      <td>${c.image_url ? `<img class="mini-thumb" src="${escapeHtml(c.image_url)}" alt="">` : '<div class="mini-thumb" style="display:grid; place-items:center;">🏟️</div>'}</td>
       <td>${escapeHtml(c.name)}</td>
       <td>${escapeHtml(c.branches?.name || '—')}</td>
       <td class="num">${Number(c.hourly_price).toFixed(2)}</td>
@@ -38356,6 +38372,7 @@ function openVenueCourtModal(court) {
   document.getElementById('venueCourtName').value = court?.name || '';
   document.getElementById('venueCourtHourlyPrice').value = court?.hourly_price || '';
   document.getElementById('venueCourtIsActive').checked = court ? !!court.is_active : true;
+  document.getElementById('venueCourtImageUrl').value = court?.image_url || '';
   populateBranchSelect(document.getElementById('venueCourtBranch'), court?.branch_id || currentProfile.branch_id, false);
   document.getElementById('venueCourtModalError').classList.remove('show');
   document.getElementById('venueCourtModalOverlay').classList.add('show');
@@ -38377,6 +38394,7 @@ async function saveVenueCourt(e) {
     hourly_price: Number(document.getElementById('venueCourtHourlyPrice').value),
     branch_id: document.getElementById('venueCourtBranch').value,
     is_active: document.getElementById('venueCourtIsActive').checked,
+    image_url: document.getElementById('venueCourtImageUrl').value.trim() || null,
   };
   try {
     if (id) {
