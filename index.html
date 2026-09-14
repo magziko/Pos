@@ -1706,6 +1706,31 @@ a { color: inherit; }
           </div>
         </div>
 
+        <div class="bo-nav-group" id="academyNavGroup">
+          <button class="bo-nav-item bo-nav-parent" id="academyNavToggle" type="button">
+            <span>مركز التدريب/الأكاديمية</span>
+            <span class="bo-nav-chevron">‹</span>
+          </button>
+          <div class="bo-nav-sub" id="academyNavSub">
+            <button class="bo-nav-sub-item" data-section="academy-students">الطلاب</button>
+            <button class="bo-nav-sub-item" data-section="academy-courses">الكورسات</button>
+            <button class="bo-nav-sub-item" data-section="academy-instructors">المدربين</button>
+            <button class="bo-nav-sub-item" data-section="academy-enrollments">التسجيلات</button>
+            <button class="bo-nav-sub-item" data-section="academy-sessions">الحصص</button>
+          </div>
+        </div>
+
+        <div class="bo-nav-group" id="venueNavGroup">
+          <button class="bo-nav-item bo-nav-parent" id="venueNavToggle" type="button">
+            <span>حجز ملاعب وقاعات</span>
+            <span class="bo-nav-chevron">‹</span>
+          </button>
+          <div class="bo-nav-sub" id="venueNavSub">
+            <button class="bo-nav-sub-item" data-section="venue-courts">الملاعب/القاعات</button>
+            <button class="bo-nav-sub-item" data-section="venue-bookings">الحجوزات</button>
+          </div>
+        </div>
+
         <!-- 4. التقارير -->
         <div class="bo-nav-group" id="reportsNavGroup">
           <button class="bo-nav-item bo-nav-parent" id="reportsNavToggle" type="button">
@@ -2866,6 +2891,122 @@ a { color: inherit; }
             <table class="bo-table">
               <thead><tr><th>المريض</th><th>الطبيب</th><th>التاريخ</th><th>الوقت</th><th>السعر</th><th>الحالة</th><th></th></tr></thead>
               <tbody id="clinicAppointmentsTableBody"><tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم طلاب الأكاديمية -->
+        <div id="bo-section-academy-students" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">الطلاب</div>
+            <button class="bo-add-btn" id="addAcademyStudentBtn">+ طالب جديد</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="academyStudentSearchInput" placeholder="ابحث بالاسم أو رقم الهاتف...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>الاسم</th><th>الهاتف</th><th>الفرع</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="academyStudentsTableBody"><tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم كورسات الأكاديمية -->
+        <div id="bo-section-academy-courses" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">الكورسات</div>
+            <button class="bo-add-btn" id="addAcademyCourseBtn">+ كورس جديد</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="academyCourseSearchInput" placeholder="ابحث باسم الكورس...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>اسم الكورس</th><th>المدة (أسابيع)</th><th>السعر</th><th>الفرع</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="academyCoursesTableBody"><tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم مدربي الأكاديمية -->
+        <div id="bo-section-academy-instructors" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">المدربين</div>
+            <button class="bo-add-btn" id="addAcademyInstructorBtn">+ مدرب جديد</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="academyInstructorSearchInput" placeholder="ابحث بالاسم...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>الاسم</th><th>التخصص</th><th>الهاتف</th><th>الفرع</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="academyInstructorsTableBody"><tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم تسجيلات الأكاديمية -->
+        <div id="bo-section-academy-enrollments" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">التسجيلات</div>
+            <button class="bo-add-btn" id="addAcademyEnrollmentBtn">+ تسجيل جديد</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="academyEnrollmentSearchInput" placeholder="ابحث باسم الطالب...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>الطالب</th><th>الكورس</th><th>الفرع</th><th>تاريخ التسجيل</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="academyEnrollmentsTableBody"><tr><td colspan="9" class="bo-empty">جاري التحميل...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم حصص الأكاديمية -->
+        <div id="bo-section-academy-sessions" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">الحصص</div>
+            <button class="bo-add-btn" id="addAcademySessionBtn">+ حصة جديدة</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="academySessionSearchInput" placeholder="ابحث باسم الكورس أو المدرب...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>الكورس</th><th>المدرب</th><th>الفرع</th><th>التاريخ</th><th>الوقت</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="academySessionsTableBody"><tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم الملاعب/القاعات -->
+        <div id="bo-section-venue-courts" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">الملاعب/القاعات</div>
+            <button class="bo-add-btn" id="addVenueCourtBtn">+ ملعب/قاعة جديدة</button>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>الاسم</th><th>الفرع</th><th>السعر بالساعة</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="venueCourtsTableBody"><tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم حجوزات الملاعب/القاعات -->
+        <div id="bo-section-venue-bookings" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">الحجوزات</div>
+            <button class="bo-add-btn" id="addVenueBookingBtn">+ حجز جديد</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="venueBookingSearchInput" placeholder="ابحث باسم العميل...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>العميل</th><th>الملعب/القاعة</th><th>التاريخ</th><th>الوقت</th><th>الإجمالي</th><th>المدفوع</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="venueBookingsTableBody"><tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -8540,6 +8681,200 @@ a { color: inherit; }
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelClinicAppointmentBtn">إلغاء</button>
         <button type="submit" class="submit-btn" id="saveClinicAppointmentBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: طالب جديد -->
+<div class="modal-overlay" id="academyStudentModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="academyStudentModalTitle">طالب جديد</div>
+    <form id="academyStudentForm">
+      <input type="hidden" id="academyStudentId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>الاسم</label><input type="text" id="academyStudentName" required></div>
+        <div class="field"><label>الهاتف</label><input type="text" id="academyStudentPhone" style="direction:ltr; text-align:right;"></div>
+        <div class="field"><label>الفرع</label><select id="academyStudentBranch" required></select></div>
+        <div class="field" style="display:flex; align-items:flex-end;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="academyStudentIsActive" checked style="width:auto;"> الطالب نشط</label>
+        </div>
+        <div class="field field-full"><label>ملاحظات</label><textarea id="academyStudentNotes" rows="2"></textarea></div>
+      </div>
+      <div class="error-msg" id="academyStudentModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelAcademyStudentBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveAcademyStudentBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: كورس جديد -->
+<div class="modal-overlay" id="academyCourseModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="academyCourseModalTitle">كورس جديد</div>
+    <form id="academyCourseForm">
+      <input type="hidden" id="academyCourseId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>اسم الكورس</label><input type="text" id="academyCourseName" required></div>
+        <div class="field"><label>المدة (أسابيع)</label><input type="number" id="academyCourseDuration" min="1" required></div>
+        <div class="field"><label>السعر</label><input type="number" id="academyCoursePrice" min="0" step="0.01" required></div>
+        <div class="field"><label>الفرع (اختياري)</label><select id="academyCourseBranch"><option value="">— كل الفروع —</option></select></div>
+        <div class="field" style="display:flex; align-items:flex-end;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="academyCourseIsActive" checked style="width:auto;"> الكورس نشط</label>
+        </div>
+        <div class="field field-full"><label>الوصف</label><textarea id="academyCourseDescription" rows="2"></textarea></div>
+      </div>
+      <div class="error-msg" id="academyCourseModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelAcademyCourseBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveAcademyCourseBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: مدرب أكاديمية جديد -->
+<div class="modal-overlay" id="academyInstructorModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="academyInstructorModalTitle">مدرب جديد</div>
+    <form id="academyInstructorForm">
+      <input type="hidden" id="academyInstructorId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>الاسم</label><input type="text" id="academyInstructorName" required></div>
+        <div class="field"><label>الهاتف</label><input type="text" id="academyInstructorPhone" style="direction:ltr; text-align:right;"></div>
+        <div class="field"><label>التخصص</label><input type="text" id="academyInstructorSpecialty"></div>
+        <div class="field"><label>الفرع</label><select id="academyInstructorBranch" required></select></div>
+        <div class="field" style="display:flex; align-items:flex-end;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="academyInstructorIsActive" checked style="width:auto;"> المدرب نشط</label>
+        </div>
+      </div>
+      <div class="error-msg" id="academyInstructorModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelAcademyInstructorBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveAcademyInstructorBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: تسجيل جديد -->
+<div class="modal-overlay" id="academyEnrollmentModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title" id="academyEnrollmentModalTitle">تسجيل جديد</div>
+    <form id="academyEnrollmentForm">
+      <input type="hidden" id="academyEnrollmentId">
+      <div class="modal-grid">
+        <div class="field field-full">
+          <label>الطالب</label>
+          <div class="smart-search">
+            <input type="text" id="academyEnrollStudentInput" autocomplete="off" placeholder="اكتب اسم الطالب..." required>
+            <input type="hidden" id="academyEnrollStudent">
+            <div class="smart-search-dropdown" id="academyEnrollStudentDropdown"></div>
+          </div>
+        </div>
+        <div class="field"><label>الكورس</label><select id="academyEnrollCourse" required></select></div>
+        <div class="field"><label>الفرع</label><select id="academyEnrollBranch" required></select></div>
+        <div class="field"><label>تاريخ التسجيل</label><input type="date" id="academyEnrollDate" required></div>
+        <div class="field"><label>إجمالي السعر</label><input type="number" id="academyEnrollTotalPrice" min="0" step="0.01" required></div>
+        <div class="field"><label>المبلغ المدفوع</label><input type="number" id="academyEnrollPaidAmount" min="0" step="0.01" value="0"></div>
+        <div class="field">
+          <label>الحالة</label>
+          <select id="academyEnrollStatus">
+            <option value="active">نشط</option>
+            <option value="completed">مكتمل</option>
+            <option value="cancelled">ملغي</option>
+          </select>
+        </div>
+      </div>
+      <div class="error-msg" id="academyEnrollmentModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelAcademyEnrollmentBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveAcademyEnrollmentBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: حصة أكاديمية جديدة -->
+<div class="modal-overlay" id="academySessionModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="academySessionModalTitle">حصة جديدة</div>
+    <form id="academySessionForm">
+      <input type="hidden" id="academySessionId">
+      <div class="modal-grid">
+        <div class="field"><label>الكورس</label><select id="academySessionCourse" required></select></div>
+        <div class="field"><label>المدرب</label><select id="academySessionInstructor"><option value="">— بدون —</option></select></div>
+        <div class="field"><label>الفرع</label><select id="academySessionBranch" required></select></div>
+        <div class="field"><label>التاريخ</label><input type="date" id="academySessionDate" required></div>
+        <div class="field"><label>من الساعة</label><input type="time" id="academySessionStartTime" required></div>
+        <div class="field"><label>إلى الساعة</label><input type="time" id="academySessionEndTime" required></div>
+        <div class="field" style="display:flex; align-items:flex-end;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="academySessionIsActive" checked style="width:auto;"> الحصة نشطة</label>
+        </div>
+      </div>
+      <div class="error-msg" id="academySessionModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelAcademySessionBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveAcademySessionBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: ملعب/قاعة جديدة -->
+<div class="modal-overlay" id="venueCourtModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="venueCourtModalTitle">ملعب/قاعة جديدة</div>
+    <form id="venueCourtForm">
+      <input type="hidden" id="venueCourtId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>الاسم</label><input type="text" id="venueCourtName" required placeholder="مثال: ملعب 1، قاعة الأفراح..."></div>
+        <div class="field"><label>السعر بالساعة</label><input type="number" id="venueCourtHourlyPrice" min="0" step="0.01" required></div>
+        <div class="field"><label>الفرع</label><select id="venueCourtBranch" required></select></div>
+        <div class="field" style="display:flex; align-items:flex-end;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="venueCourtIsActive" checked style="width:auto;"> متاح للحجز</label>
+        </div>
+      </div>
+      <div class="error-msg" id="venueCourtModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelVenueCourtBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveVenueCourtBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: حجز جديد -->
+<div class="modal-overlay" id="venueBookingModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title" id="venueBookingModalTitle">حجز جديد</div>
+    <form id="venueBookingForm">
+      <input type="hidden" id="venueBookingId">
+      <div class="modal-grid">
+        <div class="field"><label>اسم العميل</label><input type="text" id="venueBookingCustomerName" required></div>
+        <div class="field"><label>هاتف العميل</label><input type="text" id="venueBookingCustomerPhone" style="direction:ltr; text-align:right;"></div>
+        <div class="field"><label>الملعب/القاعة</label><select id="venueBookingCourt" required></select></div>
+        <div class="field"><label>التاريخ</label><input type="date" id="venueBookingDate" required></div>
+        <div class="field"><label>من الساعة</label><input type="time" id="venueBookingStartTime" required></div>
+        <div class="field"><label>إلى الساعة</label><input type="time" id="venueBookingEndTime" required></div>
+        <div class="field"><label>الإجمالي</label><input type="number" id="venueBookingTotalPrice" min="0" step="0.01" required></div>
+        <div class="field"><label>المدفوع (عربون)</label><input type="number" id="venueBookingPaidAmount" min="0" step="0.01" value="0"></div>
+        <div class="field">
+          <label>الحالة</label>
+          <select id="venueBookingStatus">
+            <option value="booked">محجوز</option>
+            <option value="completed">تم</option>
+            <option value="cancelled">ملغي</option>
+          </select>
+        </div>
+        <div class="field field-full"><label>ملاحظات</label><input type="text" id="venueBookingNotes"></div>
+      </div>
+      <div class="error-msg" id="venueBookingModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelVenueBookingBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveVenueBookingBtn">حفظ</button>
       </div>
     </form>
   </div>
@@ -16419,6 +16754,30 @@ function applyClinicFeatureVisibility() {
   }
 }
 
+function isAcademyBranch() {
+  return getCurrentBranchBusinessType()?.name === 'مركز تدريب / أكاديمية';
+}
+
+function applyAcademyFeatureVisibility() {
+  const academyGroup = document.getElementById('academyNavGroup');
+  if (academyGroup) {
+    const hasPermission = boNavGroups.find(g => g.group === 'academyNavGroup')?.sections.some(s => hasBoScreenPermission(s));
+    academyGroup.style.display = (hasPermission && isAcademyBranch()) ? '' : 'none';
+  }
+}
+
+function isVenueBranch() {
+  return getCurrentBranchBusinessType()?.name === 'حجز ملاعب / قاعات';
+}
+
+function applyVenueFeatureVisibility() {
+  const venueGroup = document.getElementById('venueNavGroup');
+  if (venueGroup) {
+    const hasPermission = boNavGroups.find(g => g.group === 'venueNavGroup')?.sections.some(s => hasBoScreenPermission(s));
+    venueGroup.style.display = (hasPermission && isVenueBranch()) ? '' : 'none';
+  }
+}
+
 function applyShoeFeatureVisibility() {
   const show = isShoeBranch() ? '' : 'none';
   // تقارير المخزون
@@ -19145,6 +19504,8 @@ async function enterBackoffice() {
   applyGymFeatureVisibility();
   applySalonFeatureVisibility();
   applyClinicFeatureVisibility();
+  applyAcademyFeatureVisibility();
+  applyVenueFeatureVisibility();
   const landingSection = firstAllowedSection();
   if (!landingSection) {
     alert('ليس لديك صلاحية للوصول إلى أي قسم في لوحة التحكم');
@@ -19170,6 +19531,8 @@ const boAllSections = ['dashboard','products','categories','unit-types','tax-rat
   'gym-members','gym-packages','gym-subscriptions','gym-attendance','gym-trainers','gym-classes','gym-dashboard',
   'salon-specialists','salon-services','salon-appointments',
   'clinic-patients','clinic-doctors','clinic-appointments',
+  'academy-students','academy-courses','academy-instructors','academy-enrollments','academy-sessions',
+  'venue-courts','venue-bookings',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
   'soon','company-info','permissions','users','branches','business-types','pos-devices','branch-settings','pos-tables','print-settings','stock','stocktake','product-batches','product-serials','backup','reset-data','employees','attendance','leave-requests','expense-items','expenses','salaries','sales-commissions','treasuries','capital','fixed-assets','promotions','coupons','modifier-groups','recipes'];
 
@@ -19182,6 +19545,8 @@ const boNavGroups = [
   { toggle: 'gymNavToggle', group: 'gymNavGroup', sections: ['gym-dashboard', 'gym-members', 'gym-packages', 'gym-subscriptions', 'gym-attendance', 'gym-trainers', 'gym-classes'] },
   { toggle: 'salonNavToggle', group: 'salonNavGroup', sections: ['salon-specialists', 'salon-services', 'salon-appointments'] },
   { toggle: 'clinicNavToggle', group: 'clinicNavGroup', sections: ['clinic-patients', 'clinic-doctors', 'clinic-appointments'] },
+  { toggle: 'academyNavToggle', group: 'academyNavGroup', sections: ['academy-students', 'academy-courses', 'academy-instructors', 'academy-enrollments', 'academy-sessions'] },
+  { toggle: 'venueNavToggle', group: 'venueNavGroup', sections: ['venue-courts', 'venue-bookings'] },
   { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
   { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['treasuries','payments','expense-items','expenses','capital','fixed-assets'] },
   { toggle: 'hrNavToggle', group: 'hrNavGroup', sections: ['employees','attendance','leave-requests','salaries','sales-commissions'] },
@@ -19211,6 +19576,9 @@ const SECTION_PERMISSION_MAP = {
   'gym-dashboard': 'gym_management',
   'salon-specialists': 'salon_management', 'salon-services': 'salon_management', 'salon-appointments': 'salon_management',
   'clinic-patients': 'clinic_management', 'clinic-doctors': 'clinic_management', 'clinic-appointments': 'clinic_management',
+  'academy-students': 'academy_management', 'academy-courses': 'academy_management', 'academy-instructors': 'academy_management',
+  'academy-enrollments': 'academy_management', 'academy-sessions': 'academy_management',
+  'venue-courts': 'venue_management', 'venue-bookings': 'venue_management',
   'reports-sales': 'reports', 'reports-purchases': 'reports', 'reports-inventory': 'reports', 'reports-accounting': 'reports', 'reports-other': 'reports',
   'treasuries': 'finance', 'payments': 'finance', 'expense-items': 'finance', 'expenses': 'finance', 'capital': 'admin', 'fixed-assets': 'finance',
   'employees': 'hr', 'attendance': 'hr', 'leave-requests': 'hr', 'salaries': 'hr', 'sales-commissions': 'hr',
@@ -19322,7 +19690,10 @@ const SCREEN_LABELS = {
   'gym-attendance': 'تسجيل الحضور', 'gym-trainers': 'المدربين', 'gym-classes': 'الحصص التدريبية',
   'gym-dashboard': 'لوحة تحكم الجيم',
   'salon-specialists': 'الأخصائيين', 'salon-services': 'الخدمات', 'salon-appointments': 'المواعيد',
-  'clinic-patients': 'المرضى', 'clinic-doctors': 'الأطباء', 'clinic-appointments': 'مواعيد العيادة'
+  'clinic-patients': 'المرضى', 'clinic-doctors': 'الأطباء', 'clinic-appointments': 'مواعيد العيادة',
+  'academy-students': 'الطلاب', 'academy-courses': 'الكورسات', 'academy-instructors': 'المدربين',
+  'academy-enrollments': 'التسجيلات', 'academy-sessions': 'الحصص',
+  'venue-courts': 'الملاعب/القاعات', 'venue-bookings': 'الحجوزات'
 };
 
 // بناء قائمة الشاشات التفصيلية لكل وحدة رئيسية تلقائيًا من SECTION_PERMISSION_MAP
@@ -19853,6 +20224,13 @@ const ACTION_CAPABLE_SCREENS = {
   'clinic-patients': { add: true, edit: true, delete: true },
   'clinic-doctors': { add: true, edit: true, delete: true },
   'clinic-appointments': { add: true, edit: true, delete: true },
+  'academy-students': { add: true, edit: true, delete: true },
+  'academy-courses': { add: true, edit: true, delete: true },
+  'academy-instructors': { add: true, edit: true, delete: true },
+  'academy-enrollments': { add: true, edit: true, delete: true },
+  'academy-sessions': { add: true, edit: true, delete: true },
+  'venue-courts': { add: true, edit: true, delete: true },
+  'venue-bookings': { add: true, edit: true, delete: true },
   'purchase-requisitions': { add: true, edit: true },
   'purchase-orders': { add: true, edit: true, delete: true },
   'sales-list': { edit: true },
@@ -19904,6 +20282,9 @@ const ADD_BUTTON_MAP = {
   'gym-attendance': 'addGymAttendanceBtn', 'gym-trainers': 'addGymTrainerBtn', 'gym-classes': 'addGymClassBtn',
   'salon-specialists': 'addSalonSpecialistBtn', 'salon-services': 'addSalonServiceBtn', 'salon-appointments': 'addSalonAppointmentBtn',
   'clinic-patients': 'addClinicPatientBtn', 'clinic-doctors': 'addClinicDoctorBtn', 'clinic-appointments': 'addClinicAppointmentBtn',
+  'academy-students': 'addAcademyStudentBtn', 'academy-courses': 'addAcademyCourseBtn', 'academy-instructors': 'addAcademyInstructorBtn',
+  'academy-enrollments': 'addAcademyEnrollmentBtn', 'academy-sessions': 'addAcademySessionBtn',
+  'venue-courts': 'addVenueCourtBtn', 'venue-bookings': 'addVenueBookingBtn',
   'purchase-orders': 'addPurchaseOrderBtn', 'purchases': 'addPurchaseBtn', 'purchase-returns': 'addPurchaseReturnBtn', 'sale-returns': 'addSaleReturnFromBoBtn',
   'stocktake': 'addStocktakeSessionBtn', 'product-batches': 'addProductBatchBtn', 'product-serials': 'addProductSerialBtn',
   'delivery': 'addDeliveryOrderBtn', 'delivery-zones': 'addDeliveryZoneBtn', 'delivery-companies': 'addDeliveryCompanyBtn', 'sales-channels': 'addSalesChannelBtn',
@@ -20109,6 +20490,22 @@ function activateBoSection(section, btn) {
   if (section === 'clinic-appointments' && !boClinicAppointmentsLoadedOnce) {
     Promise.all([loadBoClinicPatients(), loadBoClinicDoctors(), loadBoClinicAppointments()]).then(renderClinicAppointmentsTable);
     boClinicAppointmentsLoadedOnce = true;
+  }
+  if (section === 'academy-students' && !boAcademyStudentsLoadedOnce) { loadBoAcademyStudents().then(renderAcademyStudentsTable); boAcademyStudentsLoadedOnce = true; }
+  if (section === 'academy-courses' && !boAcademyCoursesLoadedOnce) { loadBoAcademyCourses().then(renderAcademyCoursesTable); boAcademyCoursesLoadedOnce = true; }
+  if (section === 'academy-instructors' && !boAcademyInstructorsLoadedOnce) { loadBoAcademyInstructors().then(renderAcademyInstructorsTable); boAcademyInstructorsLoadedOnce = true; }
+  if (section === 'academy-enrollments' && !boAcademyEnrollmentsLoadedOnce) {
+    Promise.all([loadBoAcademyStudents(), loadBoAcademyCourses(), loadBoAcademyEnrollments()]).then(renderAcademyEnrollmentsTable);
+    boAcademyEnrollmentsLoadedOnce = true;
+  }
+  if (section === 'academy-sessions' && !boAcademySessionsLoadedOnce) {
+    Promise.all([loadBoAcademyCourses(), loadBoAcademyInstructors(), loadBoAcademySessions()]).then(renderAcademySessionsTable);
+    boAcademySessionsLoadedOnce = true;
+  }
+  if (section === 'venue-courts' && !boVenueCourtsLoadedOnce) { loadBoVenueCourts().then(renderVenueCourtsTable); boVenueCourtsLoadedOnce = true; }
+  if (section === 'venue-bookings' && !boVenueBookingsLoadedOnce) {
+    Promise.all([loadBoVenueCourts(), loadBoVenueBookings()]).then(renderVenueBookingsTable);
+    boVenueBookingsLoadedOnce = true;
   }
   if (section === 'purchase-orders') { loadBoPurchaseOrders().then(renderPurchaseOrdersTable); }
   if (section === 'purchase-requisitions') { loadBoRequisitions().then(renderRequisitionsTable); }
@@ -21640,6 +22037,72 @@ function bindBackofficeEvents() {
   });
   document.getElementById('clinicAppointmentForm').addEventListener('submit', saveClinicAppointment);
   document.getElementById('clinicAppointmentSearchInput').addEventListener('input', renderClinicAppointmentsTable);
+
+  // ---- Academy Student modal ----
+  document.getElementById('addAcademyStudentBtn').addEventListener('click', () => openAcademyStudentModal(null));
+  document.getElementById('cancelAcademyStudentBtn').addEventListener('click', closeAcademyStudentModal);
+  document.getElementById('academyStudentModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'academyStudentModalOverlay') closeAcademyStudentModal();
+  });
+  document.getElementById('academyStudentForm').addEventListener('submit', saveAcademyStudent);
+  document.getElementById('academyStudentSearchInput').addEventListener('input', renderAcademyStudentsTable);
+
+  // ---- Academy Course modal ----
+  document.getElementById('addAcademyCourseBtn').addEventListener('click', () => openAcademyCourseModal(null));
+  document.getElementById('cancelAcademyCourseBtn').addEventListener('click', closeAcademyCourseModal);
+  document.getElementById('academyCourseModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'academyCourseModalOverlay') closeAcademyCourseModal();
+  });
+  document.getElementById('academyCourseForm').addEventListener('submit', saveAcademyCourse);
+  document.getElementById('academyCourseSearchInput').addEventListener('input', renderAcademyCoursesTable);
+
+  // ---- Academy Instructor modal ----
+  document.getElementById('addAcademyInstructorBtn').addEventListener('click', () => openAcademyInstructorModal(null));
+  document.getElementById('cancelAcademyInstructorBtn').addEventListener('click', closeAcademyInstructorModal);
+  document.getElementById('academyInstructorModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'academyInstructorModalOverlay') closeAcademyInstructorModal();
+  });
+  document.getElementById('academyInstructorForm').addEventListener('submit', saveAcademyInstructor);
+  document.getElementById('academyInstructorSearchInput').addEventListener('input', renderAcademyInstructorsTable);
+
+  // ---- Academy Enrollment modal ----
+  document.getElementById('addAcademyEnrollmentBtn').addEventListener('click', () => openAcademyEnrollmentModal(null));
+  document.getElementById('cancelAcademyEnrollmentBtn').addEventListener('click', closeAcademyEnrollmentModal);
+  document.getElementById('academyEnrollmentModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'academyEnrollmentModalOverlay') closeAcademyEnrollmentModal();
+  });
+  document.getElementById('academyEnrollmentForm').addEventListener('submit', saveAcademyEnrollment);
+  document.getElementById('academyEnrollCourse').addEventListener('change', applyAcademyCourseDefaults);
+  document.getElementById('academyEnrollmentSearchInput').addEventListener('input', renderAcademyEnrollmentsTable);
+
+  // ---- Academy Session modal ----
+  document.getElementById('addAcademySessionBtn').addEventListener('click', () => openAcademySessionModal(null));
+  document.getElementById('cancelAcademySessionBtn').addEventListener('click', closeAcademySessionModal);
+  document.getElementById('academySessionModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'academySessionModalOverlay') closeAcademySessionModal();
+  });
+  document.getElementById('academySessionForm').addEventListener('submit', saveAcademySession);
+  document.getElementById('academySessionSearchInput').addEventListener('input', renderAcademySessionsTable);
+
+  // ---- Venue Court modal ----
+  document.getElementById('addVenueCourtBtn').addEventListener('click', () => openVenueCourtModal(null));
+  document.getElementById('cancelVenueCourtBtn').addEventListener('click', closeVenueCourtModal);
+  document.getElementById('venueCourtModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'venueCourtModalOverlay') closeVenueCourtModal();
+  });
+  document.getElementById('venueCourtForm').addEventListener('submit', saveVenueCourt);
+
+  // ---- Venue Booking modal ----
+  document.getElementById('addVenueBookingBtn').addEventListener('click', () => openVenueBookingModal(null));
+  document.getElementById('cancelVenueBookingBtn').addEventListener('click', closeVenueBookingModal);
+  document.getElementById('venueBookingModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'venueBookingModalOverlay') closeVenueBookingModal();
+  });
+  document.getElementById('venueBookingForm').addEventListener('submit', saveVenueBooking);
+  document.getElementById('venueBookingCourt').addEventListener('change', applyVenueBookingPriceDefaults);
+  document.getElementById('venueBookingStartTime').addEventListener('change', applyVenueBookingPriceDefaults);
+  document.getElementById('venueBookingEndTime').addEventListener('change', applyVenueBookingPriceDefaults);
+  document.getElementById('venueBookingSearchInput').addEventListener('input', renderVenueBookingsTable);
 
   // ---- Asset modal ----
   document.getElementById('addAssetBtn').addEventListener('click', () => openAssetModal(null));
@@ -29806,6 +30269,8 @@ async function toggleBusinessTypeActive(item) {
   applyGymFeatureVisibility();
   applySalonFeatureVisibility();
   applyClinicFeatureVisibility();
+  applyAcademyFeatureVisibility();
+  applyVenueFeatureVisibility();
 }
 
 // ---- أجهزة نقاط البيع (pos_devices) ----
@@ -30426,6 +30891,8 @@ const PERMISSION_GROUPS = [
   { key: 'gym_management', title: 'الجيم والصالات الرياضية', desc: 'الأعضاء، الباقات، الاشتراكات، الحضور، المدربين، الحصص التدريبية', children: buildModuleScreens('gym_management') },
   { key: 'salon_management', title: 'الصالون والسبا', desc: 'الأخصائيين، الخدمات، حجز المواعيد', children: buildModuleScreens('salon_management') },
   { key: 'clinic_management', title: 'العيادة والمركز الطبي', desc: 'المرضى، الأطباء، حجز المواعيد', children: buildModuleScreens('clinic_management') },
+  { key: 'academy_management', title: 'مركز التدريب/الأكاديمية', desc: 'الطلاب، الكورسات، المدربين، التسجيلات، الحصص', children: buildModuleScreens('academy_management') },
+  { key: 'venue_management', title: 'حجز ملاعب وقاعات', desc: 'الملاعب/القاعات، الحجوزات بالساعة', children: buildModuleScreens('venue_management') },
   { key: 'technician', title: 'الفني الميداني (وصول محدود)', desc: 'وصول مقتصر على الزيارات المسندة للموظف المرتبط بحساب المستخدم نفسه فقط — منفصل عن إدارة الخدمات الكاملة', children: buildModuleScreens('technician') },
   { key: 'reports', title: 'التقارير', desc: 'تقارير المبيعات والمشتريات والمخزون والمحاسبة والتقارير الأخرى', reportGroups: REPORT_TABS },
   { key: 'finance', title: 'المالية', desc: 'الخزائن والحسابات البنكية، سجل المدفوعات، بنود المصروفات، المصروفات، الأصول الثابتة', children: buildModuleScreens('finance') },
@@ -37278,6 +37745,816 @@ async function deleteClinicAppointment(appt) {
   showToast('تم حذف الموعد');
   await loadBoClinicAppointments();
   renderClinicAppointmentsTable();
+}
+
+// ==================== مركز التدريب / الأكاديمية ====================
+let boAcademyStudents = [];
+let boAcademyCourses = [];
+let boAcademyInstructors = [];
+let boAcademyEnrollments = [];
+let boAcademySessions = [];
+let boAcademyStudentsLoadedOnce = false;
+let boAcademyCoursesLoadedOnce = false;
+let boAcademyInstructorsLoadedOnce = false;
+let boAcademyEnrollmentsLoadedOnce = false;
+let boAcademySessionsLoadedOnce = false;
+let academyEnrollStudentSearch = null;
+
+// ---- الطلاب ----
+async function loadBoAcademyStudents() {
+  const { data, error } = await supabaseClient.from('academy_students').select('*, branches(name)').order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل الطلاب', true); return; }
+  boAcademyStudents = data || [];
+}
+
+function renderAcademyStudentsTable() {
+  const tbody = document.getElementById('academyStudentsTableBody');
+  const q = (document.getElementById('academyStudentSearchInput').value || '').trim().toLowerCase();
+  const filtered = boAcademyStudents.filter(s => !q || s.name.toLowerCase().includes(q) || (s.phone || '').includes(q));
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="bo-empty">${boAcademyStudents.length === 0 ? 'لا يوجد طلاب مسجلين حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(s => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(s.name)}</td>
+      <td style="direction:ltr; text-align:right;">${escapeHtml(s.phone || '—')}</td>
+      <td>${escapeHtml(s.branches?.name || '—')}</td>
+      <td>${s.is_active ? '<span class="bo-badge active">نشط</span>' : '<span class="bo-badge inactive">غير نشط</span>'}</td>
+      <td><div class="bo-row-actions">
+        <button class="bo-icon-btn" data-action="edit">تعديل</button>
+        <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+      </div></td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openAcademyStudentModal(s));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteAcademyStudent(s));
+    applyRowActionPerm(tr, 'academy-students');
+    tbody.appendChild(tr);
+  });
+}
+
+function openAcademyStudentModal(student) {
+  document.getElementById('academyStudentModalTitle').textContent = student ? 'تعديل طالب' : 'طالب جديد';
+  document.getElementById('academyStudentId').value = student ? student.id : '';
+  document.getElementById('academyStudentName').value = student?.name || '';
+  document.getElementById('academyStudentPhone').value = student?.phone || '';
+  document.getElementById('academyStudentNotes').value = student?.notes || '';
+  document.getElementById('academyStudentIsActive').checked = student ? !!student.is_active : true;
+  populateBranchSelect(document.getElementById('academyStudentBranch'), student?.branch_id || currentProfile.branch_id, false);
+  document.getElementById('academyStudentModalError').classList.remove('show');
+  document.getElementById('academyStudentModalOverlay').classList.add('show');
+}
+
+function closeAcademyStudentModal() {
+  document.getElementById('academyStudentModalOverlay').classList.remove('show');
+}
+
+async function saveAcademyStudent(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('academyStudentModalError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('saveAcademyStudentBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  const id = document.getElementById('academyStudentId').value || null;
+  const payload = {
+    name: document.getElementById('academyStudentName').value.trim(),
+    phone: document.getElementById('academyStudentPhone').value.trim() || null,
+    notes: document.getElementById('academyStudentNotes').value.trim() || null,
+    branch_id: document.getElementById('academyStudentBranch').value,
+    is_active: document.getElementById('academyStudentIsActive').checked,
+  };
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('academy_students').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('academy_students').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث بيانات الطالب' : 'تمت إضافة الطالب بنجاح');
+    closeAcademyStudentModal();
+    await loadBoAcademyStudents();
+    renderAcademyStudentsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ';
+  }
+}
+
+async function deleteAcademyStudent(student) {
+  if (!hasBoActionPermission('academy-students', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف الطالب "${student.name}"؟`)) return;
+  const { error } = await supabaseClient.from('academy_students').delete().eq('id', student.id);
+  if (error) { console.error(error); showToast('تعذر حذف الطالب — على الأرجح مرتبط بتسجيلات', true); return; }
+  showToast('تم حذف الطالب');
+  await loadBoAcademyStudents();
+  renderAcademyStudentsTable();
+}
+
+// ---- الكورسات ----
+async function loadBoAcademyCourses() {
+  const { data, error } = await supabaseClient.from('academy_courses').select('*, branches(name)').order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل الكورسات', true); return; }
+  boAcademyCourses = data || [];
+}
+
+function renderAcademyCoursesTable() {
+  const tbody = document.getElementById('academyCoursesTableBody');
+  const q = (document.getElementById('academyCourseSearchInput').value || '').trim().toLowerCase();
+  const filtered = boAcademyCourses.filter(c => !q || c.name.toLowerCase().includes(q));
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">${boAcademyCourses.length === 0 ? 'لا توجد كورسات مضافة حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(c => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(c.name)}</td>
+      <td class="num">${c.duration_weeks ?? '—'}</td>
+      <td class="num">${Number(c.price).toFixed(2)}</td>
+      <td>${escapeHtml(c.branches?.name || 'كل الفروع')}</td>
+      <td>${c.is_active ? '<span class="bo-badge active">نشط</span>' : '<span class="bo-badge inactive">غير نشط</span>'}</td>
+      <td><div class="bo-row-actions">
+        <button class="bo-icon-btn" data-action="edit">تعديل</button>
+        <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+      </div></td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openAcademyCourseModal(c));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteAcademyCourse(c));
+    applyRowActionPerm(tr, 'academy-courses');
+    tbody.appendChild(tr);
+  });
+}
+
+function openAcademyCourseModal(course) {
+  document.getElementById('academyCourseModalTitle').textContent = course ? 'تعديل كورس' : 'كورس جديد';
+  document.getElementById('academyCourseId').value = course ? course.id : '';
+  document.getElementById('academyCourseName').value = course?.name || '';
+  document.getElementById('academyCourseDuration').value = course?.duration_weeks || '';
+  document.getElementById('academyCoursePrice').value = course?.price || '';
+  document.getElementById('academyCourseDescription').value = course?.description || '';
+  document.getElementById('academyCourseIsActive').checked = course ? !!course.is_active : true;
+  populateBranchSelect(document.getElementById('academyCourseBranch'), course?.branch_id || '', true);
+  document.getElementById('academyCourseModalError').classList.remove('show');
+  document.getElementById('academyCourseModalOverlay').classList.add('show');
+}
+
+function closeAcademyCourseModal() {
+  document.getElementById('academyCourseModalOverlay').classList.remove('show');
+}
+
+async function saveAcademyCourse(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('academyCourseModalError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('saveAcademyCourseBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  const id = document.getElementById('academyCourseId').value || null;
+  const payload = {
+    name: document.getElementById('academyCourseName').value.trim(),
+    duration_weeks: document.getElementById('academyCourseDuration').value ? Number(document.getElementById('academyCourseDuration').value) : null,
+    price: Number(document.getElementById('academyCoursePrice').value),
+    description: document.getElementById('academyCourseDescription').value.trim() || null,
+    branch_id: document.getElementById('academyCourseBranch').value || null,
+    is_active: document.getElementById('academyCourseIsActive').checked,
+  };
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('academy_courses').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('academy_courses').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث الكورس' : 'تمت إضافة الكورس بنجاح');
+    closeAcademyCourseModal();
+    await loadBoAcademyCourses();
+    renderAcademyCoursesTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ';
+  }
+}
+
+async function deleteAcademyCourse(course) {
+  if (!hasBoActionPermission('academy-courses', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف كورس "${course.name}"؟`)) return;
+  const { error } = await supabaseClient.from('academy_courses').delete().eq('id', course.id);
+  if (error) { console.error(error); showToast('تعذر حذف الكورس — على الأرجح مرتبط بتسجيلات أو حصص', true); return; }
+  showToast('تم حذف الكورس');
+  await loadBoAcademyCourses();
+  renderAcademyCoursesTable();
+}
+
+// ---- المدربين ----
+async function loadBoAcademyInstructors() {
+  const { data, error } = await supabaseClient.from('academy_instructors').select('*, branches(name)').order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل المدربين', true); return; }
+  boAcademyInstructors = data || [];
+}
+
+function renderAcademyInstructorsTable() {
+  const tbody = document.getElementById('academyInstructorsTableBody');
+  const q = (document.getElementById('academyInstructorSearchInput').value || '').trim().toLowerCase();
+  const filtered = boAcademyInstructors.filter(i => !q || i.name.toLowerCase().includes(q));
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">${boAcademyInstructors.length === 0 ? 'لا يوجد مدربين مضافين حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(i => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(i.name)}</td>
+      <td>${escapeHtml(i.specialty || '—')}</td>
+      <td style="direction:ltr; text-align:right;">${escapeHtml(i.phone || '—')}</td>
+      <td>${escapeHtml(i.branches?.name || '—')}</td>
+      <td>${i.is_active ? '<span class="bo-badge active">نشط</span>' : '<span class="bo-badge inactive">غير نشط</span>'}</td>
+      <td><div class="bo-row-actions">
+        <button class="bo-icon-btn" data-action="edit">تعديل</button>
+        <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+      </div></td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openAcademyInstructorModal(i));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteAcademyInstructor(i));
+    applyRowActionPerm(tr, 'academy-instructors');
+    tbody.appendChild(tr);
+  });
+}
+
+function openAcademyInstructorModal(instructor) {
+  document.getElementById('academyInstructorModalTitle').textContent = instructor ? 'تعديل مدرب' : 'مدرب جديد';
+  document.getElementById('academyInstructorId').value = instructor ? instructor.id : '';
+  document.getElementById('academyInstructorName').value = instructor?.name || '';
+  document.getElementById('academyInstructorPhone').value = instructor?.phone || '';
+  document.getElementById('academyInstructorSpecialty').value = instructor?.specialty || '';
+  document.getElementById('academyInstructorIsActive').checked = instructor ? !!instructor.is_active : true;
+  populateBranchSelect(document.getElementById('academyInstructorBranch'), instructor?.branch_id || currentProfile.branch_id, false);
+  document.getElementById('academyInstructorModalError').classList.remove('show');
+  document.getElementById('academyInstructorModalOverlay').classList.add('show');
+}
+
+function closeAcademyInstructorModal() {
+  document.getElementById('academyInstructorModalOverlay').classList.remove('show');
+}
+
+async function saveAcademyInstructor(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('academyInstructorModalError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('saveAcademyInstructorBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  const id = document.getElementById('academyInstructorId').value || null;
+  const payload = {
+    name: document.getElementById('academyInstructorName').value.trim(),
+    phone: document.getElementById('academyInstructorPhone').value.trim() || null,
+    specialty: document.getElementById('academyInstructorSpecialty').value.trim() || null,
+    branch_id: document.getElementById('academyInstructorBranch').value,
+    is_active: document.getElementById('academyInstructorIsActive').checked,
+  };
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('academy_instructors').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('academy_instructors').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث بيانات المدرب' : 'تمت إضافة المدرب بنجاح');
+    closeAcademyInstructorModal();
+    await loadBoAcademyInstructors();
+    renderAcademyInstructorsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ';
+  }
+}
+
+async function deleteAcademyInstructor(instructor) {
+  if (!hasBoActionPermission('academy-instructors', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف المدرب "${instructor.name}"؟`)) return;
+  const { error } = await supabaseClient.from('academy_instructors').delete().eq('id', instructor.id);
+  if (error) { console.error(error); showToast('تعذر حذف المدرب — على الأرجح مرتبط بحصص', true); return; }
+  showToast('تم حذف المدرب');
+  await loadBoAcademyInstructors();
+  renderAcademyInstructorsTable();
+}
+
+// ---- التسجيلات ----
+async function loadBoAcademyEnrollments() {
+  const { data, error } = await supabaseClient
+    .from('academy_enrollments')
+    .select('*, academy_students(name), academy_courses(name), branches(name)')
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل التسجيلات', true); return; }
+  boAcademyEnrollments = data || [];
+}
+
+function academyEnrollmentStatusBadge(en) {
+  const map = {
+    active: '<span class="bo-badge active">نشط</span>',
+    completed: '<span class="bo-badge active">مكتمل</span>',
+    cancelled: '<span class="bo-badge inactive">ملغي</span>',
+  };
+  return map[en.status] || en.status;
+}
+
+function renderAcademyEnrollmentsTable() {
+  const tbody = document.getElementById('academyEnrollmentsTableBody');
+  const q = (document.getElementById('academyEnrollmentSearchInput').value || '').trim().toLowerCase();
+  const filtered = boAcademyEnrollments.filter(en => !q || (en.academy_students?.name || '').toLowerCase().includes(q));
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" class="bo-empty">${boAcademyEnrollments.length === 0 ? 'لا توجد تسجيلات حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(en => {
+    const remaining = Number(en.total_price) - Number(en.paid_amount);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(en.academy_students?.name || '—')}</td>
+      <td>${escapeHtml(en.academy_courses?.name || '—')}</td>
+      <td>${escapeHtml(en.branches?.name || '—')}</td>
+      <td class="num">${en.enrollment_date}</td>
+      <td class="num">${Number(en.total_price).toFixed(2)}</td>
+      <td class="num">${Number(en.paid_amount).toFixed(2)}</td>
+      <td class="num">${remaining.toFixed(2)}</td>
+      <td>${academyEnrollmentStatusBadge(en)}</td>
+      <td><div class="bo-row-actions">
+        <button class="bo-icon-btn" data-action="edit">تعديل</button>
+        <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+      </div></td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openAcademyEnrollmentModal(en));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteAcademyEnrollment(en));
+    applyRowActionPerm(tr, 'academy-enrollments');
+    tbody.appendChild(tr);
+  });
+}
+
+async function openAcademyEnrollmentModal(en) {
+  if (boAcademyStudents.length === 0) await loadBoAcademyStudents();
+  if (boAcademyCourses.length === 0) await loadBoAcademyCourses();
+
+  document.getElementById('academyEnrollmentModalTitle').textContent = en ? 'تعديل تسجيل' : 'تسجيل جديد';
+  document.getElementById('academyEnrollmentId').value = en ? en.id : '';
+  document.getElementById('academyEnrollDate').value = en?.enrollment_date || new Date().toISOString().slice(0, 10);
+  document.getElementById('academyEnrollTotalPrice').value = en?.total_price ?? '';
+  document.getElementById('academyEnrollPaidAmount').value = en?.paid_amount ?? 0;
+  document.getElementById('academyEnrollStatus').value = en?.status || 'active';
+
+  if (!academyEnrollStudentSearch) {
+    academyEnrollStudentSearch = createSmartSearch({
+      input: document.getElementById('academyEnrollStudentInput'),
+      hidden: document.getElementById('academyEnrollStudent'),
+      dropdown: document.getElementById('academyEnrollStudentDropdown'),
+      getItems: () => boAcademyStudents.map(s => ({ value: s.id, label: s.name, sublabel: s.phone || '', search: `${s.name} ${s.phone || ''}` })),
+    });
+  }
+  document.getElementById('academyEnrollStudentInput').value = en?.academy_students?.name || '';
+  document.getElementById('academyEnrollStudent').value = en ? en.student_id : '';
+
+  const courseSelect = document.getElementById('academyEnrollCourse');
+  courseSelect.innerHTML = boAcademyCourses.filter(c => c.is_active || c.id === en?.course_id)
+    .map(c => `<option value="${c.id}" data-price="${c.price}">${escapeHtml(c.name)}</option>`).join('');
+  courseSelect.value = en?.course_id || (boAcademyCourses[0]?.id || '');
+
+  populateBranchSelect(document.getElementById('academyEnrollBranch'), en?.branch_id || currentProfile.branch_id, false);
+
+  document.getElementById('academyEnrollmentModalError').classList.remove('show');
+  document.getElementById('academyEnrollmentModalOverlay').classList.add('show');
+}
+
+function applyAcademyCourseDefaults() {
+  const isNew = !document.getElementById('academyEnrollmentId').value;
+  if (!isNew) return;
+  const opt = document.getElementById('academyEnrollCourse').selectedOptions[0];
+  if (opt) document.getElementById('academyEnrollTotalPrice').value = opt.dataset.price || '';
+}
+
+function closeAcademyEnrollmentModal() {
+  document.getElementById('academyEnrollmentModalOverlay').classList.remove('show');
+}
+
+async function saveAcademyEnrollment(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('academyEnrollmentModalError');
+  errEl.classList.remove('show');
+  const studentId = document.getElementById('academyEnrollStudent').value;
+  if (!studentId) {
+    errEl.textContent = 'اختر الطالب أولًا';
+    errEl.classList.add('show');
+    return;
+  }
+  const btn = document.getElementById('saveAcademyEnrollmentBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  const id = document.getElementById('academyEnrollmentId').value || null;
+  const payload = {
+    student_id: studentId,
+    course_id: document.getElementById('academyEnrollCourse').value,
+    branch_id: document.getElementById('academyEnrollBranch').value,
+    enrollment_date: document.getElementById('academyEnrollDate').value,
+    total_price: Number(document.getElementById('academyEnrollTotalPrice').value),
+    paid_amount: Number(document.getElementById('academyEnrollPaidAmount').value || 0),
+    status: document.getElementById('academyEnrollStatus').value,
+  };
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('academy_enrollments').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('academy_enrollments').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث التسجيل' : 'تم تسجيل الطالب بنجاح');
+    closeAcademyEnrollmentModal();
+    await loadBoAcademyEnrollments();
+    renderAcademyEnrollmentsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ';
+  }
+}
+
+async function deleteAcademyEnrollment(en) {
+  if (!hasBoActionPermission('academy-enrollments', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف تسجيل "${en.academy_students?.name || ''}"؟`)) return;
+  const { error } = await supabaseClient.from('academy_enrollments').delete().eq('id', en.id);
+  if (error) { console.error(error); showToast('تعذر حذف التسجيل', true); return; }
+  showToast('تم حذف التسجيل');
+  await loadBoAcademyEnrollments();
+  renderAcademyEnrollmentsTable();
+}
+
+// ---- الحصص ----
+async function loadBoAcademySessions() {
+  const { data, error } = await supabaseClient
+    .from('academy_sessions')
+    .select('*, academy_courses(name), academy_instructors(name), branches(name)')
+    .order('session_date', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل الحصص', true); return; }
+  boAcademySessions = data || [];
+}
+
+function renderAcademySessionsTable() {
+  const tbody = document.getElementById('academySessionsTableBody');
+  const q = (document.getElementById('academySessionSearchInput').value || '').trim().toLowerCase();
+  const filtered = boAcademySessions.filter(s => !q || (s.academy_courses?.name || '').toLowerCase().includes(q) || (s.academy_instructors?.name || '').toLowerCase().includes(q));
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">${boAcademySessions.length === 0 ? 'لا توجد حصص مضافة حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(s => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(s.academy_courses?.name || '—')}</td>
+      <td>${escapeHtml(s.academy_instructors?.name || '—')}</td>
+      <td>${escapeHtml(s.branches?.name || '—')}</td>
+      <td class="num">${s.session_date}</td>
+      <td class="num">${s.start_time?.slice(0,5)} - ${s.end_time?.slice(0,5)}</td>
+      <td>${s.is_active ? '<span class="bo-badge active">نشطة</span>' : '<span class="bo-badge inactive">ملغاة</span>'}</td>
+      <td><div class="bo-row-actions">
+        <button class="bo-icon-btn" data-action="edit">تعديل</button>
+        <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+      </div></td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openAcademySessionModal(s));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteAcademySession(s));
+    applyRowActionPerm(tr, 'academy-sessions');
+    tbody.appendChild(tr);
+  });
+}
+
+async function openAcademySessionModal(session) {
+  if (boAcademyCourses.length === 0) await loadBoAcademyCourses();
+  if (boAcademyInstructors.length === 0) await loadBoAcademyInstructors();
+
+  document.getElementById('academySessionModalTitle').textContent = session ? 'تعديل حصة' : 'حصة جديدة';
+  document.getElementById('academySessionId').value = session ? session.id : '';
+  document.getElementById('academySessionDate').value = session?.session_date || new Date().toISOString().slice(0, 10);
+  document.getElementById('academySessionStartTime').value = session?.start_time?.slice(0, 5) || '';
+  document.getElementById('academySessionEndTime').value = session?.end_time?.slice(0, 5) || '';
+  document.getElementById('academySessionIsActive').checked = session ? !!session.is_active : true;
+
+  const courseSelect = document.getElementById('academySessionCourse');
+  courseSelect.innerHTML = boAcademyCourses.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+  courseSelect.value = session?.course_id || (boAcademyCourses[0]?.id || '');
+
+  const instructorSelect = document.getElementById('academySessionInstructor');
+  instructorSelect.innerHTML = '<option value="">— بدون —</option>' + boAcademyInstructors.map(i => `<option value="${i.id}">${escapeHtml(i.name)}</option>`).join('');
+  instructorSelect.value = session?.instructor_id || '';
+
+  populateBranchSelect(document.getElementById('academySessionBranch'), session?.branch_id || currentProfile.branch_id, false);
+
+  document.getElementById('academySessionModalError').classList.remove('show');
+  document.getElementById('academySessionModalOverlay').classList.add('show');
+}
+
+function closeAcademySessionModal() {
+  document.getElementById('academySessionModalOverlay').classList.remove('show');
+}
+
+async function saveAcademySession(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('academySessionModalError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('saveAcademySessionBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  const id = document.getElementById('academySessionId').value || null;
+  const payload = {
+    course_id: document.getElementById('academySessionCourse').value,
+    instructor_id: document.getElementById('academySessionInstructor').value || null,
+    branch_id: document.getElementById('academySessionBranch').value,
+    session_date: document.getElementById('academySessionDate').value,
+    start_time: document.getElementById('academySessionStartTime').value,
+    end_time: document.getElementById('academySessionEndTime').value,
+    is_active: document.getElementById('academySessionIsActive').checked,
+  };
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('academy_sessions').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('academy_sessions').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث الحصة' : 'تمت إضافة الحصة بنجاح');
+    closeAcademySessionModal();
+    await loadBoAcademySessions();
+    renderAcademySessionsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ';
+  }
+}
+
+async function deleteAcademySession(session) {
+  if (!hasBoActionPermission('academy-sessions', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm('هل أنت متأكد أنك تريد حذف هذه الحصة؟')) return;
+  const { error } = await supabaseClient.from('academy_sessions').delete().eq('id', session.id);
+  if (error) { console.error(error); showToast('تعذر حذف الحصة', true); return; }
+  showToast('تم حذف الحصة');
+  await loadBoAcademySessions();
+  renderAcademySessionsTable();
+}
+
+// ==================== حجز ملاعب وقاعات ====================
+let boVenueCourts = [];
+let boVenueBookings = [];
+let boVenueCourtsLoadedOnce = false;
+let boVenueBookingsLoadedOnce = false;
+
+// ---- الملاعب/القاعات ----
+async function loadBoVenueCourts() {
+  const { data, error } = await supabaseClient.from('venue_courts').select('*, branches(name)').order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل الملاعب/القاعات', true); return; }
+  boVenueCourts = data || [];
+}
+
+function renderVenueCourtsTable() {
+  const tbody = document.getElementById('venueCourtsTableBody');
+  if (boVenueCourts.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="bo-empty">لا توجد ملاعب/قاعات مضافة حتى الآن</td></tr>';
+    return;
+  }
+  tbody.innerHTML = '';
+  boVenueCourts.forEach(c => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(c.name)}</td>
+      <td>${escapeHtml(c.branches?.name || '—')}</td>
+      <td class="num">${Number(c.hourly_price).toFixed(2)}</td>
+      <td>${c.is_active ? '<span class="bo-badge active">متاح</span>' : '<span class="bo-badge inactive">غير متاح</span>'}</td>
+      <td><div class="bo-row-actions">
+        <button class="bo-icon-btn" data-action="edit">تعديل</button>
+        <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+      </div></td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openVenueCourtModal(c));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteVenueCourt(c));
+    applyRowActionPerm(tr, 'venue-courts');
+    tbody.appendChild(tr);
+  });
+}
+
+function openVenueCourtModal(court) {
+  document.getElementById('venueCourtModalTitle').textContent = court ? 'تعديل ملعب/قاعة' : 'ملعب/قاعة جديدة';
+  document.getElementById('venueCourtId').value = court ? court.id : '';
+  document.getElementById('venueCourtName').value = court?.name || '';
+  document.getElementById('venueCourtHourlyPrice').value = court?.hourly_price || '';
+  document.getElementById('venueCourtIsActive').checked = court ? !!court.is_active : true;
+  populateBranchSelect(document.getElementById('venueCourtBranch'), court?.branch_id || currentProfile.branch_id, false);
+  document.getElementById('venueCourtModalError').classList.remove('show');
+  document.getElementById('venueCourtModalOverlay').classList.add('show');
+}
+
+function closeVenueCourtModal() {
+  document.getElementById('venueCourtModalOverlay').classList.remove('show');
+}
+
+async function saveVenueCourt(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('venueCourtModalError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('saveVenueCourtBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  const id = document.getElementById('venueCourtId').value || null;
+  const payload = {
+    name: document.getElementById('venueCourtName').value.trim(),
+    hourly_price: Number(document.getElementById('venueCourtHourlyPrice').value),
+    branch_id: document.getElementById('venueCourtBranch').value,
+    is_active: document.getElementById('venueCourtIsActive').checked,
+  };
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('venue_courts').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('venue_courts').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث البيانات' : 'تمت الإضافة بنجاح');
+    closeVenueCourtModal();
+    await loadBoVenueCourts();
+    renderVenueCourtsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ';
+  }
+}
+
+async function deleteVenueCourt(court) {
+  if (!hasBoActionPermission('venue-courts', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف "${court.name}"؟`)) return;
+  const { error } = await supabaseClient.from('venue_courts').delete().eq('id', court.id);
+  if (error) { console.error(error); showToast('تعذر الحذف — على الأرجح مرتبط بحجوزات', true); return; }
+  showToast('تم الحذف');
+  await loadBoVenueCourts();
+  renderVenueCourtsTable();
+}
+
+// ---- الحجوزات ----
+async function loadBoVenueBookings() {
+  const { data, error } = await supabaseClient
+    .from('venue_bookings')
+    .select('*, venue_courts(name, hourly_price), branches(name)')
+    .order('booking_date', { ascending: false })
+    .limit(300);
+  if (error) { console.error(error); showToast('تعذر تحميل الحجوزات', true); return; }
+  boVenueBookings = data || [];
+}
+
+function venueBookingStatusBadge(b) {
+  const map = {
+    booked: '<span class="bo-badge active">محجوز</span>',
+    completed: '<span class="bo-badge active">تم</span>',
+    cancelled: '<span class="bo-badge inactive">ملغي</span>',
+  };
+  return map[b.status] || b.status;
+}
+
+function renderVenueBookingsTable() {
+  const tbody = document.getElementById('venueBookingsTableBody');
+  const q = (document.getElementById('venueBookingSearchInput').value || '').trim().toLowerCase();
+  const filtered = boVenueBookings.filter(b => !q || (b.customer_name || '').toLowerCase().includes(q));
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" class="bo-empty">${boVenueBookings.length === 0 ? 'لا توجد حجوزات مسجلة حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(b => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(b.customer_name)}</td>
+      <td>${escapeHtml(b.venue_courts?.name || '—')}</td>
+      <td class="num">${b.booking_date}</td>
+      <td class="num">${b.start_time?.slice(0,5)} - ${b.end_time?.slice(0,5)}</td>
+      <td class="num">${Number(b.total_price).toFixed(2)}</td>
+      <td class="num">${Number(b.paid_amount).toFixed(2)}</td>
+      <td>${venueBookingStatusBadge(b)}</td>
+      <td><div class="bo-row-actions">
+        <button class="bo-icon-btn" data-action="edit">تعديل</button>
+        <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+      </div></td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openVenueBookingModal(b));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteVenueBooking(b));
+    applyRowActionPerm(tr, 'venue-bookings');
+    tbody.appendChild(tr);
+  });
+}
+
+async function openVenueBookingModal(booking) {
+  if (boVenueCourts.length === 0) await loadBoVenueCourts();
+
+  document.getElementById('venueBookingModalTitle').textContent = booking ? 'تعديل حجز' : 'حجز جديد';
+  document.getElementById('venueBookingId').value = booking ? booking.id : '';
+  document.getElementById('venueBookingCustomerName').value = booking?.customer_name || '';
+  document.getElementById('venueBookingCustomerPhone').value = booking?.customer_phone || '';
+  document.getElementById('venueBookingDate').value = booking?.booking_date || new Date().toISOString().slice(0, 10);
+  document.getElementById('venueBookingStartTime').value = booking?.start_time?.slice(0, 5) || '';
+  document.getElementById('venueBookingEndTime').value = booking?.end_time?.slice(0, 5) || '';
+  document.getElementById('venueBookingTotalPrice').value = booking?.total_price ?? '';
+  document.getElementById('venueBookingPaidAmount').value = booking?.paid_amount ?? 0;
+  document.getElementById('venueBookingStatus').value = booking?.status || 'booked';
+  document.getElementById('venueBookingNotes').value = booking?.notes || '';
+
+  const courtSelect = document.getElementById('venueBookingCourt');
+  courtSelect.innerHTML = boVenueCourts.filter(c => c.is_active || c.id === booking?.court_id)
+    .map(c => `<option value="${c.id}" data-hourly-price="${c.hourly_price}">${escapeHtml(c.name)}</option>`).join('');
+  courtSelect.value = booking?.court_id || (boVenueCourts[0]?.id || '');
+
+  document.getElementById('venueBookingModalError').classList.remove('show');
+  document.getElementById('venueBookingModalOverlay').classList.add('show');
+}
+
+// نحسب الإجمالي تلقائيًا لحجز جديد بناءً على عدد الساعات × سعر الساعة للملعب/القاعة المختارة
+function applyVenueBookingPriceDefaults() {
+  const isNew = !document.getElementById('venueBookingId').value;
+  if (!isNew) return;
+  const opt = document.getElementById('venueBookingCourt').selectedOptions[0];
+  const startVal = document.getElementById('venueBookingStartTime').value;
+  const endVal = document.getElementById('venueBookingEndTime').value;
+  if (!opt || !startVal || !endVal) return;
+  const [sh, sm] = startVal.split(':').map(Number);
+  const [eh, em] = endVal.split(':').map(Number);
+  const hours = (eh * 60 + em - (sh * 60 + sm)) / 60;
+  if (hours <= 0) return;
+  const hourlyPrice = Number(opt.dataset.hourlyPrice || 0);
+  document.getElementById('venueBookingTotalPrice').value = (hours * hourlyPrice).toFixed(2);
+}
+
+function closeVenueBookingModal() {
+  document.getElementById('venueBookingModalOverlay').classList.remove('show');
+}
+
+async function saveVenueBooking(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('venueBookingModalError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('saveVenueBookingBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  const id = document.getElementById('venueBookingId').value || null;
+  const courtSelect = document.getElementById('venueBookingCourt');
+  const courtOpt = courtSelect.selectedOptions[0];
+  const court = boVenueCourts.find(c => c.id === courtSelect.value);
+  const payload = {
+    customer_name: document.getElementById('venueBookingCustomerName').value.trim(),
+    customer_phone: document.getElementById('venueBookingCustomerPhone').value.trim() || null,
+    court_id: courtSelect.value,
+    branch_id: court?.branch_id,
+    booking_date: document.getElementById('venueBookingDate').value,
+    start_time: document.getElementById('venueBookingStartTime').value,
+    end_time: document.getElementById('venueBookingEndTime').value,
+    total_price: Number(document.getElementById('venueBookingTotalPrice').value),
+    paid_amount: Number(document.getElementById('venueBookingPaidAmount').value || 0),
+    status: document.getElementById('venueBookingStatus').value,
+    notes: document.getElementById('venueBookingNotes').value.trim() || null,
+  };
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('venue_bookings').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabaseClient.from('venue_bookings').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث الحجز' : 'تم الحجز بنجاح');
+    closeVenueBookingModal();
+    await loadBoVenueBookings();
+    renderVenueBookingsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ';
+  }
+}
+
+async function deleteVenueBooking(booking) {
+  if (!hasBoActionPermission('venue-bookings', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف حجز "${booking.customer_name}"؟`)) return;
+  const { error } = await supabaseClient.from('venue_bookings').delete().eq('id', booking.id);
+  if (error) { console.error(error); showToast('تعذر حذف الحجز', true); return; }
+  showToast('تم حذف الحجز');
+  await loadBoVenueBookings();
+  renderVenueBookingsTable();
 }
 
 // ==================== الأصول/الأجهزة (Service Management) ====================
