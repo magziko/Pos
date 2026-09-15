@@ -2435,6 +2435,7 @@ a { color: inherit; }
             <table class="bo-table">
               <thead>
                 <tr>
+                  <th></th>
                   <th>اسم الأصل</th>
                   <th>العميل</th>
                   <th>نوع الأصل</th>
@@ -2444,7 +2445,7 @@ a { color: inherit; }
                 </tr>
               </thead>
               <tbody id="assetsTableBody">
-                <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+                <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
@@ -2750,6 +2751,7 @@ a { color: inherit; }
             <table class="bo-table">
               <thead>
                 <tr>
+                  <th></th>
                   <th>الاسم</th>
                   <th>التخصص</th>
                   <th>الهاتف</th>
@@ -2759,7 +2761,7 @@ a { color: inherit; }
                 </tr>
               </thead>
               <tbody id="gymTrainersTableBody">
-                <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+                <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>
@@ -2806,8 +2808,8 @@ a { color: inherit; }
           </div>
           <div class="bo-table-wrap">
             <table class="bo-table">
-              <thead><tr><th>الاسم</th><th>التخصص</th><th>الهاتف</th><th>الفرع</th><th>الحالة</th><th></th></tr></thead>
-              <tbody id="salonSpecialistsTableBody"><tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr></tbody>
+              <thead><tr><th></th><th>الاسم</th><th>التخصص</th><th>الهاتف</th><th>الفرع</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="salonSpecialistsTableBody"><tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -2874,8 +2876,8 @@ a { color: inherit; }
           </div>
           <div class="bo-table-wrap">
             <table class="bo-table">
-              <thead><tr><th>الاسم</th><th>التخصص</th><th>الهاتف</th><th>الفرع</th><th>الحالة</th><th></th></tr></thead>
-              <tbody id="clinicDoctorsTableBody"><tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr></tbody>
+              <thead><tr><th></th><th>الاسم</th><th>التخصص</th><th>الهاتف</th><th>الفرع</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="clinicDoctorsTableBody"><tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -2942,8 +2944,8 @@ a { color: inherit; }
           </div>
           <div class="bo-table-wrap">
             <table class="bo-table">
-              <thead><tr><th>الاسم</th><th>التخصص</th><th>الهاتف</th><th>الفرع</th><th>الحالة</th><th></th></tr></thead>
-              <tbody id="academyInstructorsTableBody"><tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr></tbody>
+              <thead><tr><th></th><th>الاسم</th><th>التخصص</th><th>الهاتف</th><th>الفرع</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="academyInstructorsTableBody"><tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -8206,6 +8208,7 @@ a { color: inherit; }
         <div class="field" style="display:flex; align-items:flex-end;">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="assetIsActive" checked style="width:auto;"> الأصل نشط</label>
         </div>
+        <div class="field field-full"><label>رابط الصورة (اختياري)</label><input type="text" id="assetImageUrl" style="direction:ltr; text-align:right;" placeholder="https://..."></div>
         <div class="field field-full"><label>ملاحظات</label><textarea id="assetNotes" rows="2"></textarea></div>
       </div>
       <div id="assetAttributesWrap" style="margin-bottom:10px;"></div>
@@ -8420,6 +8423,7 @@ a { color: inherit; }
         <div class="field" style="display:flex; align-items:flex-end;">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="gymTrainerIsActive" checked style="width:auto;"> المدرب نشط</label>
         </div>
+        <div class="field field-full"><label>رابط الصورة (اختياري)</label><input type="text" id="gymTrainerImageUrl" style="direction:ltr; text-align:right;" placeholder="https://..."></div>
       </div>
       <div class="error-msg" id="gymTrainerModalError"></div>
       <div class="modal-actions">
@@ -8511,6 +8515,7 @@ a { color: inherit; }
         <div class="field" style="display:flex; align-items:flex-end;">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="salonSpecialistIsActive" checked style="width:auto;"> الأخصائي نشط</label>
         </div>
+        <div class="field field-full"><label>رابط الصورة (اختياري)</label><input type="text" id="salonSpecialistImageUrl" style="direction:ltr; text-align:right;" placeholder="https://..."></div>
       </div>
       <div class="error-msg" id="salonSpecialistModalError"></div>
       <div class="modal-actions">
@@ -8635,6 +8640,7 @@ a { color: inherit; }
         <div class="field" style="display:flex; align-items:flex-end;">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="clinicDoctorIsActive" checked style="width:auto;"> الطبيب نشط</label>
         </div>
+        <div class="field field-full"><label>رابط الصورة (اختياري)</label><input type="text" id="clinicDoctorImageUrl" style="direction:ltr; text-align:right;" placeholder="https://..."></div>
       </div>
       <div class="error-msg" id="clinicDoctorModalError"></div>
       <div class="modal-actions">
@@ -8754,6 +8760,7 @@ a { color: inherit; }
         <div class="field" style="display:flex; align-items:flex-end;">
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="academyInstructorIsActive" checked style="width:auto;"> المدرب نشط</label>
         </div>
+        <div class="field field-full"><label>رابط الصورة (اختياري)</label><input type="text" id="academyInstructorImageUrl" style="direction:ltr; text-align:right;" placeholder="https://..."></div>
       </div>
       <div class="error-msg" id="academyInstructorModalError"></div>
       <div class="modal-actions">
@@ -36650,6 +36657,7 @@ function renderGymTrainersTable() {
   filtered.forEach(t => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
+      <td>${t.image_url ? `<img class="mini-thumb" src="${escapeHtml(t.image_url)}" alt="">` : '<div class="mini-thumb" style="display:grid; place-items:center;">🧑‍🏫</div>'}</td>
       <td>${escapeHtml(t.name)}</td>
       <td>${escapeHtml(t.specialty || '—')}</td>
       <td style="direction:ltr; text-align:right;">${escapeHtml(t.phone || '—')}</td>
@@ -36673,6 +36681,7 @@ function openGymTrainerModal(trainer) {
   document.getElementById('gymTrainerPhone').value = trainer?.phone || '';
   document.getElementById('gymTrainerSpecialty').value = trainer?.specialty || '';
   document.getElementById('gymTrainerIsActive').checked = trainer ? !!trainer.is_active : true;
+  document.getElementById('gymTrainerImageUrl').value = trainer?.image_url || '';
   populateBranchSelect(document.getElementById('gymTrainerBranch'), trainer?.branch_id || currentProfile.branch_id, false);
   document.getElementById('gymTrainerModalError').classList.remove('show');
   document.getElementById('gymTrainerModalOverlay').classList.add('show');
@@ -36695,6 +36704,7 @@ async function saveGymTrainer(e) {
     specialty: document.getElementById('gymTrainerSpecialty').value.trim() || null,
     branch_id: document.getElementById('gymTrainerBranch').value,
     is_active: document.getElementById('gymTrainerIsActive').checked,
+    image_url: document.getElementById('gymTrainerImageUrl').value.trim() || null,
   };
   try {
     if (id) {
@@ -37080,6 +37090,7 @@ function renderSalonSpecialistsTable() {
   filtered.forEach(s => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
+      <td>${s.image_url ? `<img class="mini-thumb" src="${escapeHtml(s.image_url)}" alt="">` : '<div class="mini-thumb" style="display:grid; place-items:center;">💇</div>'}</td>
       <td>${escapeHtml(s.name)}</td>
       <td>${escapeHtml(s.specialty || '—')}</td>
       <td style="direction:ltr; text-align:right;">${escapeHtml(s.phone || '—')}</td>
@@ -37103,6 +37114,7 @@ function openSalonSpecialistModal(specialist) {
   document.getElementById('salonSpecialistPhone').value = specialist?.phone || '';
   document.getElementById('salonSpecialistSpecialty').value = specialist?.specialty || '';
   document.getElementById('salonSpecialistIsActive').checked = specialist ? !!specialist.is_active : true;
+  document.getElementById('salonSpecialistImageUrl').value = specialist?.image_url || '';
   populateBranchSelect(document.getElementById('salonSpecialistBranch'), specialist?.branch_id || currentProfile.branch_id, false);
   document.getElementById('salonSpecialistModalError').classList.remove('show');
   document.getElementById('salonSpecialistModalOverlay').classList.add('show');
@@ -37125,6 +37137,7 @@ async function saveSalonSpecialist(e) {
     specialty: document.getElementById('salonSpecialistSpecialty').value.trim() || null,
     branch_id: document.getElementById('salonSpecialistBranch').value,
     is_active: document.getElementById('salonSpecialistIsActive').checked,
+    image_url: document.getElementById('salonSpecialistImageUrl').value.trim() || null,
   };
   try {
     if (id) {
@@ -37537,6 +37550,7 @@ function renderClinicDoctorsTable() {
   filtered.forEach(d => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
+      <td>${d.image_url ? `<img class="mini-thumb" src="${escapeHtml(d.image_url)}" alt="">` : '<div class="mini-thumb" style="display:grid; place-items:center;">🩺</div>'}</td>
       <td>${escapeHtml(d.name)}</td>
       <td>${escapeHtml(d.specialty || '—')}</td>
       <td style="direction:ltr; text-align:right;">${escapeHtml(d.phone || '—')}</td>
@@ -37560,6 +37574,7 @@ function openClinicDoctorModal(doctor) {
   document.getElementById('clinicDoctorPhone').value = doctor?.phone || '';
   document.getElementById('clinicDoctorSpecialty').value = doctor?.specialty || '';
   document.getElementById('clinicDoctorIsActive').checked = doctor ? !!doctor.is_active : true;
+  document.getElementById('clinicDoctorImageUrl').value = doctor?.image_url || '';
   populateBranchSelect(document.getElementById('clinicDoctorBranch'), doctor?.branch_id || currentProfile.branch_id, false);
   document.getElementById('clinicDoctorModalError').classList.remove('show');
   document.getElementById('clinicDoctorModalOverlay').classList.add('show');
@@ -37582,6 +37597,7 @@ async function saveClinicDoctor(e) {
     specialty: document.getElementById('clinicDoctorSpecialty').value.trim() || null,
     branch_id: document.getElementById('clinicDoctorBranch').value,
     is_active: document.getElementById('clinicDoctorIsActive').checked,
+    image_url: document.getElementById('clinicDoctorImageUrl').value.trim() || null,
   };
   try {
     if (id) {
@@ -37987,6 +38003,7 @@ function renderAcademyInstructorsTable() {
   filtered.forEach(i => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
+      <td>${i.image_url ? `<img class="mini-thumb" src="${escapeHtml(i.image_url)}" alt="">` : '<div class="mini-thumb" style="display:grid; place-items:center;">👨‍🏫</div>'}</td>
       <td>${escapeHtml(i.name)}</td>
       <td>${escapeHtml(i.specialty || '—')}</td>
       <td style="direction:ltr; text-align:right;">${escapeHtml(i.phone || '—')}</td>
@@ -38010,6 +38027,7 @@ function openAcademyInstructorModal(instructor) {
   document.getElementById('academyInstructorPhone').value = instructor?.phone || '';
   document.getElementById('academyInstructorSpecialty').value = instructor?.specialty || '';
   document.getElementById('academyInstructorIsActive').checked = instructor ? !!instructor.is_active : true;
+  document.getElementById('academyInstructorImageUrl').value = instructor?.image_url || '';
   populateBranchSelect(document.getElementById('academyInstructorBranch'), instructor?.branch_id || currentProfile.branch_id, false);
   document.getElementById('academyInstructorModalError').classList.remove('show');
   document.getElementById('academyInstructorModalOverlay').classList.add('show');
@@ -38032,6 +38050,7 @@ async function saveAcademyInstructor(e) {
     specialty: document.getElementById('academyInstructorSpecialty').value.trim() || null,
     branch_id: document.getElementById('academyInstructorBranch').value,
     is_active: document.getElementById('academyInstructorIsActive').checked,
+    image_url: document.getElementById('academyInstructorImageUrl').value.trim() || null,
   };
   try {
     if (id) {
@@ -38597,13 +38616,14 @@ function renderAssetsTable() {
     return a.name.toLowerCase().includes(q) || (a.customers?.name || '').toLowerCase().includes(q);
   });
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="bo-empty">${boAssets.length === 0 ? 'لا توجد أصول مضافة حتى الآن' : 'لا توجد أصول مطابقة للبحث'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">${boAssets.length === 0 ? 'لا توجد أصول مضافة حتى الآن' : 'لا توجد أصول مطابقة للبحث'}</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
   filtered.forEach(a => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
+      <td>${a.image_url ? `<img class="mini-thumb" src="${escapeHtml(a.image_url)}" alt="">` : '<div class="mini-thumb" style="display:grid; place-items:center;">🔧</div>'}</td>
       <td>${escapeHtml(a.name)}</td>
       <td>${escapeHtml(a.customers?.name || '—')}</td>
       <td>${escapeHtml(a.activity_type_key || '—')}</td>
@@ -38646,6 +38666,7 @@ async function openAssetModal(asset) {
   document.getElementById('assetWarrantyEnd').value = asset?.warranty_end || '';
   document.getElementById('assetNotes').value = asset?.notes || '';
   document.getElementById('assetIsActive').checked = asset ? !!asset.is_active : true;
+  document.getElementById('assetImageUrl').value = asset?.image_url || '';
 
   if (!assetCustomerSearch) {
     assetCustomerSearch = createSmartSearch({
@@ -38777,6 +38798,7 @@ async function saveAsset(e) {
     warranty_end: document.getElementById('assetWarrantyEnd').value || null,
     notes: document.getElementById('assetNotes').value.trim() || null,
     is_active: document.getElementById('assetIsActive').checked,
+    image_url: document.getElementById('assetImageUrl').value.trim() || null,
   };
 
   try {
