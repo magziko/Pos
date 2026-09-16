@@ -2842,8 +2842,8 @@ a { color: inherit; }
           </div>
           <div class="bo-table-wrap">
             <table class="bo-table">
-              <thead><tr><th>العميل</th><th>الخدمة</th><th>الأخصائي</th><th>التاريخ</th><th>الوقت</th><th>السعر</th><th>الحالة</th><th></th></tr></thead>
-              <tbody id="salonAppointmentsTableBody"><tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr></tbody>
+              <thead><tr><th>العميل</th><th>الخدمة</th><th>الأخصائي</th><th>التاريخ</th><th>الوقت</th><th>السعر</th><th>المدفوع</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="salonAppointmentsTableBody"><tr><td colspan="9" class="bo-empty">جاري التحميل...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -2893,8 +2893,8 @@ a { color: inherit; }
           </div>
           <div class="bo-table-wrap">
             <table class="bo-table">
-              <thead><tr><th>المريض</th><th>الطبيب</th><th>التاريخ</th><th>الوقت</th><th>السعر</th><th>الحالة</th><th></th></tr></thead>
-              <tbody id="clinicAppointmentsTableBody"><tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr></tbody>
+              <thead><tr><th>المريض</th><th>الطبيب</th><th>التاريخ</th><th>الوقت</th><th>السعر</th><th>المدفوع</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="clinicAppointmentsTableBody"><tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -7282,7 +7282,7 @@ a { color: inherit; }
               <table class="bo-table">
                 <thead><tr><th>الاسم/الرقم</th><th>الشكل</th><th>الدور</th><th>الجناح</th><th>السعة</th><th>الحالة</th><th></th></tr></thead>
                 <tbody id="posTablesTableBody">
-                  <tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr>
+                  <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -8893,6 +8893,29 @@ a { color: inherit; }
   </div>
 </div>
 
+<!-- Modal: تسجيل دفعة في الخزينة (مشترك بين الصالون/العيادة/الأكاديمية/الملاعب) -->
+<div class="modal-overlay" id="cashPaymentModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="cashPaymentModalTitle">تسجيل دفعة</div>
+    <form id="cashPaymentForm">
+      <div class="modal-grid">
+        <div class="field field-full"><label id="cashPaymentSummaryLabel" style="font-weight:600;"></label></div>
+        <div class="field"><label>المبلغ</label><input type="number" id="cashPaymentAmount" min="0.01" step="0.01" required></div>
+        <div class="field">
+          <label>الإيداع في خزينة</label>
+          <select id="cashPaymentAccount" required></select>
+        </div>
+        <div class="field field-full"><label>ملاحظات (اختياري)</label><input type="text" id="cashPaymentNotes"></div>
+      </div>
+      <div class="error-msg" id="cashPaymentModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelCashPaymentBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="saveCashPaymentBtn">تسجيل الدفعة</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Modal: أمر خدمة جديد -->
 <div class="modal-overlay" id="serviceOrderModalOverlay">
   <div class="modal-box wide">
@@ -10489,6 +10512,16 @@ a { color: inherit; }
         <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
           <input type="checkbox" id="modifierOptionActive" checked style="width:auto;"> مفعّل
         </label>
+      </div>
+      <div class="ci-section-subtitle" style="margin-top:6px;">ربط بالمخزون (اختياري)</div>
+      <div style="color:var(--ink-soft); font-size:11.5px; margin-bottom:8px;">لو ربطت الخيار ده بصنف حقيقي، هيتخصم تلقائيًا من مخزون الصنف كل مرة العميل يختار الإضافة دي.</div>
+      <div class="field field-full">
+        <label>الصنف اللي هيتخصم من مخزونه</label>
+        <select id="modifierOptionComponentProduct"><option value="">— بدون ربط بالمخزون —</option></select>
+      </div>
+      <div class="field field-full" id="modifierOptionComponentQtyField" style="display:none;">
+        <label>الكمية المخصومة لكل مرة اختيار</label>
+        <input type="number" id="modifierOptionComponentQty" min="0.01" step="0.01" value="1">
       </div>
       <div class="error-msg" id="modifierOptionFormModalError"></div>
       <div class="modal-actions">
@@ -22117,6 +22150,13 @@ function bindBackofficeEvents() {
   document.getElementById('venueBookingEndTime').addEventListener('change', applyVenueBookingPriceDefaults);
   document.getElementById('venueBookingSearchInput').addEventListener('input', renderVenueBookingsTable);
 
+  // ---- Shared Cash Payment modal ----
+  document.getElementById('cancelCashPaymentBtn').addEventListener('click', closeCashPaymentModal);
+  document.getElementById('cashPaymentModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'cashPaymentModalOverlay') closeCashPaymentModal();
+  });
+  document.getElementById('cashPaymentForm').addEventListener('submit', saveCashPayment);
+
   // ---- Asset modal ----
   document.getElementById('addAssetBtn').addEventListener('click', () => openAssetModal(null));
   document.getElementById('cancelAssetBtn').addEventListener('click', closeAssetModal);
@@ -22513,6 +22553,9 @@ function bindBackofficeEvents() {
     if (e.target.id === 'modifierOptionFormModalOverlay') closeModifierOptionFormModal();
   });
   document.getElementById('modifierOptionForm').addEventListener('submit', saveModifierOption);
+  document.getElementById('modifierOptionComponentProduct').addEventListener('change', (e) => {
+    document.getElementById('modifierOptionComponentQtyField').style.display = e.target.value ? '' : 'none';
+  });
 
   document.getElementById('cancelProductModifierLinkBtn').addEventListener('click', closeProductModifierLinkModal);
   document.getElementById('productModifierLinkModalOverlay').addEventListener('click', (e) => {
@@ -30745,7 +30788,8 @@ function renderModifierOptionsTable() {
   });
 }
 
-function openModifierOptionFormModal(group, option) {
+async function openModifierOptionFormModal(group, option) {
+  if (!boProducts || boProducts.length === 0) { await loadBoProducts(); }
   document.getElementById('modifierOptionFormModalTitle').textContent = option ? 'تعديل خيار' : 'خيار جديد';
   document.getElementById('modifierOptionId').value = option ? option.id : '';
   document.getElementById('modifierOptionGroupId').value = group.id;
@@ -30753,6 +30797,14 @@ function openModifierOptionFormModal(group, option) {
   document.getElementById('modifierOptionPriceDelta').value = option ? option.price_delta : 0;
   document.getElementById('modifierOptionDefault').checked = option ? !!option.is_default : false;
   document.getElementById('modifierOptionActive').checked = option ? option.is_active : true;
+
+  const componentSelect = document.getElementById('modifierOptionComponentProduct');
+  const candidateProducts = (boProducts || []).filter(p => !p.is_bundle && !p.parent_product_id);
+  componentSelect.innerHTML = '<option value="">— بدون ربط بالمخزون —</option>'
+    + candidateProducts.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+  componentSelect.value = option?.component_product_id || '';
+  document.getElementById('modifierOptionComponentQty').value = option?.component_quantity ?? 1;
+  document.getElementById('modifierOptionComponentQtyField').style.display = componentSelect.value ? '' : 'none';
   const priceField = document.getElementById('modifierOptionPriceDeltaField');
   const priceLabel = document.getElementById('modifierOptionPriceDeltaLabel');
   if (group.price_mode === 'override') {
@@ -30792,6 +30844,8 @@ async function saveModifierOption(e) {
     price_delta: Number(document.getElementById('modifierOptionPriceDelta').value) || 0,
     is_default: document.getElementById('modifierOptionDefault').checked,
     is_active: document.getElementById('modifierOptionActive').checked,
+    component_product_id: document.getElementById('modifierOptionComponentProduct').value || null,
+    component_quantity: Number(document.getElementById('modifierOptionComponentQty').value) || 1,
   };
 
   try {
@@ -36386,13 +36440,25 @@ async function saveGymFreeze(e) {
 }
 
 async function unfreezeGymSubscription(sub) {
-  if (!confirm(`هل تريد إلغاء تجميد اشتراك "${sub.gym_members?.name || ''}"؟ هيتم تمديد تاريخ الانتهاء تلقائيًا بعدد أيام التجميد.`)) return;
+  if (!confirm(`هل تريد إلغاء تجميد اشتراك "${sub.gym_members?.name || ''}"؟ هيتم تمديد تاريخ الانتهاء تلقائيًا بعدد أيام التجميد لو متسجل.`)) return;
   try {
     const { data: openFreeze, error: findError } = await supabaseClient
       .from('gym_subscription_freezes').select('*').eq('subscription_id', sub.id).is('freeze_end', null)
       .order('freeze_start', { ascending: false }).limit(1).maybeSingle();
     if (findError) throw findError;
-    if (!openFreeze) { showToast('لا يوجد تجميد قائم على هذا الاشتراك', true); return; }
+
+    if (!openFreeze) {
+      // ممكن يحصل لو الحالة اتغيرت لـ"موقوف" يدويًا من فورم التعديل بدل زرار
+      // "تجميد" المخصص، فمفيش سجل تجميد متتبّع نقدر نحسب منه عدد الأيام —
+      // في الحالة دي نرجّع الاشتراك نشط من غير ما نمدد تاريخ الانتهاء
+      const { error: subError } = await supabaseClient.from('gym_subscriptions')
+        .update({ status: 'active' }).eq('id', sub.id);
+      if (subError) throw subError;
+      showToast('تم إلغاء التجميد (من غير تمديد، لأنه متسجلش من زرار التجميد المخصص)');
+      await loadBoGymSubscriptions();
+      renderGymSubscriptionsTable();
+      return;
+    }
 
     const today = new Date();
     const freezeStart = new Date(openFreeze.freeze_start);
@@ -37295,7 +37361,7 @@ function renderSalonAppointmentsTable() {
   const q = (document.getElementById('salonAppointmentSearchInput').value || '').trim().toLowerCase();
   const filtered = boSalonAppointments.filter(a => !q || (a.client_name || '').toLowerCase().includes(q));
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" class="bo-empty">${boSalonAppointments.length === 0 ? 'لا توجد مواعيد مسجلة حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" class="bo-empty">${boSalonAppointments.length === 0 ? 'لا توجد مواعيد مسجلة حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
@@ -37308,11 +37374,14 @@ function renderSalonAppointmentsTable() {
       <td class="num">${a.appointment_date}</td>
       <td class="num">${a.start_time?.slice(0,5)} - ${a.end_time?.slice(0,5)}</td>
       <td class="num">${Number(a.price).toFixed(2)}</td>
+      <td class="num">${Number(a.paid_amount || 0).toFixed(2)}</td>
       <td>${salonAppointmentStatusBadge(a)}</td>
       <td><div class="bo-row-actions">
+        <button class="bo-icon-btn" data-action="pay" style="color:var(--teal-700);">دفعة</button>
         <button class="bo-icon-btn" data-action="edit">تعديل</button>
         <button class="bo-icon-btn danger" data-action="delete">حذف</button>
       </div></td>`;
+    tr.querySelector('[data-action="pay"]').addEventListener('click', () => openCashPaymentModal('salon', a));
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openSalonAppointmentModal(a));
     tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteSalonAppointment(a));
     applyRowActionPerm(tr, 'salon-appointments');
@@ -37656,7 +37725,7 @@ function renderClinicAppointmentsTable() {
   const q = (document.getElementById('clinicAppointmentSearchInput').value || '').trim().toLowerCase();
   const filtered = boClinicAppointments.filter(a => !q || (a.clinic_patients?.name || '').toLowerCase().includes(q));
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" class="bo-empty">${boClinicAppointments.length === 0 ? 'لا توجد مواعيد مسجلة حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" class="bo-empty">${boClinicAppointments.length === 0 ? 'لا توجد مواعيد مسجلة حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
     return;
   }
   tbody.innerHTML = '';
@@ -37668,11 +37737,14 @@ function renderClinicAppointmentsTable() {
       <td class="num">${a.appointment_date}</td>
       <td class="num">${a.start_time?.slice(0,5)} - ${a.end_time?.slice(0,5)}</td>
       <td class="num">${Number(a.price).toFixed(2)}</td>
+      <td class="num">${Number(a.paid_amount || 0).toFixed(2)}</td>
       <td>${clinicAppointmentStatusBadge(a)}</td>
       <td><div class="bo-row-actions">
+        <button class="bo-icon-btn" data-action="pay" style="color:var(--teal-700);">دفعة</button>
         <button class="bo-icon-btn" data-action="edit">تعديل</button>
         <button class="bo-icon-btn danger" data-action="delete">حذف</button>
       </div></td>`;
+    tr.querySelector('[data-action="pay"]').addEventListener('click', () => openCashPaymentModal('clinic', a));
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openClinicAppointmentModal(a));
     tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteClinicAppointment(a));
     applyRowActionPerm(tr, 'clinic-appointments');
@@ -38124,9 +38196,11 @@ function renderAcademyEnrollmentsTable() {
       <td class="num">${remaining.toFixed(2)}</td>
       <td>${academyEnrollmentStatusBadge(en)}</td>
       <td><div class="bo-row-actions">
+        <button class="bo-icon-btn" data-action="pay" style="color:var(--teal-700);">دفعة</button>
         <button class="bo-icon-btn" data-action="edit">تعديل</button>
         <button class="bo-icon-btn danger" data-action="delete">حذف</button>
       </div></td>`;
+    tr.querySelector('[data-action="pay"]').addEventListener('click', () => openCashPaymentModal('academy', en));
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openAcademyEnrollmentModal(en));
     tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteAcademyEnrollment(en));
     applyRowActionPerm(tr, 'academy-enrollments');
@@ -38486,9 +38560,11 @@ function renderVenueBookingsTable() {
       <td class="num">${Number(b.paid_amount).toFixed(2)}</td>
       <td>${venueBookingStatusBadge(b)}</td>
       <td><div class="bo-row-actions">
+        <button class="bo-icon-btn" data-action="pay" style="color:var(--teal-700);">دفعة</button>
         <button class="bo-icon-btn" data-action="edit">تعديل</button>
         <button class="bo-icon-btn danger" data-action="delete">حذف</button>
       </div></td>`;
+    tr.querySelector('[data-action="pay"]').addEventListener('click', () => openCashPaymentModal('venue', b));
     tr.querySelector('[data-action="edit"]').addEventListener('click', () => openVenueBookingModal(b));
     tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteVenueBooking(b));
     applyRowActionPerm(tr, 'venue-bookings');
@@ -38592,6 +38668,92 @@ async function deleteVenueBooking(booking) {
   showToast('تم حذف الحجز');
   await loadBoVenueBookings();
   renderVenueBookingsTable();
+}
+
+// ==================== تسجيل دفعة في الخزينة (مشترك) ====================
+let currentCashPaymentContext = null;
+
+const CASH_PAYMENT_CONFIG = {
+  salon: { table: 'salon_appointments', totalField: 'price', label: (r) => `موعد صالون: ${r.client_name || ''}` },
+  clinic: { table: 'clinic_appointments', totalField: 'price', label: (r) => `موعد عيادة: ${r.clinic_patients?.name || ''}` },
+  academy: { table: 'academy_enrollments', totalField: 'total_price', label: (r) => `تسجيل أكاديمية: ${r.academy_students?.name || ''}` },
+  venue: { table: 'venue_bookings', totalField: 'total_price', label: (r) => `حجز ملعب/قاعة: ${r.customer_name || ''}` },
+};
+
+async function openCashPaymentModal(kind, record) {
+  const cfg = CASH_PAYMENT_CONFIG[kind];
+  currentCashPaymentContext = { kind, record, cfg };
+
+  const total = Number(record[cfg.totalField] || 0);
+  const paid = Number(record.paid_amount || 0);
+  const remaining = Math.max(0, total - paid);
+
+  document.getElementById('cashPaymentSummaryLabel').textContent =
+    `${cfg.label(record)} — الإجمالي: ${total.toFixed(2)}، المدفوع: ${paid.toFixed(2)}، المتبقي: ${remaining.toFixed(2)}`;
+  document.getElementById('cashPaymentAmount').value = remaining > 0 ? remaining.toFixed(2) : '';
+  document.getElementById('cashPaymentNotes').value = '';
+
+  if (boTreasuries.length === 0) await loadBoTreasuries();
+  const branchTreasuries = boTreasuries.filter(t => t.is_active && t.branch_id === record.branch_id);
+  const listForSelect = branchTreasuries.length > 0 ? branchTreasuries : boTreasuries.filter(t => t.is_active);
+  document.getElementById('cashPaymentAccount').innerHTML = listForSelect
+    .map(t => `<option value="${t.id}">${escapeHtml(t.branches?.name || '')} — ${escapeHtml(t.name)}</option>`).join('');
+
+  document.getElementById('cashPaymentModalError').classList.remove('show');
+  document.getElementById('cashPaymentModalOverlay').classList.add('show');
+}
+
+function closeCashPaymentModal() {
+  document.getElementById('cashPaymentModalOverlay').classList.remove('show');
+  currentCashPaymentContext = null;
+}
+
+async function saveCashPayment(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('cashPaymentModalError');
+  errEl.classList.remove('show');
+  if (!currentCashPaymentContext) return;
+  const { kind, record, cfg } = currentCashPaymentContext;
+
+  const amount = Number(document.getElementById('cashPaymentAmount').value);
+  const cashAccountId = document.getElementById('cashPaymentAccount').value;
+  if (!cashAccountId) {
+    errEl.textContent = 'اختر الخزينة اللي هيتم إيداع المبلغ فيها';
+    errEl.classList.add('show');
+    return;
+  }
+  const btn = document.getElementById('saveCashPaymentBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  try {
+    const { error: cashError } = await supabaseClient.from('cash_account_transactions').insert({
+      cash_account_id: cashAccountId,
+      type: 'customer_receipt',
+      amount: Math.abs(amount),
+      reference_id: record.id,
+      note: `${cfg.label(record)} — دفعة`,
+      user_id: currentProfile.id,
+    });
+    if (cashError) throw cashError;
+
+    const newPaid = Number(record.paid_amount || 0) + amount;
+    const { error: updError } = await supabaseClient.from(cfg.table).update({ paid_amount: newPaid }).eq('id', record.id);
+    if (updError) throw updError;
+
+    showToast('تم تسجيل الدفعة وإيداعها في الخزينة بنجاح');
+    closeCashPaymentModal();
+    await loadBoTreasuries();
+
+    if (kind === 'salon') { await loadBoSalonAppointments(); renderSalonAppointmentsTable(); }
+    if (kind === 'clinic') { await loadBoClinicAppointments(); renderClinicAppointmentsTable(); }
+    if (kind === 'academy') { await loadBoAcademyEnrollments(); renderAcademyEnrollmentsTable(); }
+    if (kind === 'venue') { await loadBoVenueBookings(); renderVenueBookingsTable(); }
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء تسجيل الدفعة';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'تسجيل الدفعة';
+  }
 }
 
 // ==================== الأصول/الأجهزة (Service Management) ====================
