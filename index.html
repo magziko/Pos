@@ -1732,6 +1732,16 @@ a { color: inherit; }
           </div>
         </div>
 
+        <div class="bo-nav-group" id="importExportNavGroup">
+          <button class="bo-nav-item bo-nav-parent" id="importExportNavToggle" type="button">
+            <span>الاستيراد والتصدير</span>
+            <span class="bo-nav-chevron">‹</span>
+          </button>
+          <div class="bo-nav-sub" id="importExportNavSub">
+            <button class="bo-nav-sub-item" data-section="import-shipments">الشحنات</button>
+          </div>
+        </div>
+
         <!-- 4. التقارير -->
         <div class="bo-nav-group" id="reportsNavGroup">
           <button class="bo-nav-item bo-nav-parent" id="reportsNavToggle" type="button">
@@ -3011,6 +3021,23 @@ a { color: inherit; }
             <table class="bo-table">
               <thead><tr><th>العميل</th><th>الملعب/القاعة</th><th>التاريخ</th><th>الوقت</th><th>الإجمالي</th><th>المدفوع</th><th>الحالة</th><th></th></tr></thead>
               <tbody id="venueBookingsTableBody"><tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم شحنات الاستيراد -->
+        <div id="bo-section-import-shipments" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">الشحنات</div>
+            <button class="bo-add-btn" id="addImportShipmentBtn">+ شحنة جديدة</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="importShipmentSearchInput" placeholder="ابحث برقم الشحنة أو المورد...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>رقم الشحنة</th><th>المورد</th><th>بلد المنشأ</th><th>طريقة الشحن</th><th>الوصول المتوقع</th><th>القيمة + التكاليف</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="importShipmentsTableBody"><tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -8911,6 +8938,83 @@ a { color: inherit; }
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelCashPaymentBtn">إلغاء</button>
         <button type="submit" class="submit-btn" id="saveCashPaymentBtn">تسجيل الدفعة</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: شحنة استيراد جديدة -->
+<div class="modal-overlay" id="importShipmentModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title" id="importShipmentModalTitle">شحنة جديدة</div>
+    <form id="importShipmentForm">
+      <input type="hidden" id="importShipmentId">
+      <div class="modal-grid">
+        <div class="field"><label>رقم/مرجع الشحنة</label><input type="text" id="importShipmentRef" style="direction:ltr; text-align:right;"></div>
+        <div class="field"><label>المورد</label><select id="importShipmentSupplier"><option value="">— بدون —</option></select></div>
+        <div class="field"><label>الفرع</label><select id="importShipmentBranch" required></select></div>
+        <div class="field"><label>بلد المنشأ</label><input type="text" id="importShipmentOrigin"></div>
+        <div class="field">
+          <label>طريقة الشحن</label>
+          <select id="importShipmentMethod">
+            <option value="sea">بحري</option>
+            <option value="air">جوي</option>
+            <option value="land">بري</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>الحالة</label>
+          <select id="importShipmentStatus">
+            <option value="ordered">تم الطلب</option>
+            <option value="in_transit">في الطريق</option>
+            <option value="customs_clearance">في التخليص الجمركي</option>
+            <option value="received">تم الاستلام</option>
+            <option value="cancelled">ملغاة</option>
+          </select>
+        </div>
+        <div class="field"><label>رقم بوليصة الشحن</label><input type="text" id="importShipmentBol" style="direction:ltr; text-align:right;"></div>
+        <div class="field"><label>رقم الحاوية</label><input type="text" id="importShipmentContainer" style="direction:ltr; text-align:right;"></div>
+        <div class="field"><label>تاريخ المغادرة</label><input type="date" id="importShipmentDeparture"></div>
+        <div class="field"><label>تاريخ الوصول المتوقع</label><input type="date" id="importShipmentExpectedArrival"></div>
+        <div class="field"><label>تاريخ الوصول الفعلي</label><input type="date" id="importShipmentActualArrival"></div>
+        <div class="field">
+          <label>عملة الشحنة</label>
+          <select id="importShipmentCurrency">
+            <option value="USD">دولار أمريكي (USD)</option>
+            <option value="EUR">يورو (EUR)</option>
+            <option value="EGP">جنيه مصري (EGP)</option>
+            <option value="CNY">يوان صيني (CNY)</option>
+            <option value="GBP">جنيه إسترليني (GBP)</option>
+          </select>
+        </div>
+        <div class="field"><label>سعر الصرف (مقابل الجنيه)</label><input type="number" id="importShipmentExchangeRate" min="0" step="0.0001" value="1"></div>
+        <div class="field"><label>تكلفة الشحن (جنيه)</label><input type="number" id="importShipmentFreight" min="0" step="0.01" value="0"></div>
+        <div class="field"><label>الرسوم الجمركية (جنيه)</label><input type="number" id="importShipmentCustoms" min="0" step="0.01" value="0"></div>
+        <div class="field"><label>تكاليف أخرى (جنيه)</label><input type="number" id="importShipmentOtherCosts" min="0" step="0.01" value="0"></div>
+        <div class="field field-full"><label>ملاحظات</label><textarea id="importShipmentNotes" rows="2"></textarea></div>
+      </div>
+
+      <div class="ci-section-subtitle" style="margin-top:6px;">أصناف الشحنة</div>
+      <div class="bo-table-wrap" style="margin-bottom:10px;">
+        <table class="bo-table">
+          <thead><tr><th>الصنف</th><th>الكمية</th><th>سعر الوحدة (بعملة الشحنة)</th><th></th></tr></thead>
+          <tbody id="importShipmentItemsList"><tr><td colspan="4" class="bo-empty">— احفظ الشحنة أولًا لإضافة أصناف —</td></tr></tbody>
+        </table>
+      </div>
+      <div class="modal-grid" id="importShipmentAddItemWrap" style="display:none;">
+        <div class="field"><label>الصنف</label><select id="importShipmentItemProduct"></select></div>
+        <div class="field"><label>الكمية</label><input type="number" id="importShipmentItemQty" min="0.01" step="0.01" value="1"></div>
+        <div class="field"><label>سعر الوحدة (بعملة الشحنة)</label><input type="number" id="importShipmentItemCost" min="0" step="0.0001" value="0"></div>
+        <div class="field" style="display:flex; align-items:flex-end;">
+          <button type="button" class="bo-outline-btn" id="addImportShipmentItemBtn">+ إضافة الصنف</button>
+        </div>
+      </div>
+
+      <div class="error-msg" id="importShipmentModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelImportShipmentBtn">إغلاق</button>
+        <button type="button" class="bo-outline-btn" id="receiveImportShipmentBtn" style="display:none;">استلام الشحنة للمخزون</button>
+        <button type="submit" class="submit-btn" id="saveImportShipmentBtn">حفظ</button>
       </div>
     </form>
   </div>
@@ -16824,6 +16928,18 @@ function applyVenueFeatureVisibility() {
   }
 }
 
+function isImportExportBranch() {
+  return getCurrentBranchBusinessType()?.name === 'استيراد وتصدير';
+}
+
+function applyImportExportFeatureVisibility() {
+  const ieGroup = document.getElementById('importExportNavGroup');
+  if (ieGroup) {
+    const hasPermission = boNavGroups.find(g => g.group === 'importExportNavGroup')?.sections.some(s => hasBoScreenPermission(s));
+    ieGroup.style.display = (hasPermission && isImportExportBranch()) ? '' : 'none';
+  }
+}
+
 function applyShoeFeatureVisibility() {
   const show = isShoeBranch() ? '' : 'none';
   // تقارير المخزون
@@ -19552,6 +19668,7 @@ async function enterBackoffice() {
   applyClinicFeatureVisibility();
   applyAcademyFeatureVisibility();
   applyVenueFeatureVisibility();
+  applyImportExportFeatureVisibility();
   const landingSection = firstAllowedSection();
   if (!landingSection) {
     alert('ليس لديك صلاحية للوصول إلى أي قسم في لوحة التحكم');
@@ -19579,6 +19696,7 @@ const boAllSections = ['dashboard','products','categories','unit-types','tax-rat
   'clinic-patients','clinic-doctors','clinic-appointments',
   'academy-students','academy-courses','academy-instructors','academy-enrollments','academy-sessions',
   'venue-courts','venue-bookings',
+  'import-shipments',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
   'soon','company-info','permissions','users','branches','business-types','pos-devices','branch-settings','pos-tables','print-settings','stock','stocktake','product-batches','product-serials','backup','reset-data','employees','attendance','leave-requests','expense-items','expenses','salaries','sales-commissions','treasuries','capital','fixed-assets','promotions','coupons','modifier-groups','recipes'];
 
@@ -19593,6 +19711,7 @@ const boNavGroups = [
   { toggle: 'clinicNavToggle', group: 'clinicNavGroup', sections: ['clinic-patients', 'clinic-doctors', 'clinic-appointments'] },
   { toggle: 'academyNavToggle', group: 'academyNavGroup', sections: ['academy-students', 'academy-courses', 'academy-instructors', 'academy-enrollments', 'academy-sessions'] },
   { toggle: 'venueNavToggle', group: 'venueNavGroup', sections: ['venue-courts', 'venue-bookings'] },
+  { toggle: 'importExportNavToggle', group: 'importExportNavGroup', sections: ['import-shipments'] },
   { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
   { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['treasuries','payments','expense-items','expenses','capital','fixed-assets'] },
   { toggle: 'hrNavToggle', group: 'hrNavGroup', sections: ['employees','attendance','leave-requests','salaries','sales-commissions'] },
@@ -19625,6 +19744,7 @@ const SECTION_PERMISSION_MAP = {
   'academy-students': 'academy_management', 'academy-courses': 'academy_management', 'academy-instructors': 'academy_management',
   'academy-enrollments': 'academy_management', 'academy-sessions': 'academy_management',
   'venue-courts': 'venue_management', 'venue-bookings': 'venue_management',
+  'import-shipments': 'import_export_management',
   'reports-sales': 'reports', 'reports-purchases': 'reports', 'reports-inventory': 'reports', 'reports-accounting': 'reports', 'reports-other': 'reports',
   'treasuries': 'finance', 'payments': 'finance', 'expense-items': 'finance', 'expenses': 'finance', 'capital': 'admin', 'fixed-assets': 'finance',
   'employees': 'hr', 'attendance': 'hr', 'leave-requests': 'hr', 'salaries': 'hr', 'sales-commissions': 'hr',
@@ -19739,7 +19859,8 @@ const SCREEN_LABELS = {
   'clinic-patients': 'المرضى', 'clinic-doctors': 'الأطباء', 'clinic-appointments': 'مواعيد العيادة',
   'academy-students': 'الطلاب', 'academy-courses': 'الكورسات', 'academy-instructors': 'المدربين',
   'academy-enrollments': 'التسجيلات', 'academy-sessions': 'الحصص',
-  'venue-courts': 'الملاعب/القاعات', 'venue-bookings': 'الحجوزات'
+  'venue-courts': 'الملاعب/القاعات', 'venue-bookings': 'الحجوزات',
+  'import-shipments': 'الشحنات'
 };
 
 // بناء قائمة الشاشات التفصيلية لكل وحدة رئيسية تلقائيًا من SECTION_PERMISSION_MAP
@@ -20277,6 +20398,7 @@ const ACTION_CAPABLE_SCREENS = {
   'academy-sessions': { add: true, edit: true, delete: true },
   'venue-courts': { add: true, edit: true, delete: true },
   'venue-bookings': { add: true, edit: true, delete: true },
+  'import-shipments': { add: true, edit: true, delete: true },
   'purchase-requisitions': { add: true, edit: true },
   'purchase-orders': { add: true, edit: true, delete: true },
   'sales-list': { edit: true },
@@ -20331,6 +20453,7 @@ const ADD_BUTTON_MAP = {
   'academy-students': 'addAcademyStudentBtn', 'academy-courses': 'addAcademyCourseBtn', 'academy-instructors': 'addAcademyInstructorBtn',
   'academy-enrollments': 'addAcademyEnrollmentBtn', 'academy-sessions': 'addAcademySessionBtn',
   'venue-courts': 'addVenueCourtBtn', 'venue-bookings': 'addVenueBookingBtn',
+  'import-shipments': 'addImportShipmentBtn',
   'purchase-orders': 'addPurchaseOrderBtn', 'purchases': 'addPurchaseBtn', 'purchase-returns': 'addPurchaseReturnBtn', 'sale-returns': 'addSaleReturnFromBoBtn',
   'stocktake': 'addStocktakeSessionBtn', 'product-batches': 'addProductBatchBtn', 'product-serials': 'addProductSerialBtn',
   'delivery': 'addDeliveryOrderBtn', 'delivery-zones': 'addDeliveryZoneBtn', 'delivery-companies': 'addDeliveryCompanyBtn', 'sales-channels': 'addSalesChannelBtn',
@@ -20552,6 +20675,10 @@ function activateBoSection(section, btn) {
   if (section === 'venue-bookings' && !boVenueBookingsLoadedOnce) {
     Promise.all([loadBoVenueCourts(), loadBoVenueBookings()]).then(renderVenueBookingsTable);
     boVenueBookingsLoadedOnce = true;
+  }
+  if (section === 'import-shipments' && !boImportShipmentsLoadedOnce) {
+    loadBoImportShipments().then(renderImportShipmentsTable);
+    boImportShipmentsLoadedOnce = true;
   }
   if (section === 'purchase-orders') { loadBoPurchaseOrders().then(renderPurchaseOrdersTable); }
   if (section === 'purchase-requisitions') { loadBoRequisitions().then(renderRequisitionsTable); }
@@ -22156,6 +22283,17 @@ function bindBackofficeEvents() {
     if (e.target.id === 'cashPaymentModalOverlay') closeCashPaymentModal();
   });
   document.getElementById('cashPaymentForm').addEventListener('submit', saveCashPayment);
+
+  // ---- Import Shipment modal ----
+  document.getElementById('addImportShipmentBtn').addEventListener('click', () => openImportShipmentModal(null));
+  document.getElementById('cancelImportShipmentBtn').addEventListener('click', closeImportShipmentModal);
+  document.getElementById('importShipmentModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'importShipmentModalOverlay') closeImportShipmentModal();
+  });
+  document.getElementById('importShipmentForm').addEventListener('submit', saveImportShipment);
+  document.getElementById('addImportShipmentItemBtn').addEventListener('click', () => addImportShipmentItem());
+  document.getElementById('receiveImportShipmentBtn').addEventListener('click', () => receiveImportShipment());
+  document.getElementById('importShipmentSearchInput').addEventListener('input', renderImportShipmentsTable);
 
   // ---- Asset modal ----
   document.getElementById('addAssetBtn').addEventListener('click', () => openAssetModal(null));
@@ -30327,6 +30465,7 @@ async function toggleBusinessTypeActive(item) {
   applyClinicFeatureVisibility();
   applyAcademyFeatureVisibility();
   applyVenueFeatureVisibility();
+  applyImportExportFeatureVisibility();
 }
 
 // ---- أجهزة نقاط البيع (pos_devices) ----
@@ -30960,6 +31099,7 @@ const PERMISSION_GROUPS = [
   { key: 'clinic_management', title: 'العيادة والمركز الطبي', desc: 'المرضى، الأطباء، حجز المواعيد', children: buildModuleScreens('clinic_management') },
   { key: 'academy_management', title: 'مركز التدريب/الأكاديمية', desc: 'الطلاب، الكورسات، المدربين، التسجيلات، الحصص', children: buildModuleScreens('academy_management') },
   { key: 'venue_management', title: 'حجز ملاعب وقاعات', desc: 'الملاعب/القاعات، الحجوزات بالساعة', children: buildModuleScreens('venue_management') },
+  { key: 'import_export_management', title: 'الاستيراد والتصدير', desc: 'الشحنات وتكلفة الشحن والجمارك', children: buildModuleScreens('import_export_management') },
   { key: 'technician', title: 'الفني الميداني (وصول محدود)', desc: 'وصول مقتصر على الزيارات المسندة للموظف المرتبط بحساب المستخدم نفسه فقط — منفصل عن إدارة الخدمات الكاملة', children: buildModuleScreens('technician') },
   { key: 'reports', title: 'التقارير', desc: 'تقارير المبيعات والمشتريات والمخزون والمحاسبة والتقارير الأخرى', reportGroups: REPORT_TABS },
   { key: 'finance', title: 'المالية', desc: 'الخزائن والحسابات البنكية، سجل المدفوعات، بنود المصروفات، المصروفات، الأصول الثابتة', children: buildModuleScreens('finance') },
@@ -38753,6 +38893,296 @@ async function saveCashPayment(e) {
     errEl.classList.add('show');
   } finally {
     btn.disabled = false; btn.textContent = 'تسجيل الدفعة';
+  }
+}
+
+// ==================== الاستيراد والتصدير ====================
+let boImportShipments = [];
+let boImportShipmentsLoadedOnce = false;
+let currentImportShipmentItems = [];
+
+async function loadBoImportShipments() {
+  const { data, error } = await supabaseClient
+    .from('import_shipments')
+    .select('*, suppliers(name), branches(name)')
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل الشحنات', true); return; }
+  boImportShipments = data || [];
+}
+
+function importShipmentStatusBadge(s) {
+  const map = {
+    ordered: '<span class="bo-badge inactive">تم الطلب</span>',
+    in_transit: '<span class="bo-badge inactive">في الطريق</span>',
+    customs_clearance: '<span class="bo-badge inactive">في التخليص الجمركي</span>',
+    received: '<span class="bo-badge active">تم الاستلام</span>',
+    cancelled: '<span class="bo-badge inactive">ملغاة</span>',
+  };
+  return map[s.status] || s.status;
+}
+
+const SHIPPING_METHOD_LABELS = { sea: 'بحري', air: 'جوي', land: 'بري' };
+
+function renderImportShipmentsTable() {
+  const tbody = document.getElementById('importShipmentsTableBody');
+  const q = (document.getElementById('importShipmentSearchInput').value || '').trim().toLowerCase();
+  const filtered = boImportShipments.filter(s =>
+    !q || (s.shipment_ref || '').toLowerCase().includes(q) || (s.suppliers?.name || '').toLowerCase().includes(q));
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" class="bo-empty">${boImportShipments.length === 0 ? 'لا توجد شحنات مسجلة حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(s => {
+    const totalCosts = Number(s.freight_cost) + Number(s.customs_duty) + Number(s.other_costs);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(s.shipment_ref || '—')}</td>
+      <td>${escapeHtml(s.suppliers?.name || '—')}</td>
+      <td>${escapeHtml(s.origin_country || '—')}</td>
+      <td>${SHIPPING_METHOD_LABELS[s.shipping_method] || '—'}</td>
+      <td class="num">${s.expected_arrival_date || '—'}</td>
+      <td class="num">${totalCosts.toFixed(2)} جنيه تكاليف</td>
+      <td>${importShipmentStatusBadge(s)}</td>
+      <td><div class="bo-row-actions">
+        <button class="bo-icon-btn" data-action="edit">فتح</button>
+        <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+      </div></td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openImportShipmentModal(s));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deleteImportShipment(s));
+    applyRowActionPerm(tr, 'import-shipments');
+    tbody.appendChild(tr);
+  });
+}
+
+async function openImportShipmentModal(shipment) {
+  if (boSuppliers.length === 0) await loadBoSuppliers();
+  if (boProducts.length === 0) await loadBoProducts();
+
+  document.getElementById('importShipmentModalTitle').textContent = shipment ? 'تعديل شحنة' : 'شحنة جديدة';
+  document.getElementById('importShipmentId').value = shipment ? shipment.id : '';
+  document.getElementById('importShipmentRef').value = shipment?.shipment_ref || '';
+  document.getElementById('importShipmentOrigin').value = shipment?.origin_country || '';
+  document.getElementById('importShipmentMethod').value = shipment?.shipping_method || 'sea';
+  document.getElementById('importShipmentStatus').value = shipment?.status || 'ordered';
+  document.getElementById('importShipmentBol').value = shipment?.bill_of_lading || '';
+  document.getElementById('importShipmentContainer').value = shipment?.container_number || '';
+  document.getElementById('importShipmentDeparture').value = shipment?.departure_date || '';
+  document.getElementById('importShipmentExpectedArrival').value = shipment?.expected_arrival_date || '';
+  document.getElementById('importShipmentActualArrival').value = shipment?.actual_arrival_date || '';
+  document.getElementById('importShipmentCurrency').value = shipment?.currency || 'USD';
+  document.getElementById('importShipmentExchangeRate').value = shipment?.exchange_rate ?? 1;
+  document.getElementById('importShipmentFreight').value = shipment?.freight_cost ?? 0;
+  document.getElementById('importShipmentCustoms').value = shipment?.customs_duty ?? 0;
+  document.getElementById('importShipmentOtherCosts').value = shipment?.other_costs ?? 0;
+  document.getElementById('importShipmentNotes').value = shipment?.notes || '';
+
+  const supplierSelect = document.getElementById('importShipmentSupplier');
+  supplierSelect.innerHTML = '<option value="">— بدون —</option>' + boSuppliers.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+  supplierSelect.value = shipment?.supplier_id || '';
+
+  populateBranchSelect(document.getElementById('importShipmentBranch'), shipment?.branch_id || currentProfile.branch_id, false);
+
+  const productSelect = document.getElementById('importShipmentItemProduct');
+  productSelect.innerHTML = boProducts.filter(p => !p.parent_product_id).map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+
+  const addItemWrap = document.getElementById('importShipmentAddItemWrap');
+  const receiveBtn = document.getElementById('receiveImportShipmentBtn');
+  if (shipment) {
+    addItemWrap.style.display = '';
+    await renderImportShipmentItemsList(shipment.id);
+    receiveBtn.style.display = shipment.received_at ? 'none' : '';
+  } else {
+    addItemWrap.style.display = 'none';
+    document.getElementById('importShipmentItemsList').innerHTML = '<tr><td colspan="4" class="bo-empty">— احفظ الشحنة أولًا لإضافة أصناف —</td></tr>';
+    receiveBtn.style.display = 'none';
+  }
+
+  document.getElementById('importShipmentModalError').classList.remove('show');
+  document.getElementById('importShipmentModalOverlay').classList.add('show');
+}
+
+async function renderImportShipmentItemsList(shipmentId) {
+  const tbody = document.getElementById('importShipmentItemsList');
+  const { data, error } = await supabaseClient
+    .from('import_shipment_items').select('*, products(name)').eq('shipment_id', shipmentId).order('created_at');
+  if (error) { console.error(error); return; }
+  currentImportShipmentItems = data || [];
+  if (currentImportShipmentItems.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="bo-empty">لا توجد أصناف مضافة بعد</td></tr>';
+    return;
+  }
+  tbody.innerHTML = currentImportShipmentItems.map(it => `
+    <tr>
+      <td>${escapeHtml(it.products?.name || '—')}</td>
+      <td class="num">${Number(it.quantity).toFixed(2)}</td>
+      <td class="num">${Number(it.unit_cost_foreign).toFixed(4)}</td>
+      <td><button type="button" class="bo-icon-btn danger" data-item-id="${it.id}">حذف</button></td>
+    </tr>`).join('');
+  tbody.querySelectorAll('[data-item-id]').forEach(btn => {
+    btn.addEventListener('click', () => deleteImportShipmentItem(btn.dataset.itemId, shipmentId));
+  });
+}
+
+async function addImportShipmentItem() {
+  const shipmentId = document.getElementById('importShipmentId').value;
+  if (!shipmentId) { showToast('احفظ الشحنة أولًا', true); return; }
+  const productId = document.getElementById('importShipmentItemProduct').value;
+  const qty = Number(document.getElementById('importShipmentItemQty').value);
+  const cost = Number(document.getElementById('importShipmentItemCost').value);
+  if (!productId || qty <= 0) { showToast('اختر صنف وكمية صحيحة', true); return; }
+  const { error } = await supabaseClient.from('import_shipment_items').insert({
+    shipment_id: shipmentId, product_id: productId, quantity: qty, unit_cost_foreign: cost,
+  });
+  if (error) { console.error(error); showToast('تعذر إضافة الصنف', true); return; }
+  document.getElementById('importShipmentItemQty').value = 1;
+  document.getElementById('importShipmentItemCost').value = 0;
+  await renderImportShipmentItemsList(shipmentId);
+  showToast('تمت إضافة الصنف للشحنة');
+}
+
+async function deleteImportShipmentItem(itemId, shipmentId) {
+  if (!confirm('حذف هذا الصنف من الشحنة؟')) return;
+  const { error } = await supabaseClient.from('import_shipment_items').delete().eq('id', itemId);
+  if (error) { console.error(error); showToast('تعذر حذف الصنف', true); return; }
+  await renderImportShipmentItemsList(shipmentId);
+}
+
+function closeImportShipmentModal() {
+  document.getElementById('importShipmentModalOverlay').classList.remove('show');
+}
+
+async function saveImportShipment(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('importShipmentModalError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('saveImportShipmentBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  const id = document.getElementById('importShipmentId').value || null;
+  const payload = {
+    shipment_ref: document.getElementById('importShipmentRef').value.trim() || null,
+    supplier_id: document.getElementById('importShipmentSupplier').value || null,
+    branch_id: document.getElementById('importShipmentBranch').value,
+    origin_country: document.getElementById('importShipmentOrigin').value.trim() || null,
+    shipping_method: document.getElementById('importShipmentMethod').value,
+    status: document.getElementById('importShipmentStatus').value,
+    bill_of_lading: document.getElementById('importShipmentBol').value.trim() || null,
+    container_number: document.getElementById('importShipmentContainer').value.trim() || null,
+    departure_date: document.getElementById('importShipmentDeparture').value || null,
+    expected_arrival_date: document.getElementById('importShipmentExpectedArrival').value || null,
+    actual_arrival_date: document.getElementById('importShipmentActualArrival').value || null,
+    currency: document.getElementById('importShipmentCurrency').value,
+    exchange_rate: Number(document.getElementById('importShipmentExchangeRate').value) || 1,
+    freight_cost: Number(document.getElementById('importShipmentFreight').value) || 0,
+    customs_duty: Number(document.getElementById('importShipmentCustoms').value) || 0,
+    other_costs: Number(document.getElementById('importShipmentOtherCosts').value) || 0,
+    notes: document.getElementById('importShipmentNotes').value.trim() || null,
+  };
+  try {
+    let shipmentId = id;
+    if (id) {
+      const { error } = await supabaseClient.from('import_shipments').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      payload.created_by = currentProfile.id;
+      const { data, error } = await supabaseClient.from('import_shipments').insert(payload).select().single();
+      if (error) throw error;
+      shipmentId = data.id;
+    }
+    showToast(id ? 'تم تحديث الشحنة' : 'تمت إضافة الشحنة بنجاح');
+    await loadBoImportShipments();
+    renderImportShipmentsTable();
+    if (!id) {
+      const created = boImportShipments.find(s => s.id === shipmentId);
+      if (created) { await openImportShipmentModal(created); }
+    } else {
+      closeImportShipmentModal();
+    }
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ';
+  }
+}
+
+async function deleteImportShipment(shipment) {
+  if (!hasBoActionPermission('import-shipments', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (shipment.received_at) { showToast('لا يمكن حذف شحنة تم استلامها للمخزون بالفعل', true); return; }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف شحنة "${shipment.shipment_ref || ''}"؟`)) return;
+  const { error } = await supabaseClient.from('import_shipments').delete().eq('id', shipment.id);
+  if (error) { console.error(error); showToast('تعذر حذف الشحنة', true); return; }
+  showToast('تم حذف الشحنة');
+  await loadBoImportShipments();
+  renderImportShipmentsTable();
+}
+
+// استلام الشحنة: بيحسب التكلفة الفعلية (landed cost) لكل صنف = (سعر الوحدة × سعر
+// الصرف) + نصيبه من تكاليف الشحن/الجمارك/الأخرى موزعة حسب قيمة كل صنف، وبيرحّل
+// الكمية للمخزون فعليًا، وبيحدّث تكلفة الصنف في شاشة المنتجات
+async function receiveImportShipment() {
+  const shipmentId = document.getElementById('importShipmentId').value;
+  if (!shipmentId) return;
+  const shipment = boImportShipments.find(s => s.id === shipmentId);
+  if (!shipment) return;
+  if (shipment.received_at) { showToast('الشحنة دي اتستلمت بالفعل', true); return; }
+  if (!confirm('هل تريد استلام الشحنة؟ هيتم ترحيل كل الأصناف للمخزون وتحديث تكلفتها الفعلية، ولا يمكن التراجع عن هذا الإجراء.')) return;
+
+  const errEl = document.getElementById('importShipmentModalError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('receiveImportShipmentBtn');
+  btn.disabled = true; btn.textContent = 'جاري الاستلام...';
+
+  try {
+    const { data: items, error: itemsError } = await supabaseClient
+      .from('import_shipment_items').select('*, products(name, cost_price)').eq('shipment_id', shipmentId);
+    if (itemsError) throw itemsError;
+    if (!items || items.length === 0) { showToast('لا توجد أصناف في الشحنة عشان نستلمها', true); btn.disabled = false; btn.textContent = 'استلام الشحنة للمخزون'; return; }
+
+    if (boWarehouses.length === 0) await loadBoWarehouses();
+    const warehouse = boWarehouses.find(w => w.branch_id === shipment.branch_id);
+    if (!warehouse) { showToast('لا يوجد مخزن مسجّل لهذا الفرع', true); btn.disabled = false; btn.textContent = 'استلام الشحنة للمخزون'; return; }
+
+    const exchangeRate = Number(shipment.exchange_rate) || 1;
+    const totalExtraCosts = Number(shipment.freight_cost) + Number(shipment.customs_duty) + Number(shipment.other_costs);
+    const totalItemsValueEgp = items.reduce((sum, it) => sum + (Number(it.quantity) * Number(it.unit_cost_foreign) * exchangeRate), 0);
+
+    for (const it of items) {
+      const itemValueEgp = Number(it.quantity) * Number(it.unit_cost_foreign) * exchangeRate;
+      const shareOfExtraCosts = totalItemsValueEgp > 0 ? (itemValueEgp / totalItemsValueEgp) * totalExtraCosts : 0;
+      const landedUnitCost = (itemValueEgp + shareOfExtraCosts) / Number(it.quantity);
+
+      const { error: stockError } = await supabaseClient.from('stock_transactions').insert({
+        product_id: it.product_id,
+        warehouse_id: warehouse.id,
+        quantity: Number(it.quantity),
+        type: 'purchase',
+        reference_id: shipmentId,
+        note: `استلام شحنة استيراد${shipment.shipment_ref ? ' — ' + shipment.shipment_ref : ''}`,
+        user_id: currentProfile.id,
+      });
+      if (stockError) throw stockError;
+
+      const { error: costError } = await supabaseClient.from('products').update({ cost_price: landedUnitCost }).eq('id', it.product_id);
+      if (costError) throw costError;
+    }
+
+    const { error: shipError } = await supabaseClient.from('import_shipments')
+      .update({ status: 'received', received_at: new Date().toISOString(), actual_arrival_date: shipment.actual_arrival_date || new Date().toISOString().slice(0, 10) })
+      .eq('id', shipmentId);
+    if (shipError) throw shipError;
+
+    showToast('تم استلام الشحنة، وترحيل الأصناف للمخزون بتكلفتها الفعلية');
+    closeImportShipmentModal();
+    await loadBoImportShipments();
+    renderImportShipmentsTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء استلام الشحنة';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'استلام الشحنة للمخزون';
   }
 }
 
