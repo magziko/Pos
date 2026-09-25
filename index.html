@@ -5812,6 +5812,10 @@ a { color: inherit; }
               <div class="report-type-icon">🏆</div>
               <div class="report-type-label">أداء مدربي الجيم</div>
             </button>
+            <button type="button" class="report-type-card" data-report="import-shipments-tracking">
+              <div class="report-type-icon">🚢</div>
+              <div class="report-type-label">تتبع شحنات الاستيراد</div>
+            </button>
           </div>
 
           <div id="otherReportDetailWrap" style="display:none;">
@@ -6620,6 +6624,26 @@ a { color: inherit; }
                 <table class="bo-table">
                   <thead><tr><th>المدرب</th><th>الفرع</th><th>عدد الحصص</th><th>إجمالي الحجوزات</th><th>متوسط الحجوزات/حصة</th><th>نسبة الإشغال</th></tr></thead>
                   <tbody id="gymTrainerPerfTableBody"><tr><td colspan="6" class="bo-empty">جاري التحميل...</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- تتبع شحنات الاستيراد -->
+            <div id="otherReportDetail-import-shipments-tracking" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">الشحنات اللي لسه في الطريق (تم الطلب / في الطريق / التخليص الجمركي)</div>
+                <div class="report-subtitle-actions">
+                  <button class="bo-outline-btn" id="refreshImportTrackingBtn">تحديث</button>
+                </div>
+              </div>
+              <div class="report-cards">
+                <div class="report-card"><div class="report-card-label">شحنات في الطريق</div><div class="report-card-value num" id="importTrackingTotalCount">0</div></div>
+                <div class="report-card"><div class="report-card-label">شحنات متأخرة</div><div class="report-card-value num negative" id="importTrackingDelayedCount">0</div></div>
+              </div>
+              <div class="bo-table-wrap">
+                <table class="bo-table">
+                  <thead><tr><th>رقم الشحنة</th><th>المورد</th><th>الفرع</th><th>طريقة الشحن</th><th>الوصول المتوقع</th><th>الحالة</th><th>الأيام</th></tr></thead>
+                  <tbody id="importTrackingTableBody"><tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr></tbody>
                 </table>
               </div>
             </div>
@@ -15175,6 +15199,7 @@ function bindPosEvents() {
   document.getElementById('gymExpReportDays').addEventListener('change', () => refreshGymExpiringReport());
   document.getElementById('refreshGymDueReportBtn').addEventListener('click', () => refreshGymDuePaymentsReport());
   document.getElementById('refreshGymTrainerPerfBtn').addEventListener('click', () => refreshGymTrainerPerformanceReport());
+  document.getElementById('refreshImportTrackingBtn').addEventListener('click', () => refreshImportTrackingReport());
   document.getElementById('exportPclBtn').addEventListener('click', () => exportPclToExcel());
   document.getElementById('variantPickerOverlay').addEventListener('click', (e) => {
     if (e.target.id === 'variantPickerOverlay') closeVariantPicker();
@@ -21658,6 +21683,7 @@ function bindBackofficeEvents() {
       if (key === 'gym-expiring') refreshGymExpiringReport();
       if (key === 'gym-due-payments') refreshGymDuePaymentsReport();
       if (key === 'gym-trainer-performance') runGymTrainerPerformanceReport();
+      if (key === 'import-shipments-tracking') refreshImportTrackingReport();
       if (key === 'service-management') { runServiceManagementReport(); }
     });
   });
@@ -39184,6 +39210,46 @@ async function receiveImportShipment() {
   } finally {
     btn.disabled = false; btn.textContent = 'استلام الشحنة للمخزون';
   }
+}
+
+// ---- تقرير تتبع الشحنات ----
+async function refreshImportTrackingReport() {
+  const tbody = document.getElementById('importTrackingTableBody');
+  tbody.innerHTML = '<tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>';
+  const { data, error } = await supabaseClient
+    .from('import_shipments')
+    .select('*, suppliers(name), branches(name)')
+    .in('status', ['ordered', 'in_transit', 'customs_clearance'])
+    .order('expected_arrival_date', { ascending: true, nullsFirst: false });
+  if (error) { console.error(error); tbody.innerHTML = '<tr><td colspan="7" class="bo-empty">تعذر تحميل التقرير</td></tr>'; return; }
+
+  const today = new Date();
+  document.getElementById('importTrackingTotalCount').textContent = (data || []).length;
+  const delayedCount = (data || []).filter(s => s.expected_arrival_date && new Date(s.expected_arrival_date) < today).length;
+  document.getElementById('importTrackingDelayedCount').textContent = delayedCount;
+
+  if (!data || data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="bo-empty">لا توجد شحنات في الطريق حاليًا</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(s => {
+    let daysLabel = '—';
+    if (s.expected_arrival_date) {
+      const daysDiff = Math.round((new Date(s.expected_arrival_date) - today) / (1000 * 60 * 60 * 24));
+      daysLabel = daysDiff < 0
+        ? `<span style="color:#b91c1c; font-weight:700;">متأخرة ${Math.abs(daysDiff)} يوم</span>`
+        : (daysDiff === 0 ? 'متوقعة النهاردة' : `متبقي ${daysDiff} يوم`);
+    }
+    return `<tr>
+      <td>${escapeHtml(s.shipment_ref || '—')}</td>
+      <td>${escapeHtml(s.suppliers?.name || '—')}</td>
+      <td>${escapeHtml(s.branches?.name || '—')}</td>
+      <td>${SHIPPING_METHOD_LABELS[s.shipping_method] || '—'}</td>
+      <td class="num">${s.expected_arrival_date || '—'}</td>
+      <td>${importShipmentStatusBadge(s)}</td>
+      <td>${daysLabel}</td>
+    </tr>`;
+  }).join('');
 }
 
 // ==================== الأصول/الأجهزة (Service Management) ====================
