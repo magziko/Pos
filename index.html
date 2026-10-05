@@ -7969,6 +7969,12 @@ a { color: inherit; }
       </div>
       <div class="modal-grid" id="productTierPricesSection" style="display:none;"></div>
 
+      <div class="ci-section-subtitle">بيانات جمركية (اختياري — لأنشطة الاستيراد والتصدير)</div>
+      <div class="modal-grid">
+        <div class="field"><label>الكود الجمركي (HS Code)</label><input type="text" id="productHsCode" style="direction:ltr; text-align:right;" placeholder="مثال: 8517.12"></div>
+        <div class="field"><label>نسبة الرسم الجمركي (%)</label><input type="number" id="productCustomsDutyRate" step="0.01" min="0" max="100" value="0"></div>
+      </div>
+
       <div class="ci-section-subtitle">المخزون والوحدات</div>
       <div class="modal-grid">
         <div class="field" id="productReorderField"><label>حد إعادة الطلب</label><input type="number" id="productReorder" step="0.01" min="0" value="0"></div>
@@ -9181,7 +9187,13 @@ a { color: inherit; }
         </div>
         <div class="field"><label>سعر الصرف (مقابل الجنيه)</label><input type="number" id="importShipmentExchangeRate" min="0" step="0.0001" value="1"></div>
         <div class="field"><label>تكلفة الشحن (جنيه)</label><input type="number" id="importShipmentFreight" min="0" step="0.01" value="0"></div>
-        <div class="field"><label>الرسوم الجمركية (جنيه)</label><input type="number" id="importShipmentCustoms" min="0" step="0.01" value="0"></div>
+        <div class="field">
+          <label>الرسوم الجمركية (جنيه)</label>
+          <div style="display:flex; gap:6px;">
+            <input type="number" id="importShipmentCustoms" min="0" step="0.01" value="0" style="flex:1;">
+            <button type="button" class="bo-outline-btn" id="autoCalcCustomsBtn" title="يحسب الرسوم تلقائيًا من نسبة الرسم الجمركي المسجّلة على كل صنف" style="white-space:nowrap;">حساب تلقائي</button>
+          </div>
+        </div>
         <div class="field"><label>تكاليف أخرى (جنيه)</label><input type="number" id="importShipmentOtherCosts" min="0" step="0.01" value="0"></div>
         <div class="field field-full"><label>ملاحظات</label><textarea id="importShipmentNotes" rows="2"></textarea></div>
       </div>
@@ -9189,8 +9201,8 @@ a { color: inherit; }
       <div class="ci-section-subtitle" style="margin-top:6px;">أصناف الشحنة</div>
       <div class="bo-table-wrap" style="margin-bottom:10px;">
         <table class="bo-table">
-          <thead><tr><th>الصنف</th><th>الكمية</th><th>سعر الوحدة (بعملة الشحنة)</th><th></th></tr></thead>
-          <tbody id="importShipmentItemsList"><tr><td colspan="4" class="bo-empty">— احفظ الشحنة أولًا لإضافة أصناف —</td></tr></tbody>
+          <thead><tr><th>الصنف</th><th>الكود الجمركي</th><th>الكمية</th><th>سعر الوحدة (بعملة الشحنة)</th><th></th></tr></thead>
+          <tbody id="importShipmentItemsList"><tr><td colspan="5" class="bo-empty">— احفظ الشحنة أولًا لإضافة أصناف —</td></tr></tbody>
         </table>
       </div>
       <div class="modal-grid" id="importShipmentAddItemWrap" style="display:none;">
@@ -22501,6 +22513,7 @@ function bindBackofficeEvents() {
   });
   document.getElementById('importShipmentForm').addEventListener('submit', saveImportShipment);
   document.getElementById('addImportShipmentItemBtn').addEventListener('click', () => addImportShipmentItem());
+  document.getElementById('autoCalcCustomsBtn').addEventListener('click', () => autoCalcImportCustomsDuty());
   document.getElementById('receiveImportShipmentBtn').addEventListener('click', () => receiveImportShipment());
   document.getElementById('importShipmentSearchInput').addEventListener('input', renderImportShipmentsTable);
 
@@ -24685,6 +24698,8 @@ async function openProductModal(product, initialTab, isDuplicate) {
   document.getElementById('productCommissionRate').value = product ? (product.commission_rate ?? 0) : 0;
   document.getElementById('productKitchenAlias').value = product?.kitchen_alias || '';
   document.getElementById('productReorder').value = product ? product.reorder_level : 0;
+  document.getElementById('productHsCode').value = product?.hs_code || '';
+  document.getElementById('productCustomsDutyRate').value = product ? (product.customs_duty_rate ?? 0) : 0;
   document.getElementById('productCollectionTag').value = product?.collection_tag || '';
   currentProductBusinessTypeRows = (product?.product_business_type_prices || []).map(r => ({ business_type_id: r.business_type_id, price: r.price }));
   renderProductBusinessTypeRows();
@@ -25618,6 +25633,8 @@ async function saveProduct(e) {
     kitchen_alias: document.getElementById('productKitchenAlias').value.trim() || null,
     reorder_level: document.getElementById('productItemKind').value === 'service' ? 0 : (Number(document.getElementById('productReorder').value) || 0),
     collection_tag: document.getElementById('productCollectionTag').value.trim() || null,
+    hs_code: document.getElementById('productHsCode').value.trim() || null,
+    customs_duty_rate: Number(document.getElementById('productCustomsDutyRate').value) || 0,
     business_type_id: currentProductBusinessTypeRows[0]?.business_type_id || null,
     image_url: document.getElementById('productImage').value.trim() || null,
     is_active: document.getElementById('productActive').checked,
@@ -39236,7 +39253,7 @@ async function openImportShipmentModal(shipment) {
     receiveBtn.style.display = shipment.received_at ? 'none' : '';
   } else {
     addItemWrap.style.display = 'none';
-    document.getElementById('importShipmentItemsList').innerHTML = '<tr><td colspan="4" class="bo-empty">— احفظ الشحنة أولًا لإضافة أصناف —</td></tr>';
+    document.getElementById('importShipmentItemsList').innerHTML = '<tr><td colspan="5" class="bo-empty">— احفظ الشحنة أولًا لإضافة أصناف —</td></tr>';
     receiveBtn.style.display = 'none';
   }
 
@@ -39247,16 +39264,17 @@ async function openImportShipmentModal(shipment) {
 async function renderImportShipmentItemsList(shipmentId) {
   const tbody = document.getElementById('importShipmentItemsList');
   const { data, error } = await supabaseClient
-    .from('import_shipment_items').select('*, products(name)').eq('shipment_id', shipmentId).order('created_at');
+    .from('import_shipment_items').select('*, products(name, hs_code, customs_duty_rate)').eq('shipment_id', shipmentId).order('created_at');
   if (error) { console.error(error); return; }
   currentImportShipmentItems = data || [];
   if (currentImportShipmentItems.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="4" class="bo-empty">لا توجد أصناف مضافة بعد</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="bo-empty">لا توجد أصناف مضافة بعد</td></tr>';
     return;
   }
   tbody.innerHTML = currentImportShipmentItems.map(it => `
     <tr>
       <td>${escapeHtml(it.products?.name || '—')}</td>
+      <td>${it.products?.hs_code ? escapeHtml(it.products.hs_code) + ' (' + Number(it.products.customs_duty_rate || 0).toFixed(1) + '%)' : '—'}</td>
       <td class="num">${Number(it.quantity).toFixed(2)}</td>
       <td class="num">${Number(it.unit_cost_foreign).toFixed(4)}</td>
       <td><button type="button" class="bo-icon-btn danger" data-item-id="${it.id}">حذف</button></td>
@@ -39264,6 +39282,26 @@ async function renderImportShipmentItemsList(shipmentId) {
   tbody.querySelectorAll('[data-item-id]').forEach(btn => {
     btn.addEventListener('click', () => deleteImportShipmentItem(btn.dataset.itemId, shipmentId));
   });
+}
+
+// يحسب الرسوم الجمركية تلقائيًا = مجموع (كمية × سعر الوحدة × سعر الصرف × نسبة
+// الرسم الجمركي المسجّلة على كل صنف)، ويملأ حقل "الرسوم الجمركية" بالناتج
+// (المستخدم لسه يقدر يعدّله يدويًا بعد كده لو حابب)
+async function autoCalcImportCustomsDuty() {
+  const shipmentId = document.getElementById('importShipmentId').value;
+  if (!shipmentId) { showToast('احفظ الشحنة وضيف أصناف أولًا', true); return; }
+  const { data, error } = await supabaseClient
+    .from('import_shipment_items').select('quantity, unit_cost_foreign, products(customs_duty_rate)').eq('shipment_id', shipmentId);
+  if (error) { console.error(error); showToast('تعذر حساب الرسوم الجمركية', true); return; }
+  if (!data || data.length === 0) { showToast('لا توجد أصناف في الشحنة', true); return; }
+
+  const exchangeRate = Number(document.getElementById('importShipmentExchangeRate').value) || 1;
+  const totalDuty = data.reduce((sum, it) => {
+    const rate = Number(it.products?.customs_duty_rate || 0) / 100;
+    return sum + (Number(it.quantity) * Number(it.unit_cost_foreign) * exchangeRate * rate);
+  }, 0);
+  document.getElementById('importShipmentCustoms').value = totalDuty.toFixed(2);
+  showToast(`تم حساب الرسوم الجمركية تلقائيًا: ${totalDuty.toFixed(2)} جنيه`);
 }
 
 async function addImportShipmentItem() {
@@ -39431,7 +39469,20 @@ async function receiveImportShipment() {
       .eq('id', shipmentId);
     if (shipError) throw shipError;
 
-    showToast('تم استلام الشحنة، وترحيل الأصناف للمخزون بتكلفتها الفعلية');
+    // قيد على حساب المورد (مديونية علينا) بنفس منطق أوامر الشراء الموجودة في
+    // النظام: نضيف القيمة الكاملة للشحنة (بضاعة + تكاليف) مرة واحدة وقت
+    // الاستلام، وبنخصم أي مبلغ كان اتدفع للمورد قبل كده على نفس الشحنة
+    if (shipment.supplier_id) {
+      const totalShipmentValue = totalItemsValueEgp + totalExtraCosts;
+      const netDelta = totalShipmentValue - Number(shipment.paid_amount || 0);
+      const supplier = boSuppliers.find(s => s.id === shipment.supplier_id);
+      if (supplier) {
+        const newBalance = (Number(supplier.balance) || 0) + netDelta;
+        await supabaseClient.from('suppliers').update({ balance: newBalance }).eq('id', shipment.supplier_id);
+      }
+    }
+
+    showToast('تم استلام الشحنة، وترحيل الأصناف للمخزون بتكلفتها الفعلية، وتحديث رصيد المورد');
     closeImportShipmentModal();
     await loadBoImportShipments();
     renderImportShipmentsTable();
@@ -39537,9 +39588,21 @@ async function saveSupplierPayment(e) {
     const { error: updError } = await supabaseClient.from('import_shipments').update({ paid_amount: newPaid }).eq('id', shipment.id);
     if (updError) throw updError;
 
+    // رصيد المورد بيتسجل عليه قيد (مديونية) وقت استلام الشحنة بس — فلو الشحنة
+    // لسه ماتسلمتش، الدفعة دي "مقدم" ومش ليها قيد نخصم منه لحد الاستلام (ساعتها
+    // الـ netDelta في receiveImportShipment هيخصم أي مقدم اتدفع تلقائيًا)
+    if (shipment.supplier_id && shipment.received_at) {
+      const supplier = boSuppliers.find(s => s.id === shipment.supplier_id);
+      if (supplier) {
+        const newBalance = (Number(supplier.balance) || 0) - amount;
+        await supabaseClient.from('suppliers').update({ balance: newBalance }).eq('id', shipment.supplier_id);
+      }
+    }
+
     showToast('تم تسجيل الدفعة للمورد وسحبها من الخزينة');
     closeSupplierPaymentModal();
     await loadBoTreasuries();
+    await loadBoSuppliers();
     await loadBoImportShipments();
     renderImportShipmentsTable();
   } catch (err) {
@@ -39602,9 +39665,21 @@ async function saveCustomerCollection(e) {
     const { error: updError } = await supabaseClient.from('export_shipments').update({ paid_amount: newPaid }).eq('id', shipment.id);
     if (updError) throw updError;
 
+    // رصيد العميل بيتسجل عليه قيد وقت تأكيد الشحن بس — لو لسه ماتشحنتش، التحصيل
+    // ده "مقدم" ومالوش قيد نخصم منه لحد الشحن (ساعتها الـ netDelta هيخصمه تلقائيًا)
+    if (shipment.customer_id && shipment.shipped_at) {
+      if (boCustomers.length === 0) await loadBoCustomers();
+      const customer = boCustomers.find(c => c.id === shipment.customer_id);
+      if (customer) {
+        const newBalance = (Number(customer.balance) || 0) - amount;
+        await supabaseClient.from('customers').update({ balance: newBalance }).eq('id', shipment.customer_id);
+      }
+    }
+
     showToast('تم تسجيل التحصيل وإيداعه في الخزينة');
     closeCustomerCollectionModal();
     await loadBoTreasuries();
+    await loadBoCustomers();
     await loadBoExportShipments();
     renderExportShipmentsTable();
   } catch (err) {
@@ -40051,7 +40126,21 @@ async function shipExportShipment() {
       .eq('id', shipmentId);
     if (shipError) throw shipError;
 
-    showToast('تم تأكيد الشحن وخصم الأصناف من المخزون');
+    // قيد على حساب العميل (مديونية له علينا) بنفس منطق المبيعات الآجلة: نضيف
+    // قيمة البضاعة وقت تأكيد الشحن، ونخصم أي تحصيل كان حصل قبل كده
+    if (shipment.customer_id) {
+      const exchangeRate = Number(shipment.exchange_rate) || 1;
+      const goodsValueEgp = items.reduce((sum, it) => sum + (Number(it.quantity) * Number(it.unit_price_foreign) * exchangeRate), 0);
+      const netDelta = goodsValueEgp - Number(shipment.paid_amount || 0);
+      if (boCustomers.length === 0) await loadBoCustomers();
+      const customer = boCustomers.find(c => c.id === shipment.customer_id);
+      if (customer) {
+        const newBalance = (Number(customer.balance) || 0) + netDelta;
+        await supabaseClient.from('customers').update({ balance: newBalance }).eq('id', shipment.customer_id);
+      }
+    }
+
+    showToast('تم تأكيد الشحن وخصم الأصناف من المخزون، وتحديث رصيد العميل');
     closeExportShipmentModal();
     await loadBoExportShipments();
     renderExportShipmentsTable();
