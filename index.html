@@ -9017,6 +9017,7 @@ a { color: inherit; }
           <label>الحالة</label>
           <select id="exportShipmentStatus">
             <option value="preparing">قيد التجهيز</option>
+            <option value="partially_shipped">شحن جزئي</option>
             <option value="shipped">تم الشحن</option>
             <option value="in_transit">في الطريق</option>
             <option value="delivered">تم التسليم</option>
@@ -9063,12 +9064,32 @@ a { color: inherit; }
       <div class="error-msg" id="exportShipmentModalError"></div>
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelExportShipmentBtn">إغلاق</button>
+        <button type="button" class="bo-outline-btn" id="viewExportPaymentsBtn" style="display:none;">سجل التحصيلات</button>
         <button type="button" class="bo-outline-btn" id="printExportInvoiceBtn" style="display:none;">طباعة فاتورة تجارية</button>
         <button type="button" class="bo-outline-btn" id="printExportPackingListBtn" style="display:none;">طباعة Packing List</button>
-        <button type="button" class="bo-outline-btn" id="shipExportShipmentBtn" style="display:none;">تأكيد الشحن (خصم المخزون)</button>
+        <button type="button" class="bo-outline-btn" id="shipExportShipmentBtn" style="display:none;">شحن/استكمال الشحن</button>
         <button type="submit" class="submit-btn" id="saveExportShipmentBtn">حفظ</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Modal: استلام جزئي لشحنة تصدير -->
+<div class="modal-overlay" id="exportShipModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">تأكيد شحن الأصناف</div>
+    <div style="color:var(--ink-soft); font-size:11.5px; margin-bottom:10px;">عدّل الكمية المشحونة فعليًا لو عايز تشحن جزء من الطلب بس. الكمية الافتراضية هي المتبقي من كل صنف.</div>
+    <div class="bo-table-wrap" style="margin-bottom:10px;">
+      <table class="bo-table">
+        <thead><tr><th>الصنف</th><th>المطلوب</th><th>المشحون سابقًا</th><th>المشحون الآن</th></tr></thead>
+        <tbody id="exportShipItemsList"></tbody>
+      </table>
+    </div>
+    <div class="error-msg" id="exportShipModalError"></div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="cancelExportShipBtn">إلغاء</button>
+      <button type="button" class="submit-btn" id="confirmExportShipBtn">تأكيد الشحن</button>
+    </div>
   </div>
 </div>
 
@@ -9166,6 +9187,7 @@ a { color: inherit; }
             <option value="ordered">تم الطلب</option>
             <option value="in_transit">في الطريق</option>
             <option value="customs_clearance">في التخليص الجمركي</option>
+            <option value="partially_received">استلام جزئي</option>
             <option value="received">تم الاستلام</option>
             <option value="cancelled">ملغاة</option>
           </select>
@@ -9217,10 +9239,46 @@ a { color: inherit; }
       <div class="error-msg" id="importShipmentModalError"></div>
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelImportShipmentBtn">إغلاق</button>
-        <button type="button" class="bo-outline-btn" id="receiveImportShipmentBtn" style="display:none;">استلام الشحنة للمخزون</button>
+        <button type="button" class="bo-outline-btn" id="viewImportPaymentsBtn" style="display:none;">سجل الدفعات</button>
+        <button type="button" class="bo-outline-btn" id="receiveImportShipmentBtn" style="display:none;">استلام/استكمال الاستلام</button>
         <button type="submit" class="submit-btn" id="saveImportShipmentBtn">حفظ</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Modal: استلام جزئي لشحنة استيراد -->
+<div class="modal-overlay" id="importReceiveModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">تأكيد استلام الأصناف</div>
+    <div style="color:var(--ink-soft); font-size:11.5px; margin-bottom:10px;">عدّل الكمية المستلمة فعليًا لو فيه نقص أو تلف. الكمية الافتراضية هي المتبقي من كل صنف.</div>
+    <div class="bo-table-wrap" style="margin-bottom:10px;">
+      <table class="bo-table">
+        <thead><tr><th>الصنف</th><th>المطلوب</th><th>المستلم سابقًا</th><th>المستلم الآن</th></tr></thead>
+        <tbody id="importReceiveItemsList"></tbody>
+      </table>
+    </div>
+    <div class="error-msg" id="importReceiveModalError"></div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="cancelImportReceiveBtn">إلغاء</button>
+      <button type="button" class="submit-btn" id="confirmImportReceiveBtn">تأكيد الاستلام</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: سجل دفعات شحنة (مشترك استيراد/تصدير) -->
+<div class="modal-overlay" id="shipmentPaymentsHistoryModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="shipmentPaymentsHistoryTitle">سجل الدفعات</div>
+    <div class="bo-table-wrap">
+      <table class="bo-table">
+        <thead><tr><th>التاريخ</th><th>المبلغ</th><th>ملاحظات</th></tr></thead>
+        <tbody id="shipmentPaymentsHistoryList"><tr><td colspan="3" class="bo-empty">لا توجد دفعات مسجلة</td></tr></tbody>
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="closeShipmentPaymentsHistoryBtn">إغلاق</button>
+    </div>
   </div>
 </div>
 
@@ -22514,7 +22572,13 @@ function bindBackofficeEvents() {
   document.getElementById('importShipmentForm').addEventListener('submit', saveImportShipment);
   document.getElementById('addImportShipmentItemBtn').addEventListener('click', () => addImportShipmentItem());
   document.getElementById('autoCalcCustomsBtn').addEventListener('click', () => autoCalcImportCustomsDuty());
-  document.getElementById('receiveImportShipmentBtn').addEventListener('click', () => receiveImportShipment());
+  document.getElementById('receiveImportShipmentBtn').addEventListener('click', () => openImportReceiveModal());
+  document.getElementById('cancelImportReceiveBtn').addEventListener('click', closeImportReceiveModal);
+  document.getElementById('importReceiveModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'importReceiveModalOverlay') closeImportReceiveModal();
+  });
+  document.getElementById('confirmImportReceiveBtn').addEventListener('click', () => confirmImportReceive());
+  document.getElementById('viewImportPaymentsBtn').addEventListener('click', () => openShipmentPaymentsHistory('import'));
   document.getElementById('importShipmentSearchInput').addEventListener('input', renderImportShipmentsTable);
 
   // ---- Supplier Payment modal ----
@@ -22539,7 +22603,19 @@ function bindBackofficeEvents() {
   });
   document.getElementById('exportShipmentForm').addEventListener('submit', saveExportShipment);
   document.getElementById('addExportShipmentItemBtn').addEventListener('click', () => addExportShipmentItem());
-  document.getElementById('shipExportShipmentBtn').addEventListener('click', () => shipExportShipment());
+  document.getElementById('shipExportShipmentBtn').addEventListener('click', () => openExportShipModal());
+  document.getElementById('cancelExportShipBtn').addEventListener('click', closeExportShipModal);
+  document.getElementById('exportShipModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'exportShipModalOverlay') closeExportShipModal();
+  });
+  document.getElementById('confirmExportShipBtn').addEventListener('click', () => confirmExportShip());
+  document.getElementById('viewExportPaymentsBtn').addEventListener('click', () => openShipmentPaymentsHistory('export'));
+
+  // ---- Shipment Payments History modal (shared) ----
+  document.getElementById('closeShipmentPaymentsHistoryBtn').addEventListener('click', closeShipmentPaymentsHistory);
+  document.getElementById('shipmentPaymentsHistoryModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'shipmentPaymentsHistoryModalOverlay') closeShipmentPaymentsHistory();
+  });
   document.getElementById('printExportInvoiceBtn').addEventListener('click', () => printExportCommercialInvoice());
   document.getElementById('printExportPackingListBtn').addEventListener('click', () => printExportPackingList());
   document.getElementById('exportShipmentSearchInput').addEventListener('input', renderExportShipmentsTable);
@@ -39171,6 +39247,7 @@ function importShipmentStatusBadge(s) {
     ordered: '<span class="bo-badge inactive">تم الطلب</span>',
     in_transit: '<span class="bo-badge inactive">في الطريق</span>',
     customs_clearance: '<span class="bo-badge inactive">في التخليص الجمركي</span>',
+    partially_received: '<span class="bo-badge inactive">استلام جزئي</span>',
     received: '<span class="bo-badge active">تم الاستلام</span>',
     cancelled: '<span class="bo-badge inactive">ملغاة</span>',
   };
@@ -39247,14 +39324,17 @@ async function openImportShipmentModal(shipment) {
 
   const addItemWrap = document.getElementById('importShipmentAddItemWrap');
   const receiveBtn = document.getElementById('receiveImportShipmentBtn');
+  const paymentsBtn = document.getElementById('viewImportPaymentsBtn');
   if (shipment) {
     addItemWrap.style.display = '';
     await renderImportShipmentItemsList(shipment.id);
-    receiveBtn.style.display = shipment.received_at ? 'none' : '';
+    receiveBtn.style.display = ['received', 'cancelled'].includes(shipment.status) ? 'none' : '';
+    paymentsBtn.style.display = '';
   } else {
     addItemWrap.style.display = 'none';
     document.getElementById('importShipmentItemsList').innerHTML = '<tr><td colspan="5" class="bo-empty">— احفظ الشحنة أولًا لإضافة أصناف —</td></tr>';
     receiveBtn.style.display = 'none';
+    paymentsBtn.style.display = 'none';
   }
 
   document.getElementById('importShipmentModalError').classList.remove('show');
@@ -39275,7 +39355,7 @@ async function renderImportShipmentItemsList(shipmentId) {
     <tr>
       <td>${escapeHtml(it.products?.name || '—')}</td>
       <td>${it.products?.hs_code ? escapeHtml(it.products.hs_code) + ' (' + Number(it.products.customs_duty_rate || 0).toFixed(1) + '%)' : '—'}</td>
-      <td class="num">${Number(it.quantity).toFixed(2)}</td>
+      <td class="num">${Number(it.quantity).toFixed(2)}${Number(it.received_quantity) > 0 ? `<br><span style="font-size:10.5px; color:var(--teal-700);">استُلم ${Number(it.received_quantity).toFixed(2)}</span>` : ''}</td>
       <td class="num">${Number(it.unit_cost_foreign).toFixed(4)}</td>
       <td><button type="button" class="bo-icon-btn danger" data-item-id="${it.id}">حذف</button></td>
     </tr>`).join('');
@@ -39401,58 +39481,92 @@ async function deleteImportShipment(shipment) {
 // استلام الشحنة: بيحسب التكلفة الفعلية (landed cost) لكل صنف = (سعر الوحدة × سعر
 // الصرف) + نصيبه من تكاليف الشحن/الجمارك/الأخرى موزعة حسب قيمة كل صنف، وبيرحّل
 // الكمية للمخزون فعليًا، وبيحدّث تكلفة الصنف في شاشة المنتجات
-async function receiveImportShipment() {
+// استلام جزئي: بيفتح مودال يعرض المتبقي من كل صنف، وتقدر تعدّل الكمية المستلمة
+// فعليًا (لو فيه نقص/تلف)، وممكن تكرر الاستلام على أكتر من دفعة لحد ما تكتمل
+async function openImportReceiveModal() {
   const shipmentId = document.getElementById('importShipmentId').value;
   if (!shipmentId) return;
+  const { data: items, error } = await supabaseClient
+    .from('import_shipment_items').select('*, products(name)').eq('shipment_id', shipmentId);
+  if (error) { console.error(error); showToast('تعذر تحميل أصناف الشحنة', true); return; }
+  const remaining = (items || []).filter(it => (Number(it.quantity) - Number(it.received_quantity)) > 0.0001);
+  if (remaining.length === 0) { showToast('كل الأصناف اتستلمت بالكامل بالفعل', true); return; }
+
+  document.getElementById('importReceiveItemsList').innerHTML = remaining.map(it => {
+    const rem = Number(it.quantity) - Number(it.received_quantity);
+    return `<tr>
+      <td>${escapeHtml(it.products?.name || '—')}</td>
+      <td class="num">${Number(it.quantity).toFixed(2)}</td>
+      <td class="num">${Number(it.received_quantity).toFixed(2)}</td>
+      <td><input type="number" class="import-receive-qty-input" data-item-id="${it.id}" min="0" max="${rem}" step="0.01" value="${rem}" style="width:90px;"></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('importReceiveModalError').classList.remove('show');
+  document.getElementById('importReceiveModalOverlay').classList.add('show');
+}
+
+function closeImportReceiveModal() {
+  document.getElementById('importReceiveModalOverlay').classList.remove('show');
+}
+
+async function confirmImportReceive() {
+  const shipmentId = document.getElementById('importShipmentId').value;
   const shipment = boImportShipments.find(s => s.id === shipmentId);
   if (!shipment) return;
-  if (shipment.received_at) { showToast('الشحنة دي اتستلمت بالفعل', true); return; }
-  if (!confirm('هل تريد استلام الشحنة؟ هيتم ترحيل كل الأصناف للمخزون وتحديث تكلفتها الفعلية، ولا يمكن التراجع عن هذا الإجراء.')) return;
-
-  const errEl = document.getElementById('importShipmentModalError');
+  const errEl = document.getElementById('importReceiveModalError');
   errEl.classList.remove('show');
-  const btn = document.getElementById('receiveImportShipmentBtn');
+
+  const inputs = Array.from(document.querySelectorAll('.import-receive-qty-input'));
+  const batch = inputs.map(inp => ({ itemId: inp.dataset.itemId, qty: Number(inp.value) || 0 })).filter(b => b.qty > 0);
+  if (batch.length === 0) { errEl.textContent = 'ادخل كمية أكبر من صفر على الأقل لصنف واحد'; errEl.classList.add('show'); return; }
+
+  const btn = document.getElementById('confirmImportReceiveBtn');
   btn.disabled = true; btn.textContent = 'جاري الاستلام...';
 
   try {
-    const { data: items, error: itemsError } = await supabaseClient
-      .from('import_shipment_items').select('*, products(name, cost_price)').eq('shipment_id', shipmentId);
+    const wasFirstBatch = ['ordered', 'in_transit', 'customs_clearance'].includes(shipment.status);
+
+    const { data: allItems, error: itemsError } = await supabaseClient
+      .from('import_shipment_items').select('*').eq('shipment_id', shipmentId);
     if (itemsError) throw itemsError;
-    if (!items || items.length === 0) { showToast('لا توجد أصناف في الشحنة عشان نستلمها', true); btn.disabled = false; btn.textContent = 'استلام الشحنة للمخزون'; return; }
 
     if (boWarehouses.length === 0) await loadBoWarehouses();
     const warehouse = boWarehouses.find(w => w.branch_id === shipment.branch_id);
-    if (!warehouse) { showToast('لا يوجد مخزن مسجّل لهذا الفرع', true); btn.disabled = false; btn.textContent = 'استلام الشحنة للمخزون'; return; }
+    if (!warehouse) { showToast('لا يوجد مخزن مسجّل لهذا الفرع', true); btn.disabled = false; btn.textContent = 'تأكيد الاستلام'; return; }
 
     const exchangeRate = Number(shipment.exchange_rate) || 1;
     const totalExtraCosts = Number(shipment.freight_cost) + Number(shipment.customs_duty) + Number(shipment.other_costs);
-    const totalItemsValueEgp = items.reduce((sum, it) => sum + (Number(it.quantity) * Number(it.unit_cost_foreign) * exchangeRate), 0);
+    // نسبة توزيع التكاليف الإضافية ثابتة طول عمر الشحنة، مبنية على القيمة
+    // الكاملة المطلوبة لكل الأصناف (مش بس اللي بيتستلم دلوقتي)
+    const totalItemsValueEgp = allItems.reduce((sum, it) => sum + (Number(it.quantity) * Number(it.unit_cost_foreign) * exchangeRate), 0);
 
-    for (const it of items) {
-      const itemValueEgp = Number(it.quantity) * Number(it.unit_cost_foreign) * exchangeRate;
-      const shareOfExtraCosts = totalItemsValueEgp > 0 ? (itemValueEgp / totalItemsValueEgp) * totalExtraCosts : 0;
-      const landedUnitCost = (itemValueEgp + shareOfExtraCosts) / Number(it.quantity);
+    let thisBatchValue = 0;
 
-      // متوسط مرجّح: نقرأ الرصيد الحالي (كل المخازن) وتكلفة الصنف قبل الترحيل، عشان
-      // التكلفة الجديدة تتحسب مع الكمية القديمة مش تلغيها. بنقرأ من جديد مع كل صنف
-      // عشان لو نفس الصنف اتكرر في الشحنة يتحسب على اللي قبله.
+    for (const b of batch) {
+      const it = allItems.find(x => x.id === b.itemId);
+      if (!it) continue;
+      const batchItemValueEgp = b.qty * Number(it.unit_cost_foreign) * exchangeRate;
+      const shareOfExtraCosts = totalItemsValueEgp > 0 ? (batchItemValueEgp / totalItemsValueEgp) * totalExtraCosts : 0;
+      const landedUnitCost = (batchItemValueEgp + shareOfExtraCosts) / b.qty;
+      thisBatchValue += batchItemValueEgp + shareOfExtraCosts;
+
+      // متوسط مرجّح مع الرصيد الحالي قبل إضافة الدفعة دي
       const { data: existingBalances, error: balError } = await supabaseClient
         .from('stock_balances').select('quantity').eq('product_id', it.product_id);
       if (balError) throw balError;
-      const existingQty = Math.max(0, (existingBalances || []).reduce((s, b) => s + Number(b.quantity), 0));
+      const existingQty = Math.max(0, (existingBalances || []).reduce((s, bal) => s + Number(bal.quantity), 0));
       const { data: prodRow, error: prodError } = await supabaseClient
         .from('products').select('cost_price').eq('id', it.product_id).single();
       if (prodError) throw prodError;
       const existingCost = Number(prodRow.cost_price) || 0;
-      const receivedQty = Number(it.quantity);
       const weightedCost = existingQty > 0
-        ? ((existingQty * existingCost) + (receivedQty * landedUnitCost)) / (existingQty + receivedQty)
+        ? ((existingQty * existingCost) + (b.qty * landedUnitCost)) / (existingQty + b.qty)
         : landedUnitCost;
 
       const { error: stockError } = await supabaseClient.from('stock_transactions').insert({
         product_id: it.product_id,
         warehouse_id: warehouse.id,
-        quantity: Number(it.quantity),
+        quantity: b.qty,
         type: 'purchase',
         reference_id: shipmentId,
         note: `استلام شحنة استيراد${shipment.shipment_ref ? ' — ' + shipment.shipment_ref : ''}`,
@@ -39462,36 +39576,50 @@ async function receiveImportShipment() {
 
       const { error: costError } = await supabaseClient.from('products').update({ cost_price: weightedCost }).eq('id', it.product_id);
       if (costError) throw costError;
+
+      const { error: itemUpdError } = await supabaseClient.from('import_shipment_items')
+        .update({ received_quantity: Number(it.received_quantity) + b.qty }).eq('id', it.id);
+      if (itemUpdError) throw itemUpdError;
     }
 
+    const { data: refreshedItems } = await supabaseClient.from('import_shipment_items').select('quantity, received_quantity').eq('shipment_id', shipmentId);
+    const fullyReceived = (refreshedItems || []).every(it => Number(it.received_quantity) >= Number(it.quantity) - 0.0001);
+    const newStatus = fullyReceived ? 'received' : 'partially_received';
+
     const { error: shipError } = await supabaseClient.from('import_shipments')
-      .update({ status: 'received', received_at: new Date().toISOString(), actual_arrival_date: shipment.actual_arrival_date || new Date().toISOString().slice(0, 10) })
+      .update({
+        status: newStatus,
+        received_at: fullyReceived ? new Date().toISOString() : shipment.received_at,
+        actual_arrival_date: shipment.actual_arrival_date || new Date().toISOString().slice(0, 10),
+      })
       .eq('id', shipmentId);
     if (shipError) throw shipError;
 
-    // قيد على حساب المورد (مديونية علينا) بنفس منطق أوامر الشراء الموجودة في
-    // النظام: نضيف القيمة الكاملة للشحنة (بضاعة + تكاليف) مرة واحدة وقت
-    // الاستلام، وبنخصم أي مبلغ كان اتدفع للمورد قبل كده على نفس الشحنة
+    // قيد على حساب المورد: أول دفعة استلام بتضيف قيمتها وبتخصم أي مقدم كان
+    // اتدفع قبل الاستلام؛ أي دفعة استلام بعد كده بتضيف قيمتها زي ما هي لأن
+    // أي مدفوعات وسط الطريق بتتخصم من الرصيد أول بأول بعد أول استلام
     if (shipment.supplier_id) {
-      const totalShipmentValue = totalItemsValueEgp + totalExtraCosts;
-      const netDelta = totalShipmentValue - Number(shipment.paid_amount || 0);
+      const netDelta = wasFirstBatch ? (thisBatchValue - Number(shipment.paid_amount || 0)) : thisBatchValue;
       const supplier = boSuppliers.find(s => s.id === shipment.supplier_id);
       if (supplier) {
         const newBalance = (Number(supplier.balance) || 0) + netDelta;
         await supabaseClient.from('suppliers').update({ balance: newBalance }).eq('id', shipment.supplier_id);
+        await loadBoSuppliers();
       }
     }
 
-    showToast('تم استلام الشحنة، وترحيل الأصناف للمخزون بتكلفتها الفعلية، وتحديث رصيد المورد');
-    closeImportShipmentModal();
+    showToast(fullyReceived ? 'تم استلام الشحنة بالكامل وتحديث المخزون والتكلفة ورصيد المورد' : 'تم تسجيل استلام جزئي وتحديث المخزون والتكلفة ورصيد المورد');
+    closeImportReceiveModal();
     await loadBoImportShipments();
     renderImportShipmentsTable();
+    const updated = boImportShipments.find(s => s.id === shipmentId);
+    if (updated) await openImportShipmentModal(updated);
   } catch (err) {
     console.error(err);
-    errEl.textContent = err.message || 'حدث خطأ أثناء استلام الشحنة';
+    errEl.textContent = err.message || 'حدث خطأ أثناء الاستلام';
     errEl.classList.add('show');
   } finally {
-    btn.disabled = false; btn.textContent = 'استلام الشحنة للمخزون';
+    btn.disabled = false; btn.textContent = 'تأكيد الاستلام';
   }
 }
 
@@ -39584,14 +39712,17 @@ async function saveSupplierPayment(e) {
       cashAccountId, -Math.abs(amount), 'supplier_payment', shipment.id,
       `دفعة لمورد شحنة: ${shipment.shipment_ref || ''}${notes ? ' — ' + notes : ''}`
     );
+    await supabaseClient.from('import_shipment_payments').insert({
+      shipment_id: shipment.id, amount, cash_account_id: cashAccountId, notes: notes || null, created_by: currentProfile.id,
+    });
     const newPaid = Number(shipment.paid_amount || 0) + amount;
     const { error: updError } = await supabaseClient.from('import_shipments').update({ paid_amount: newPaid }).eq('id', shipment.id);
     if (updError) throw updError;
 
-    // رصيد المورد بيتسجل عليه قيد (مديونية) وقت استلام الشحنة بس — فلو الشحنة
-    // لسه ماتسلمتش، الدفعة دي "مقدم" ومش ليها قيد نخصم منه لحد الاستلام (ساعتها
-    // الـ netDelta في receiveImportShipment هيخصم أي مقدم اتدفع تلقائيًا)
-    if (shipment.supplier_id && shipment.received_at) {
+    // رصيد المورد بيتسجل عليه قيد (مديونية) بمجرد ما يبدأ الاستلام (ولو جزئي) —
+    // فلو الشحنة لسه ماستلمتش حاجة خالص، الدفعة دي "مقدم" ومش ليها قيد نخصم
+    // منه لحد أول استلام (ساعتها الـ netDelta هيخصم أي مقدم اتدفع تلقائيًا)
+    if (shipment.supplier_id && ['partially_received', 'received'].includes(shipment.status)) {
       const supplier = boSuppliers.find(s => s.id === shipment.supplier_id);
       if (supplier) {
         const newBalance = (Number(supplier.balance) || 0) - amount;
@@ -39639,6 +39770,35 @@ function closeCustomerCollectionModal() {
   currentCustomerCollectionShipment = null;
 }
 
+// ---- سجل دفعات الشحنة (مشترك استيراد/تصدير) ----
+async function openShipmentPaymentsHistory(kind) {
+  const idField = kind === 'import' ? 'importShipmentId' : 'exportShipmentId';
+  const shipmentId = document.getElementById(idField).value;
+  if (!shipmentId) return;
+  const table = kind === 'import' ? 'import_shipment_payments' : 'export_shipment_payments';
+  document.getElementById('shipmentPaymentsHistoryTitle').textContent = kind === 'import' ? 'سجل الدفعات للمورد' : 'سجل التحصيلات من العميل';
+  const tbody = document.getElementById('shipmentPaymentsHistoryList');
+  tbody.innerHTML = '<tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>';
+  document.getElementById('shipmentPaymentsHistoryModalOverlay').classList.add('show');
+
+  const { data, error } = await supabaseClient.from(table).select('*').eq('shipment_id', shipmentId).order('payment_date', { ascending: false });
+  if (error) { console.error(error); tbody.innerHTML = '<tr><td colspan="3" class="bo-empty">تعذر تحميل السجل</td></tr>'; return; }
+  if (!data || data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3" class="bo-empty">لا توجد دفعات مسجلة بعد</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(p => `
+    <tr>
+      <td class="num">${p.payment_date}</td>
+      <td class="num">${Number(p.amount).toFixed(2)}</td>
+      <td>${escapeHtml(p.notes || '—')}</td>
+    </tr>`).join('');
+}
+
+function closeShipmentPaymentsHistory() {
+  document.getElementById('shipmentPaymentsHistoryModalOverlay').classList.remove('show');
+}
+
 async function saveCustomerCollection(e) {
   e.preventDefault();
   const errEl = document.getElementById('customerCollectionModalError');
@@ -39661,13 +39821,17 @@ async function saveCustomerCollection(e) {
       cashAccountId, Math.abs(amount), 'customer_receipt', shipment.id,
       `تحصيل شحنة تصدير: ${shipment.shipment_ref || ''}${notes ? ' — ' + notes : ''}`
     );
+    await supabaseClient.from('export_shipment_payments').insert({
+      shipment_id: shipment.id, amount, cash_account_id: cashAccountId, notes: notes || null, created_by: currentProfile.id,
+    });
     const newPaid = Number(shipment.paid_amount || 0) + amount;
     const { error: updError } = await supabaseClient.from('export_shipments').update({ paid_amount: newPaid }).eq('id', shipment.id);
     if (updError) throw updError;
 
-    // رصيد العميل بيتسجل عليه قيد وقت تأكيد الشحن بس — لو لسه ماتشحنتش، التحصيل
-    // ده "مقدم" ومالوش قيد نخصم منه لحد الشحن (ساعتها الـ netDelta هيخصمه تلقائيًا)
-    if (shipment.customer_id && shipment.shipped_at) {
+    // رصيد العميل بيتسجل عليه قيد بمجرد ما يبدأ الشحن (ولو جزئي) — لو لسه
+    // ماتشحنش حاجة خالص، التحصيل ده "مقدم" ومالوش قيد نخصم منه لحد أول شحن
+    // (ساعتها الـ netDelta هيخصمه تلقائيًا)
+    if (shipment.customer_id && ['partially_shipped', 'shipped', 'in_transit', 'delivered'].includes(shipment.status)) {
       if (boCustomers.length === 0) await loadBoCustomers();
       const customer = boCustomers.find(c => c.id === shipment.customer_id);
       if (customer) {
@@ -39708,6 +39872,7 @@ async function loadBoExportShipments() {
 function exportShipmentStatusBadge(s) {
   const map = {
     preparing: '<span class="bo-badge inactive">قيد التجهيز</span>',
+    partially_shipped: '<span class="bo-badge inactive">شحن جزئي</span>',
     shipped: '<span class="bo-badge active">تم الشحن</span>',
     in_transit: '<span class="bo-badge active">في الطريق</span>',
     delivered: '<span class="bo-badge active">تم التسليم</span>',
@@ -39792,18 +39957,21 @@ async function openExportShipmentModal(shipment) {
   const shipBtn = document.getElementById('shipExportShipmentBtn');
   const printInvoiceBtn = document.getElementById('printExportInvoiceBtn');
   const printPackingBtn = document.getElementById('printExportPackingListBtn');
+  const paymentsBtn = document.getElementById('viewExportPaymentsBtn');
   if (shipment) {
     addItemWrap.style.display = '';
     await renderExportShipmentItemsList(shipment.id);
-    shipBtn.style.display = shipment.shipped_at ? 'none' : '';
+    shipBtn.style.display = ['shipped', 'cancelled'].includes(shipment.status) ? 'none' : '';
     printInvoiceBtn.style.display = '';
     printPackingBtn.style.display = '';
+    paymentsBtn.style.display = '';
   } else {
     addItemWrap.style.display = 'none';
     document.getElementById('exportShipmentItemsList').innerHTML = '<tr><td colspan="4" class="bo-empty">— احفظ الشحنة أولًا لإضافة أصناف —</td></tr>';
     shipBtn.style.display = 'none';
     printInvoiceBtn.style.display = 'none';
     printPackingBtn.style.display = 'none';
+    paymentsBtn.style.display = 'none';
   }
 
   document.getElementById('exportShipmentModalError').classList.remove('show');
@@ -39822,7 +39990,7 @@ async function renderExportShipmentItemsList(shipmentId) {
   tbody.innerHTML = data.map(it => `
     <tr>
       <td>${escapeHtml(it.products?.name || '—')}</td>
-      <td class="num">${Number(it.quantity).toFixed(2)}</td>
+      <td class="num">${Number(it.quantity).toFixed(2)}${Number(it.shipped_quantity) > 0 ? `<br><span style="font-size:10.5px; color:var(--teal-700);">اتشحن ${Number(it.shipped_quantity).toFixed(2)}</span>` : ''}</td>
       <td class="num">${Number(it.unit_price_foreign).toFixed(4)}</td>
       <td><button type="button" class="bo-icon-btn danger" data-item-id="${it.id}">حذف</button></td>
     </tr>`).join('');
@@ -40064,32 +40232,63 @@ async function deleteExportShipment(shipment) {
 }
 
 // تأكيد الشحن: بيخصم الكميات فعليًا من مخزون فرع الشحنة (عكس استلام شحنة الاستيراد)
-async function shipExportShipment() {
+async function openExportShipModal() {
   const shipmentId = document.getElementById('exportShipmentId').value;
   if (!shipmentId) return;
+  const { data: items, error } = await supabaseClient
+    .from('export_shipment_items').select('*, products(name)').eq('shipment_id', shipmentId);
+  if (error) { console.error(error); showToast('تعذر تحميل أصناف الشحنة', true); return; }
+  const remaining = (items || []).filter(it => (Number(it.quantity) - Number(it.shipped_quantity)) > 0.0001);
+  if (remaining.length === 0) { showToast('كل الأصناف اتشحنت بالكامل بالفعل', true); return; }
+
+  document.getElementById('exportShipItemsList').innerHTML = remaining.map(it => {
+    const rem = Number(it.quantity) - Number(it.shipped_quantity);
+    return `<tr>
+      <td>${escapeHtml(it.products?.name || '—')}</td>
+      <td class="num">${Number(it.quantity).toFixed(2)}</td>
+      <td class="num">${Number(it.shipped_quantity).toFixed(2)}</td>
+      <td><input type="number" class="export-ship-qty-input" data-item-id="${it.id}" min="0" max="${rem}" step="0.01" value="${rem}" style="width:90px;"></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('exportShipModalError').classList.remove('show');
+  document.getElementById('exportShipModalOverlay').classList.add('show');
+}
+
+function closeExportShipModal() {
+  document.getElementById('exportShipModalOverlay').classList.remove('show');
+}
+
+async function confirmExportShip() {
+  const shipmentId = document.getElementById('exportShipmentId').value;
   const shipment = boExportShipments.find(s => s.id === shipmentId);
   if (!shipment) return;
-  if (shipment.shipped_at) { showToast('الشحنة دي اتشحنت بالفعل', true); return; }
-  if (!confirm('هل تريد تأكيد شحن هذه الشحنة؟ هيتم خصم كل الأصناف من المخزون، ولا يمكن التراجع عن هذا الإجراء.')) return;
-
-  const errEl = document.getElementById('exportShipmentModalError');
+  const errEl = document.getElementById('exportShipModalError');
   errEl.classList.remove('show');
-  const btn = document.getElementById('shipExportShipmentBtn');
+
+  const inputs = Array.from(document.querySelectorAll('.export-ship-qty-input'));
+  const batch = inputs.map(inp => ({ itemId: inp.dataset.itemId, qty: Number(inp.value) || 0 })).filter(b => b.qty > 0);
+  if (batch.length === 0) { errEl.textContent = 'ادخل كمية أكبر من صفر على الأقل لصنف واحد'; errEl.classList.add('show'); return; }
+
+  const btn = document.getElementById('confirmExportShipBtn');
   btn.disabled = true; btn.textContent = 'جاري الشحن...';
 
   try {
-    const { data: items, error: itemsError } = await supabaseClient
+    const wasFirstBatch = shipment.status === 'preparing';
+
+    const { data: allItems, error: itemsError } = await supabaseClient
       .from('export_shipment_items').select('*').eq('shipment_id', shipmentId);
     if (itemsError) throw itemsError;
-    if (!items || items.length === 0) { showToast('لا توجد أصناف في الشحنة عشان نشحنها', true); btn.disabled = false; btn.textContent = 'تأكيد الشحن (خصم المخزون)'; return; }
 
     if (boWarehouses.length === 0) await loadBoWarehouses();
     const warehouse = boWarehouses.find(w => w.branch_id === shipment.branch_id);
-    if (!warehouse) { showToast('لا يوجد مخزن مسجّل لهذا الفرع', true); btn.disabled = false; btn.textContent = 'تأكيد الشحن (خصم المخزون)'; return; }
+    if (!warehouse) { showToast('لا يوجد مخزن مسجّل لهذا الفرع', true); btn.disabled = false; btn.textContent = 'تأكيد الشحن'; return; }
 
-    // فحص الرصيد المتاح قبل الخصم (الداتابيز نفسها مابتمنعش الرصيد السالب)
+    // فحص الرصيد المتاح قبل الخصم
     const requiredByProduct = {};
-    items.forEach(it => { requiredByProduct[it.product_id] = (requiredByProduct[it.product_id] || 0) + Number(it.quantity); });
+    batch.forEach(b => {
+      const it = allItems.find(x => x.id === b.itemId);
+      if (it) requiredByProduct[it.product_id] = (requiredByProduct[it.product_id] || 0) + b.qty;
+    });
     const { data: balances, error: balError } = await supabaseClient
       .from('stock_balances').select('product_id, quantity')
       .eq('warehouse_id', warehouse.id).in('product_id', Object.keys(requiredByProduct));
@@ -40105,51 +40304,68 @@ async function shipExportShipment() {
     if (shortages.length > 0) {
       errEl.textContent = 'الرصيد لا يكفي: ' + shortages.join('، ');
       errEl.classList.add('show');
+      btn.disabled = false; btn.textContent = 'تأكيد الشحن';
       return;
     }
 
-    for (const it of items) {
+    const exchangeRate = Number(shipment.exchange_rate) || 1;
+    let thisBatchValue = 0;
+
+    for (const b of batch) {
+      const it = allItems.find(x => x.id === b.itemId);
+      if (!it) continue;
+      thisBatchValue += b.qty * Number(it.unit_price_foreign) * exchangeRate;
+
       const { error: stockError } = await supabaseClient.from('stock_transactions').insert({
         product_id: it.product_id,
         warehouse_id: warehouse.id,
-        quantity: -Number(it.quantity),
+        quantity: -b.qty,
         type: 'adjustment',
         reference_id: shipmentId,
         note: `شحن شحنة تصدير${shipment.shipment_ref ? ' — ' + shipment.shipment_ref : ''}`,
         user_id: currentProfile.id,
       });
       if (stockError) throw stockError;
+
+      const { error: itemUpdError } = await supabaseClient.from('export_shipment_items')
+        .update({ shipped_quantity: Number(it.shipped_quantity) + b.qty }).eq('id', it.id);
+      if (itemUpdError) throw itemUpdError;
     }
 
+    const { data: refreshedItems } = await supabaseClient.from('export_shipment_items').select('quantity, shipped_quantity').eq('shipment_id', shipmentId);
+    const fullyShipped = (refreshedItems || []).every(it => Number(it.shipped_quantity) >= Number(it.quantity) - 0.0001);
+    const newStatus = fullyShipped ? 'shipped' : 'partially_shipped';
+
     const { error: shipError } = await supabaseClient.from('export_shipments')
-      .update({ status: 'shipped', shipped_at: new Date().toISOString() })
+      .update({ status: newStatus, shipped_at: fullyShipped ? new Date().toISOString() : shipment.shipped_at })
       .eq('id', shipmentId);
     if (shipError) throw shipError;
 
-    // قيد على حساب العميل (مديونية له علينا) بنفس منطق المبيعات الآجلة: نضيف
-    // قيمة البضاعة وقت تأكيد الشحن، ونخصم أي تحصيل كان حصل قبل كده
+    // قيد على حساب العميل: أول دفعة شحن بتضيف قيمتها وتخصم أي تحصيل مقدم،
+    // وأي دفعة شحن بعد كده بتضيف قيمتها زي ما هي (التحصيلات بعد كده بتتخصم أول بأول)
     if (shipment.customer_id) {
-      const exchangeRate = Number(shipment.exchange_rate) || 1;
-      const goodsValueEgp = items.reduce((sum, it) => sum + (Number(it.quantity) * Number(it.unit_price_foreign) * exchangeRate), 0);
-      const netDelta = goodsValueEgp - Number(shipment.paid_amount || 0);
+      const netDelta = wasFirstBatch ? (thisBatchValue - Number(shipment.paid_amount || 0)) : thisBatchValue;
       if (boCustomers.length === 0) await loadBoCustomers();
       const customer = boCustomers.find(c => c.id === shipment.customer_id);
       if (customer) {
         const newBalance = (Number(customer.balance) || 0) + netDelta;
         await supabaseClient.from('customers').update({ balance: newBalance }).eq('id', shipment.customer_id);
+        await loadBoCustomers();
       }
     }
 
-    showToast('تم تأكيد الشحن وخصم الأصناف من المخزون، وتحديث رصيد العميل');
-    closeExportShipmentModal();
+    showToast(fullyShipped ? 'تم تأكيد الشحن بالكامل وتحديث المخزون ورصيد العميل' : 'تم تسجيل شحن جزئي وتحديث المخزون ورصيد العميل');
+    closeExportShipModal();
     await loadBoExportShipments();
     renderExportShipmentsTable();
+    const updated = boExportShipments.find(s => s.id === shipmentId);
+    if (updated) await openExportShipmentModal(updated);
   } catch (err) {
     console.error(err);
     errEl.textContent = err.message || 'حدث خطأ أثناء تأكيد الشحن';
     errEl.classList.add('show');
   } finally {
-    btn.disabled = false; btn.textContent = 'تأكيد الشحن (خصم المخزون)';
+    btn.disabled = false; btn.textContent = 'تأكيد الشحن';
   }
 }
 
