@@ -1740,6 +1740,8 @@ a { color: inherit; }
           <div class="bo-nav-sub" id="importExportNavSub">
             <button class="bo-nav-sub-item" data-section="import-export-dashboard">لوحة التحكم</button>
             <button class="bo-nav-sub-item" data-section="import-shipments">شحنات الاستيراد</button>
+            <button class="bo-nav-sub-item" data-section="import-lcs">الاعتمادات المستندية</button>
+            <button class="bo-nav-sub-item" data-section="import-fx">فروق العملة</button>
             <button class="bo-nav-sub-item" data-section="export-shipments">شحنات التصدير</button>
           </div>
         </div>
@@ -3044,6 +3046,72 @@ a { color: inherit; }
           </div>
         </div>
 
+        <!-- قسم الاعتمادات المستندية -->
+        <div id="bo-section-import-lcs" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">الاعتمادات المستندية (LC)</div>
+            <button class="bo-add-btn" id="addImportLcBtn">+ اعتماد جديد</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px; display:flex; gap:8px; flex-wrap:wrap;">
+            <input type="text" id="importLcSearchInput" placeholder="ابحث برقم الاعتماد أو المورد أو البنك..." style="flex:1; min-width:200px;">
+            <select id="importLcStatusFilter" style="max-width:200px;">
+              <option value="">كل الحالات</option>
+              <option value="draft">مسودة</option>
+              <option value="opened">مفتوح</option>
+              <option value="documents_presented">مستندات مقدّمة</option>
+              <option value="due">مستحق السداد (خلال 7 أيام / متأخر)</option>
+              <option value="settled">مسوّى</option>
+              <option value="cancelled">ملغي</option>
+            </select>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>رقم الاعتماد</th><th>المورد</th><th>الشحنة</th><th>البنك</th><th>المبلغ</th><th>الهامش المدفوع (جنيه)</th><th>الانتهاء / استحقاق السداد</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="importLcsTableBody"><tr><td colspan="9" class="bo-empty">جاري التحميل...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- تقرير فروق العملة -->
+        <div id="bo-section-import-fx" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">فروق العملة (مدفوعات الموردين)</div>
+            <button class="bo-outline-btn" id="refreshImportFxBtn">تحديث</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+            <label style="font-size:13px;">من</label><input type="date" id="importFxFrom">
+            <label style="font-size:13px;">إلى</label><input type="date" id="importFxTo">
+          </div>
+          <div class="report-cards">
+            <div class="report-card"><div class="report-card-label">إجمالي أرباح فروق العملة</div><div class="report-card-value num positive" id="importFxGain">0.00</div></div>
+            <div class="report-card"><div class="report-card-label">إجمالي خسائر فروق العملة</div><div class="report-card-value num negative" id="importFxLoss">0.00</div></div>
+            <div class="report-card"><div class="report-card-label">صافي الأثر (ربح + / خسارة −)</div><div class="report-card-value num" id="importFxNet">0.00</div></div>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>التاريخ</th><th>الشحنة</th><th>المورد</th><th>المصدر</th><th>المبلغ (عملة)</th><th>سعر الشحنة</th><th>سعر الدفع</th><th>فرق العملة (جنيه)</th></tr></thead>
+              <tbody id="importFxTableBody"><tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr></tbody>
+            </table>
+          </div>
+          <div class="report-subtitle-row" style="margin-top:26px;">
+            <div class="report-subtitle" style="font-size:14px;">تقييم فروق العملة غير المحققة (على المتبقي للموردين)</div>
+          </div>
+          <div style="font-size:12.5px; color:var(--ink-soft); margin-bottom:10px;">
+            تقديري: بيقيّم المتبقي من مديونية الموردين (على الشحنات المستلمة) بسعر الصرف الحالي اللي تدخله، مقارنةً بسعر الدفتر. بيدخل تلقائيًا في ملخص المركز المالي.
+          </div>
+          <div id="importFxRatesWrap" style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;"></div>
+          <div style="margin-bottom:14px;"><button class="bo-outline-btn" id="saveImportFxRatesBtn" type="button">حفظ الأسعار وإعادة التقييم</button></div>
+          <div class="report-cards">
+            <div class="report-card"><div class="report-card-label">أثر التقييم غير المحقق (ربح + / خسارة −)</div><div class="report-card-value num" id="importFxUnrealizedTotal">0.00</div></div>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>الشحنة</th><th>المورد</th><th>العملة</th><th>المتبقي بالعملة</th><th>سعر الدفتر</th><th>السعر الحالي</th><th>فرق التقييم (جنيه)</th></tr></thead>
+              <tbody id="importFxUnrealizedBody"><tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- لوحة تحكم الاستيراد والتصدير -->
         <div id="bo-section-import-export-dashboard" style="display:none;">
           <div class="bo-section-header">
@@ -3058,6 +3126,10 @@ a { color: inherit; }
             <div class="report-card"><div class="report-card-label">عدد شحنات التصدير (الشهر)</div><div class="report-card-value num" id="ieDashExportValueMonth">0</div></div>
             <div class="report-card"><div class="report-card-label">شحنات تصدير قيد التجهيز/الشحن</div><div class="report-card-value num" id="ieDashExportActive">0</div></div>
             <div class="report-card"><div class="report-card-label">إجمالي مستحق للموردين (بضاعة + تكاليف)</div><div class="report-card-value num negative" id="ieDashSupplierDue">0.00</div></div>
+            <div class="report-card"><div class="report-card-label">اعتمادات مستندية مفتوحة</div><div class="report-card-value num" id="ieDashLcOpen">0</div></div>
+            <div class="report-card"><div class="report-card-label">اعتمادات تنتهي خلال 14 يوم / منتهية</div><div class="report-card-value num negative" id="ieDashLcExpiring">0</div></div>
+            <div class="report-card"><div class="report-card-label">اعتمادات مستحقة السداد خلال 7 أيام / متأخرة</div><div class="report-card-value num negative" id="ieDashLcDue">0</div></div>
+            <div class="report-card"><div class="report-card-label">صافي فروق العملة (ربح + / خسارة −)</div><div class="report-card-value num" id="ieDashFxNet">0.00</div></div>
             <div class="report-card"><div class="report-card-label">إجمالي مستحق من عملاء التصدير</div><div class="report-card-value num positive" id="ieDashCustomerDue">0.00</div></div>
           </div>
         </div>
@@ -9100,7 +9172,14 @@ a { color: inherit; }
     <form id="supplierPaymentForm">
       <div class="modal-grid">
         <div class="field field-full"><label id="supplierPaymentSummaryLabel" style="font-weight:600;"></label></div>
-        <div class="field"><label>المبلغ</label><input type="number" id="supplierPaymentAmount" min="0.01" step="0.01" required></div>
+        <div class="field" id="supplierPaymentModeWrap">
+          <label>الدفع بـ</label>
+          <select id="supplierPaymentMode"><option value="egp">جنيه (مبلغ مباشر)</option><option value="foreign">عملة أجنبية بسعر صرف الدفع</option></select>
+        </div>
+        <div class="field" id="supplierPaymentEgpWrap"><label>المبلغ (جنيه)</label><input type="number" id="supplierPaymentAmount" min="0.01" step="0.01" required></div>
+        <div class="field" id="supplierPaymentForeignWrap" style="display:none;"><label>المبلغ بالعملة الأجنبية (<span id="supplierPaymentForeignCur"></span>)</label><input type="number" id="supplierPaymentForeignAmount" min="0.01" step="0.01"></div>
+        <div class="field" id="supplierPaymentRateWrap" style="display:none;"><label>سعر الصرف وقت الدفع</label><input type="number" id="supplierPaymentRate" min="0.0001" step="0.0001" value="1"></div>
+        <div class="field field-full" id="supplierPaymentFxPreviewWrap"><div id="supplierPaymentFxPreview" style="font-size:13px; line-height:1.9;"></div></div>
         <div class="field">
           <label>السحب من خزينة</label>
           <select id="supplierPaymentAccount" required></select>
@@ -9266,13 +9345,96 @@ a { color: inherit; }
   </div>
 </div>
 
+<!-- Modal: اعتماد مستندي -->
+<div class="modal-overlay" id="importLcModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title" id="importLcModalTitle">اعتماد مستندي جديد</div>
+    <form id="importLcForm">
+      <input type="hidden" id="importLcId">
+      <div class="modal-grid">
+        <div class="field"><label>رقم الاعتماد</label><input type="text" id="importLcNumber" required style="direction:ltr; text-align:right;"></div>
+        <div class="field"><label>الفرع</label><select id="importLcBranch" required></select></div>
+        <div class="field"><label>الشحنة المرتبطة</label><select id="importLcShipment"><option value="">— بدون —</option></select></div>
+        <div class="field"><label>المورد (المستفيد)</label><select id="importLcSupplier"><option value="">— بدون —</option></select></div>
+        <div class="field"><label>البنك المصدر</label><input type="text" id="importLcBank"></div>
+        <div class="field">
+          <label>نوع الاعتماد</label>
+          <select id="importLcType"><option value="sight">اطلاع (Sight)</option><option value="usance">آجل (Usance)</option></select>
+        </div>
+        <div class="field" id="importLcUsanceWrap" style="display:none;"><label>مدة الأجل (يوم)</label><input type="number" id="importLcUsanceDays" min="1" step="1"></div>
+        <div class="field">
+          <label>العملة</label>
+          <select id="importLcCurrency">
+            <option value="USD">USD</option><option value="EUR">EUR</option><option value="CNY">CNY</option><option value="GBP">GBP</option><option value="AED">AED</option><option value="SAR">SAR</option><option value="TRY">TRY</option><option value="EGP">EGP</option>
+          </select>
+        </div>
+        <div class="field"><label>قيمة الاعتماد (بالعملة الأجنبية)</label><input type="number" id="importLcAmount" min="0.01" step="0.01" required></div>
+        <div class="field"><label>سعر الصرف وقت الفتح (مقابل الجنيه)</label><input type="number" id="importLcOpeningRate" min="0.0001" step="0.0001" value="1" required></div>
+        <div class="field"><label>نسبة الهامش النقدي %</label><input type="number" id="importLcMarginPercent" min="0" max="100" step="0.01" value="0"></div>
+        <div class="field"><label>الهامش المستحق (جنيه)</label><input type="text" id="importLcMarginPreview" readonly></div>
+        <div class="field"><label>عمولة ومصاريف البنك (جنيه)</label><input type="number" id="importLcBankFees" min="0" step="0.01" value="0"></div>
+        <div class="field"><label>الخزينة/الحساب البنكي (للهامش والمصاريف)</label><select id="importLcCashAccount"><option value="">— اختر —</option></select></div>
+        <div class="field"><label>تاريخ الإصدار</label><input type="date" id="importLcIssueDate"></div>
+        <div class="field"><label>تاريخ الانتهاء</label><input type="date" id="importLcExpiryDate"></div>
+        <div class="field"><label>آخر موعد للشحن</label><input type="date" id="importLcLatestShipment"></div>
+        <div class="field field-full"><label>ملاحظات</label><textarea id="importLcNotes" rows="2"></textarea></div>
+      </div>
+      <div class="error-msg" id="importLcModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelImportLcBtn">إغلاق</button>
+        <button type="submit" class="submit-btn" id="saveImportLcBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: تقديم مستندات الاعتماد -->
+<div class="modal-overlay" id="importLcDocsModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">تقديم مستندات الاعتماد للبنك</div>
+    <form id="importLcDocsForm">
+      <div class="modal-grid">
+        <div class="field field-full"><label id="importLcDocsSummary" style="font-weight:600;"></label></div>
+        <div class="field field-full"><label>تاريخ تقديم المستندات</label><input type="date" id="importLcDocsDate" required></div>
+        <div class="field field-full"><div id="importLcDocsPreview" style="font-size:13px;"></div></div>
+      </div>
+      <div class="error-msg" id="importLcDocsError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelImportLcDocsBtn">إلغاء</button>
+        <button type="submit" class="submit-btn">تأكيد</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: تسوية اعتماد مستندي -->
+<div class="modal-overlay" id="importLcSettleModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">تسوية الاعتماد المستندي</div>
+    <form id="importLcSettleForm">
+      <div class="modal-grid">
+        <div class="field field-full"><label id="importLcSettleSummary" style="font-weight:600;"></label></div>
+        <div class="field"><label>المبلغ المسوّى (بالعملة الأجنبية)</label><input type="number" id="importLcSettleAmount" min="0.01" step="0.01" required></div>
+        <div class="field"><label>سعر الصرف وقت التسوية</label><input type="number" id="importLcSettleRate" min="0.0001" step="0.0001" required></div>
+        <div class="field field-full"><label>الخزينة/الحساب البنكي</label><select id="importLcSettleAccount" required></select></div>
+        <div class="field field-full"><div id="importLcSettlePreview" style="font-size:13px; line-height:1.9; background:var(--surface-sunken); border-radius:var(--radius-sm); padding:10px 12px;"></div></div>
+      </div>
+      <div class="error-msg" id="importLcSettleError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelImportLcSettleBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="confirmImportLcSettleBtn">تأكيد التسوية</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Modal: سجل دفعات شحنة (مشترك استيراد/تصدير) -->
 <div class="modal-overlay" id="shipmentPaymentsHistoryModalOverlay">
   <div class="modal-box">
     <div class="modal-title" id="shipmentPaymentsHistoryTitle">سجل الدفعات</div>
     <div class="bo-table-wrap">
       <table class="bo-table">
-        <thead><tr><th>التاريخ</th><th>المبلغ</th><th>ملاحظات</th></tr></thead>
+        <thead><tr id="shipmentPaymentsHistoryHead"><th>التاريخ</th><th>المبلغ</th><th>ملاحظات</th></tr></thead>
         <tbody id="shipmentPaymentsHistoryList"><tr><td colspan="3" class="bo-empty">لا توجد دفعات مسجلة</td></tr></tbody>
       </table>
     </div>
@@ -19964,7 +20126,7 @@ const boAllSections = ['dashboard','products','categories','unit-types','tax-rat
   'clinic-patients','clinic-doctors','clinic-appointments',
   'academy-students','academy-courses','academy-instructors','academy-enrollments','academy-sessions',
   'venue-courts','venue-bookings',
-  'import-shipments',
+  'import-shipments','import-lcs','import-fx',
   'export-shipments','import-export-dashboard',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
   'soon','company-info','permissions','users','branches','business-types','pos-devices','branch-settings','pos-tables','print-settings','stock','stocktake','product-batches','product-serials','backup','reset-data','employees','attendance','leave-requests','expense-items','expenses','salaries','sales-commissions','treasuries','capital','fixed-assets','promotions','coupons','modifier-groups','recipes'];
@@ -19980,7 +20142,7 @@ const boNavGroups = [
   { toggle: 'clinicNavToggle', group: 'clinicNavGroup', sections: ['clinic-patients', 'clinic-doctors', 'clinic-appointments'] },
   { toggle: 'academyNavToggle', group: 'academyNavGroup', sections: ['academy-students', 'academy-courses', 'academy-instructors', 'academy-enrollments', 'academy-sessions'] },
   { toggle: 'venueNavToggle', group: 'venueNavGroup', sections: ['venue-courts', 'venue-bookings'] },
-  { toggle: 'importExportNavToggle', group: 'importExportNavGroup', sections: ['import-export-dashboard', 'import-shipments', 'export-shipments'] },
+  { toggle: 'importExportNavToggle', group: 'importExportNavGroup', sections: ['import-export-dashboard', 'import-shipments', 'import-lcs', 'import-fx', 'export-shipments'] },
   { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
   { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['treasuries','payments','expense-items','expenses','capital','fixed-assets'] },
   { toggle: 'hrNavToggle', group: 'hrNavGroup', sections: ['employees','attendance','leave-requests','salaries','sales-commissions'] },
@@ -20013,7 +20175,7 @@ const SECTION_PERMISSION_MAP = {
   'academy-students': 'academy_management', 'academy-courses': 'academy_management', 'academy-instructors': 'academy_management',
   'academy-enrollments': 'academy_management', 'academy-sessions': 'academy_management',
   'venue-courts': 'venue_management', 'venue-bookings': 'venue_management',
-  'import-shipments': 'import_export_management',
+  'import-shipments': 'import_export_management', 'import-lcs': 'import_export_management', 'import-fx': 'import_export_management',
   'export-shipments': 'import_export_management', 'import-export-dashboard': 'import_export_management',
   'reports-sales': 'reports', 'reports-purchases': 'reports', 'reports-inventory': 'reports', 'reports-accounting': 'reports', 'reports-other': 'reports',
   'treasuries': 'finance', 'payments': 'finance', 'expense-items': 'finance', 'expenses': 'finance', 'capital': 'admin', 'fixed-assets': 'finance',
@@ -20130,7 +20292,7 @@ const SCREEN_LABELS = {
   'academy-students': 'الطلاب', 'academy-courses': 'الكورسات', 'academy-instructors': 'المدربين',
   'academy-enrollments': 'التسجيلات', 'academy-sessions': 'الحصص',
   'venue-courts': 'الملاعب/القاعات', 'venue-bookings': 'الحجوزات',
-  'import-shipments': 'الشحنات',
+  'import-shipments': 'الشحنات', 'import-lcs': 'الاعتمادات المستندية', 'import-fx': 'فروق العملة',
   'export-shipments': 'شحنات التصدير', 'import-export-dashboard': 'لوحة تحكم الاستيراد والتصدير'
 };
 
@@ -20670,6 +20832,7 @@ const ACTION_CAPABLE_SCREENS = {
   'venue-courts': { add: true, edit: true, delete: true },
   'venue-bookings': { add: true, edit: true, delete: true },
   'import-shipments': { add: true, edit: true, delete: true },
+  'import-lcs': { add: true, edit: true, delete: true },
   'export-shipments': { add: true, edit: true, delete: true },
   'purchase-requisitions': { add: true, edit: true },
   'purchase-orders': { add: true, edit: true, delete: true },
@@ -20726,6 +20889,7 @@ const ADD_BUTTON_MAP = {
   'academy-enrollments': 'addAcademyEnrollmentBtn', 'academy-sessions': 'addAcademySessionBtn',
   'venue-courts': 'addVenueCourtBtn', 'venue-bookings': 'addVenueBookingBtn',
   'import-shipments': 'addImportShipmentBtn',
+  'import-lcs': 'addImportLcBtn',
   'export-shipments': 'addExportShipmentBtn',
   'purchase-orders': 'addPurchaseOrderBtn', 'purchases': 'addPurchaseBtn', 'purchase-returns': 'addPurchaseReturnBtn', 'sale-returns': 'addSaleReturnFromBoBtn',
   'stocktake': 'addStocktakeSessionBtn', 'product-batches': 'addProductBatchBtn', 'product-serials': 'addProductSerialBtn',
@@ -20957,6 +21121,8 @@ function activateBoSection(section, btn) {
     loadBoExportShipments().then(renderExportShipmentsTable);
     boExportShipmentsLoadedOnce = true;
   }
+  if (section === 'import-lcs') { Promise.all([loadBoImportLcs(), boSuppliers.length ? null : loadBoSuppliers(), boTreasuries.length ? null : loadBoTreasuries(), boImportShipments.length ? null : loadBoImportShipments()]).then(renderImportLcsTable); }
+  if (section === 'import-fx') { refreshImportFxReport(); renderImportFxUnrealized(); }
   if (section === 'import-export-dashboard') { refreshImportExportDashboard(); }
   if (section === 'purchase-orders') { loadBoPurchaseOrders().then(renderPurchaseOrdersTable); }
   if (section === 'purchase-requisitions') { loadBoRequisitions().then(renderRequisitionsTable); }
@@ -22587,6 +22753,38 @@ function bindBackofficeEvents() {
     if (e.target.id === 'supplierPaymentModalOverlay') closeSupplierPaymentModal();
   });
   document.getElementById('supplierPaymentForm').addEventListener('submit', saveSupplierPayment);
+
+  document.getElementById('supplierPaymentMode').addEventListener('change', updateSupplierPaymentMode);
+  document.getElementById('supplierPaymentForeignAmount').addEventListener('input', updateSupplierPaymentFxPreview);
+  document.getElementById('supplierPaymentRate').addEventListener('input', updateSupplierPaymentFxPreview);
+
+  // ---- Letters of Credit ----
+  document.getElementById('addImportLcBtn').addEventListener('click', () => openImportLcModal(null));
+  document.getElementById('cancelImportLcBtn').addEventListener('click', closeImportLcModal);
+  document.getElementById('importLcModalOverlay').addEventListener('click', (e) => { if (e.target.id === 'importLcModalOverlay') closeImportLcModal(); });
+  document.getElementById('importLcForm').addEventListener('submit', saveImportLc);
+  document.getElementById('importLcSearchInput').addEventListener('input', renderImportLcsTable);
+  document.getElementById('importLcStatusFilter').addEventListener('change', renderImportLcsTable);
+  document.getElementById('importLcShipment').addEventListener('change', autofillLcFromShipment);
+  document.getElementById('importLcType').addEventListener('change', () => {
+    document.getElementById('importLcUsanceWrap').style.display = document.getElementById('importLcType').value === 'usance' ? '' : 'none';
+  });
+  ['importLcAmount', 'importLcOpeningRate', 'importLcMarginPercent'].forEach(id => document.getElementById(id).addEventListener('input', updateLcMarginPreview));
+  document.getElementById('importLcBranch').addEventListener('change', () => lcFillTreasurySelect(document.getElementById('importLcBranch').value, ''));
+  document.getElementById('cancelImportLcSettleBtn').addEventListener('click', closeImportLcSettleModal);
+  document.getElementById('importLcSettleModalOverlay').addEventListener('click', (e) => { if (e.target.id === 'importLcSettleModalOverlay') closeImportLcSettleModal(); });
+  document.getElementById('importLcSettleForm').addEventListener('submit', confirmImportLcSettle);
+  document.getElementById('cancelImportLcDocsBtn').addEventListener('click', closeImportLcDocsModal);
+  document.getElementById('importLcDocsModalOverlay').addEventListener('click', (e) => { if (e.target.id === 'importLcDocsModalOverlay') closeImportLcDocsModal(); });
+  document.getElementById('importLcDocsForm').addEventListener('submit', confirmImportLcDocs);
+  document.getElementById('importLcDocsDate').addEventListener('input', updateImportLcDocsPreview);
+  ['importLcSettleAmount', 'importLcSettleRate'].forEach(id => document.getElementById(id).addEventListener('input', updateLcSettlePreview));
+
+  // ---- FX report ----
+  document.getElementById('refreshImportFxBtn').addEventListener('click', () => { refreshImportFxReport(); renderImportFxUnrealized(); });
+  document.getElementById('saveImportFxRatesBtn').addEventListener('click', () => saveImportFxRates());
+  document.getElementById('importFxFrom').addEventListener('change', () => refreshImportFxReport());
+  document.getElementById('importFxTo').addEventListener('change', () => refreshImportFxReport());
 
   // ---- Customer Collection modal ----
   document.getElementById('cancelCustomerCollectionBtn').addEventListener('click', closeCustomerCollectionModal);
@@ -39674,6 +39872,7 @@ async function openSupplierPaymentModal(shipment) {
     `شحنة: ${shipment.shipment_ref || ''} — تكاليف الشحن/الجمارك: ${totalCosts.toFixed(2)}، المدفوع: ${paid.toFixed(2)}`;
   document.getElementById('supplierPaymentAmount').value = '';
   document.getElementById('supplierPaymentNotes').value = '';
+  initSupplierPaymentFx(shipment);
 
   if (boTreasuries.length === 0) await loadBoTreasuries();
   const branchTreasuries = boTreasuries.filter(t => t.is_active && t.branch_id === shipment.branch_id);
@@ -39690,6 +39889,85 @@ function closeSupplierPaymentModal() {
   currentSupplierPaymentShipment = null;
 }
 
+// ==================== فروق العملة + الاعتمادات المستندية (LC) ====================
+// المنطق المحاسبي:
+//  - مديونية المورد بتتسجل بسعر صرف الشحنة (سعر الحجز/الدفتر).
+//  - لما ندفع بالعملة الأجنبية بسعر صرف مختلف: الخارج من الخزينة = المبلغ × سعر الدفع،
+//    والمخصوم من مديونية المورد = المبلغ × سعر الشحنة، والفرق بينهم = فرق العملة
+//    (موجب = خسارة، سالب = ربح). فرق العملة بيتسجل كأثر منفصل ومبيتضافش لتكلفة المخزون.
+//  - تسوية الاعتماد المستندي = دفعة للمورد بالعملة الأجنبية بسعر صرف يوم التسوية،
+//    والهامش المدفوع وقت الفتح بيتخصم من الصافي المطلوب من الخزينة.
+function fxRound2(n) { return Math.round((Number(n) + Number.EPSILON) * 100) / 100; }
+
+function fxDiffLabelHtml(fx) {
+  const v = Number(fx) || 0;
+  if (Math.abs(v) < 0.005) return '<span>0.00</span>';
+  return v > 0
+    ? `<span style="color:#b91c1c; font-weight:700;">خسارة ${v.toFixed(2)}</span>`
+    : `<span style="color:var(--teal-700); font-weight:700;">ربح ${Math.abs(v).toFixed(2)}</span>`;
+}
+
+// تسجيل دفعة للمورد على شحنة (بدون الخزينة): صف الدفعة + paid_amount + إجمالي فرق العملة + رصيد المورد
+async function recordImportSupplierSettlement(shipmentId, p) {
+  const { data: fresh, error: freshErr } = await supabaseClient
+    .from('import_shipments').select('paid_amount, fx_difference_total, status, supplier_id').eq('id', shipmentId).single();
+  if (freshErr) throw freshErr;
+  const { error: payErr } = await supabaseClient.from('import_shipment_payments').insert({
+    shipment_id: shipmentId, amount: p.bookEgp, cash_account_id: p.cashAccountId || null, notes: p.notes || null,
+    created_by: currentProfile.id, amount_foreign: p.foreignAmt ?? null, payment_rate: p.payRate ?? null,
+    cash_amount: p.cashEgp, fx_difference: p.fx || 0, lc_id: p.lcId || null,
+  });
+  if (payErr) throw payErr;
+  const { error: updErr } = await supabaseClient.from('import_shipments').update({
+    paid_amount: fxRound2(Number(fresh.paid_amount || 0) + p.bookEgp),
+    fx_difference_total: fxRound2(Number(fresh.fx_difference_total || 0) + (p.fx || 0)),
+  }).eq('id', shipmentId);
+  if (updErr) throw updErr;
+  // رصيد المورد بيتأثر بس بعد أول استلام (نفس قاعدة الدفع العادي)
+  if (fresh.supplier_id && ['partially_received', 'received'].includes(fresh.status)) {
+    const { data: sup, error: supErr } = await supabaseClient.from('suppliers').select('balance').eq('id', fresh.supplier_id).single();
+    if (supErr) throw supErr;
+    const { error: balErr } = await supabaseClient.from('suppliers')
+      .update({ balance: fxRound2((Number(sup.balance) || 0) - p.bookEgp) }).eq('id', fresh.supplier_id);
+    if (balErr) throw balErr;
+  }
+}
+
+// ---- دفع للمورد بعملة أجنبية: واجهة الحقول ----
+function initSupplierPaymentFx(shipment) {
+  const isForeignCurrency = !!shipment.currency && shipment.currency !== 'EGP';
+  document.getElementById('supplierPaymentModeWrap').style.display = isForeignCurrency ? '' : 'none';
+  document.getElementById('supplierPaymentMode').value = 'egp';
+  document.getElementById('supplierPaymentForeignAmount').value = '';
+  document.getElementById('supplierPaymentRate').value = Number(shipment.exchange_rate) || 1;
+  document.getElementById('supplierPaymentForeignCur').textContent = shipment.currency || '';
+  updateSupplierPaymentMode();
+}
+
+function updateSupplierPaymentMode() {
+  const foreign = document.getElementById('supplierPaymentMode').value === 'foreign';
+  document.getElementById('supplierPaymentEgpWrap').style.display = foreign ? 'none' : '';
+  document.getElementById('supplierPaymentForeignWrap').style.display = foreign ? '' : 'none';
+  document.getElementById('supplierPaymentRateWrap').style.display = foreign ? '' : 'none';
+  document.getElementById('supplierPaymentAmount').required = !foreign;
+  document.getElementById('supplierPaymentForeignAmount').required = foreign;
+  document.getElementById('supplierPaymentRate').required = foreign;
+  updateSupplierPaymentFxPreview();
+}
+
+function updateSupplierPaymentFxPreview() {
+  const el = document.getElementById('supplierPaymentFxPreview');
+  const shipment = currentSupplierPaymentShipment;
+  if (!shipment || document.getElementById('supplierPaymentMode').value !== 'foreign') { el.innerHTML = ''; return; }
+  const f = Number(document.getElementById('supplierPaymentForeignAmount').value) || 0;
+  const r = Number(document.getElementById('supplierPaymentRate').value) || 0;
+  const book = Number(shipment.exchange_rate) || 1;
+  const cash = fxRound2(f * r), bookVal = fxRound2(f * book), diff = fxRound2(cash - bookVal);
+  el.innerHTML = `الخارج من الخزينة: <b>${cash.toFixed(2)}</b> جنيه<br>` +
+    `المخصوم من مديونية المورد (بسعر الشحنة ${book}): <b>${bookVal.toFixed(2)}</b> جنيه<br>` +
+    `فرق العملة: ${fxDiffLabelHtml(diff)}`;
+}
+
 async function saveSupplierPayment(e) {
   e.preventDefault();
   const errEl = document.getElementById('supplierPaymentModalError');
@@ -39697,40 +39975,47 @@ async function saveSupplierPayment(e) {
   if (!currentSupplierPaymentShipment) return;
   const shipment = currentSupplierPaymentShipment;
 
-  const amount = Number(document.getElementById('supplierPaymentAmount').value);
   const cashAccountId = document.getElementById('supplierPaymentAccount').value;
   if (!cashAccountId) {
     errEl.textContent = 'اختر الخزينة اللي هيتم السحب منها';
     errEl.classList.add('show');
     return;
   }
+  const isForeign = shipment.currency !== 'EGP' && document.getElementById('supplierPaymentMode').value === 'foreign';
+  let cashEgp, bookEgp, fx = 0, foreignAmt = null, payRate = null;
+  if (isForeign) {
+    foreignAmt = Number(document.getElementById('supplierPaymentForeignAmount').value);
+    payRate = Number(document.getElementById('supplierPaymentRate').value);
+    const bookRate = Number(shipment.exchange_rate) || 1;
+    if (!(foreignAmt > 0) || !(payRate > 0)) {
+      errEl.textContent = 'أدخل مبلغ بالعملة الأجنبية وسعر صرف صحيحين';
+      errEl.classList.add('show');
+      return;
+    }
+    cashEgp = fxRound2(foreignAmt * payRate);
+    bookEgp = fxRound2(foreignAmt * bookRate);
+    fx = fxRound2(cashEgp - bookEgp);
+  } else {
+    const amount = Number(document.getElementById('supplierPaymentAmount').value);
+    if (!(amount > 0)) { errEl.textContent = 'أدخل مبلغ صحيح'; errEl.classList.add('show'); return; }
+    cashEgp = bookEgp = fxRound2(amount);
+  }
   const btn = document.getElementById('saveSupplierPaymentBtn');
   btn.disabled = true; btn.textContent = 'جاري الحفظ...';
   try {
     const notes = document.getElementById('supplierPaymentNotes').value.trim();
     await postCashAccountAdjustment(
-      cashAccountId, -Math.abs(amount), 'supplier_payment', shipment.id,
-      `دفعة لمورد شحنة: ${shipment.shipment_ref || ''}${notes ? ' — ' + notes : ''}`
+      cashAccountId, -Math.abs(cashEgp), 'supplier_payment', shipment.id,
+      `دفعة لمورد شحنة: ${shipment.shipment_ref || ''}${isForeign ? ` (${foreignAmt} ${shipment.currency} × ${payRate})` : ''}${notes ? ' — ' + notes : ''}`
     );
-    await supabaseClient.from('import_shipment_payments').insert({
-      shipment_id: shipment.id, amount, cash_account_id: cashAccountId, notes: notes || null, created_by: currentProfile.id,
-    });
-    const newPaid = Number(shipment.paid_amount || 0) + amount;
-    const { error: updError } = await supabaseClient.from('import_shipments').update({ paid_amount: newPaid }).eq('id', shipment.id);
-    if (updError) throw updError;
-
     // رصيد المورد بيتسجل عليه قيد (مديونية) بمجرد ما يبدأ الاستلام (ولو جزئي) —
-    // فلو الشحنة لسه ماستلمتش حاجة خالص، الدفعة دي "مقدم" ومش ليها قيد نخصم
-    // منه لحد أول استلام (ساعتها الـ netDelta هيخصم أي مقدم اتدفع تلقائيًا)
-    if (shipment.supplier_id && ['partially_received', 'received'].includes(shipment.status)) {
-      const supplier = boSuppliers.find(s => s.id === shipment.supplier_id);
-      if (supplier) {
-        const newBalance = (Number(supplier.balance) || 0) - amount;
-        await supabaseClient.from('suppliers').update({ balance: newBalance }).eq('id', shipment.supplier_id);
-      }
-    }
+    // فلو الشحنة لسه ماستلمتش حاجة خالص، الدفعة دي "مقدم" ومتتخصمش من الرصيد
+    // لحد أول استلام (ساعتها الـ netDelta هيخصم أي مقدم اتدفع تلقائيًا)
+    await recordImportSupplierSettlement(shipment.id, { bookEgp, cashEgp, fx, foreignAmt, payRate, cashAccountId, notes });
 
-    showToast('تم تسجيل الدفعة للمورد وسحبها من الخزينة');
+    showToast(isForeign && Math.abs(fx) >= 0.005
+      ? `تم تسجيل الدفعة — فرق العملة: ${fx > 0 ? 'خسارة' : 'ربح'} ${Math.abs(fx).toFixed(2)} جنيه`
+      : 'تم تسجيل الدفعة للمورد وسحبها من الخزينة');
     closeSupplierPaymentModal();
     await loadBoTreasuries();
     await loadBoSuppliers();
@@ -39743,6 +40028,684 @@ async function saveSupplierPayment(e) {
   } finally {
     btn.disabled = false; btn.textContent = 'تسجيل الدفع';
   }
+}
+
+// ---- سجل دفعات الشحنة (مشترك استيراد/تصدير) ----
+async function openShipmentPaymentsHistory(kind) {
+  const idField = kind === 'import' ? 'importShipmentId' : 'exportShipmentId';
+  const shipmentId = document.getElementById(idField).value;
+  if (!shipmentId) return;
+  const table = kind === 'import' ? 'import_shipment_payments' : 'export_shipment_payments';
+  const cols = kind === 'import' ? 6 : 3;
+  document.getElementById('shipmentPaymentsHistoryTitle').textContent = kind === 'import' ? 'سجل الدفعات للمورد' : 'سجل التحصيلات من العميل';
+  document.getElementById('shipmentPaymentsHistoryHead').innerHTML = kind === 'import'
+    ? '<th>التاريخ</th><th>المبلغ المخصوم (جنيه)</th><th>بالعملة الأجنبية</th><th>سعر الدفع</th><th>فرق العملة</th><th>ملاحظات</th>'
+    : '<th>التاريخ</th><th>المبلغ</th><th>ملاحظات</th>';
+  const tbody = document.getElementById('shipmentPaymentsHistoryList');
+  tbody.innerHTML = `<tr><td colspan="${cols}" class="bo-empty">جاري التحميل...</td></tr>`;
+  document.getElementById('shipmentPaymentsHistoryModalOverlay').classList.add('show');
+
+  const { data, error } = await supabaseClient.from(table).select('*').eq('shipment_id', shipmentId).order('payment_date', { ascending: false });
+  if (error) { console.error(error); tbody.innerHTML = `<tr><td colspan="${cols}" class="bo-empty">تعذر تحميل السجل</td></tr>`; return; }
+  if (!data || data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="${cols}" class="bo-empty">لا توجد دفعات مسجلة بعد</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map(p => kind === 'import' ? `
+    <tr>
+      <td class="num">${p.payment_date}</td>
+      <td class="num">${Number(p.amount).toFixed(2)}</td>
+      <td class="num">${p.amount_foreign != null ? Number(p.amount_foreign).toFixed(2) : '—'}</td>
+      <td class="num">${p.payment_rate != null ? Number(p.payment_rate).toFixed(4) : '—'}</td>
+      <td class="num">${fxDiffLabelHtml(p.fx_difference)}</td>
+      <td>${escapeHtml(p.notes || '—')}${p.lc_id ? ' <span class="bo-badge active">اعتماد مستندي</span>' : ''}</td>
+    </tr>` : `
+    <tr>
+      <td class="num">${p.payment_date}</td>
+      <td class="num">${Number(p.amount).toFixed(2)}</td>
+      <td>${escapeHtml(p.notes || '—')}</td>
+    </tr>`).join('');
+}
+
+// ---- الاعتمادات المستندية ----
+let boImportLcs = [];
+let boImportLcsLoadedOnce = false;
+const LC_STATUS_LABELS = {
+  draft: '<span class="bo-badge inactive">مسودة</span>',
+  opened: '<span class="bo-badge active">مفتوح</span>',
+  documents_presented: '<span class="bo-badge active">مستندات مقدّمة</span>',
+  settled: '<span class="bo-badge active">مسوّى</span>',
+  expired: '<span class="bo-badge inactive">منتهي</span>',
+  cancelled: '<span class="bo-badge inactive">ملغي</span>',
+};
+
+function lcTodayStr() { return new Date().toISOString().slice(0, 10); }
+function lcIsLive(lc) { return ['opened', 'documents_presented'].includes(lc.status); }
+function lcAddDays(dateStr, n) {
+  const d = new Date(dateStr + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + Number(n || 0));
+  return d.toISOString().slice(0, 10);
+}
+// مستحق السداد: اعتماد مفتوح/مستندات مقدّمة وميعاد سداده خلال withinDays يوم (أو فات)
+function lcIsDue(lc, withinDays) {
+  return lcIsLive(lc) && !!lc.maturity_date && lc.maturity_date <= lcAddDays(lcTodayStr(), withinDays);
+}
+function lcDaysToExpiry(lc) {
+  if (!lc.expiry_date) return null;
+  return Math.round((new Date(lc.expiry_date) - new Date(lcTodayStr())) / 86400000);
+}
+
+async function loadBoImportLcs() {
+  const { data, error } = await supabaseClient
+    .from('import_letters_of_credit')
+    .select('*, suppliers(name), import_shipments(shipment_ref, currency, exchange_rate)')
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل الاعتمادات المستندية', true); return; }
+  boImportLcs = data || [];
+}
+
+function renderImportLcsTable() {
+  const tbody = document.getElementById('importLcsTableBody');
+  const q = (document.getElementById('importLcSearchInput').value || '').trim().toLowerCase();
+  const st = document.getElementById('importLcStatusFilter').value;
+  const filtered = boImportLcs.filter(lc =>
+    (!st || (st === 'due' ? lcIsDue(lc, 7) : lc.status === st)) &&
+    (!q || (lc.lc_number || '').toLowerCase().includes(q) || (lc.suppliers?.name || '').toLowerCase().includes(q) || (lc.issuing_bank || '').toLowerCase().includes(q)));
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" class="bo-empty">${boImportLcs.length === 0 ? 'لا توجد اعتمادات مستندية حتى الآن' : 'لا توجد نتائج مطابقة'}</td></tr>`;
+    return;
+  }
+  const canEdit = hasBoActionPermission('import-lcs', 'edit');
+  tbody.innerHTML = '';
+  filtered.forEach(lc => {
+    const days = lcDaysToExpiry(lc);
+    let expiryHtml = lc.expiry_date || '—';
+    if (lcIsLive(lc) && days !== null) {
+      if (days < 0) expiryHtml += `<br><span style="color:#b91c1c; font-weight:700; font-size:11px;">منتهي منذ ${Math.abs(days)} يوم</span>`;
+      else if (days <= 14) expiryHtml += `<br><span style="color:#9a6b00; font-weight:700; font-size:11px;">ينتهي بعد ${days} يوم</span>`;
+    }
+    if (lc.maturity_date && lcIsLive(lc)) {
+      const md = Math.round((new Date(lc.maturity_date) - new Date(lcTodayStr())) / 86400000);
+      const col = md < 0 ? '#b91c1c' : (md <= 7 ? '#9a6b00' : 'var(--ink-soft)');
+      const txt = md < 0 ? `متأخر السداد ${Math.abs(md)} يوم` : (md === 0 ? 'يُسدَّد اليوم' : `استحقاق السداد بعد ${md} يوم`);
+      expiryHtml += `<br><span style="color:${col}; font-weight:700; font-size:11px;">${txt} (${lc.maturity_date})</span>`;
+    }
+    const acts = [];
+    if (canEdit && lc.status === 'draft') acts.push('<button class="bo-icon-btn" data-action="lc-open" style="color:var(--teal-700);">فتح الاعتماد</button>');
+    if (canEdit && lc.status === 'opened') acts.push('<button class="bo-icon-btn" data-action="lc-docs">مستندات مقدّمة</button>');
+    if (canEdit && lcIsLive(lc)) {
+      acts.push('<button class="bo-icon-btn" data-action="lc-settle" style="color:var(--teal-700);">تسوية</button>');
+      acts.push('<button class="bo-icon-btn danger" data-action="lc-cancel">إلغاء</button>');
+    }
+    acts.push('<button class="bo-icon-btn" data-action="edit">فتح</button>');
+    if (['draft', 'cancelled'].includes(lc.status)) acts.push('<button class="bo-icon-btn danger" data-action="delete">حذف</button>');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(lc.lc_number)}</td>
+      <td>${escapeHtml(lc.suppliers?.name || '—')}</td>
+      <td>${escapeHtml(lc.import_shipments?.shipment_ref || '—')}</td>
+      <td>${escapeHtml(lc.issuing_bank || '—')}</td>
+      <td class="num">${Number(lc.amount_foreign).toFixed(2)} ${escapeHtml(lc.currency)}</td>
+      <td class="num">${Number(lc.margin_paid || 0).toFixed(2)}</td>
+      <td class="num">${expiryHtml}</td>
+      <td>${LC_STATUS_LABELS[lc.status] || lc.status}</td>
+      <td><div class="bo-row-actions">${acts.join('')}</div></td>`;
+    const bind = (sel, fn) => { const b = tr.querySelector(`[data-action="${sel}"]`); if (b) b.addEventListener('click', fn); };
+    bind('lc-open', () => openImportLcAction(lc));
+    bind('lc-docs', () => openImportLcDocsModal(lc));
+    bind('lc-settle', () => openImportLcSettleModal(lc));
+    bind('lc-cancel', () => cancelImportLc(lc));
+    bind('edit', () => openImportLcModal(lc));
+    bind('delete', () => deleteImportLc(lc));
+    applyRowActionPerm(tr, 'import-lcs');
+    tbody.appendChild(tr);
+  });
+}
+
+function lcFillTreasurySelect(branchId, selected) {
+  const sel = document.getElementById('importLcCashAccount');
+  const active = boTreasuries.filter(t => t.is_active);
+  const branchOnes = active.filter(t => t.branch_id === branchId);
+  const list = branchOnes.length > 0 ? branchOnes : active;
+  sel.innerHTML = '<option value="">— اختر —</option>' + list.map(t => `<option value="${t.id}">${escapeHtml(t.branches?.name || '')} — ${escapeHtml(t.name)}</option>`).join('');
+  sel.value = selected || '';
+}
+
+function updateLcMarginPreview() {
+  const amt = Number(document.getElementById('importLcAmount').value) || 0;
+  const rate = Number(document.getElementById('importLcOpeningRate').value) || 0;
+  const pct = Number(document.getElementById('importLcMarginPercent').value) || 0;
+  document.getElementById('importLcMarginPreview').value = fxRound2(amt * rate * pct / 100).toFixed(2);
+}
+
+async function autofillLcFromShipment() {
+  const id = document.getElementById('importLcShipment').value;
+  if (!id || document.getElementById('importLcAmount').disabled) return;
+  const s = boImportShipments.find(x => x.id === id);
+  if (!s) return;
+  if (s.supplier_id) document.getElementById('importLcSupplier').value = s.supplier_id;
+  if (s.currency) document.getElementById('importLcCurrency').value = s.currency;
+  document.getElementById('importLcOpeningRate').value = Number(s.exchange_rate) || 1;
+  if (s.branch_id) document.getElementById('importLcBranch').value = s.branch_id;
+  const { data } = await supabaseClient.from('import_shipment_items').select('quantity, unit_cost_foreign').eq('shipment_id', id);
+  const total = (data || []).reduce((sum, it) => sum + Number(it.quantity) * Number(it.unit_cost_foreign), 0);
+  if (total > 0 && !Number(document.getElementById('importLcAmount').value)) document.getElementById('importLcAmount').value = fxRound2(total);
+  updateLcMarginPreview();
+}
+
+async function openImportLcModal(lc) {
+  if (boSuppliers.length === 0) await loadBoSuppliers();
+  if (boTreasuries.length === 0) await loadBoTreasuries();
+  if (boImportShipments.length === 0) await loadBoImportShipments();
+
+  const frozenFin = !!lc && lc.status !== 'draft';
+  const fullyFrozen = !!lc && ['settled', 'cancelled'].includes(lc.status);
+  document.getElementById('importLcModalTitle').textContent = lc ? `اعتماد مستندي — ${lc.lc_number}` : 'اعتماد مستندي جديد';
+  document.getElementById('importLcId').value = lc ? lc.id : '';
+  document.getElementById('importLcNumber').value = lc?.lc_number || '';
+  populateBranchSelect(document.getElementById('importLcBranch'), lc?.branch_id || currentProfile.branch_id, false);
+  document.getElementById('importLcSupplier').innerHTML = '<option value="">— بدون —</option>' + boSuppliers.map(s => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+  document.getElementById('importLcSupplier').value = lc?.supplier_id || '';
+  document.getElementById('importLcShipment').innerHTML = '<option value="">— بدون —</option>' +
+    boImportShipments.filter(s => s.status !== 'cancelled' || s.id === lc?.shipment_id)
+      .map(s => `<option value="${s.id}">${escapeHtml(s.shipment_ref || '—')}${s.suppliers?.name ? ' — ' + escapeHtml(s.suppliers.name) : ''}</option>`).join('');
+  document.getElementById('importLcShipment').value = lc?.shipment_id || '';
+  document.getElementById('importLcBank').value = lc?.issuing_bank || '';
+  document.getElementById('importLcType').value = lc?.lc_type || 'sight';
+  document.getElementById('importLcUsanceDays').value = lc?.usance_days || '';
+  document.getElementById('importLcUsanceWrap').style.display = (lc?.lc_type === 'usance') ? '' : 'none';
+  document.getElementById('importLcCurrency').value = lc?.currency || 'USD';
+  document.getElementById('importLcAmount').value = lc?.amount_foreign ?? '';
+  document.getElementById('importLcOpeningRate').value = lc?.opening_rate ?? 1;
+  document.getElementById('importLcMarginPercent').value = lc?.margin_percent ?? 0;
+  document.getElementById('importLcBankFees').value = lc?.bank_fees ?? 0;
+  lcFillTreasurySelect(lc?.branch_id || currentProfile.branch_id, lc?.cash_account_id);
+  document.getElementById('importLcIssueDate').value = lc?.issue_date || lcTodayStr();
+  document.getElementById('importLcExpiryDate').value = lc?.expiry_date || '';
+  document.getElementById('importLcLatestShipment').value = lc?.latest_shipment_date || '';
+  document.getElementById('importLcNotes').value = lc?.notes || '';
+  ['importLcAmount', 'importLcOpeningRate', 'importLcMarginPercent', 'importLcBankFees', 'importLcCashAccount', 'importLcCurrency', 'importLcType', 'importLcUsanceDays', 'importLcBranch']
+    .forEach(id => { document.getElementById(id).disabled = frozenFin; });
+  document.getElementById('saveImportLcBtn').disabled = fullyFrozen;
+  updateLcMarginPreview();
+  if (lc && lc.margin_paid > 0) document.getElementById('importLcMarginPreview').value = Number(lc.margin_paid).toFixed(2) + ' (مدفوع)';
+  document.getElementById('importLcModalError').classList.remove('show');
+  document.getElementById('importLcModalOverlay').classList.add('show');
+}
+
+function closeImportLcModal() { document.getElementById('importLcModalOverlay').classList.remove('show'); }
+
+async function saveImportLc(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('importLcModalError');
+  errEl.classList.remove('show');
+  const id = document.getElementById('importLcId').value || null;
+  const issue = document.getElementById('importLcIssueDate').value || null;
+  const expiry = document.getElementById('importLcExpiryDate').value || null;
+  const latest = document.getElementById('importLcLatestShipment').value || null;
+  const fail = (msg) => { errEl.textContent = msg; errEl.classList.add('show'); };
+  if (issue && expiry && expiry < issue) return fail('تاريخ الانتهاء لازم يكون بعد تاريخ الإصدار');
+  if (latest && expiry && latest > expiry) return fail('آخر موعد للشحن لازم يكون قبل تاريخ انتهاء الاعتماد');
+  const type = document.getElementById('importLcType').value;
+  const payload = {
+    lc_number: document.getElementById('importLcNumber').value.trim(),
+    shipment_id: document.getElementById('importLcShipment').value || null,
+    supplier_id: document.getElementById('importLcSupplier').value || null,
+    issuing_bank: document.getElementById('importLcBank').value.trim() || null,
+    issue_date: issue, expiry_date: expiry, latest_shipment_date: latest,
+    notes: document.getElementById('importLcNotes').value.trim() || null,
+  };
+  const existing = id ? boImportLcs.find(x => x.id === id) : null;
+  if (!existing || existing.status === 'draft') {
+    const amount = Number(document.getElementById('importLcAmount').value);
+    const rate = Number(document.getElementById('importLcOpeningRate').value);
+    if (!(amount > 0) || !(rate > 0)) return fail('أدخل قيمة اعتماد وسعر صرف صحيحين');
+    if (type === 'usance' && !(Number(document.getElementById('importLcUsanceDays').value) > 0)) return fail('أدخل مدة الأجل بالأيام');
+    Object.assign(payload, {
+      branch_id: document.getElementById('importLcBranch').value,
+      lc_type: type,
+      usance_days: type === 'usance' ? Number(document.getElementById('importLcUsanceDays').value) : null,
+      currency: document.getElementById('importLcCurrency').value,
+      amount_foreign: amount, opening_rate: rate,
+      margin_percent: Number(document.getElementById('importLcMarginPercent').value) || 0,
+      bank_fees: Number(document.getElementById('importLcBankFees').value) || 0,
+      cash_account_id: document.getElementById('importLcCashAccount').value || null,
+    });
+  }
+  const btn = document.getElementById('saveImportLcBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  try {
+    if (id) {
+      const { error } = await supabaseClient.from('import_letters_of_credit').update(payload).eq('id', id);
+      if (error) throw error;
+    } else {
+      payload.created_by = currentProfile.id;
+      const { error } = await supabaseClient.from('import_letters_of_credit').insert(payload);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث الاعتماد' : 'تمت إضافة الاعتماد كمسودة');
+    closeImportLcModal();
+    await loadBoImportLcs();
+    renderImportLcsTable();
+  } catch (err) {
+    console.error(err);
+    fail(err.message || 'حدث خطأ أثناء الحفظ');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ';
+  }
+}
+
+async function deleteImportLc(lc) {
+  if (!hasBoActionPermission('import-lcs', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!['draft', 'cancelled'].includes(lc.status)) { showToast('يمكن حذف المسودات والاعتمادات الملغاة فقط', true); return; }
+  if (!confirm(`حذف الاعتماد "${lc.lc_number}"؟`)) return;
+  const { error } = await supabaseClient.from('import_letters_of_credit').delete().eq('id', lc.id);
+  if (error) { console.error(error); showToast('تعذر حذف الاعتماد', true); return; }
+  showToast('تم حذف الاعتماد');
+  await loadBoImportLcs();
+  renderImportLcsTable();
+}
+
+// فتح الاعتماد: بيسحب الهامش النقدي ومصاريف البنك من الخزينة. الحالة بتتحدّث الأول
+// (بشرط إنها لسه مسودة) عشان محدش يفتح نفس الاعتماد مرتين، ولو السحب فشل بنرجّعها
+async function openImportLcAction(lc) {
+  if (!lc.cash_account_id) { showToast('اختر الخزينة من شاشة الاعتماد أولًا', true); return; }
+  const margin = fxRound2(Number(lc.amount_foreign) * Number(lc.opening_rate) * Number(lc.margin_percent) / 100);
+  const fees = fxRound2(Number(lc.bank_fees) || 0);
+  if (!confirm(`فتح الاعتماد ${lc.lc_number}\nسيتم سحب هامش نقدي ${margin.toFixed(2)} جنيه ومصاريف بنك ${fees.toFixed(2)} جنيه من الخزينة. متابعة؟`)) return;
+  const posted = [];
+  try {
+    const { data: upd, error } = await supabaseClient.from('import_letters_of_credit')
+      .update({ status: 'opened', margin_paid: margin, opened_at: new Date().toISOString() })
+      .eq('id', lc.id).eq('status', 'draft').select();
+    if (error) throw error;
+    if (!upd || upd.length === 0) throw new Error('الاعتماد اتفتح قبل كده أو حالته اتغيرت');
+    try {
+      if (margin > 0) { await postCashAccountAdjustment(lc.cash_account_id, -margin, 'supplier_payment', lc.id, `هامش اعتماد مستندي ${lc.lc_number}`); posted.push(margin); }
+      if (fees > 0) { await postCashAccountAdjustment(lc.cash_account_id, -fees, 'withdrawal', lc.id, `عمولة ومصاريف اعتماد ${lc.lc_number}`); posted.push(fees); }
+    } catch (cashErr) {
+      for (const amt of posted) { try { await postCashAccountAdjustment(lc.cash_account_id, amt, 'reversal', lc.id, `عكس قيد فتح اعتماد ${lc.lc_number} (فشل الفتح)`); } catch (_) {} }
+      await supabaseClient.from('import_letters_of_credit').update({ status: 'draft', margin_paid: 0, opened_at: null }).eq('id', lc.id);
+      throw cashErr;
+    }
+    showToast('تم فتح الاعتماد وسحب الهامش والمصاريف من الخزينة');
+    await loadBoTreasuries();
+    await loadBoImportLcs();
+    renderImportLcsTable();
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || 'تعذر فتح الاعتماد', true);
+  }
+}
+
+// تقديم المستندات: بنسجّل تاريخ التقديم، وميعاد استحقاق السداد = التاريخ ده + مدة الأجل
+// (الاعتماد الاطلاعي Sight بيستحق وقت تقديم المستندات نفسه)
+let currentLcDocs = null;
+
+function openImportLcDocsModal(lc) {
+  currentLcDocs = lc;
+  document.getElementById('importLcDocsSummary').textContent =
+    `اعتماد ${lc.lc_number} — ${lc.lc_type === 'usance' ? `آجل ${lc.usance_days || 0} يوم` : 'اطلاع (Sight)'}`;
+  document.getElementById('importLcDocsDate').value = lcTodayStr();
+  document.getElementById('importLcDocsError').classList.remove('show');
+  updateImportLcDocsPreview();
+  document.getElementById('importLcDocsModalOverlay').classList.add('show');
+}
+
+function closeImportLcDocsModal() {
+  document.getElementById('importLcDocsModalOverlay').classList.remove('show');
+  currentLcDocs = null;
+}
+
+function updateImportLcDocsPreview() {
+  const lc = currentLcDocs;
+  const el = document.getElementById('importLcDocsPreview');
+  const d = document.getElementById('importLcDocsDate').value;
+  if (!lc || !d) { el.textContent = ''; return; }
+  const days = lc.lc_type === 'usance' ? (Number(lc.usance_days) || 0) : 0;
+  el.innerHTML = `ميعاد استحقاق السداد: <b>${lcAddDays(d, days)}</b>${days ? ` (بعد ${days} يوم من تقديم المستندات)` : ' (وقت تقديم المستندات)'}`;
+}
+
+async function confirmImportLcDocs(e) {
+  e.preventDefault();
+  const lc = currentLcDocs;
+  if (!lc) return;
+  const errEl = document.getElementById('importLcDocsError');
+  errEl.classList.remove('show');
+  const d = document.getElementById('importLcDocsDate').value;
+  const fail = (m) => { errEl.textContent = m; errEl.classList.add('show'); };
+  if (!d) return fail('اختر تاريخ تقديم المستندات');
+  if (lc.issue_date && d < lc.issue_date) return fail('تاريخ التقديم قبل تاريخ إصدار الاعتماد');
+  if (lc.expiry_date && d > lc.expiry_date) return fail('تاريخ التقديم بعد تاريخ انتهاء صلاحية الاعتماد');
+  const maturity = lcAddDays(d, lc.lc_type === 'usance' ? (Number(lc.usance_days) || 0) : 0);
+  const { data, error } = await supabaseClient.from('import_letters_of_credit')
+    .update({ status: 'documents_presented', documents_date: d, maturity_date: maturity })
+    .eq('id', lc.id).eq('status', 'opened').select();
+  if (error || !data || data.length === 0) { console.error(error); return fail('تعذر تحديث الحالة (ربما اتغيرت حالة الاعتماد)'); }
+  showToast(`تم تسجيل تقديم المستندات — استحقاق السداد: ${maturity}`);
+  closeImportLcDocsModal();
+  await loadBoImportLcs();
+  renderImportLcsTable();
+}
+
+// إلغاء اعتماد مفتوح: بيرجّع الهامش النقدي للخزينة (مصاريف البنك مبترجعش)
+async function cancelImportLc(lc) {
+  const margin = Number(lc.margin_paid || 0);
+  if (!confirm(`إلغاء الاعتماد ${lc.lc_number}؟${margin > 0 ? `\nسيتم رد الهامش ${margin.toFixed(2)} جنيه للخزينة (مصاريف البنك لا تُرد).` : ''}`)) return;
+  try {
+    const { data: upd, error } = await supabaseClient.from('import_letters_of_credit')
+      .update({ status: 'cancelled', margin_paid: 0, notes: ((lc.notes || '') + (margin > 0 ? ` | أُلغي ورُدّ الهامش ${margin.toFixed(2)}` : ' | أُلغي')).trim() })
+      .eq('id', lc.id).in('status', ['opened', 'documents_presented']).select();
+    if (error) throw error;
+    if (!upd || upd.length === 0) throw new Error('حالة الاعتماد اتغيرت');
+    if (margin > 0 && lc.cash_account_id) {
+      try { await postCashAccountAdjustment(lc.cash_account_id, margin, 'supplier_refund', lc.id, `رد هامش اعتماد ملغي ${lc.lc_number}`); }
+      catch (cashErr) {
+        await supabaseClient.from('import_letters_of_credit').update({ status: lc.status, margin_paid: margin, notes: lc.notes }).eq('id', lc.id);
+        throw cashErr;
+      }
+    }
+    showToast('تم إلغاء الاعتماد');
+    await loadBoTreasuries();
+    await loadBoImportLcs();
+    renderImportLcsTable();
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || 'تعذر إلغاء الاعتماد', true);
+  }
+}
+
+// ---- تسوية الاعتماد ----
+let currentLcSettle = null;
+
+function lcSettleBookRate(lc) {
+  const s = boImportShipments.find(x => x.id === lc.shipment_id);
+  return s ? (Number(s.exchange_rate) || 1) : Number(lc.opening_rate);
+}
+
+async function openImportLcSettleModal(lc) {
+  if (boTreasuries.length === 0) await loadBoTreasuries();
+  if (boImportShipments.length === 0) await loadBoImportShipments();
+  currentLcSettle = lc;
+  const ship = boImportShipments.find(x => x.id === lc.shipment_id);
+  document.getElementById('importLcSettleSummary').textContent =
+    `اعتماد ${lc.lc_number} — ${Number(lc.amount_foreign).toFixed(2)} ${lc.currency} — الهامش المدفوع ${Number(lc.margin_paid || 0).toFixed(2)} جنيه` +
+    (ship ? ` — شحنة ${ship.shipment_ref || ''}` : ' — غير مرتبط بشحنة') +
+    (lc.maturity_date ? ` — استحقاق السداد ${lc.maturity_date}` : '');
+  document.getElementById('importLcSettleAmount').value = lc.amount_foreign;
+  document.getElementById('importLcSettleRate').value = lcSettleBookRate(lc);
+  const active = boTreasuries.filter(t => t.is_active);
+  const sel = document.getElementById('importLcSettleAccount');
+  sel.innerHTML = active.map(t => `<option value="${t.id}">${escapeHtml(t.branches?.name || '')} — ${escapeHtml(t.name)}</option>`).join('');
+  if (lc.cash_account_id) sel.value = lc.cash_account_id;
+  document.getElementById('importLcSettleError').classList.remove('show');
+  updateLcSettlePreview();
+  document.getElementById('importLcSettleModalOverlay').classList.add('show');
+}
+
+function closeImportLcSettleModal() {
+  document.getElementById('importLcSettleModalOverlay').classList.remove('show');
+  currentLcSettle = null;
+}
+
+function lcSettleCalc() {
+  const lc = currentLcSettle;
+  const f = Number(document.getElementById('importLcSettleAmount').value) || 0;
+  const r = Number(document.getElementById('importLcSettleRate').value) || 0;
+  const bookRate = lcSettleBookRate(lc);
+  const total = fxRound2(f * r);
+  const margin = Number(lc.margin_paid || 0);
+  return { f, r, bookRate, total, margin, net: fxRound2(total - margin), bookEgp: fxRound2(f * bookRate), fx: fxRound2(total - fxRound2(f * bookRate)) };
+}
+
+function updateLcSettlePreview() {
+  if (!currentLcSettle) return;
+  const c = lcSettleCalc();
+  document.getElementById('importLcSettlePreview').innerHTML =
+    `إجمالي المسدَّد للمورد بسعر اليوم: <b>${c.total.toFixed(2)}</b> جنيه<br>` +
+    `الهامش المدفوع سابقًا: <b>${c.margin.toFixed(2)}</b> جنيه<br>` +
+    `${c.net >= 0 ? 'الصافي المسحوب من الخزينة' : 'الفائض المردود للخزينة'}: <b>${Math.abs(c.net).toFixed(2)}</b> جنيه<br>` +
+    `القيمة بسعر الدفتر (${c.bookRate}): <b>${c.bookEgp.toFixed(2)}</b> جنيه<br>` +
+    `فرق العملة: ${fxDiffLabelHtml(c.fx)}`;
+}
+
+async function confirmImportLcSettle(e) {
+  e.preventDefault();
+  const lc = currentLcSettle;
+  if (!lc) return;
+  const errEl = document.getElementById('importLcSettleError');
+  errEl.classList.remove('show');
+  const c = lcSettleCalc();
+  const accountId = document.getElementById('importLcSettleAccount').value;
+  const fail = (m) => { errEl.textContent = m; errEl.classList.add('show'); };
+  if (!(c.f > 0) || !(c.r > 0)) return fail('أدخل مبلغ وسعر صرف صحيحين');
+  if (c.f > Number(lc.amount_foreign) + 0.0001) return fail('المبلغ المسوّى أكبر من قيمة الاعتماد');
+  if (!accountId) return fail('اختر الخزينة');
+  if (lc.lc_type === 'usance') {
+    if (lc.status === 'opened' && !confirm('المستندات لسه ماتسجلش تقديمها للبنك. متأكد إنك عايز تسوّي الاعتماد الآن؟')) return;
+    if (lc.maturity_date && lc.maturity_date > lcTodayStr() && !confirm(`ميعاد استحقاق السداد (${lc.maturity_date}) لسه ماجاش. تسوّي الاعتماد الآن؟`)) return;
+  }
+  const btn = document.getElementById('confirmImportLcSettleBtn');
+  btn.disabled = true; btn.textContent = 'جاري التسوية...';
+  let cashPosted = 0;
+  try {
+    const { data: upd, error } = await supabaseClient.from('import_letters_of_credit')
+      .update({ status: 'settled', settled_foreign: c.f, settlement_rate: c.r, settled_at: new Date().toISOString(), fx_difference: c.fx })
+      .eq('id', lc.id).in('status', ['opened', 'documents_presented']).select();
+    if (error) throw error;
+    if (!upd || upd.length === 0) throw new Error('حالة الاعتماد اتغيرت');
+    try {
+      if (Math.abs(c.net) >= 0.005) {
+        cashPosted = -c.net; // سالب = سحب من الخزينة، موجب = رد للخزينة
+        await postCashAccountAdjustment(accountId, cashPosted, c.net > 0 ? 'supplier_payment' : 'supplier_refund', lc.id,
+          `تسوية اعتماد مستندي ${lc.lc_number} (${c.f} ${lc.currency} × ${c.r})`);
+      }
+      if (lc.shipment_id) {
+        await recordImportSupplierSettlement(lc.shipment_id, {
+          bookEgp: c.bookEgp, cashEgp: c.total, fx: c.fx, foreignAmt: c.f, payRate: c.r, cashAccountId: accountId, lcId: lc.id,
+          notes: `تسوية اعتماد مستندي ${lc.lc_number}`,
+        });
+      }
+    } catch (innerErr) {
+      if (cashPosted !== 0) { try { await postCashAccountAdjustment(accountId, -cashPosted, 'reversal', lc.id, `عكس تسوية اعتماد ${lc.lc_number} (فشل التسوية)`); } catch (_) {} }
+      await supabaseClient.from('import_letters_of_credit')
+        .update({ status: lc.status, settled_foreign: 0, settlement_rate: null, settled_at: null, fx_difference: 0 }).eq('id', lc.id);
+      throw innerErr;
+    }
+    showToast(Math.abs(c.fx) >= 0.005 ? `تمت التسوية — فرق العملة: ${c.fx > 0 ? 'خسارة' : 'ربح'} ${Math.abs(c.fx).toFixed(2)} جنيه` : 'تمت تسوية الاعتماد');
+    closeImportLcSettleModal();
+    await loadBoTreasuries();
+    await loadBoSuppliers();
+    await loadBoImportShipments();
+    await loadBoImportLcs();
+    renderImportLcsTable();
+  } catch (err) {
+    console.error(err);
+    fail(err.message || 'حدث خطأ أثناء التسوية');
+  } finally {
+    btn.disabled = false; btn.textContent = 'تأكيد التسوية';
+  }
+}
+
+// ---- تقييم فروق العملة غير المحققة (على متبقي مديونية الموردين) ----
+// التعرّض بالعملة الأجنبية = الأقل من (المتبقي من المديونية) و(قيمة البضاعة المستلمة بسعر الدفتر)، مقسوم
+// على سعر الدفتر. الشحن/الجمارك بالجنيه أصلًا فمش بتتأثر بالعملة. دي أرقام تقديرية: المدفوعات
+// بالجنيه (من غير عملة أجنبية) بتتخصم من إجمالي المديونية مش من البضاعة بالتحديد.
+// الشحنات اللي لسه ماتستلمتش مش داخلة (لسه مش مديونية مسجلة على المورد).
+// موجب = خسارة (المديونية زادت بسعر اليوم)، سالب = ربح.
+async function loadImportFxRates() {
+  const { data, error } = await supabaseClient.from('import_fx_rates').select('currency, rate');
+  if (error) { console.error(error); return {}; }
+  const map = {};
+  (data || []).forEach(r => { map[r.currency] = Number(r.rate); });
+  return map;
+}
+
+async function computeImportFxExposure() {
+  let q = supabaseClient.from('import_shipments')
+    .select('id, shipment_ref, currency, exchange_rate, freight_cost, customs_duty, other_costs, paid_amount, branch_id, suppliers(name), import_shipment_items(quantity, received_quantity, unit_cost_foreign)')
+    .in('status', ['partially_received', 'received']);
+  q = applyBranchScope(q, null, 'branch_id');
+  const { data, error } = await q;
+  if (error) throw error;
+  const rows = [];
+  (data || []).forEach(s => {
+    if (!s.currency || s.currency === 'EGP') return;
+    const book = Number(s.exchange_rate) || 1;
+    const items = s.import_shipment_items || [];
+    const totalForeign = items.reduce((sum, it) => sum + Number(it.quantity) * Number(it.unit_cost_foreign), 0);
+    const receivedForeign = items.reduce((sum, it) => sum + Number(it.received_quantity) * Number(it.unit_cost_foreign), 0);
+    if (totalForeign <= 0 || receivedForeign <= 0) return;
+    const receivedBook = receivedForeign * book;
+    const costs = Number(s.freight_cost) + Number(s.customs_duty) + Number(s.other_costs);
+    const outstanding = receivedBook + costs * (receivedForeign / totalForeign) - Number(s.paid_amount || 0);
+    const exposureEgp = Math.max(0, Math.min(outstanding, receivedBook));
+    if (exposureEgp < 0.005) return;
+    rows.push({ ref: s.shipment_ref || '—', supplier: s.suppliers?.name || '—', currency: s.currency, book, exposureForeign: exposureEgp / book });
+  });
+  return rows;
+}
+
+function valueImportFxExposure(rows, rates) {
+  let total = 0;
+  const valued = rows.map(r => {
+    const cur = rates[r.currency];
+    const diff = cur ? fxRound2(r.exposureForeign * (cur - r.book)) : null;
+    if (diff !== null) total += diff;
+    return { ...r, current: cur || null, diff };
+  });
+  return { rows: valued, total: fxRound2(total) };
+}
+
+// إجمالي التقييم غير المحقق (للتقارير المالية). لو مفيش أسعار حالية محفوظة بيرجّع 0
+async function computeImportFxUnrealizedTotal() {
+  try {
+    const [rows, rates] = await Promise.all([computeImportFxExposure(), loadImportFxRates()]);
+    return valueImportFxExposure(rows, rates).total;
+  } catch (err) {
+    console.error(err);
+    return 0;
+  }
+}
+
+async function renderImportFxUnrealized() {
+  const wrap = document.getElementById('importFxRatesWrap');
+  const tbody = document.getElementById('importFxUnrealizedBody');
+  tbody.innerHTML = '<tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>';
+  let rows, rates;
+  try {
+    [rows, rates] = await Promise.all([computeImportFxExposure(), loadImportFxRates()]);
+  } catch (err) {
+    console.error(err);
+    tbody.innerHTML = '<tr><td colspan="7" class="bo-empty">تعذر تحميل التقييم</td></tr>';
+    return;
+  }
+  const currencies = [...new Set(rows.map(r => r.currency))];
+  const active = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.fxCurrency : null;
+  if (!active) {
+    wrap.innerHTML = currencies.length === 0 ? '<span style="font-size:13px; color:var(--ink-soft);">لا توجد مديونيات بعملة أجنبية مستحقة حاليًا</span>'
+      : currencies.map(c => `<div class="field" style="min-width:150px;"><label>سعر ${escapeHtml(c)} الحالي</label><input type="number" min="0.0001" step="0.0001" data-fx-currency="${escapeHtml(c)}" value="${rates[c] || ''}"></div>`).join('');
+  }
+  const v = valueImportFxExposure(rows, rates);
+  const totalEl = document.getElementById('importFxUnrealizedTotal');
+  totalEl.textContent = (-v.total).toFixed(2);
+  totalEl.className = 'report-card-value num ' + (v.total < 0 ? 'positive' : (v.total > 0 ? 'negative' : ''));
+  if (v.rows.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="bo-empty">لا توجد مديونيات بعملة أجنبية مستحقة</td></tr>'; return; }
+  tbody.innerHTML = v.rows.map(r => `<tr>
+    <td>${escapeHtml(r.ref)}</td>
+    <td>${escapeHtml(r.supplier)}</td>
+    <td>${escapeHtml(r.currency)}</td>
+    <td class="num">${r.exposureForeign.toFixed(2)}</td>
+    <td class="num">${r.book.toFixed(4)}</td>
+    <td class="num">${r.current ? r.current.toFixed(4) : '<span style="color:var(--ink-soft);">أدخل السعر</span>'}</td>
+    <td class="num">${r.diff === null ? '—' : fxDiffLabelHtml(r.diff)}</td>
+  </tr>`).join('');
+}
+
+async function saveImportFxRates() {
+  const inputs = [...document.querySelectorAll('#importFxRatesWrap input[data-fx-currency]')];
+  const payload = inputs.map(i => ({ currency: i.dataset.fxCurrency, rate: Number(i.value) }))
+    .filter(r => r.rate > 0).map(r => ({ ...r, updated_at: new Date().toISOString(), updated_by: currentProfile.id }));
+  if (payload.length === 0) { showToast('أدخل سعر صرف واحد على الأقل', true); return; }
+  const { error } = await supabaseClient.from('import_fx_rates').upsert(payload, { onConflict: 'currency' });
+  if (error) { console.error(error); showToast('تعذر حفظ أسعار الصرف', true); return; }
+  showToast('تم حفظ أسعار الصرف الحالية وإعادة التقييم');
+  await renderImportFxUnrealized();
+}
+
+// فروق العملة المحققة في فترة (للقوائم المالية): موجب = ربح، سالب = خسارة
+async function computeImportFxRealized(fromDate, toDate, branchId) {
+  try {
+    let pq = supabaseClient.from('import_shipment_payments')
+      .select('fx_difference, import_shipments!inner(branch_id)').neq('fx_difference', 0)
+      .gte('payment_date', fromDate).lte('payment_date', toDate);
+    pq = applyBranchScope(pq, branchId, 'import_shipments.branch_id');
+    let lq = supabaseClient.from('import_letters_of_credit')
+      .select('fx_difference, branch_id').eq('status', 'settled').is('shipment_id', null).neq('fx_difference', 0)
+      .gte('settled_at', `${fromDate}T00:00:00`).lte('settled_at', `${toDate}T23:59:59`);
+    lq = applyBranchScope(lq, branchId, 'branch_id');
+    const [pr, lr] = await Promise.all([pq, lq]);
+    if (pr.error) throw pr.error;
+    if (lr.error) throw lr.error;
+    const loss = (pr.data || []).reduce((s, p) => s + Number(p.fx_difference), 0)
+      + (lr.data || []).reduce((s, l) => s + Number(l.fx_difference), 0);
+    return fxRound2(-loss);
+  } catch (err) {
+    console.error(err);
+    return 0;
+  }
+}
+
+// ---- تقرير فروق العملة ----
+async function refreshImportFxReport() {
+  const tbody = document.getElementById('importFxTableBody');
+  tbody.innerHTML = '<tr><td colspan="8" class="bo-empty">جاري التحميل...</td></tr>';
+  const from = document.getElementById('importFxFrom').value;
+  const to = document.getElementById('importFxTo').value;
+  let pq = supabaseClient.from('import_shipment_payments')
+    .select('payment_date, amount_foreign, payment_rate, fx_difference, import_shipments(shipment_ref, currency, exchange_rate, suppliers(name)), import_letters_of_credit(lc_number)')
+    .neq('fx_difference', 0);
+  if (from) pq = pq.gte('payment_date', from);
+  if (to) pq = pq.lte('payment_date', to);
+  const lq = supabaseClient.from('import_letters_of_credit')
+    .select('lc_number, currency, settled_at, settled_foreign, settlement_rate, opening_rate, fx_difference, suppliers(name)')
+    .eq('status', 'settled').is('shipment_id', null).neq('fx_difference', 0);
+  const [pr, lr] = await Promise.all([pq, lq]);
+  if (pr.error || lr.error) { console.error(pr.error || lr.error); tbody.innerHTML = '<tr><td colspan="8" class="bo-empty">تعذر تحميل التقرير</td></tr>'; return; }
+
+  const rows = (pr.data || []).map(p => ({
+    date: p.payment_date, ref: p.import_shipments?.shipment_ref || '—', supplier: p.import_shipments?.suppliers?.name || '—',
+    source: p.import_letters_of_credit?.lc_number ? `اعتماد ${p.import_letters_of_credit.lc_number}` : 'دفع مباشر',
+    foreign: p.amount_foreign, cur: p.import_shipments?.currency || '', book: p.import_shipments?.exchange_rate, pay: p.payment_rate, fx: Number(p.fx_difference),
+  }));
+  (lr.data || []).forEach(l => {
+    const d = (l.settled_at || '').slice(0, 10);
+    if ((from && d < from) || (to && d > to)) return;
+    rows.push({ date: d, ref: '—', supplier: l.suppliers?.name || '—', source: `اعتماد ${l.lc_number} (بدون شحنة)`,
+      foreign: l.settled_foreign, cur: l.currency, book: l.opening_rate, pay: l.settlement_rate, fx: Number(l.fx_difference) });
+  });
+  rows.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+
+  const loss = rows.filter(r => r.fx > 0).reduce((s, r) => s + r.fx, 0);
+  const gain = rows.filter(r => r.fx < 0).reduce((s, r) => s - r.fx, 0);
+  const net = gain - loss;
+  document.getElementById('importFxGain').textContent = gain.toFixed(2);
+  document.getElementById('importFxLoss').textContent = loss.toFixed(2);
+  const netEl = document.getElementById('importFxNet');
+  netEl.textContent = net.toFixed(2);
+  netEl.className = 'report-card-value num ' + (net > 0 ? 'positive' : (net < 0 ? 'negative' : ''));
+
+  if (rows.length === 0) { tbody.innerHTML = '<tr><td colspan="8" class="bo-empty">لا توجد فروق عملة في الفترة المحددة</td></tr>'; return; }
+  tbody.innerHTML = rows.map(r => `<tr>
+    <td class="num">${r.date || '—'}</td>
+    <td>${escapeHtml(r.ref)}</td>
+    <td>${escapeHtml(r.supplier)}</td>
+    <td>${escapeHtml(r.source)}</td>
+    <td class="num">${r.foreign != null ? Number(r.foreign).toFixed(2) + ' ' + escapeHtml(r.cur) : '—'}</td>
+    <td class="num">${r.book != null ? Number(r.book).toFixed(4) : '—'}</td>
+    <td class="num">${r.pay != null ? Number(r.pay).toFixed(4) : '—'}</td>
+    <td class="num">${fxDiffLabelHtml(r.fx)}</td>
+  </tr>`).join('');
 }
 
 // ---- تحصيل من عميل تصدير ----
@@ -39768,31 +40731,6 @@ async function openCustomerCollectionModal(shipment) {
 function closeCustomerCollectionModal() {
   document.getElementById('customerCollectionModalOverlay').classList.remove('show');
   currentCustomerCollectionShipment = null;
-}
-
-// ---- سجل دفعات الشحنة (مشترك استيراد/تصدير) ----
-async function openShipmentPaymentsHistory(kind) {
-  const idField = kind === 'import' ? 'importShipmentId' : 'exportShipmentId';
-  const shipmentId = document.getElementById(idField).value;
-  if (!shipmentId) return;
-  const table = kind === 'import' ? 'import_shipment_payments' : 'export_shipment_payments';
-  document.getElementById('shipmentPaymentsHistoryTitle').textContent = kind === 'import' ? 'سجل الدفعات للمورد' : 'سجل التحصيلات من العميل';
-  const tbody = document.getElementById('shipmentPaymentsHistoryList');
-  tbody.innerHTML = '<tr><td colspan="3" class="bo-empty">جاري التحميل...</td></tr>';
-  document.getElementById('shipmentPaymentsHistoryModalOverlay').classList.add('show');
-
-  const { data, error } = await supabaseClient.from(table).select('*').eq('shipment_id', shipmentId).order('payment_date', { ascending: false });
-  if (error) { console.error(error); tbody.innerHTML = '<tr><td colspan="3" class="bo-empty">تعذر تحميل السجل</td></tr>'; return; }
-  if (!data || data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="3" class="bo-empty">لا توجد دفعات مسجلة بعد</td></tr>';
-    return;
-  }
-  tbody.innerHTML = data.map(p => `
-    <tr>
-      <td class="num">${p.payment_date}</td>
-      <td class="num">${Number(p.amount).toFixed(2)}</td>
-      <td>${escapeHtml(p.notes || '—')}</td>
-    </tr>`).join('');
 }
 
 function closeShipmentPaymentsHistory() {
@@ -40409,6 +41347,25 @@ async function refreshImportExportDashboard() {
       return sum + Math.max(0, goodsValue - Number(s.paid_amount || 0));
     }, 0);
     document.getElementById('ieDashCustomerDue').textContent = customerDue.toFixed(2);
+
+    const [fxRes, lcRes] = await Promise.all([
+      supabaseClient.from('import_shipment_payments').select('fx_difference').neq('fx_difference', 0),
+      supabaseClient.from('import_letters_of_credit').select('status, expiry_date, maturity_date, shipment_id, fx_difference'),
+    ]);
+    const lcs = lcRes.data || [];
+    const liveLcs = lcs.filter(l => ['opened', 'documents_presented'].includes(l.status));
+    document.getElementById('ieDashLcOpen').textContent = liveLcs.length;
+    document.getElementById('ieDashLcDue').textContent = liveLcs.filter(l => lcIsDue(l, 7)).length;
+    document.getElementById('ieDashLcExpiring').textContent = liveLcs.filter(l => {
+      if (!l.expiry_date) return false;
+      return Math.round((new Date(l.expiry_date) - new Date(new Date().toISOString().slice(0, 10))) / 86400000) <= 14;
+    }).length;
+    const fxLoss = (fxRes.data || []).reduce((s, p) => s + Number(p.fx_difference), 0)
+      + lcs.filter(l => l.status === 'settled' && !l.shipment_id).reduce((s, l) => s + Number(l.fx_difference), 0);
+    const fxNet = -fxLoss;
+    const fxEl = document.getElementById('ieDashFxNet');
+    fxEl.textContent = fxNet.toFixed(2);
+    fxEl.className = 'report-card-value num ' + (fxNet > 0 ? 'positive' : (fxNet < 0 ? 'negative' : ''));
   } catch (err) {
     console.error(err);
     showToast('تعذر تحميل لوحة تحكم الاستيراد والتصدير', true);
@@ -46878,9 +47835,12 @@ async function refreshIncomeStatement() {
     if (salariesError) throw salariesError;
     const totalSalaries = (salaries || []).reduce((sum, x) => sum + Number(x.net_amount), 0);
 
+    // فروق العملة المحققة من مدفوعات موردي الاستيراد (موجب = ربح، سالب = خسارة)
+    const realizedFx = await computeImportFxRealized(fromDate, toDate, branchId);
+
     const netSales = totalSales - totalReturns;
     const grossProfit = netSales - netCOGS;
-    const netProfit = grossProfit - totalExpenses - totalSalaries;
+    const netProfit = grossProfit - totalExpenses - totalSalaries + realizedFx;
 
     const rows = [
       { label: 'إجمالي المبيعات', value: totalSales, type: 'normal' },
@@ -46890,6 +47850,7 @@ async function refreshIncomeStatement() {
       { label: 'إجمالي الربح (هامش الربح)', value: grossProfit, type: 'subtotal' },
       { label: 'المصروفات', value: totalExpenses, type: 'deduct' },
       { label: 'الرواتب', value: totalSalaries, type: 'deduct' },
+      ...(Math.abs(realizedFx) >= 0.005 ? [{ label: 'فروق العملة المحققة (ربح + / خسارة −)', value: realizedFx, type: 'normal' }] : []),
       { label: 'صافي الربح', value: netProfit, type: 'total' },
     ];
     lastIncomeStatementRows = rows;
@@ -46964,6 +47925,8 @@ async function refreshFinancialPositionReport() {
     // مستحق من العملاء (ذمم مدينة) ومستحق للموردين (ذمم دائنة) — أرصدة موجبة فقط
     const receivables = boCustomers.reduce((sum, c) => sum + Math.max(Number(c.balance) || 0, 0), 0);
     const payables = boSuppliers.reduce((sum, s) => sum + Math.max(Number(s.balance) || 0, 0), 0);
+    // تقييم المتبقي على الموردين بعملة أجنبية بسعر الصرف الحالي المحفوظ (من شاشة فروق العملة) — تقديري
+    const fxUnrealized = await computeImportFxUnrealizedTotal();
 
     // قيمة المخزون بسعر التكلفة (كل الفروع/المخازن)
     const stockByProduct = await fetchStockByProduct(null);
@@ -46980,7 +47943,7 @@ async function refreshFinancialPositionReport() {
       .reduce((sum, a) => sum + computeAssetBookValue(a), 0);
 
     const totalAssets = treasuryBalance + cashOnHand + receivables + inventoryValue + fixedAssetsValue;
-    const totalLiabilities = payables;
+    const totalLiabilities = payables + fxUnrealized;
     const netPosition = totalAssets - totalLiabilities;
 
     // رأس المال وحقوق الملكية: صافي مساهمات المالك (رأس مال مبدئي + ضخ إضافي − مسحوبات
@@ -47032,6 +47995,7 @@ async function refreshFinancialPositionReport() {
       { label: 'صافي القيمة الدفترية للأصول الثابتة', value: fixedAssetsValue, type: 'normal' },
       { label: 'إجمالي الأصول التقديرية', value: totalAssets, type: 'subtotal' },
       { label: 'مستحق للموردين (ذمم دائنة)', value: payables, type: 'deduct' },
+      ...(Math.abs(fxUnrealized) >= 0.005 ? [{ label: 'تقييم فروق العملة غير المحققة على الموردين (تقديري)', value: fxUnrealized, type: 'deduct' }] : []),
       { label: 'رأس المال المستثمر (صافي مساهمات المالك)', value: capitalNet, type: 'normal' },
       { label: 'الأرباح المحتجزة التقديرية', value: retainedEarnings, type: 'normal' },
       { label: 'صافي المركز المالي التقديري', value: netPosition, type: 'total' },
