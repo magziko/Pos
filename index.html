@@ -1742,6 +1742,7 @@ a { color: inherit; }
             <button class="bo-nav-sub-item" data-section="import-shipments">شحنات الاستيراد</button>
             <button class="bo-nav-sub-item" data-section="import-lcs">الاعتمادات المستندية</button>
             <button class="bo-nav-sub-item" data-section="import-fx">فروق العملة</button>
+            <button class="bo-nav-sub-item" data-section="import-cost-sheet">كشف تكلفة الشحنة</button>
             <button class="bo-nav-sub-item" data-section="export-shipments">شحنات التصدير</button>
           </div>
         </div>
@@ -3112,6 +3113,39 @@ a { color: inherit; }
           </div>
         </div>
 
+        <!-- كشف تكلفة الشحنة -->
+        <div id="bo-section-import-cost-sheet" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">كشف تكلفة شحنة الاستيراد</div>
+            <div style="display:flex; gap:8px;">
+              <button class="bo-outline-btn" id="refreshImportCostSheetBtn" type="button">تحديث</button>
+              <button class="bo-outline-btn" id="exportImportCostSheetBtn" type="button">تصدير إكسل</button>
+            </div>
+          </div>
+          <div class="search-row" style="margin-bottom:14px; display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
+            <select id="importCostShipment" style="min-width:240px; max-width:420px;"><option value="">— اختر الشحنة —</option></select>
+            <label style="font-size:13px; display:flex; align-items:center; gap:6px;">
+              <input type="checkbox" id="importCostIncludeLc"> تضمين عمولة ومصاريف الاعتماد المستندي في التكلفة
+            </label>
+          </div>
+          <div style="font-size:12.5px; color:var(--ink-soft); margin-bottom:12px;">
+            التكاليف الإضافية (شحن + جمارك + أخرى) موزعة على الأصناف بنسبة قيمة كل صنف — نفس طريقة حساب التكلفة وقت الاستلام. الحساب على الكمية المطلوبة في الشحنة. التضمين هنا للعرض فقط ولا يغيّر تكلفة الصنف المسجلة. فروق العملة تظهر منفصلة ولا تدخل في التكلفة.
+          </div>
+          <div class="report-cards">
+            <div class="report-card"><div class="report-card-label">قيمة البضاعة (جنيه)</div><div class="report-card-value num" id="importCostGoods">0.00</div></div>
+            <div class="report-card"><div class="report-card-label">شحن + جمارك + أخرى</div><div class="report-card-value num" id="importCostExtras">0.00</div></div>
+            <div class="report-card"><div class="report-card-label">عمولة ومصاريف الاعتماد</div><div class="report-card-value num" id="importCostLcFees">0.00</div></div>
+            <div class="report-card"><div class="report-card-label">إجمالي تكلفة الشحنة</div><div class="report-card-value num negative" id="importCostTotal">0.00</div></div>
+            <div class="report-card"><div class="report-card-label">فروق العملة المحققة (ربح + / خسارة −) — منفصلة</div><div class="report-card-value num" id="importCostFx">0.00</div></div>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>الصنف</th><th>الكمية</th><th>سعر الوحدة (عملة)</th><th>قيمة البضاعة (جنيه)</th><th>نصيب التكاليف</th><th>إجمالي التكلفة</th><th>تكلفة الوحدة</th></tr></thead>
+              <tbody id="importCostSheetBody"><tr><td colspan="7" class="bo-empty">اختر شحنة لعرض كشف التكلفة</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- لوحة تحكم الاستيراد والتصدير -->
         <div id="bo-section-import-export-dashboard" style="display:none;">
           <div class="bo-section-header">
@@ -3802,8 +3836,12 @@ a { color: inherit; }
                   <div class="report-card-value num" id="reportAvgInvoice">0.00</div>
                 </div>
                 <div class="report-card">
-                  <div class="report-card-label">صافي الربح (بعد خصم المصروفات والرواتب)</div>
+                  <div class="report-card-label">صافي الربح (بعد خصم المصروفات والرواتب، وشامل فروق العملة إن وُجدت)</div>
                   <div class="report-card-value num positive" id="reportProfit">0.00</div>
+                </div>
+                <div class="report-card" id="reportFxCard" style="display:none;">
+                  <div class="report-card-label">فروق العملة المحققة (استيراد) — ضمن صافي الربح</div>
+                  <div class="report-card-value num" id="reportFx">0.00</div>
                 </div>
                 <div class="report-card">
                   <div class="report-card-label">إجمالي المصروفات</div>
@@ -5306,9 +5344,9 @@ a { color: inherit; }
               </div>
               <div class="bo-table-wrap">
                 <table class="bo-table">
-                  <thead><tr><th>الفرع</th><th>المبيعات</th><th>عدد الفواتير</th><th>تكلفة البضاعة</th><th>إجمالي الربح</th><th>المصروفات</th><th>الرواتب</th><th>صافي الربح</th><th>هامش الربح</th></tr></thead>
+                  <thead><tr><th>الفرع</th><th>المبيعات</th><th>عدد الفواتير</th><th>تكلفة البضاعة</th><th>إجمالي الربح</th><th>المصروفات</th><th>الرواتب</th><th>فروق العملة</th><th>صافي الربح</th><th>هامش الربح</th></tr></thead>
                   <tbody id="branchProfitTableBody">
-                    <tr><td colspan="9" class="bo-empty">جاري التحميل...</td></tr>
+                    <tr><td colspan="10" class="bo-empty">جاري التحميل...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -9319,6 +9357,7 @@ a { color: inherit; }
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelImportShipmentBtn">إغلاق</button>
         <button type="button" class="bo-outline-btn" id="viewImportPaymentsBtn" style="display:none;">سجل الدفعات</button>
+        <button type="button" class="bo-outline-btn" id="viewImportDocsBtn" style="display:none;">المستندات</button>
         <button type="button" class="bo-outline-btn" id="receiveImportShipmentBtn" style="display:none;">استلام/استكمال الاستلام</button>
         <button type="submit" class="submit-btn" id="saveImportShipmentBtn">حفظ</button>
       </div>
@@ -9425,6 +9464,32 @@ a { color: inherit; }
         <button type="submit" class="submit-btn" id="confirmImportLcSettleBtn">تأكيد التسوية</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Modal: مستندات شحنة الاستيراد -->
+<div class="modal-overlay" id="importDocsModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title">مستندات الشحنة</div>
+    <div id="importDocsSummary" style="font-size:13px; font-weight:600; margin-bottom:10px;"></div>
+    <div class="bo-table-wrap">
+      <table class="bo-table">
+        <thead><tr><th>المستند</th><th>الرقم</th><th>التاريخ</th><th>الحالة</th><th></th></tr></thead>
+        <tbody id="importDocsList"><tr><td colspan="5" class="bo-empty">جاري التحميل...</td></tr></tbody>
+      </table>
+    </div>
+    <div class="modal-grid" style="margin-top:12px;">
+      <div class="field"><label>إضافة مستند</label><select id="importDocsNewType"></select></div>
+      <div class="field"><label>&nbsp;</label><input type="text" id="importDocsNewCustom" placeholder="اسم المستند" style="display:none;"></div>
+      <div class="field field-full" style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button type="button" class="bo-outline-btn" id="addImportDocBtn">+ إضافة</button>
+        <button type="button" class="bo-outline-btn" id="addDefaultImportDocsBtn">إضافة المستندات الأساسية</button>
+      </div>
+    </div>
+    <div class="error-msg" id="importDocsModalError"></div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="closeImportDocsBtn">إغلاق</button>
+    </div>
   </div>
 </div>
 
@@ -20126,7 +20191,7 @@ const boAllSections = ['dashboard','products','categories','unit-types','tax-rat
   'clinic-patients','clinic-doctors','clinic-appointments',
   'academy-students','academy-courses','academy-instructors','academy-enrollments','academy-sessions',
   'venue-courts','venue-bookings',
-  'import-shipments','import-lcs','import-fx',
+  'import-shipments','import-lcs','import-fx','import-cost-sheet',
   'export-shipments','import-export-dashboard',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
   'soon','company-info','permissions','users','branches','business-types','pos-devices','branch-settings','pos-tables','print-settings','stock','stocktake','product-batches','product-serials','backup','reset-data','employees','attendance','leave-requests','expense-items','expenses','salaries','sales-commissions','treasuries','capital','fixed-assets','promotions','coupons','modifier-groups','recipes'];
@@ -20142,7 +20207,7 @@ const boNavGroups = [
   { toggle: 'clinicNavToggle', group: 'clinicNavGroup', sections: ['clinic-patients', 'clinic-doctors', 'clinic-appointments'] },
   { toggle: 'academyNavToggle', group: 'academyNavGroup', sections: ['academy-students', 'academy-courses', 'academy-instructors', 'academy-enrollments', 'academy-sessions'] },
   { toggle: 'venueNavToggle', group: 'venueNavGroup', sections: ['venue-courts', 'venue-bookings'] },
-  { toggle: 'importExportNavToggle', group: 'importExportNavGroup', sections: ['import-export-dashboard', 'import-shipments', 'import-lcs', 'import-fx', 'export-shipments'] },
+  { toggle: 'importExportNavToggle', group: 'importExportNavGroup', sections: ['import-export-dashboard', 'import-shipments', 'import-lcs', 'import-fx', 'import-cost-sheet', 'export-shipments'] },
   { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
   { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['treasuries','payments','expense-items','expenses','capital','fixed-assets'] },
   { toggle: 'hrNavToggle', group: 'hrNavGroup', sections: ['employees','attendance','leave-requests','salaries','sales-commissions'] },
@@ -20175,7 +20240,7 @@ const SECTION_PERMISSION_MAP = {
   'academy-students': 'academy_management', 'academy-courses': 'academy_management', 'academy-instructors': 'academy_management',
   'academy-enrollments': 'academy_management', 'academy-sessions': 'academy_management',
   'venue-courts': 'venue_management', 'venue-bookings': 'venue_management',
-  'import-shipments': 'import_export_management', 'import-lcs': 'import_export_management', 'import-fx': 'import_export_management',
+  'import-shipments': 'import_export_management', 'import-lcs': 'import_export_management', 'import-fx': 'import_export_management', 'import-cost-sheet': 'import_export_management',
   'export-shipments': 'import_export_management', 'import-export-dashboard': 'import_export_management',
   'reports-sales': 'reports', 'reports-purchases': 'reports', 'reports-inventory': 'reports', 'reports-accounting': 'reports', 'reports-other': 'reports',
   'treasuries': 'finance', 'payments': 'finance', 'expense-items': 'finance', 'expenses': 'finance', 'capital': 'admin', 'fixed-assets': 'finance',
@@ -20292,7 +20357,7 @@ const SCREEN_LABELS = {
   'academy-students': 'الطلاب', 'academy-courses': 'الكورسات', 'academy-instructors': 'المدربين',
   'academy-enrollments': 'التسجيلات', 'academy-sessions': 'الحصص',
   'venue-courts': 'الملاعب/القاعات', 'venue-bookings': 'الحجوزات',
-  'import-shipments': 'الشحنات', 'import-lcs': 'الاعتمادات المستندية', 'import-fx': 'فروق العملة',
+  'import-shipments': 'الشحنات', 'import-lcs': 'الاعتمادات المستندية', 'import-fx': 'فروق العملة', 'import-cost-sheet': 'كشف تكلفة الشحنة',
   'export-shipments': 'شحنات التصدير', 'import-export-dashboard': 'لوحة تحكم الاستيراد والتصدير'
 };
 
@@ -21123,6 +21188,7 @@ function activateBoSection(section, btn) {
   }
   if (section === 'import-lcs') { Promise.all([loadBoImportLcs(), boSuppliers.length ? null : loadBoSuppliers(), boTreasuries.length ? null : loadBoTreasuries(), boImportShipments.length ? null : loadBoImportShipments()]).then(renderImportLcsTable); }
   if (section === 'import-fx') { refreshImportFxReport(); renderImportFxUnrealized(); }
+  if (section === 'import-cost-sheet') { populateImportCostShipments().then(refreshImportCostSheet); }
   if (section === 'import-export-dashboard') { refreshImportExportDashboard(); }
   if (section === 'purchase-orders') { loadBoPurchaseOrders().then(renderPurchaseOrdersTable); }
   if (section === 'purchase-requisitions') { loadBoRequisitions().then(renderRequisitionsTable); }
@@ -22745,6 +22811,14 @@ function bindBackofficeEvents() {
   });
   document.getElementById('confirmImportReceiveBtn').addEventListener('click', () => confirmImportReceive());
   document.getElementById('viewImportPaymentsBtn').addEventListener('click', () => openShipmentPaymentsHistory('import'));
+  document.getElementById('viewImportDocsBtn').addEventListener('click', () => openImportDocsModal());
+  document.getElementById('closeImportDocsBtn').addEventListener('click', closeImportDocsModal);
+  document.getElementById('importDocsModalOverlay').addEventListener('click', (e) => { if (e.target.id === 'importDocsModalOverlay') closeImportDocsModal(); });
+  document.getElementById('addImportDocBtn').addEventListener('click', () => addImportDocFromForm());
+  document.getElementById('addDefaultImportDocsBtn').addEventListener('click', () => addDefaultImportDocs());
+  document.getElementById('importDocsNewType').addEventListener('change', () => {
+    document.getElementById('importDocsNewCustom').style.display = document.getElementById('importDocsNewType').value === '__custom' ? '' : 'none';
+  });
   document.getElementById('importShipmentSearchInput').addEventListener('input', renderImportShipmentsTable);
 
   // ---- Supplier Payment modal ----
@@ -22783,6 +22857,10 @@ function bindBackofficeEvents() {
   // ---- FX report ----
   document.getElementById('refreshImportFxBtn').addEventListener('click', () => { refreshImportFxReport(); renderImportFxUnrealized(); });
   document.getElementById('saveImportFxRatesBtn').addEventListener('click', () => saveImportFxRates());
+  document.getElementById('importCostShipment').addEventListener('change', refreshImportCostSheet);
+  document.getElementById('importCostIncludeLc').addEventListener('change', refreshImportCostSheet);
+  document.getElementById('refreshImportCostSheetBtn').addEventListener('click', refreshImportCostSheet);
+  document.getElementById('exportImportCostSheetBtn').addEventListener('click', exportImportCostSheetToExcel);
   document.getElementById('importFxFrom').addEventListener('change', () => refreshImportFxReport());
   document.getElementById('importFxTo').addEventListener('change', () => refreshImportFxReport());
 
@@ -39523,16 +39601,19 @@ async function openImportShipmentModal(shipment) {
   const addItemWrap = document.getElementById('importShipmentAddItemWrap');
   const receiveBtn = document.getElementById('receiveImportShipmentBtn');
   const paymentsBtn = document.getElementById('viewImportPaymentsBtn');
+  const docsBtn = document.getElementById('viewImportDocsBtn');
   if (shipment) {
     addItemWrap.style.display = '';
     await renderImportShipmentItemsList(shipment.id);
     receiveBtn.style.display = ['received', 'cancelled'].includes(shipment.status) ? 'none' : '';
     paymentsBtn.style.display = '';
+    docsBtn.style.display = '';
   } else {
     addItemWrap.style.display = 'none';
     document.getElementById('importShipmentItemsList').innerHTML = '<tr><td colspan="5" class="bo-empty">— احفظ الشحنة أولًا لإضافة أصناف —</td></tr>';
     receiveBtn.style.display = 'none';
     paymentsBtn.style.display = 'none';
+    docsBtn.style.display = 'none';
   }
 
   document.getElementById('importShipmentModalError').classList.remove('show');
@@ -40377,6 +40458,10 @@ async function confirmImportLcDocs(e) {
   if (!d) return fail('اختر تاريخ تقديم المستندات');
   if (lc.issue_date && d < lc.issue_date) return fail('تاريخ التقديم قبل تاريخ إصدار الاعتماد');
   if (lc.expiry_date && d > lc.expiry_date) return fail('تاريخ التقديم بعد تاريخ انتهاء صلاحية الاعتماد');
+  if (lc.shipment_id) {
+    const docs = await countPendingImportDocs(lc.shipment_id);
+    if (docs.pending.length > 0 && !confirm(`على الشحنة المرتبطة ${docs.pending.length} مستند لسه ناقص: ${docs.pending.join('، ')}.\nتقدّم المستندات للبنك برضه؟`)) return;
+  }
   const maturity = lcAddDays(d, lc.lc_type === 'usance' ? (Number(lc.usance_days) || 0) : 0);
   const { data, error } = await supabaseClient.from('import_letters_of_credit')
     .update({ status: 'documents_presented', documents_date: d, maturity_date: maturity })
@@ -40633,6 +40718,30 @@ async function saveImportFxRates() {
   await renderImportFxUnrealized();
 }
 
+// فروق العملة المحققة في فترة مجمّعة حسب الفرع (لتقرير الأرباح حسب الفرع): موجب = ربح، سالب = خسارة
+async function computeImportFxRealizedByBranch(fromDate, toDate) {
+  const map = {};
+  try {
+    let pq = supabaseClient.from('import_shipment_payments')
+      .select('fx_difference, import_shipments!inner(branch_id)').neq('fx_difference', 0)
+      .gte('payment_date', fromDate).lte('payment_date', toDate);
+    pq = applyBranchScope(pq, null, 'import_shipments.branch_id');
+    let lq = supabaseClient.from('import_letters_of_credit')
+      .select('fx_difference, branch_id').eq('status', 'settled').is('shipment_id', null).neq('fx_difference', 0)
+      .gte('settled_at', `${fromDate}T00:00:00`).lte('settled_at', `${toDate}T23:59:59`);
+    lq = applyBranchScope(lq, null, 'branch_id');
+    const [pr, lr] = await Promise.all([pq, lq]);
+    if (pr.error) throw pr.error;
+    if (lr.error) throw lr.error;
+    (pr.data || []).forEach(p => { const k = p.import_shipments?.branch_id || 'unknown'; map[k] = (map[k] || 0) - Number(p.fx_difference); });
+    (lr.data || []).forEach(l => { const k = l.branch_id || 'unknown'; map[k] = (map[k] || 0) - Number(l.fx_difference); });
+    Object.keys(map).forEach(k => { map[k] = fxRound2(map[k]); });
+  } catch (err) {
+    console.error(err);
+  }
+  return map;
+}
+
 // فروق العملة المحققة في فترة (للقوائم المالية): موجب = ربح، سالب = خسارة
 async function computeImportFxRealized(fromDate, toDate, branchId) {
   try {
@@ -40654,6 +40763,188 @@ async function computeImportFxRealized(fromDate, toDate, branchId) {
     console.error(err);
     return 0;
   }
+}
+
+// ---- كشف تكلفة الشحنة ----
+let lastImportCostSheet = null;
+
+// حساب التكلفة (دالة نقية عشان تتختبر): الأصناف بتاخد نصيبها من التكاليف الإضافية بنسبة قيمتها
+function computeImportCostSheet(items, rate, extras, lcFees, includeLc) {
+  const r = Number(rate) || 1;
+  const totalGoods = items.reduce((s, it) => s + Number(it.quantity) * Number(it.unit_cost_foreign) * r, 0);
+  const extraPool = Number(extras) + (includeLc ? Number(lcFees) : 0);
+  const rows = items.map(it => {
+    const qty = Number(it.quantity);
+    const goods = qty * Number(it.unit_cost_foreign) * r;
+    const share = totalGoods > 0 ? (goods / totalGoods) * extraPool : 0;
+    return { name: it.name, qty, unitForeign: Number(it.unit_cost_foreign), goods, share, total: goods + share, unitCost: qty > 0 ? (goods + share) / qty : 0 };
+  });
+  return { rows, totalGoods, extraPool, grandTotal: totalGoods + extraPool };
+}
+
+async function populateImportCostShipments() {
+  if (boImportShipments.length === 0) await loadBoImportShipments();
+  const sel = document.getElementById('importCostShipment');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">— اختر الشحنة —</option>' + boImportShipments
+    .filter(s => s.status !== 'cancelled')
+    .map(s => `<option value="${s.id}">${escapeHtml(s.shipment_ref || '—')}${s.suppliers?.name ? ' — ' + escapeHtml(s.suppliers.name) : ''}</option>`).join('');
+  sel.value = current;
+}
+
+async function refreshImportCostSheet() {
+  const id = document.getElementById('importCostShipment').value;
+  const tbody = document.getElementById('importCostSheetBody');
+  lastImportCostSheet = null;
+  if (!id) { tbody.innerHTML = '<tr><td colspan="7" class="bo-empty">اختر شحنة لعرض كشف التكلفة</td></tr>'; return; }
+  const s = boImportShipments.find(x => x.id === id);
+  if (!s) return;
+  tbody.innerHTML = '<tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>';
+  const [itemsRes, lcRes, fxRes] = await Promise.all([
+    supabaseClient.from('import_shipment_items').select('quantity, unit_cost_foreign, products(name)').eq('shipment_id', id).order('created_at'),
+    supabaseClient.from('import_letters_of_credit').select('bank_fees').eq('shipment_id', id).not('status', 'in', '(draft,cancelled)'),
+    supabaseClient.from('import_shipment_payments').select('fx_difference').eq('shipment_id', id),
+  ]);
+  if (itemsRes.error) { console.error(itemsRes.error); tbody.innerHTML = '<tr><td colspan="7" class="bo-empty">تعذر تحميل الكشف</td></tr>'; return; }
+  const items = (itemsRes.data || []).map(it => ({ ...it, name: it.products?.name || '—' }));
+  const extras = Number(s.freight_cost) + Number(s.customs_duty) + Number(s.other_costs);
+  const lcFees = (lcRes.data || []).reduce((sum, l) => sum + Number(l.bank_fees || 0), 0);
+  const fxRealized = -((fxRes.data || []).reduce((sum, p) => sum + Number(p.fx_difference || 0), 0));
+  const includeLc = document.getElementById('importCostIncludeLc').checked;
+  const sheet = computeImportCostSheet(items, s.exchange_rate, extras, lcFees, includeLc);
+  lastImportCostSheet = { shipment: s, sheet, extras, lcFees, includeLc, fxRealized };
+
+  document.getElementById('importCostGoods').textContent = sheet.totalGoods.toFixed(2);
+  document.getElementById('importCostExtras').textContent = extras.toFixed(2);
+  document.getElementById('importCostLcFees').textContent = lcFees.toFixed(2) + (includeLc ? '' : ' (غير مضافة)');
+  document.getElementById('importCostTotal').textContent = sheet.grandTotal.toFixed(2);
+  const fxEl = document.getElementById('importCostFx');
+  fxEl.textContent = fxRealized.toFixed(2);
+  fxEl.className = 'report-card-value num ' + (fxRealized > 0 ? 'positive' : (fxRealized < 0 ? 'negative' : ''));
+
+  if (sheet.rows.length === 0) { tbody.innerHTML = '<tr><td colspan="7" class="bo-empty">لا توجد أصناف في هذه الشحنة</td></tr>'; return; }
+  tbody.innerHTML = sheet.rows.map(r => `<tr>
+    <td>${escapeHtml(r.name)}</td>
+    <td class="num">${r.qty.toFixed(2)}</td>
+    <td class="num">${r.unitForeign.toFixed(4)} ${escapeHtml(s.currency || '')}</td>
+    <td class="num">${r.goods.toFixed(2)}</td>
+    <td class="num">${r.share.toFixed(2)}</td>
+    <td class="num">${r.total.toFixed(2)}</td>
+    <td class="num"><b>${r.unitCost.toFixed(4)}</b></td>
+  </tr>`).join('');
+}
+
+function exportImportCostSheetToExcel() {
+  if (!lastImportCostSheet || lastImportCostSheet.sheet.rows.length === 0) { showToast('اختر شحنة بها أصناف أولًا', true); return; }
+  const { shipment, sheet, extras, lcFees, includeLc, fxRealized } = lastImportCostSheet;
+  const rows = sheet.rows.map(r => ({
+    'الصنف': r.name, 'الكمية': Number(r.qty.toFixed(2)), [`سعر الوحدة (${shipment.currency || ''})`]: Number(r.unitForeign.toFixed(4)),
+    'قيمة البضاعة (جنيه)': Number(r.goods.toFixed(2)), 'نصيب التكاليف': Number(r.share.toFixed(2)),
+    'إجمالي التكلفة': Number(r.total.toFixed(2)), 'تكلفة الوحدة': Number(r.unitCost.toFixed(4)),
+  }));
+  const summary = [
+    { 'البند': 'قيمة البضاعة (جنيه)', 'القيمة': Number(sheet.totalGoods.toFixed(2)) },
+    { 'البند': 'شحن + جمارك + أخرى', 'القيمة': Number(extras.toFixed(2)) },
+    { 'البند': includeLc ? 'عمولة ومصاريف الاعتماد (مضافة)' : 'عمولة ومصاريف الاعتماد (غير مضافة)', 'القيمة': Number(lcFees.toFixed(2)) },
+    { 'البند': 'إجمالي تكلفة الشحنة', 'القيمة': Number(sheet.grandTotal.toFixed(2)) },
+    { 'البند': 'فروق العملة المحققة (ربح + / خسارة −) — منفصلة', 'القيمة': Number(fxRealized.toFixed(2)) },
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'تكلفة الأصناف');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summary), 'الملخص');
+  XLSX.writeFile(wb, `كشف-تكلفة-شحنة-${(shipment.shipment_ref || 'shipment').replace(/[\\/:*?"<>|]/g, '_')}-${new Date().toISOString().split('T')[0]}.xlsx`);
+}
+
+// ---- مستندات الشحنة (قايمة تحقق) ----
+const IMPORT_DOC_DEFAULTS = ['بوليصة الشحن (B/L)', 'الفاتورة التجارية', 'Packing List', 'شهادة المنشأ', 'شهادة فحص/مطابقة', 'بوليصة التأمين', 'إذن التسليم'];
+const IMPORT_DOC_STATUS = { pending: 'مطلوب', received: 'تم الاستلام', submitted: 'مقدَّم' };
+let currentImportDocsShipmentId = null;
+
+async function openImportDocsModal() {
+  const id = document.getElementById('importShipmentId').value;
+  if (!id) return;
+  currentImportDocsShipmentId = id;
+  const sel = document.getElementById('importDocsNewType');
+  sel.innerHTML = IMPORT_DOC_DEFAULTS.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('') + '<option value="__custom">أخرى...</option>';
+  document.getElementById('importDocsNewCustom').value = '';
+  document.getElementById('importDocsNewCustom').style.display = 'none';
+  document.getElementById('importDocsModalError').classList.remove('show');
+  document.getElementById('importDocsModalOverlay').classList.add('show');
+  await renderImportDocs();
+}
+
+function closeImportDocsModal() {
+  document.getElementById('importDocsModalOverlay').classList.remove('show');
+  currentImportDocsShipmentId = null;
+}
+
+async function renderImportDocs() {
+  const shipmentId = currentImportDocsShipmentId;
+  const tbody = document.getElementById('importDocsList');
+  const { data, error } = await supabaseClient.from('import_shipment_documents').select('*').eq('shipment_id', shipmentId).order('created_at');
+  if (error) { console.error(error); tbody.innerHTML = '<tr><td colspan="5" class="bo-empty">تعذر تحميل المستندات</td></tr>'; return; }
+  const docs = data || [];
+  const done = docs.filter(d => d.status !== 'pending').length;
+  document.getElementById('importDocsSummary').textContent = docs.length ? `${done} من ${docs.length} مستند تم استلامه/تقديمه` : 'لا توجد مستندات مسجلة بعد';
+  if (docs.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="bo-empty">اضغط "إضافة المستندات الأساسية" أو أضف مستند يدويًا</td></tr>'; return; }
+  tbody.innerHTML = docs.map(d => `<tr data-doc-id="${d.id}">
+    <td>${escapeHtml(d.doc_type)}</td>
+    <td><input type="text" data-field="doc_number" value="${escapeHtml(d.doc_number || '')}" style="direction:ltr; text-align:right; width:130px;"></td>
+    <td><input type="date" data-field="doc_date" value="${d.doc_date || ''}"></td>
+    <td><select data-field="status">${Object.entries(IMPORT_DOC_STATUS).map(([k, v]) => `<option value="${k}" ${d.status === k ? 'selected' : ''}>${v}</option>`).join('')}</select></td>
+    <td><button type="button" class="bo-icon-btn danger" data-doc-del="${d.id}">حذف</button></td>
+  </tr>`).join('');
+  tbody.querySelectorAll('[data-field]').forEach(el => {
+    el.addEventListener('change', async () => {
+      const row = el.closest('tr');
+      const field = el.dataset.field;
+      const value = el.value.trim() || null;
+      const { error: updErr } = await supabaseClient.from('import_shipment_documents').update({ [field]: value }).eq('id', row.dataset.docId);
+      if (updErr) { console.error(updErr); showToast('تعذر حفظ التعديل', true); return; }
+      if (field === 'status') renderImportDocs();
+    });
+  });
+  tbody.querySelectorAll('[data-doc-del]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('حذف هذا المستند من القايمة؟')) return;
+      const { error: delErr } = await supabaseClient.from('import_shipment_documents').delete().eq('id', btn.dataset.docDel);
+      if (delErr) { console.error(delErr); showToast('تعذر الحذف', true); return; }
+      renderImportDocs();
+    });
+  });
+}
+
+async function addImportDocs(types) {
+  const shipmentId = currentImportDocsShipmentId;
+  if (!shipmentId || types.length === 0) return;
+  const { error } = await supabaseClient.from('import_shipment_documents')
+    .insert(types.map(t => ({ shipment_id: shipmentId, doc_type: t, created_by: currentProfile.id })));
+  if (error) { console.error(error); showToast('تعذر إضافة المستند', true); return; }
+  await renderImportDocs();
+}
+
+async function addDefaultImportDocs() {
+  const { data } = await supabaseClient.from('import_shipment_documents').select('doc_type').eq('shipment_id', currentImportDocsShipmentId);
+  const existing = new Set((data || []).map(d => d.doc_type));
+  const missing = IMPORT_DOC_DEFAULTS.filter(t => !existing.has(t));
+  if (missing.length === 0) { showToast('كل المستندات الأساسية مضافة بالفعل'); return; }
+  await addImportDocs(missing);
+}
+
+async function addImportDocFromForm() {
+  const sel = document.getElementById('importDocsNewType').value;
+  const type = sel === '__custom' ? document.getElementById('importDocsNewCustom').value.trim() : sel;
+  if (!type) { showToast('اكتب اسم المستند', true); return; }
+  await addImportDocs([type]);
+  document.getElementById('importDocsNewCustom').value = '';
+}
+
+// عدد المستندات الناقصة (لسه "مطلوب") على شحنة — بيتستخدم لتحذير تقديم مستندات الاعتماد
+async function countPendingImportDocs(shipmentId) {
+  const { data, error } = await supabaseClient.from('import_shipment_documents').select('doc_type, status').eq('shipment_id', shipmentId);
+  if (error) { console.error(error); return { total: 0, pending: [] }; }
+  const docs = data || [];
+  return { total: docs.length, pending: docs.filter(d => d.status === 'pending').map(d => d.doc_type) };
 }
 
 // ---- تقرير فروق العملة ----
@@ -45908,7 +46199,16 @@ async function runReport() {
     const totalSalariesInRange = (salariesInRange || []).reduce((sum, x) => sum + Number(x.net_amount), 0);
     document.getElementById('reportSalaries').textContent = totalSalariesInRange.toFixed(2);
 
-    const profit = grossProfit - totalExpensesInRange - totalSalariesInRange;
+    // فروق العملة المحققة من مدفوعات موردي الاستيراد (موجب = ربح، سالب = خسارة)
+    const realizedFxInRange = await computeImportFxRealized(fromDate, toDate, branchId);
+    const fxCard = document.getElementById('reportFxCard');
+    fxCard.style.display = Math.abs(realizedFxInRange) >= 0.005 ? '' : 'none';
+    const fxValEl = document.getElementById('reportFx');
+    fxValEl.textContent = realizedFxInRange.toFixed(2);
+    fxValEl.classList.toggle('positive', realizedFxInRange > 0);
+    fxValEl.classList.toggle('negative', realizedFxInRange < 0);
+
+    const profit = grossProfit - totalExpensesInRange - totalSalariesInRange + realizedFxInRange;
     const profitEl = document.getElementById('reportProfit');
     profitEl.textContent = profit.toFixed(2);
     profitEl.classList.toggle('positive', profit >= 0);
@@ -46393,7 +46693,7 @@ async function runBranchProfitReport() {
   if (!fromDate || !toDate) return;
   const fromISO = `${fromDate}T00:00:00`;
   const toISO = `${toDate}T23:59:59`;
-  document.getElementById('branchProfitTableBody').innerHTML = `<tr><td colspan="9" class="bo-empty">جاري التحميل...</td></tr>`;
+  document.getElementById('branchProfitTableBody').innerHTML = `<tr><td colspan="10" class="bo-empty">جاري التحميل...</td></tr>`;
   try {
     const { data: sales, error: salesError } = await supabaseClient
       .from('sales')
@@ -46427,7 +46727,7 @@ async function runBranchProfitReport() {
 
     const branchMap = {};
     const ensureBranch = (id, name) => {
-      if (!branchMap[id]) branchMap[id] = { name: name || 'فرع محذوف', sales: 0, count: 0, cost: 0, expenses: 0, salaries: 0 };
+      if (!branchMap[id]) branchMap[id] = { name: name || 'فرع محذوف', sales: 0, count: 0, cost: 0, expenses: 0, salaries: 0, fx: 0 };
       else if (name) branchMap[id].name = name;
       return branchMap[id];
     };
@@ -46452,6 +46752,10 @@ async function runBranchProfitReport() {
       b.salaries += Number(sp.net_amount);
     });
 
+    // فروق العملة المحققة (استيراد) لكل فرع — موجب = ربح
+    const fxByBranch = await computeImportFxRealizedByBranch(fromDate, toDate);
+    Object.entries(fxByBranch).forEach(([id, v]) => { ensureBranch(id).fx += v; });
+
     Object.keys(branchMap).forEach(id => {
       if (branchMap[id].name === 'فرع محذوف') {
         const found = boBranchesList.find(x => x.id === id);
@@ -46461,7 +46765,7 @@ async function runBranchProfitReport() {
 
     const rows = Object.values(branchMap).map(b => {
       const grossProfit = b.sales - b.cost;
-      const netProfit = grossProfit - b.expenses - b.salaries;
+      const netProfit = grossProfit - b.expenses - b.salaries + b.fx;
       const margin = b.sales > 0 ? (netProfit / b.sales * 100) : 0;
       return { ...b, grossProfit, netProfit, margin };
     }).sort((a, b) => b.sales - a.sales);
@@ -46474,7 +46778,7 @@ async function runBranchProfitReport() {
     totalNetEl.classList.toggle('positive', totalNet >= 0);
     totalNetEl.classList.toggle('negative', totalNet < 0);
 
-    renderBreakdownTable('branchProfitTableBody', rows, 9, row => `
+    renderBreakdownTable('branchProfitTableBody', rows, 10, row => `
       <td>${escapeHtml(row.name)}</td>
       <td class="num">${row.sales.toFixed(2)}</td>
       <td class="num">${row.count}</td>
@@ -46482,6 +46786,7 @@ async function runBranchProfitReport() {
       <td class="num">${row.grossProfit.toFixed(2)}</td>
       <td class="num">${row.expenses.toFixed(2)}</td>
       <td class="num">${row.salaries.toFixed(2)}</td>
+      <td class="num ${row.fx > 0 ? 'positive' : (row.fx < 0 ? 'negative' : '')}">${row.fx.toFixed(2)}</td>
       <td class="num ${row.netProfit >= 0 ? 'positive' : 'negative'}">${row.netProfit.toFixed(2)}</td>
       <td class="num">${row.margin.toFixed(1)}%</td>`);
     lastBranchProfitRows = rows;
@@ -46495,7 +46800,7 @@ function exportBranchProfitToExcel() {
   if (lastBranchProfitRows.length === 0) { showToast('لا توجد بيانات لتصديرها', true); return; }
   const rows = lastBranchProfitRows.map(r => ({
     'الفرع': r.name, 'المبيعات': r.sales.toFixed(2), 'عدد الفواتير': r.count, 'تكلفة البضاعة': r.cost.toFixed(2),
-    'إجمالي الربح': r.grossProfit.toFixed(2), 'المصروفات': r.expenses.toFixed(2), 'الرواتب': r.salaries.toFixed(2),
+    'إجمالي الربح': r.grossProfit.toFixed(2), 'المصروفات': r.expenses.toFixed(2), 'الرواتب': r.salaries.toFixed(2), 'فروق العملة': r.fx.toFixed(2),
     'صافي الربح': r.netProfit.toFixed(2), 'هامش الربح %': r.margin.toFixed(1),
   }));
   const wb = XLSX.utils.book_new();
