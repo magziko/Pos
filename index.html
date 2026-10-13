@@ -1746,6 +1746,7 @@ a { color: inherit; }
             <button class="bo-nav-sub-item" data-section="import-profit">ربحية الشحنة</button>
             <button class="bo-nav-sub-item" data-section="export-shipments">شحنات التصدير</button>
             <button class="bo-nav-sub-item" data-section="export-lcs">اعتمادات التصدير</button>
+            <button class="bo-nav-sub-item" data-section="import-containers">تتبع الحاويات</button>
           </div>
         </div>
 
@@ -3100,6 +3101,45 @@ a { color: inherit; }
           </div>
         </div>
 
+        <!-- تتبع الحاويات -->
+        <div id="bo-section-import-containers" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">تتبع الحاويات</div>
+            <button class="bo-add-btn" id="addContainerBtn">+ حاوية جديدة</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px; display:flex; gap:8px; flex-wrap:wrap;">
+            <input type="text" id="containerSearchInput" placeholder="ابحث برقم الحاوية أو الشحنة أو شركة الشحن..." style="flex:1; min-width:200px;">
+            <select id="containerDirectionFilter" style="max-width:150px;">
+              <option value="">استيراد وتصدير</option><option value="import">استيراد</option><option value="export">تصدير</option>
+            </select>
+            <select id="containerStatusFilter" style="max-width:220px;">
+              <option value="">كل الحالات</option>
+              <option value="booked">محجوزة / لم تبحر</option>
+              <option value="sailing">في الطريق</option>
+              <option value="at_port">في الميناء</option>
+              <option value="customs_cleared">تم الإفراج الجمركي</option>
+              <option value="delivered">خرجت من الميناء</option>
+              <option value="returned">أُعيدت فارغة</option>
+              <option value="demurrage">عليها غرامات تأخير</option>
+            </select>
+          </div>
+          <div style="font-size:12.5px; color:var(--ink-soft); margin-bottom:10px;">
+            الحالة بتتحسب تلقائيًا من التواريخ اللي بتدخلها. غرامات التأخير = (أيام بعد انتهاء أيام السماح من وصول الحاوية للميناء حتى خروجها أو النهارده) × الغرامة اليومية. للمتابعة فقط ومبتدخلش في تكلفة الشحنة أو الخزينة.
+          </div>
+          <div class="report-cards">
+            <div class="report-card"><div class="report-card-label">حاويات في الميناء</div><div class="report-card-value num" id="containerCardAtPort">0</div></div>
+            <div class="report-card"><div class="report-card-label">أيام السماح تنتهي خلال 3 أيام</div><div class="report-card-value num" id="containerCardSoon">0</div></div>
+            <div class="report-card"><div class="report-card-label">عليها غرامات تأخير الآن</div><div class="report-card-value num negative" id="containerCardAccruing">0</div></div>
+            <div class="report-card"><div class="report-card-label">إجمالي غرامات التأخير (جنيه)</div><div class="report-card-value num negative" id="containerCardTotal">0.00</div></div>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead><tr><th>الحاوية</th><th>الشحنة</th><th>شركة الشحن</th><th>ميناء الوصول</th><th>الوصول للميناء</th><th>انتهاء أيام السماح</th><th>غرامات التأخير</th><th>الحالة</th><th></th></tr></thead>
+              <tbody id="containersTableBody"><tr><td colspan="9" class="bo-empty">جاري التحميل...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
         <!-- تقرير فروق العملة -->
         <div id="bo-section-import-fx" style="display:none;">
           <div class="bo-section-header">
@@ -3259,6 +3299,7 @@ a { color: inherit; }
             <div class="report-card"><div class="report-card-label">اعتمادات مستندية مفتوحة</div><div class="report-card-value num" id="ieDashLcOpen">0</div></div>
             <div class="report-card"><div class="report-card-label">اعتمادات تنتهي خلال 14 يوم / منتهية</div><div class="report-card-value num negative" id="ieDashLcExpiring">0</div></div>
             <div class="report-card"><div class="report-card-label">اعتمادات مستحقة السداد خلال 7 أيام / متأخرة</div><div class="report-card-value num negative" id="ieDashLcDue">0</div></div>
+            <div class="report-card"><div class="report-card-label">حاويات عليها غرامات تأخير الآن</div><div class="report-card-value num negative" id="ieDashCtAccruing">0</div></div>
             <div class="report-card"><div class="report-card-label">اعتمادات تصدير سارية</div><div class="report-card-value num" id="ieDashExLcOpen">0</div></div>
             <div class="report-card"><div class="report-card-label">اعتمادات تصدير مستحقة التحصيل خلال 7 أيام / متأخرة</div><div class="report-card-value num negative" id="ieDashExLcDue">0</div></div>
             <div class="report-card"><div class="report-card-label">صافي فروق العملة (ربح + / خسارة −)</div><div class="report-card-value num" id="ieDashFxNet">0.00</div></div>
@@ -9622,6 +9663,42 @@ a { color: inherit; }
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelExportLcCollectBtn">إلغاء</button>
         <button type="submit" class="submit-btn" id="confirmExportLcCollectBtn">تأكيد التحصيل</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: حاوية -->
+<div class="modal-overlay" id="containerModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title" id="containerModalTitle">حاوية جديدة</div>
+    <form id="containerForm">
+      <input type="hidden" id="containerId">
+      <div class="modal-grid">
+        <div class="field"><label>رقم الحاوية</label><input type="text" id="containerNumber" required style="direction:ltr; text-align:right;" placeholder="مثال: MSKU1234567"></div>
+        <div class="field"><label>الاتجاه</label><select id="containerDirection"><option value="import">استيراد</option><option value="export">تصدير</option></select></div>
+        <div class="field"><label>الشحنة</label><select id="containerShipment" required><option value="">— اختر —</option></select></div>
+        <div class="field"><label>النوع / الحجم</label>
+          <select id="containerSize"><option value="20GP">20 قدم عادية</option><option value="40GP">40 قدم عادية</option><option value="40HC" selected>40 قدم High Cube</option><option value="20RF">20 قدم مبردة</option><option value="40RF">40 قدم مبردة</option><option value="LCL">مجمّعة LCL</option><option value="OTHER">أخرى</option></select>
+        </div>
+        <div class="field"><label>شركة الشحن</label><input type="text" id="containerLine"></div>
+        <div class="field"><label>رقم الختم (Seal)</label><input type="text" id="containerSeal" style="direction:ltr; text-align:right;"></div>
+        <div class="field"><label>ميناء الشحن</label><input type="text" id="containerPol"></div>
+        <div class="field"><label>ميناء الوصول</label><input type="text" id="containerPod"></div>
+        <div class="field"><label>الوصول المتوقع للميناء</label><input type="date" id="containerEta"></div>
+        <div class="field"><label>الوصول الفعلي للميناء</label><input type="date" id="containerArrived"></div>
+        <div class="field"><label>أيام السماح (بدون غرامة)</label><input type="number" id="containerFreeDays" min="0" step="1" value="0"></div>
+        <div class="field"><label>غرامة التأخير اليومية (جنيه)</label><input type="number" id="containerDemRate" min="0" step="0.01" value="0"></div>
+        <div class="field"><label>تاريخ الإفراج الجمركي</label><input type="date" id="containerReleased"></div>
+        <div class="field"><label>تاريخ خروج الحاوية من الميناء</label><input type="date" id="containerGateOut"></div>
+        <div class="field"><label>تاريخ إرجاع الحاوية فارغة</label><input type="date" id="containerReturned"></div>
+        <div class="field field-full"><div id="containerPreview" style="font-size:13px; line-height:1.9; background:var(--surface-sunken); border-radius:var(--radius-sm); padding:10px 12px;"></div></div>
+        <div class="field field-full"><label>ملاحظات</label><textarea id="containerNotes" rows="2"></textarea></div>
+      </div>
+      <div class="error-msg" id="containerModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelContainerBtn">إغلاق</button>
+        <button type="submit" class="submit-btn" id="saveContainerBtn">حفظ</button>
       </div>
     </form>
   </div>
@@ -20373,7 +20450,7 @@ const boAllSections = ['dashboard','products','categories','unit-types','tax-rat
   'academy-students','academy-courses','academy-instructors','academy-enrollments','academy-sessions',
   'venue-courts','venue-bookings',
   'import-shipments','import-lcs','import-fx','import-cost-sheet','import-profit',
-  'export-shipments','export-lcs','import-export-dashboard',
+  'export-shipments','export-lcs','import-containers','import-export-dashboard',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
   'soon','company-info','permissions','users','branches','business-types','pos-devices','branch-settings','pos-tables','print-settings','stock','stocktake','product-batches','product-serials','backup','reset-data','employees','attendance','leave-requests','expense-items','expenses','salaries','sales-commissions','treasuries','capital','fixed-assets','promotions','coupons','modifier-groups','recipes'];
 
@@ -20388,7 +20465,7 @@ const boNavGroups = [
   { toggle: 'clinicNavToggle', group: 'clinicNavGroup', sections: ['clinic-patients', 'clinic-doctors', 'clinic-appointments'] },
   { toggle: 'academyNavToggle', group: 'academyNavGroup', sections: ['academy-students', 'academy-courses', 'academy-instructors', 'academy-enrollments', 'academy-sessions'] },
   { toggle: 'venueNavToggle', group: 'venueNavGroup', sections: ['venue-courts', 'venue-bookings'] },
-  { toggle: 'importExportNavToggle', group: 'importExportNavGroup', sections: ['import-export-dashboard', 'import-shipments', 'import-lcs', 'import-fx', 'import-cost-sheet', 'import-profit', 'export-shipments', 'export-lcs'] },
+  { toggle: 'importExportNavToggle', group: 'importExportNavGroup', sections: ['import-export-dashboard', 'import-shipments', 'import-lcs', 'import-fx', 'import-cost-sheet', 'import-profit', 'export-shipments', 'export-lcs', 'import-containers'] },
   { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
   { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['treasuries','payments','expense-items','expenses','capital','fixed-assets'] },
   { toggle: 'hrNavToggle', group: 'hrNavGroup', sections: ['employees','attendance','leave-requests','salaries','sales-commissions'] },
@@ -20422,7 +20499,7 @@ const SECTION_PERMISSION_MAP = {
   'academy-enrollments': 'academy_management', 'academy-sessions': 'academy_management',
   'venue-courts': 'venue_management', 'venue-bookings': 'venue_management',
   'import-shipments': 'import_export_management', 'import-lcs': 'import_export_management', 'import-fx': 'import_export_management', 'import-cost-sheet': 'import_export_management', 'import-profit': 'import_export_management',
-  'export-shipments': 'import_export_management', 'export-lcs': 'import_export_management', 'import-export-dashboard': 'import_export_management',
+  'export-shipments': 'import_export_management', 'export-lcs': 'import_export_management', 'import-containers': 'import_export_management', 'import-export-dashboard': 'import_export_management',
   'reports-sales': 'reports', 'reports-purchases': 'reports', 'reports-inventory': 'reports', 'reports-accounting': 'reports', 'reports-other': 'reports',
   'treasuries': 'finance', 'payments': 'finance', 'expense-items': 'finance', 'expenses': 'finance', 'capital': 'admin', 'fixed-assets': 'finance',
   'employees': 'hr', 'attendance': 'hr', 'leave-requests': 'hr', 'salaries': 'hr', 'sales-commissions': 'hr',
@@ -20539,7 +20616,7 @@ const SCREEN_LABELS = {
   'academy-enrollments': 'التسجيلات', 'academy-sessions': 'الحصص',
   'venue-courts': 'الملاعب/القاعات', 'venue-bookings': 'الحجوزات',
   'import-shipments': 'الشحنات', 'import-lcs': 'الاعتمادات المستندية', 'import-fx': 'فروق العملة', 'import-cost-sheet': 'كشف تكلفة الشحنة', 'import-profit': 'ربحية الشحنة',
-  'export-shipments': 'شحنات التصدير', 'export-lcs': 'اعتمادات التصدير', 'import-export-dashboard': 'لوحة تحكم الاستيراد والتصدير'
+  'export-shipments': 'شحنات التصدير', 'export-lcs': 'اعتمادات التصدير', 'import-containers': 'تتبع الحاويات', 'import-export-dashboard': 'لوحة تحكم الاستيراد والتصدير'
 };
 
 // بناء قائمة الشاشات التفصيلية لكل وحدة رئيسية تلقائيًا من SECTION_PERMISSION_MAP
@@ -21081,6 +21158,7 @@ const ACTION_CAPABLE_SCREENS = {
   'import-lcs': { add: true, edit: true, delete: true },
   'export-shipments': { add: true, edit: true, delete: true },
   'export-lcs': { add: true, edit: true, delete: true },
+  'import-containers': { add: true, edit: true, delete: true },
   'purchase-requisitions': { add: true, edit: true },
   'purchase-orders': { add: true, edit: true, delete: true },
   'sales-list': { edit: true },
@@ -21139,6 +21217,7 @@ const ADD_BUTTON_MAP = {
   'import-lcs': 'addImportLcBtn',
   'export-shipments': 'addExportShipmentBtn',
   'export-lcs': 'addExportLcBtn',
+  'import-containers': 'addContainerBtn',
   'purchase-orders': 'addPurchaseOrderBtn', 'purchases': 'addPurchaseBtn', 'purchase-returns': 'addPurchaseReturnBtn', 'sale-returns': 'addSaleReturnFromBoBtn',
   'stocktake': 'addStocktakeSessionBtn', 'product-batches': 'addProductBatchBtn', 'product-serials': 'addProductSerialBtn',
   'delivery': 'addDeliveryOrderBtn', 'delivery-zones': 'addDeliveryZoneBtn', 'delivery-companies': 'addDeliveryCompanyBtn', 'sales-channels': 'addSalesChannelBtn',
@@ -21369,6 +21448,7 @@ function activateBoSection(section, btn) {
     loadBoExportShipments().then(renderExportShipmentsTable);
     boExportShipmentsLoadedOnce = true;
   }
+  if (section === 'import-containers') { Promise.all([loadBoContainers(), boImportShipments.length ? null : loadBoImportShipments(), boExportShipments.length ? null : loadBoExportShipments()]).then(renderContainersTable); }
   if (section === 'export-lcs') { Promise.all([loadBoExportLcs(), boExportShipments.length ? null : loadBoExportShipments(), boTreasuries.length ? null : loadBoTreasuries()]).then(renderExportLcsTable); }
   if (section === 'import-lcs') { Promise.all([loadBoImportLcs(), boSuppliers.length ? null : loadBoSuppliers(), boTreasuries.length ? null : loadBoTreasuries(), boImportShipments.length ? null : loadBoImportShipments()]).then(renderImportLcsTable); }
   if (section === 'import-fx') { refreshImportFxReport(); renderImportFxUnrealized(); renderImportFxPosition(); document.getElementById('importFxHistDate').value = lcTodayStr(); loadImportFxHistory(); }
@@ -23020,6 +23100,15 @@ function bindBackofficeEvents() {
   // ---- Letters of Credit ----
   document.getElementById('addImportLcBtn').addEventListener('click', () => openImportLcModal(null));
   document.getElementById('addExportLcBtn').addEventListener('click', () => openExportLcModal(null));
+  document.getElementById('addContainerBtn').addEventListener('click', () => openContainerModal(null));
+  document.getElementById('containerForm').addEventListener('submit', saveContainer);
+  document.getElementById('cancelContainerBtn').addEventListener('click', closeContainerModal);
+  document.getElementById('containerModalOverlay').addEventListener('click', (e) => { if (e.target.id === 'containerModalOverlay') closeContainerModal(); });
+  document.getElementById('containerDirection').addEventListener('change', () => populateContainerShipments(document.getElementById('containerDirection').value, ''));
+  ['containerEta', 'containerArrived', 'containerFreeDays', 'containerDemRate', 'containerReleased', 'containerGateOut', 'containerReturned'].forEach(id => document.getElementById(id).addEventListener('input', updateContainerPreview));
+  document.getElementById('containerSearchInput').addEventListener('input', renderContainersTable);
+  document.getElementById('containerDirectionFilter').addEventListener('change', renderContainersTable);
+  document.getElementById('containerStatusFilter').addEventListener('change', renderContainersTable);
   document.getElementById('exportLcForm').addEventListener('submit', saveExportLc);
   document.getElementById('cancelExportLcBtn').addEventListener('click', closeExportLcModal);
   document.getElementById('exportLcModalOverlay').addEventListener('click', (e) => { if (e.target.id === 'exportLcModalOverlay') closeExportLcModal(); });
@@ -41669,6 +41758,270 @@ async function saveCustomerCollection(e) {
   }
 }
 
+// ==================== تتبع الحاويات ====================
+// الحالة بتتحسب من التواريخ (من الأحدث للأقدم): إرجاع فارغة > خروج من الميناء > إفراج جمركي > وصول الميناء > في الطريق > محجوزة.
+// غرامة التأخير = أيام بعد (وصول الميناء + أيام السماح) حتى خروج الحاوية (أو النهارده لو لسه جوه) × الغرامة اليومية.
+let boContainers = [];
+const CONTAINER_STATUS_LABELS = {
+  booked: '<span class="bo-badge inactive">محجوزة</span>',
+  sailing: '<span class="bo-badge active">في الطريق</span>',
+  at_port: '<span class="bo-badge active">في الميناء</span>',
+  customs_cleared: '<span class="bo-badge active">أُفرج عنها</span>',
+  delivered: '<span class="bo-badge active">خرجت من الميناء</span>',
+  returned: '<span class="bo-badge inactive">أُعيدت فارغة</span>',
+};
+
+function ctDaysBetween(a, b) {
+  return Math.round((new Date(b + 'T00:00:00Z') - new Date(a + 'T00:00:00Z')) / 86400000);
+}
+
+// دالة نقية: حالة الحاوية وغراماتها في تاريخ today
+function computeContainerState(c, today) {
+  let status = 'booked';
+  if (c.empty_returned_date) status = 'returned';
+  else if (c.gate_out_date) status = 'delivered';
+  else if (c.customs_released_date) status = 'customs_cleared';
+  else if (c.arrived_at_port) status = 'at_port';
+  else if (c.eta_port) status = 'sailing';
+  let freeEnd = null, daysOver = 0, demurrage = 0, accruing = false, daysToFreeEnd = null;
+  if (c.arrived_at_port) {
+    freeEnd = lcAddDays(c.arrived_at_port, Number(c.free_days) || 0);
+    const stop = c.gate_out_date || today;
+    daysOver = Math.max(0, ctDaysBetween(freeEnd, stop));
+    demurrage = fxRound2(daysOver * (Number(c.demurrage_per_day) || 0));
+    if (!c.gate_out_date) { accruing = daysOver > 0 && demurrage > 0; daysToFreeEnd = ctDaysBetween(today, freeEnd); }
+  }
+  return { status, freeEnd, daysOver, demurrage, accruing, daysToFreeEnd };
+}
+
+async function loadBoContainers() {
+  const { data, error } = await supabaseClient
+    .from('shipment_containers')
+    .select('*, import_shipments(shipment_ref), export_shipments(shipment_ref)')
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل الحاويات', true); return; }
+  boContainers = data || [];
+}
+
+function renderContainersTable() {
+  const tbody = document.getElementById('containersTableBody');
+  const today = lcTodayStr();
+  const q = (document.getElementById('containerSearchInput').value || '').trim().toLowerCase();
+  const dir = document.getElementById('containerDirectionFilter').value;
+  const st = document.getElementById('containerStatusFilter').value;
+  const all = boContainers.map(c => ({ c, s: computeContainerState(c, today), ref: (c.direction === 'import' ? c.import_shipments?.shipment_ref : c.export_shipments?.shipment_ref) || '—' }));
+
+  // الكروت (على كل الحاويات، مش المفلترة)
+  const atPort = all.filter(x => x.s.status === 'at_port' || x.s.status === 'customs_cleared');
+  document.getElementById('containerCardAtPort').textContent = atPort.length;
+  document.getElementById('containerCardSoon').textContent = atPort.filter(x => x.s.daysToFreeEnd !== null && x.s.daysToFreeEnd >= 0 && x.s.daysToFreeEnd <= 3).length;
+  document.getElementById('containerCardAccruing').textContent = all.filter(x => x.s.accruing).length;
+  document.getElementById('containerCardTotal').textContent = all.reduce((s, x) => s + x.s.demurrage, 0).toFixed(2);
+
+  const filtered = all.filter(x =>
+    (!dir || x.c.direction === dir) &&
+    (!st || (st === 'demurrage' ? x.s.demurrage > 0 : x.s.status === st)) &&
+    (!q || (x.c.container_number || '').toLowerCase().includes(q) || x.ref.toLowerCase().includes(q) || (x.c.shipping_line || '').toLowerCase().includes(q)));
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" class="bo-empty">${boContainers.length === 0 ? 'لا توجد حاويات حتى الآن' : 'لا توجد نتائج مطابقة'}</td></tr>`;
+    return;
+  }
+  const canEdit = hasBoActionPermission('import-containers', 'edit');
+  tbody.innerHTML = '';
+  filtered.forEach(({ c, s, ref }) => {
+    let freeHtml = s.freeEnd || '—';
+    if (s.freeEnd && !c.gate_out_date) {
+      if (s.daysToFreeEnd < 0) freeHtml += `<br><span style="color:#b91c1c; font-weight:700; font-size:11px;">انتهت منذ ${Math.abs(s.daysToFreeEnd)} يوم</span>`;
+      else if (s.daysToFreeEnd <= 3) freeHtml += `<br><span style="color:#9a6b00; font-weight:700; font-size:11px;">تنتهي ${s.daysToFreeEnd === 0 ? 'اليوم' : 'بعد ' + s.daysToFreeEnd + ' يوم'}</span>`;
+    }
+    const charged = Number(c.demurrage_charged || 0);
+    const pendingCharge = fxRound2(s.demurrage - charged);
+    const demHtml = s.demurrage > 0
+      ? `<span style="color:#b91c1c; font-weight:700;">${s.demurrage.toFixed(2)}</span><br><span style="font-size:11px; color:var(--ink-soft);">${s.daysOver} يوم${s.accruing ? ' (مستمرة)' : ''}</span>` +
+        (charged > 0 ? `<br><span style="font-size:11px; color:var(--teal-700);">محمّل على الشحنة: ${charged.toFixed(2)}</span>` : '')
+      : (charged > 0 ? `<span style="font-size:11px; color:var(--teal-700);">محمّل على الشحنة: ${charged.toFixed(2)}</span>` : '—');
+    const acts = [];
+    if (canEdit) {
+      if (!c.arrived_at_port) acts.push('<button class="bo-icon-btn" data-action="arrived">وصلت الميناء</button>');
+      else if (!c.customs_released_date && !c.gate_out_date) acts.push('<button class="bo-icon-btn" data-action="released">تم الإفراج</button>');
+      else if (!c.gate_out_date) acts.push('<button class="bo-icon-btn" data-action="gateout">خرجت</button>');
+      else if (!c.empty_returned_date) acts.push('<button class="bo-icon-btn" data-action="returned">أُعيدت فارغة</button>');
+    }
+    if (canEdit && pendingCharge > 0.004) acts.push('<button class="bo-icon-btn" data-action="charge" style="color:var(--teal-700);">تحميل الغرامة على الشحنة</button>');
+    acts.push('<button class="bo-icon-btn" data-action="edit">فتح</button>');
+    acts.push('<button class="bo-icon-btn danger" data-action="delete">حذف</button>');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="direction:ltr; text-align:right;">${escapeHtml(c.container_number)}<br><span style="font-size:11px; color:var(--ink-soft);">${escapeHtml(c.container_size)}</span></td>
+      <td>${escapeHtml(ref)}<br><span style="font-size:11px; color:var(--ink-soft);">${c.direction === 'import' ? 'استيراد' : 'تصدير'}</span></td>
+      <td>${escapeHtml(c.shipping_line || '—')}</td>
+      <td>${escapeHtml(c.port_of_discharge || '—')}</td>
+      <td class="num">${c.arrived_at_port || (c.eta_port ? 'متوقع ' + c.eta_port : '—')}</td>
+      <td class="num">${freeHtml}</td>
+      <td class="num">${demHtml}</td>
+      <td>${CONTAINER_STATUS_LABELS[s.status]}</td>
+      <td><div class="bo-row-actions">${acts.join('')}</div></td>`;
+    const bind = (sel, fn) => { const b = tr.querySelector(`[data-action="${sel}"]`); if (b) b.addEventListener('click', fn); };
+    bind('arrived', () => quickUpdateContainer(c, { arrived_at_port: today }));
+    bind('released', () => quickUpdateContainer(c, { customs_released_date: today }));
+    bind('gateout', () => quickUpdateContainer(c, { gate_out_date: today }));
+    bind('returned', () => quickUpdateContainer(c, { empty_returned_date: today }));
+    bind('charge', () => chargeContainerDemurrage(c));
+    bind('edit', () => openContainerModal(c));
+    bind('delete', () => deleteContainer(c));
+    applyRowActionPerm(tr, 'import-containers');
+    tbody.appendChild(tr);
+  });
+}
+
+// تحميل غرامة التأخير المستحقة على "مصاريف أخرى" في الشحنة (بتدخل كشف التكلفة وتقرير الربحية).
+// بيتحمّل الفرق بس عن اللي اتحمّل قبل كده، فلو الغرامة لسه بتزيد تقدر تحمّل الزيادة بعدين من غير تكرار.
+// استيراد: مسموح قبل الاستلام بس (بعدها تكلفة المخزون ورصيد المورد اتسجلوا ومبيتغيروش).
+async function chargeContainerDemurrage(c) {
+  const s = computeContainerState(c, lcTodayStr());
+  const delta = fxRound2(s.demurrage - Number(c.demurrage_charged || 0));
+  if (!(delta > 0.004)) { showToast('مفيش غرامة جديدة للتحميل', true); return; }
+  const isImport = c.direction === 'import';
+  const shipTable = isImport ? 'import_shipments' : 'export_shipments';
+  const shipId = isImport ? c.import_shipment_id : c.export_shipment_id;
+  const { data: ship, error: shipErr } = await supabaseClient.from(shipTable).select('other_costs, status, shipment_ref').eq('id', shipId).single();
+  if (shipErr || !ship) { console.error(shipErr); showToast('تعذر قراءة الشحنة', true); return; }
+  if (ship.status === 'cancelled') { showToast('الشحنة ملغاة', true); return; }
+  if (isImport && !['ordered', 'in_transit', 'customs_clearance'].includes(ship.status)) {
+    showToast('الشحنة اتستلمت (ولو جزئيًا) فتكلفتها ورصيد المورد اتسجلوا ومبيتغيروش. سجّل الغرامة كمصروف من شاشة المصروفات.', true);
+    return;
+  }
+  if (!confirm(`تحميل ${delta.toFixed(2)} جنيه (غرامة تأخير الحاوية ${c.container_number}) على مصاريف أخرى في الشحنة ${ship.shipment_ref || ''}؟`)) return;
+  const oldOther = Number(ship.other_costs || 0);
+  const { data: upd, error: updErr } = await supabaseClient.from(shipTable)
+    .update({ other_costs: fxRound2(oldOther + delta) }).eq('id', shipId).eq('other_costs', ship.other_costs).select();
+  if (updErr || !upd || upd.length === 0) { console.error(updErr); showToast('تعذر تحديث الشحنة (ربما اتعدّلت في نفس الوقت)، جرّب تاني', true); return; }
+  const { error: cErr } = await supabaseClient.from('shipment_containers')
+    .update({ demurrage_charged: fxRound2(Number(c.demurrage_charged || 0) + delta) }).eq('id', c.id);
+  if (cErr) {
+    console.error(cErr);
+    await supabaseClient.from(shipTable).update({ other_costs: ship.other_costs }).eq('id', shipId);
+    showToast('تعذر تسجيل التحميل على الحاوية، وتم التراجع', true);
+    return;
+  }
+  showToast(`تم تحميل ${delta.toFixed(2)} جنيه على مصاريف الشحنة الأخرى`);
+  if (isImport) { boImportShipments = []; } else { boExportShipments = []; }
+  await loadBoContainers();
+  renderContainersTable();
+}
+
+async function quickUpdateContainer(c, patch) {
+  const { error } = await supabaseClient.from('shipment_containers').update(patch).eq('id', c.id);
+  if (error) { console.error(error); showToast('تعذر تحديث الحاوية', true); return; }
+  showToast('تم تحديث الحاوية بتاريخ النهارده');
+  await loadBoContainers();
+  renderContainersTable();
+}
+
+function populateContainerShipments(direction, selected) {
+  const list = direction === 'import' ? boImportShipments : boExportShipments;
+  document.getElementById('containerShipment').innerHTML = '<option value="">— اختر —</option>' +
+    list.filter(s => s.status !== 'cancelled' || s.id === selected)
+      .map(s => `<option value="${s.id}">${escapeHtml(s.shipment_ref || '—')}${(s.suppliers?.name || s.customers?.name) ? ' — ' + escapeHtml(s.suppliers?.name || s.customers?.name) : ''}</option>`).join('');
+  document.getElementById('containerShipment').value = selected || '';
+}
+
+function readContainerForm() {
+  const v = (id) => document.getElementById(id).value;
+  return {
+    container_number: v('containerNumber').trim().toUpperCase(), container_size: v('containerSize'),
+    shipping_line: v('containerLine').trim() || null, seal_number: v('containerSeal').trim() || null,
+    port_of_loading: v('containerPol').trim() || null, port_of_discharge: v('containerPod').trim() || null,
+    eta_port: v('containerEta') || null, arrived_at_port: v('containerArrived') || null,
+    free_days: Math.max(0, parseInt(v('containerFreeDays'), 10) || 0), demurrage_per_day: Math.max(0, Number(v('containerDemRate')) || 0),
+    customs_released_date: v('containerReleased') || null, gate_out_date: v('containerGateOut') || null, empty_returned_date: v('containerReturned') || null,
+  };
+}
+
+function updateContainerPreview() {
+  const s = computeContainerState(readContainerForm(), lcTodayStr());
+  const el = document.getElementById('containerPreview');
+  el.innerHTML = `الحالة: ${CONTAINER_STATUS_LABELS[s.status]}` +
+    (s.freeEnd ? ` — انتهاء أيام السماح: <b>${s.freeEnd}</b>` : '') +
+    (s.demurrage > 0 ? ` — غرامات التأخير: <b style="color:#b91c1c;">${s.demurrage.toFixed(2)}</b> جنيه (${s.daysOver} يوم)` : '');
+}
+
+async function openContainerModal(c) {
+  if (boImportShipments.length === 0) await loadBoImportShipments();
+  if (boExportShipments.length === 0) await loadBoExportShipments();
+  document.getElementById('containerModalTitle').textContent = c ? `حاوية — ${c.container_number}` : 'حاوية جديدة';
+  document.getElementById('containerId').value = c ? c.id : '';
+  document.getElementById('containerDirection').value = c?.direction || 'import';
+  document.getElementById('containerDirection').disabled = !!c;
+  populateContainerShipments(c?.direction || 'import', c ? (c.import_shipment_id || c.export_shipment_id) : '');
+  document.getElementById('containerShipment').disabled = !!c;
+  const set = (id, val) => { document.getElementById(id).value = val ?? ''; };
+  set('containerNumber', c?.container_number); set('containerSize', c?.container_size || '40HC');
+  set('containerLine', c?.shipping_line); set('containerSeal', c?.seal_number);
+  set('containerPol', c?.port_of_loading); set('containerPod', c?.port_of_discharge);
+  set('containerEta', c?.eta_port); set('containerArrived', c?.arrived_at_port);
+  set('containerFreeDays', c?.free_days ?? 0); set('containerDemRate', c?.demurrage_per_day ?? 0);
+  set('containerReleased', c?.customs_released_date); set('containerGateOut', c?.gate_out_date); set('containerReturned', c?.empty_returned_date);
+  set('containerNotes', c?.notes);
+  updateContainerPreview();
+  document.getElementById('containerModalError').classList.remove('show');
+  document.getElementById('containerModalOverlay').classList.add('show');
+}
+
+function closeContainerModal() { document.getElementById('containerModalOverlay').classList.remove('show'); }
+
+async function saveContainer(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('containerModalError');
+  errEl.classList.remove('show');
+  const fail = (m) => { errEl.textContent = m; errEl.classList.add('show'); };
+  const id = document.getElementById('containerId').value || null;
+  const payload = readContainerForm();
+  payload.notes = document.getElementById('containerNotes').value.trim() || null;
+  if (!payload.container_number) return fail('أدخل رقم الحاوية');
+  if (payload.arrived_at_port && payload.customs_released_date && payload.customs_released_date < payload.arrived_at_port) return fail('تاريخ الإفراج قبل تاريخ الوصول للميناء');
+  if (payload.arrived_at_port && payload.gate_out_date && payload.gate_out_date < payload.arrived_at_port) return fail('تاريخ الخروج قبل تاريخ الوصول للميناء');
+  if (payload.gate_out_date && payload.empty_returned_date && payload.empty_returned_date < payload.gate_out_date) return fail('تاريخ الإرجاع قبل تاريخ الخروج');
+  if (!id) {
+    const direction = document.getElementById('containerDirection').value;
+    const shipId = document.getElementById('containerShipment').value;
+    if (!shipId) return fail('اختر الشحنة');
+    const ship = (direction === 'import' ? boImportShipments : boExportShipments).find(s => s.id === shipId);
+    Object.assign(payload, {
+      direction, branch_id: ship?.branch_id || currentProfile.branch_id || null,
+      import_shipment_id: direction === 'import' ? shipId : null, export_shipment_id: direction === 'export' ? shipId : null,
+      created_by: currentProfile.id,
+    });
+  }
+  const btn = document.getElementById('saveContainerBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  try {
+    const { error } = id
+      ? await supabaseClient.from('shipment_containers').update(payload).eq('id', id)
+      : await supabaseClient.from('shipment_containers').insert(payload);
+    if (error) throw error;
+    showToast(id ? 'تم تحديث الحاوية' : 'تمت إضافة الحاوية');
+    closeContainerModal();
+    await loadBoContainers();
+    renderContainersTable();
+  } catch (err) {
+    console.error(err);
+    fail(err.message || 'حدث خطأ أثناء الحفظ');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ';
+  }
+}
+
+async function deleteContainer(c) {
+  if (!hasBoActionPermission('import-containers', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm(`حذف الحاوية ${c.container_number}؟${Number(c.demurrage_charged || 0) > 0 ? `\nملحوظة: ${Number(c.demurrage_charged).toFixed(2)} جنيه محمّلة على مصاريف الشحنة هتفضل كما هي.` : ''}`)) return;
+  const { error } = await supabaseClient.from('shipment_containers').delete().eq('id', c.id);
+  if (error) { console.error(error); showToast('تعذر الحذف', true); return; }
+  showToast('تم الحذف');
+  await loadBoContainers();
+  renderContainersTable();
+}
+
 // ==================== اعتمادات التصدير (LC مستلمة من العملاء) ====================
 // الاعتماد دايمًا مرتبط بشحنة تصدير. التحصيل = تحصيل من العميل بعملة أجنبية على الشحنة
 // (نفس منطق فرق العملة: النقدية بسعر اليوم، رصيد العميل بسعر الشحنة)، فبيظهر تلقائيًا في تقارير فروق العملة.
@@ -42572,11 +42925,12 @@ async function refreshImportExportDashboard() {
     }, 0);
     document.getElementById('ieDashCustomerDue').textContent = customerDue.toFixed(2);
 
-    const [fxRes, lcRes, exFxRes, exLcRes] = await Promise.all([
+    const [fxRes, lcRes, exFxRes, exLcRes, ctRes] = await Promise.all([
       supabaseClient.from('import_shipment_payments').select('fx_difference').neq('fx_difference', 0),
       supabaseClient.from('import_letters_of_credit').select('status, expiry_date, maturity_date, shipment_id, fx_difference'),
       supabaseClient.from('export_shipment_payments').select('fx_difference').neq('fx_difference', 0),
       supabaseClient.from('export_letters_of_credit').select('status, maturity_date'),
+      supabaseClient.from('shipment_containers').select('arrived_at_port, free_days, demurrage_per_day, gate_out_date'),
     ]);
     const lcs = lcRes.data || [];
     const liveLcs = lcs.filter(l => ['opened', 'documents_presented'].includes(l.status));
@@ -42586,6 +42940,7 @@ async function refreshImportExportDashboard() {
       if (!l.expiry_date) return false;
       return Math.round((new Date(l.expiry_date) - new Date(new Date().toISOString().slice(0, 10))) / 86400000) <= 14;
     }).length;
+    document.getElementById('ieDashCtAccruing').textContent = (ctRes.data || []).filter(c => computeContainerState(c, lcTodayStr()).accruing).length;
     const exLcs = (exLcRes.data || []).filter(exLcIsLive);
     document.getElementById('ieDashExLcOpen').textContent = exLcs.length;
     document.getElementById('ieDashExLcDue').textContent = exLcs.filter(l => exLcIsDue(l, 7)).length;
