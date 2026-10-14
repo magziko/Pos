@@ -3123,7 +3123,8 @@ a { color: inherit; }
           <div class="bo-section-title" style="font-size:15px;margin:10px 0;">حالة الجاهزية</div>
           <div id="zatcaReadiness" style="margin-bottom:16px;"></div>
           <div class="bo-section-title" style="font-size:15px;margin:10px 0;">تجهيز فاتورة (بدون إرسال)</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;"><input type="text" id="zatcaInvNo" placeholder="رقم الفاتورة" inputmode="numeric" style="max-width:180px;"><button type="button" class="submit-btn" style="margin-top:0;" id="zatcaPrepBtn">تجهيز</button></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;"><input type="text" id="zatcaInvNo" placeholder="رقم الفاتورة" inputmode="numeric" style="max-width:180px;"><button type="button" class="submit-btn" style="margin-top:0;" id="zatcaPrepBtn">تجهيز</button><button type="button" class="bo-icon-btn" id="zatcaListRetBtn">عرض المرتجعات</button><select id="zatcaReturnSel" style="max-width:220px;"></select><button type="button" class="submit-btn" style="margin-top:0;" id="zatcaCreditBtn">تجهيز إشعار دائن</button></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin:8px 0;"><div class="field"><label>من تاريخ</label><input type="date" id="zatcaBulkFrom"></div><div class="field"><label>إلى تاريخ</label><input type="date" id="zatcaBulkTo"></div><button type="button" class="submit-btn" style="margin-top:0;" id="zatcaBulkBtn">تجهيز كل غير المجهز في الفترة (حد أقصى 200)</button></div>
           <div id="zatcaPrepMsg" style="font-size:13px;margin-bottom:14px;"></div>
           <div class="bo-table-wrap"><table class="bo-table"><thead><tr><th>ICV</th><th>رقم الفاتورة</th><th>النوع</th><th>الحالة</th><th>تنبيهات</th><th></th></tr></thead><tbody id="zatcaDocsBody"><tr><td colspan="6" class="bo-empty">—</td></tr></tbody></table></div>
         </div>
@@ -6092,6 +6093,30 @@ a { color: inherit; }
               <div class="report-type-icon">🧾</div>
               <div class="report-type-label">سجل إرسال الفواتير للفاتورة الإلكترونية (ETA)</div>
             </button>
+            <button type="button" class="report-type-card" data-report="einvoice-summary">
+              <div class="report-type-icon">🌍</div>
+              <div class="report-type-label">ملخص الفواتير الإلكترونية (مصر + السعودية)</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="salon-report" style="display:none;">
+              <div class="report-type-icon">💈</div>
+              <div class="report-type-label">تقرير الصالون (المواعيد والإيراد)</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="gym-report" style="display:none;">
+              <div class="report-type-icon">🏋️</div>
+              <div class="report-type-label">تقرير الجيم التفصيلي (الاشتراكات والحضور)</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="clinic-report" style="display:none;">
+              <div class="report-type-icon">🩺</div>
+              <div class="report-type-label">تقرير العيادة (الحجوزات والإيراد)</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="academy-report" style="display:none;">
+              <div class="report-type-icon">🎓</div>
+              <div class="report-type-label">تقرير الأكاديمية (التسجيلات والتحصيل)</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="venue-report" style="display:none;">
+              <div class="report-type-icon">🏟️</div>
+              <div class="report-type-label">تقرير الملاعب والقاعات (الحجوزات والإيراد)</div>
+            </button>
             <button type="button" class="report-type-card" data-report="missed-size-requests">
               <div class="report-type-icon">🙋</div>
               <div class="report-type-label">طلبات العملاء على مقاسات غير متوفرة</div>
@@ -6715,6 +6740,157 @@ a { color: inherit; }
                   </tbody>
                 </table>
               </div>
+            </div>
+
+            <div id="otherReportDetail-salon-report" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">تقرير الصالون (المواعيد والإيراد)</div>
+                <div class="report-subtitle-actions"><button class="bo-icon-btn" id="act-salon-report-export">تصدير إكسل</button></div>
+              </div>
+              <div class="quick-range-row" id="act-salon-report-qr" style="margin-bottom:12px;">
+                <button class="quick-range-btn" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn active" data-invqr="30days">آخر 30 يوم</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+              </div>
+              <div class="report-filters">
+                <div class="field"><label>من تاريخ</label><input type="date" id="act-salon-report-from"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="act-salon-report-to"></div>
+                <div class="field"><label>الفرع</label><select id="act-salon-report-branch"><option value="">كل الفروع</option></select></div>
+                <div class="field"><label>الحالة</label><select id="act-salon-report-status"><option value="">الكل</option><option value="booked">محجوز</option><option value="completed">مكتمل</option><option value="cancelled">ملغي</option><option value="no_show">لم يحضر</option></select></div>
+                <button class="bo-add-btn" id="act-salon-report-run">تحديث</button>
+              </div>
+              <div class="report-cards" id="act-salon-report-cards"></div>
+              <div id="act-salon-report-tables"></div>
+            </div>
+
+            <div id="otherReportDetail-gym-report" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">تقرير الجيم التفصيلي (الاشتراكات والحضور)</div>
+                <div class="report-subtitle-actions"><button class="bo-icon-btn" id="act-gym-report-export">تصدير إكسل</button></div>
+              </div>
+              <div class="quick-range-row" id="act-gym-report-qr" style="margin-bottom:12px;">
+                <button class="quick-range-btn" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn active" data-invqr="30days">آخر 30 يوم</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+              </div>
+              <div class="report-filters">
+                <div class="field"><label>من تاريخ</label><input type="date" id="act-gym-report-from"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="act-gym-report-to"></div>
+                <div class="field"><label>الفرع</label><select id="act-gym-report-branch"><option value="">كل الفروع</option></select></div>
+                <div class="field"><label>الحالة</label><select id="act-gym-report-status"><option value="">الكل</option><option value="active">نشط</option><option value="expired">منتهي</option><option value="frozen">مجمد</option><option value="cancelled">ملغي</option></select></div>
+                <button class="bo-add-btn" id="act-gym-report-run">تحديث</button>
+              </div>
+              <div class="report-cards" id="act-gym-report-cards"></div>
+              <div id="act-gym-report-tables"></div>
+            </div>
+
+            <div id="otherReportDetail-clinic-report" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">تقرير العيادة (الحجوزات والإيراد)</div>
+                <div class="report-subtitle-actions"><button class="bo-icon-btn" id="act-clinic-report-export">تصدير إكسل</button></div>
+              </div>
+              <div class="quick-range-row" id="act-clinic-report-qr" style="margin-bottom:12px;">
+                <button class="quick-range-btn" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn active" data-invqr="30days">آخر 30 يوم</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+              </div>
+              <div class="report-filters">
+                <div class="field"><label>من تاريخ</label><input type="date" id="act-clinic-report-from"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="act-clinic-report-to"></div>
+                <div class="field"><label>الفرع</label><select id="act-clinic-report-branch"><option value="">كل الفروع</option></select></div>
+                <div class="field"><label>الحالة</label><select id="act-clinic-report-status"><option value="">الكل</option><option value="booked">محجوز</option><option value="completed">مكتمل</option><option value="cancelled">ملغي</option><option value="no_show">لم يحضر</option></select></div>
+                <button class="bo-add-btn" id="act-clinic-report-run">تحديث</button>
+              </div>
+              <div class="report-cards" id="act-clinic-report-cards"></div>
+              <div id="act-clinic-report-tables"></div>
+            </div>
+
+            <div id="otherReportDetail-academy-report" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">تقرير الأكاديمية (التسجيلات والتحصيل)</div>
+                <div class="report-subtitle-actions"><button class="bo-icon-btn" id="act-academy-report-export">تصدير إكسل</button></div>
+              </div>
+              <div class="quick-range-row" id="act-academy-report-qr" style="margin-bottom:12px;">
+                <button class="quick-range-btn" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn active" data-invqr="30days">آخر 30 يوم</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+              </div>
+              <div class="report-filters">
+                <div class="field"><label>من تاريخ</label><input type="date" id="act-academy-report-from"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="act-academy-report-to"></div>
+                <div class="field"><label>الفرع</label><select id="act-academy-report-branch"><option value="">كل الفروع</option></select></div>
+                <div class="field"><label>الحالة</label><select id="act-academy-report-status"><option value="">الكل</option><option value="active">نشط</option><option value="completed">مكتمل</option><option value="cancelled">ملغي</option></select></div>
+                <button class="bo-add-btn" id="act-academy-report-run">تحديث</button>
+              </div>
+              <div class="report-cards" id="act-academy-report-cards"></div>
+              <div id="act-academy-report-tables"></div>
+            </div>
+
+            <div id="otherReportDetail-venue-report" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">تقرير الملاعب والقاعات (الحجوزات والإيراد)</div>
+                <div class="report-subtitle-actions"><button class="bo-icon-btn" id="act-venue-report-export">تصدير إكسل</button></div>
+              </div>
+              <div class="quick-range-row" id="act-venue-report-qr" style="margin-bottom:12px;">
+                <button class="quick-range-btn" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn active" data-invqr="30days">آخر 30 يوم</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+              </div>
+              <div class="report-filters">
+                <div class="field"><label>من تاريخ</label><input type="date" id="act-venue-report-from"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="act-venue-report-to"></div>
+                <div class="field"><label>الفرع</label><select id="act-venue-report-branch"><option value="">كل الفروع</option></select></div>
+                <div class="field"><label>الحالة</label><select id="act-venue-report-status"><option value="">الكل</option><option value="booked">محجوز</option><option value="completed">مكتمل</option><option value="cancelled">ملغي</option></select></div>
+                <button class="bo-add-btn" id="act-venue-report-run">تحديث</button>
+              </div>
+              <div class="report-cards" id="act-venue-report-cards"></div>
+              <div id="act-venue-report-tables"></div>
+            </div>
+
+            <!-- ملخص الفواتير الإلكترونية (مصر ETA + السعودية ZATCA) -->
+            <div id="otherReportDetail-einvoice-summary" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">ملخص الفواتير الإلكترونية (مصر ETA + السعودية ZATCA)</div>
+                <div class="report-subtitle-actions"><button class="bo-icon-btn" id="exportEinvSummaryBtn">تصدير إكسل</button></div>
+              </div>
+              <div class="quick-range-row" id="einvQuickRange" style="margin-bottom:12px;">
+                <button class="quick-range-btn active" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="yesterday">أمس</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn" data-invqr="30days">آخر 30 يوم</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+              </div>
+              <div class="report-filters">
+                <div class="field"><label>من تاريخ</label><input type="date" id="einvFromDate"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="einvToDate"></div>
+                <div class="field"><label>الفرع</label><select id="einvBranchFilter"><option value="">كل الفروع</option></select></div>
+                <button class="bo-add-btn" id="runEinvSummaryBtn">تحديث</button>
+              </div>
+              <div class="report-subtitle" style="font-size:14px;margin:8px 0;">🇪🇬 مصر — ETA</div>
+              <div class="report-cards">
+                <div class="report-card"><div class="report-card-label">فواتير الفترة</div><div class="report-card-value num" id="einvEtaTotal">0</div></div>
+                <div class="report-card"><div class="report-card-label">لم تُرسل</div><div class="report-card-value num" id="einvEtaNotSent">0</div></div>
+                <div class="report-card"><div class="report-card-label">مقبولة</div><div class="report-card-value num" id="einvEtaAccepted">0</div></div>
+                <div class="report-card"><div class="report-card-label">مرفوضة / خطأ</div><div class="report-card-value num negative" id="einvEtaFailed">0</div></div>
+              </div>
+              <div class="bo-table-wrap"><table class="bo-table"><thead><tr><th>الفرع</th><th>الفواتير</th><th>لم تُرسل</th><th>في الانتظار</th><th>تم الإرسال</th><th>مقبولة</th><th>مرفوضة/خطأ</th><th>إجمالي القيمة</th></tr></thead><tbody id="einvEtaBody"><tr><td colspan="8" class="bo-empty">—</td></tr></tbody></table></div>
+              <div class="report-subtitle" style="font-size:14px;margin:16px 0 8px;">🇸🇦 السعودية — ZATCA</div>
+              <div class="report-cards">
+                <div class="report-card"><div class="report-card-label">فواتير الفترة</div><div class="report-card-value num" id="einvZTotal">0</div></div>
+                <div class="report-card"><div class="report-card-label">لم تُجهّز بعد</div><div class="report-card-value num" id="einvZNotPrep">0</div></div>
+                <div class="report-card"><div class="report-card-label">مجهزة (لم تُرسل)</div><div class="report-card-value num" id="einvZPrepared">0</div></div>
+                <div class="report-card"><div class="report-card-label">مُرسلة / مقبولة</div><div class="report-card-value num" id="einvZAccepted">0</div></div>
+                <div class="report-card"><div class="report-card-label">مرفوضة</div><div class="report-card-value num negative" id="einvZRejected">0</div></div>
+              </div>
+              <div class="bo-table-wrap"><table class="bo-table"><thead><tr><th>الفرع</th><th>الفواتير</th><th>لم تُجهّز</th><th>مجهزة</th><th>مُرسلة</th><th>مقبولة</th><th>مرفوضة</th><th>إشعارات دائنة</th><th>بها تنبيهات</th><th>إجمالي القيمة</th></tr></thead><tbody id="einvZBody"><tr><td colspan="10" class="bo-empty">—</td></tr></tbody></table></div>
+              <div class="report-subtitle" style="font-size:14px;margin:16px 0 8px;">تنبيهات المستندات المجهزة (ZATCA)</div>
+              <div class="bo-table-wrap"><table class="bo-table"><thead><tr><th>الفرع</th><th>رقم الفاتورة</th><th>ICV</th><th>التنبيهات</th></tr></thead><tbody id="einvWarnBody"><tr><td colspan="4" class="bo-empty">—</td></tr></tbody></table></div>
+              <div class="bo-empty" style="padding:12px;text-align:center;font-size:12.5px;margin-top:8px;">الفرع يظهر تحت ZATCA لو جهته مضبوطة على ZATCA أو عليه مستندات مجهزة، وإلا يظهر تحت ETA. "مجهزة" تعني بُنيت محليًا ولم تُرسل للهيئة.</div>
             </div>
 
             <!-- سجل إرسال الفواتير للفاتورة الإلكترونية (ETA) -->
@@ -17640,6 +17816,7 @@ function isGymBranch() {
 }
 
 function applyGymFeatureVisibility() {
+  applyActivityReportsVisibility();
   const gymGroup = document.getElementById('gymNavGroup');
   if (gymGroup) {
     const hasPermission = boNavGroups.find(g => g.group === 'gymNavGroup')?.sections.some(s => hasBoScreenPermission(s));
@@ -20601,6 +20778,12 @@ const REPORT_TABS = {
     { key: 'loyalty-points', title: 'نقاط الولاء' },
     { key: 'coupons-usage', title: 'استخدام الكوبونات' },
     { key: 'eta-log', title: 'سجل إرسال الفواتير للفاتورة الإلكترونية (ETA)' },
+    { key: 'gym-report', title: 'تقرير الجيم التفصيلي (الاشتراكات والحضور)' },
+    { key: 'salon-report', title: 'تقرير الصالون (المواعيد والإيراد)' },
+    { key: 'clinic-report', title: 'تقرير العيادة (الحجوزات والإيراد)' },
+    { key: 'academy-report', title: 'تقرير الأكاديمية (التسجيلات والتحصيل)' },
+    { key: 'venue-report', title: 'تقرير الملاعب والقاعات (الحجوزات والإيراد)' },
+    { key: 'einvoice-summary', title: 'ملخص الفواتير الإلكترونية (مصر + السعودية)' },
     { key: 'missed-size-requests', title: 'طلبات العملاء على مقاسات غير متوفرة' },
     { key: 'stock-holds', title: 'الحجوزات المؤقتة' },
     { key: 'laundry-orders', title: 'أوامر المغسلة' },
@@ -22453,6 +22636,8 @@ function bindBackofficeEvents() {
       if (key === 'loyalty-points') { setInventoryDateRange('30days', 'loyaltyReportFromDate', 'loyaltyReportToDate'); runLoyaltyReport(); }
       if (key === 'coupons-usage') { setInventoryDateRange('30days', 'couponsReportFromDate', 'couponsReportToDate'); runCouponsReport(); }
       if (key === 'eta-log') { populateEtaLogBranchFilter(); setInventoryDateRange('today', 'etaLogFromDate', 'etaLogToDate'); runEtaLogReport(); }
+      if (ACT_REPORTS[key]) actReportInit(key);
+      if (key === 'einvoice-summary') { populateEinvBranchFilter(); setInventoryDateRange('today', 'einvFromDate', 'einvToDate'); runEinvSummaryReport(); }
       if (key === 'missed-size-requests') refreshMissedSizeRequestsReport();
       if (key === 'stock-holds') refreshStockHoldsReport();
       if (key === 'laundry-orders') refreshLaundryOrdersReport();
@@ -22469,6 +22654,9 @@ function bindBackofficeEvents() {
   document.getElementById('runCouponsReportBtn').addEventListener('click', runCouponsReport);
   document.getElementById('exportCouponsReportBtn').addEventListener('click', exportCouponsReportToExcel);
   document.getElementById('runEtaLogBtn').addEventListener('click', runEtaLogReport);
+  document.getElementById('runEinvSummaryBtn').addEventListener('click', runEinvSummaryReport);
+  Object.keys(ACT_REPORTS).forEach(k => { document.getElementById(`act-${k}-run`).addEventListener('click', () => runActReport(k)); document.getElementById(`act-${k}-export`).addEventListener('click', () => exportActReport(k)); });
+  document.getElementById('exportEinvSummaryBtn').addEventListener('click', exportEinvSummaryToExcel);
   document.getElementById('exportEtaLogBtn').addEventListener('click', exportEtaLogToExcel);
   document.getElementById('etaLogStatusFilter').addEventListener('change', runEtaLogReport);
   document.getElementById('etaLogBranchFilter').addEventListener('change', runEtaLogReport);
@@ -48403,6 +48591,241 @@ function exportEtaLogToExcel() {
   XLSX.writeFile(wb, `سجل-الفاتورة-الإلكترونية-${dateStr}.xlsx`);
 }
 
+
+// ---- ملخص الفواتير الإلكترونية (مصر ETA + السعودية ZATCA) ----
+let lastEinvSummary = null;
+const einvMoney = n => Number(n || 0).toLocaleString('ar-EG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+async function einvFetchAll(build) {
+  const out = [];
+  for (let from = 0; out.length < 20000; from += 1000) {
+    const { data, error } = await build().range(from, from + 999);
+    if (error) throw error;
+    out.push(...(data || []));
+    if (!data || data.length < 1000) break;
+  }
+  return out;
+}
+function populateEinvBranchFilter() {
+  const sel = document.getElementById('einvBranchFilter');
+  sel.innerHTML = '<option value="">كل الفروع</option>' + boBranchesList.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+  sel.parentElement.style.display = boBranchesList.length <= 1 ? 'none' : '';
+}
+async function runEinvSummaryReport() {
+  const fromDate = document.getElementById('einvFromDate').value, toDate = document.getElementById('einvToDate').value;
+  if (!fromDate || !toDate) return;
+  const fromISO = `${fromDate}T00:00:00`, toISO = `${toDate}T23:59:59`;
+  const branchId = document.getElementById('einvBranchFilter').value;
+  try {
+    const [sales, invDocs, credDocs, settings] = await Promise.all([
+      einvFetchAll(() => applyBranchScope(supabaseClient.from('sales').select('id, branch_id, total, eta_status, branches(name)').eq('status', 'completed').gte('created_at', fromISO).lte('created_at', toISO).order('created_at'), branchId)),
+      einvFetchAll(() => applyBranchScope(supabaseClient.from('einvoice_documents').select('id, branch_id, status, icv, warnings, sales!inner(invoice_number, created_at), branches(name)').eq('authority', 'zatca').is('return_id', null).gte('sales.created_at', fromISO).lte('sales.created_at', toISO).order('icv'), branchId)),
+      einvFetchAll(() => applyBranchScope(supabaseClient.from('einvoice_documents').select('id, branch_id').eq('authority', 'zatca').not('return_id', 'is', null).gte('created_at', fromISO).lte('created_at', toISO).order('created_at'), branchId)),
+      supabaseClient.from('einvoice_settings').select('branch_id, authority').then(r => r.data || [])
+    ]);
+    const authBy = Object.fromEntries(settings.map(s => [s.branch_id, s.authority]));
+    const zBranches = new Set(invDocs.map(d => d.branch_id)); settings.forEach(s => { if (s.authority === 'zatca') zBranches.add(s.branch_id); });
+    const nameOf = {}; sales.forEach(s => { if (s.branches?.name) nameOf[s.branch_id] = s.branches.name; }); invDocs.forEach(d => { if (d.branches?.name) nameOf[d.branch_id] = d.branches.name; });
+    boBranchesList.forEach(b => { nameOf[b.id] = nameOf[b.id] || b.name; });
+    const eta = {}, z = {};
+    for (const s of sales) {
+      if (zBranches.has(s.branch_id)) {
+        const r = z[s.branch_id] = z[s.branch_id] || { branch: nameOf[s.branch_id] || '—', total: 0, value: 0, prepared: 0, submitted: 0, accepted: 0, rejected: 0, credit: 0, warn: 0 };
+        r.total++; r.value += Number(s.total) || 0;
+      } else {
+        const r = eta[s.branch_id] = eta[s.branch_id] || { branch: nameOf[s.branch_id] || '—', total: 0, value: 0, not_sent: 0, queued: 0, sent: 0, accepted: 0, failed: 0 };
+        r.total++; r.value += Number(s.total) || 0;
+        const st = s.eta_status || 'not_sent';
+        if (st === 'rejected' || st === 'error') r.failed++; else if (r[st] !== undefined) r[st]++; else r.not_sent++;
+      }
+    }
+    const warnRows = [];
+    for (const d of invDocs) {
+      const r = z[d.branch_id] = z[d.branch_id] || { branch: nameOf[d.branch_id] || '—', total: 0, value: 0, prepared: 0, submitted: 0, accepted: 0, rejected: 0, credit: 0, warn: 0 };
+      if (d.status === 'prepared' || d.status === 'exported') r.prepared++; else if (d.status === 'submitted') r.submitted++; else if (d.status === 'accepted') r.accepted++; else if (d.status === 'rejected') r.rejected++;
+      if ((d.warnings || []).length) { r.warn++; warnRows.push({ branch: r.branch, invoice: d.sales?.invoice_number, icv: d.icv, text: d.warnings.join('؛ ') }); }
+    }
+    for (const d of credDocs) { if (zBranches.has(d.branch_id)) { const r = z[d.branch_id] = z[d.branch_id] || { branch: nameOf[d.branch_id] || '—', total: 0, value: 0, prepared: 0, submitted: 0, accepted: 0, rejected: 0, credit: 0, warn: 0 }; r.credit++; } }
+    const etaRows = Object.values(eta), zRows = Object.values(z);
+    zRows.forEach(r => { r.notPrep = Math.max(0, r.total - (r.prepared + r.submitted + r.accepted + r.rejected)); });
+    const sum = (rows, k) => rows.reduce((a, r) => a + (r[k] || 0), 0);
+    document.getElementById('einvEtaTotal').textContent = sum(etaRows, 'total'); document.getElementById('einvEtaNotSent').textContent = sum(etaRows, 'not_sent');
+    document.getElementById('einvEtaAccepted').textContent = sum(etaRows, 'accepted'); document.getElementById('einvEtaFailed').textContent = sum(etaRows, 'failed');
+    document.getElementById('einvZTotal').textContent = sum(zRows, 'total'); document.getElementById('einvZNotPrep').textContent = sum(zRows, 'notPrep');
+    document.getElementById('einvZPrepared').textContent = sum(zRows, 'prepared'); document.getElementById('einvZAccepted').textContent = sum(zRows, 'submitted') + sum(zRows, 'accepted');
+    document.getElementById('einvZRejected').textContent = sum(zRows, 'rejected');
+    document.getElementById('einvEtaBody').innerHTML = etaRows.length ? etaRows.map(r => `<tr><td>${escapeHtml(r.branch)}</td><td class="num">${r.total}</td><td class="num">${r.not_sent}</td><td class="num">${r.queued}</td><td class="num">${r.sent}</td><td class="num">${r.accepted}</td><td class="num">${r.failed}</td><td class="num">${einvMoney(r.value)}</td></tr>`).join('') : '<tr><td colspan="8" class="bo-empty">لا توجد فواتير</td></tr>';
+    document.getElementById('einvZBody').innerHTML = zRows.length ? zRows.map(r => `<tr><td>${escapeHtml(r.branch)}</td><td class="num">${r.total}</td><td class="num">${r.notPrep}</td><td class="num">${r.prepared}</td><td class="num">${r.submitted}</td><td class="num">${r.accepted}</td><td class="num">${r.rejected}</td><td class="num">${r.credit}</td><td class="num">${r.warn}</td><td class="num">${einvMoney(r.value)}</td></tr>`).join('') : '<tr><td colspan="10" class="bo-empty">لا توجد فروع ZATCA</td></tr>';
+    document.getElementById('einvWarnBody').innerHTML = warnRows.length ? warnRows.slice(0, 100).map(w => `<tr><td>${escapeHtml(w.branch)}</td><td class="num">${w.invoice ?? '—'}</td><td class="num">${w.icv}</td><td>${escapeHtml(w.text)}</td></tr>`).join('') : '<tr><td colspan="4" class="bo-empty">لا توجد تنبيهات</td></tr>';
+    lastEinvSummary = { etaRows, zRows, warnRows };
+  } catch (e) { console.error(e); showToast('تعذر تحميل ملخص الفواتير الإلكترونية', true); }
+}
+function exportEinvSummaryToExcel() {
+  if (!lastEinvSummary || (!lastEinvSummary.etaRows.length && !lastEinvSummary.zRows.length)) { showToast('لا توجد بيانات لتصديرها', true); return; }
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(lastEinvSummary.etaRows.map(r => ({ 'الفرع': r.branch, 'الفواتير': r.total, 'لم تُرسل': r.not_sent, 'في الانتظار': r.queued, 'تم الإرسال': r.sent, 'مقبولة': r.accepted, 'مرفوضة/خطأ': r.failed, 'إجمالي القيمة': r.value }))), 'مصر ETA');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(lastEinvSummary.zRows.map(r => ({ 'الفرع': r.branch, 'الفواتير': r.total, 'لم تُجهّز': r.notPrep, 'مجهزة': r.prepared, 'مُرسلة': r.submitted, 'مقبولة': r.accepted, 'مرفوضة': r.rejected, 'إشعارات دائنة': r.credit, 'بها تنبيهات': r.warn, 'إجمالي القيمة': r.value }))), 'السعودية ZATCA');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(lastEinvSummary.warnRows.map(w => ({ 'الفرع': w.branch, 'رقم الفاتورة': w.invoice, 'ICV': w.icv, 'التنبيهات': w.text }))), 'تنبيهات');
+  XLSX.writeFile(wb, `ملخص-الفواتير-الإلكترونية-${new Date().toISOString().split('T')[0]}.xlsx`);
+}
+
+
+// ---- تقارير الأنشطة (صالون / عيادة / أكاديمية / ملاعب) ----
+const ACT_STATUS_AR = { booked: 'محجوز', completed: 'مكتمل', cancelled: 'ملغي', no_show: 'لم يحضر', active: 'نشط', expired: 'منتهي', frozen: 'مجمد' };
+const actSt = s => ACT_STATUS_AR[s] || s || '—';
+const actNum = v => Number(v) || 0;
+const actTime = s => String(s || '').slice(0, 5);
+const ACT_REPORTS = {
+  'gym-report': {
+    title: 'تقرير الجيم التفصيلي (الاشتراكات والحضور)', gate: () => isGymBranch(),
+    statuses: [['active', 'نشط'], ['expired', 'منتهي'], ['frozen', 'مجمد'], ['cancelled', 'ملغي']],
+    async load(f, t, b) {
+      const [subs, att] = await Promise.all([
+        einvFetchAll(() => applyBranchScope(supabaseClient.from('gym_subscriptions').select('status, start_date, end_date, total_price, paid_amount, member_id, package_id, gym_members(name), gym_packages(name)').gte('start_date', f).lte('start_date', t).order('start_date'), b)),
+        einvFetchAll(() => applyBranchScope(supabaseClient.from('gym_attendance').select('member_id, gym_members(name)').gte('checked_in_at', f + 'T00:00:00').lte('checked_in_at', t + 'T23:59:59').order('checked_in_at'), b))
+      ]);
+      return { subs, att };
+    },
+    filter: (d, st) => ({ ...d, subs: d.subs.filter(r => r.status === st) }),
+    compute({ subs, att }) {
+      const live = subs.filter(r => r.status !== 'cancelled');
+      const val = live.reduce((x, r) => x + actNum(r.total_price), 0), paid = live.reduce((x, r) => x + actNum(r.paid_amount), 0);
+      const pk = {}; live.forEach(r => { const g = pk[r.package_id || '-'] = pk[r.package_id || '-'] || { n: r.gym_packages?.name || '—', c: 0, v: 0, p: 0 }; g.c++; g.v += actNum(r.total_price); g.p += actNum(r.paid_amount); });
+      const am = {}; att.forEach(r => { const g = am[r.member_id || '-'] = am[r.member_id || '-'] || { n: r.gym_members?.name || '—', c: 0 }; g.c++; });
+      return {
+        cards: [['الاشتراكات', subs.length], ['نشطة', subs.filter(r => r.status === 'active').length], ['منتهية', subs.filter(r => r.status === 'expired').length], ['مجمدة', subs.filter(r => r.status === 'frozen').length], ['ملغاة', subs.filter(r => r.status === 'cancelled').length], ['إجمالي القيمة', einvMoney(val)], ['المحصّل', einvMoney(paid)], ['المتبقي', einvMoney(val - paid), true], ['مرات الحضور', att.length], ['أعضاء حضروا', new Set(att.map(r => r.member_id)).size]],
+        tables: [
+          { title: 'حسب الباقة', heads: ['الباقة', 'الاشتراكات', 'القيمة', 'المحصّل', 'المتبقي'], rows: Object.values(pk).sort((a, b) => b.v - a.v).map(g => [g.n, g.c, einvMoney(g.v), einvMoney(g.p), einvMoney(g.v - g.p)]) },
+          { title: 'أكثر الأعضاء حضورًا (أعلى 20)', heads: ['العضو', 'مرات الحضور'], rows: Object.values(am).sort((a, b) => b.c - a.c).slice(0, 20).map(g => [g.n, g.c]) },
+          { title: 'تفاصيل الاشتراكات', detail: true, heads: ['البداية', 'النهاية', 'العضو', 'الباقة', 'الحالة', 'الإجمالي', 'المدفوع', 'المتبقي'], rows: subs.map(r => [r.start_date, r.end_date, r.gym_members?.name || '—', r.gym_packages?.name || '—', actSt(r.status), einvMoney(r.total_price), einvMoney(r.paid_amount), einvMoney(actNum(r.total_price) - actNum(r.paid_amount))]) }
+        ]
+      };
+    }
+  },
+  'salon-report': {
+    title: 'تقرير الصالون (المواعيد والإيراد)', gate: () => isSalonBranch(),
+    statuses: [['booked', 'محجوز'], ['completed', 'مكتمل'], ['cancelled', 'ملغي'], ['no_show', 'لم يحضر']],
+    async load(f, t, b) { return einvFetchAll(() => applyBranchScope(supabaseClient.from('salon_appointments').select('status, price, paid_amount, appointment_date, start_time, client_name, specialist_id, service_id, salon_specialists(name), salon_services(name)').gte('appointment_date', f).lte('appointment_date', t).order('appointment_date'), b)); },
+    filter: (d, st) => d.filter(r => r.status === st),
+    compute(rows) {
+      const done = rows.filter(r => r.status === 'completed');
+      const rev = done.reduce((x, r) => x + actNum(r.price), 0);
+      const grp = (key, nameFn) => { const m = {}; rows.forEach(r => { const k = r[key] || '-'; const g = m[k] = m[k] || { n: nameFn(r) || '—', c: 0, d: 0, ns: 0, rev: 0 }; g.c++; if (r.status === 'completed') { g.d++; g.rev += actNum(r.price); } if (r.status === 'no_show') g.ns++; }); return Object.values(m).sort((a, b) => b.rev - a.rev); };
+      return {
+        cards: [['إجمالي المواعيد', rows.length], ['مكتملة', done.length], ['ملغاة', rows.filter(r => r.status === 'cancelled').length], ['لم يحضر', rows.filter(r => r.status === 'no_show').length, true], ['الإيراد (المكتمل)', einvMoney(rev)], ['المحصّل', einvMoney(rows.reduce((x, r) => x + actNum(r.paid_amount), 0))], ['متوسط الفاتورة', einvMoney(done.length ? rev / done.length : 0)]],
+        tables: [
+          { title: 'حسب الأخصائي', heads: ['الأخصائي', 'المواعيد', 'مكتملة', 'لم يحضر', 'الإيراد'], rows: grp('specialist_id', r => r.salon_specialists?.name).map(g => [g.n, g.c, g.d, g.ns, einvMoney(g.rev)]) },
+          { title: 'حسب الخدمة', heads: ['الخدمة', 'المواعيد', 'مكتملة', 'لم يحضر', 'الإيراد'], rows: grp('service_id', r => r.salon_services?.name).map(g => [g.n, g.c, g.d, g.ns, einvMoney(g.rev)]) },
+          { title: 'تفاصيل المواعيد', detail: true, heads: ['التاريخ', 'الوقت', 'العميل', 'الأخصائي', 'الخدمة', 'الحالة', 'السعر', 'المدفوع', 'المتبقي'], rows: rows.map(r => [r.appointment_date, actTime(r.start_time), r.client_name || '—', r.salon_specialists?.name || '—', r.salon_services?.name || '—', actSt(r.status), einvMoney(r.price), einvMoney(r.paid_amount), einvMoney(actNum(r.price) - actNum(r.paid_amount))]) }
+        ]
+      };
+    }
+  },
+  'clinic-report': {
+    title: 'تقرير العيادة (الحجوزات والإيراد)', gate: () => isClinicBranch(),
+    statuses: [['booked', 'محجوز'], ['completed', 'مكتمل'], ['cancelled', 'ملغي'], ['no_show', 'لم يحضر']],
+    async load(f, t, b) { return einvFetchAll(() => applyBranchScope(supabaseClient.from('clinic_appointments').select('status, price, paid_amount, appointment_date, start_time, reason, doctor_id, patient_id, clinic_doctors(name), clinic_patients(name)').gte('appointment_date', f).lte('appointment_date', t).order('appointment_date'), b)); },
+    filter: (d, st) => d.filter(r => r.status === st),
+    compute(rows) {
+      const done = rows.filter(r => r.status === 'completed');
+      const rev = done.reduce((x, r) => x + actNum(r.price), 0);
+      const m = {}; rows.forEach(r => { const g = m[r.doctor_id || '-'] = m[r.doctor_id || '-'] || { n: r.clinic_doctors?.name || '—', c: 0, d: 0, ns: 0, rev: 0 }; g.c++; if (r.status === 'completed') { g.d++; g.rev += actNum(r.price); } if (r.status === 'no_show') g.ns++; });
+      return {
+        cards: [['إجمالي الحجوزات', rows.length], ['مكتملة', done.length], ['ملغاة', rows.filter(r => r.status === 'cancelled').length], ['لم يحضر', rows.filter(r => r.status === 'no_show').length, true], ['مرضى مختلفون', new Set(rows.map(r => r.patient_id)).size], ['الإيراد (المكتمل)', einvMoney(rev)], ['المحصّل', einvMoney(rows.reduce((x, r) => x + actNum(r.paid_amount), 0))]],
+        tables: [
+          { title: 'حسب الطبيب', heads: ['الطبيب', 'الحجوزات', 'مكتملة', 'لم يحضر', 'الإيراد'], rows: Object.values(m).sort((a, b) => b.rev - a.rev).map(g => [g.n, g.c, g.d, g.ns, einvMoney(g.rev)]) },
+          { title: 'تفاصيل الحجوزات', detail: true, heads: ['التاريخ', 'الوقت', 'المريض', 'الطبيب', 'السبب', 'الحالة', 'السعر', 'المدفوع', 'المتبقي'], rows: rows.map(r => [r.appointment_date, actTime(r.start_time), r.clinic_patients?.name || '—', r.clinic_doctors?.name || '—', r.reason || '—', actSt(r.status), einvMoney(r.price), einvMoney(r.paid_amount), einvMoney(actNum(r.price) - actNum(r.paid_amount))]) }
+        ]
+      };
+    }
+  },
+  'academy-report': {
+    title: 'تقرير الأكاديمية (التسجيلات والتحصيل)', gate: () => isAcademyBranch(),
+    statuses: [['active', 'نشط'], ['completed', 'مكتمل'], ['cancelled', 'ملغي']],
+    async load(f, t, b) {
+      const [enr, ses] = await Promise.all([
+        einvFetchAll(() => applyBranchScope(supabaseClient.from('academy_enrollments').select('status, total_price, paid_amount, enrollment_date, course_id, academy_courses(name), academy_students(name)').gte('enrollment_date', f).lte('enrollment_date', t).order('enrollment_date'), b)),
+        einvFetchAll(() => applyBranchScope(supabaseClient.from('academy_sessions').select('instructor_id, course_id, academy_instructors(name), academy_courses(name)').gte('session_date', f).lte('session_date', t).order('session_date'), b))
+      ]);
+      return { enr, ses };
+    },
+    filter: (d, st) => ({ ...d, enr: d.enr.filter(r => r.status === st) }),
+    compute({ enr, ses }) {
+      const live = enr.filter(r => r.status !== 'cancelled');
+      const val = live.reduce((x, r) => x + actNum(r.total_price), 0), paid = live.reduce((x, r) => x + actNum(r.paid_amount), 0);
+      const m = {}; live.forEach(r => { const g = m[r.course_id || '-'] = m[r.course_id || '-'] || { n: r.academy_courses?.name || '—', c: 0, v: 0, p: 0 }; g.c++; g.v += actNum(r.total_price); g.p += actNum(r.paid_amount); });
+      const si = {}; ses.forEach(r => { const g = si[r.instructor_id || '-'] = si[r.instructor_id || '-'] || { n: r.academy_instructors?.name || '—', c: 0 }; g.c++; });
+      return {
+        cards: [['التسجيلات', enr.length], ['نشطة', enr.filter(r => r.status === 'active').length], ['مكتملة', enr.filter(r => r.status === 'completed').length], ['ملغاة', enr.filter(r => r.status === 'cancelled').length], ['إجمالي القيمة', einvMoney(val)], ['المحصّل', einvMoney(paid)], ['المتبقي', einvMoney(val - paid), true], ['الحصص في الفترة', ses.length]],
+        tables: [
+          { title: 'حسب الدورة', heads: ['الدورة', 'التسجيلات', 'القيمة', 'المحصّل', 'المتبقي'], rows: Object.values(m).sort((a, b) => b.v - a.v).map(g => [g.n, g.c, einvMoney(g.v), einvMoney(g.p), einvMoney(g.v - g.p)]) },
+          { title: 'حصص المدرّسين', heads: ['المدرّس', 'عدد الحصص'], rows: Object.values(si).sort((a, b) => b.c - a.c).map(g => [g.n, g.c]) },
+          { title: 'تفاصيل التسجيلات', detail: true, heads: ['التاريخ', 'الطالب', 'الدورة', 'الحالة', 'القيمة', 'المدفوع', 'المتبقي'], rows: enr.map(r => [r.enrollment_date, r.academy_students?.name || '—', r.academy_courses?.name || '—', actSt(r.status), einvMoney(r.total_price), einvMoney(r.paid_amount), einvMoney(actNum(r.total_price) - actNum(r.paid_amount))]) }
+        ]
+      };
+    }
+  },
+  'venue-report': {
+    title: 'تقرير الملاعب والقاعات (الحجوزات والإيراد)', gate: () => isVenueBranch(),
+    statuses: [['booked', 'محجوز'], ['completed', 'مكتمل'], ['cancelled', 'ملغي']],
+    async load(f, t, b) { return einvFetchAll(() => applyBranchScope(supabaseClient.from('venue_bookings').select('status, total_price, paid_amount, booking_date, start_time, end_time, customer_name, court_id, venue_courts(name)').gte('booking_date', f).lte('booking_date', t).order('booking_date'), b)); },
+    filter: (d, st) => d.filter(r => r.status === st),
+    compute(rows) {
+      const hrs = r => { const p = s => { const [h, m] = String(s || '0:0').split(':'); return (+h || 0) * 60 + (+m || 0); }; return Math.max(0, p(r.end_time) - p(r.start_time)) / 60; };
+      const live = rows.filter(r => r.status !== 'cancelled');
+      const rev = live.reduce((x, r) => x + actNum(r.total_price), 0), paid = live.reduce((x, r) => x + actNum(r.paid_amount), 0);
+      const m = {}; live.forEach(r => { const g = m[r.court_id || '-'] = m[r.court_id || '-'] || { n: r.venue_courts?.name || '—', c: 0, h: 0, v: 0, p: 0 }; g.c++; g.h += hrs(r); g.v += actNum(r.total_price); g.p += actNum(r.paid_amount); });
+      return {
+        cards: [['الحجوزات', rows.length], ['مكتملة', rows.filter(r => r.status === 'completed').length], ['ملغاة', rows.filter(r => r.status === 'cancelled').length], ['ساعات محجوزة', live.reduce((x, r) => x + hrs(r), 0).toFixed(1)], ['الإيراد', einvMoney(rev)], ['المحصّل', einvMoney(paid)], ['المتبقي', einvMoney(rev - paid), true]],
+        tables: [
+          { title: 'حسب الملعب / القاعة', heads: ['الملعب', 'الحجوزات', 'الساعات', 'الإيراد', 'المحصّل', 'المتبقي'], rows: Object.values(m).sort((a, b) => b.v - a.v).map(g => [g.n, g.c, g.h.toFixed(1), einvMoney(g.v), einvMoney(g.p), einvMoney(g.v - g.p)]) },
+          { title: 'تفاصيل الحجوزات', detail: true, heads: ['التاريخ', 'من', 'إلى', 'الملعب', 'العميل', 'الحالة', 'الإجمالي', 'المدفوع', 'المتبقي'], rows: rows.map(r => [r.booking_date, actTime(r.start_time), actTime(r.end_time), r.venue_courts?.name || '—', r.customer_name || '—', actSt(r.status), einvMoney(r.total_price), einvMoney(r.paid_amount), einvMoney(actNum(r.total_price) - actNum(r.paid_amount))]) }
+        ]
+      };
+    }
+  }
+};
+const lastActReport = {};
+const ACT_DETAIL_LIMIT = 300;
+function applyActivityReportsVisibility() {
+  Object.entries(ACT_REPORTS).forEach(([key, cfg]) => {
+    const on = !!cfg.gate();
+    const card = document.querySelector(`[data-report="${key}"]`); if (card) card.style.display = on ? '' : 'none';
+    const d = document.getElementById('otherReportDetail-' + key); if (d && !on) d.style.display = 'none';
+  });
+}
+function actReportInit(key) {
+  const f = document.getElementById(`act-${key}-from`), t = document.getElementById(`act-${key}-to`);
+  const sel = document.getElementById(`act-${key}-branch`);
+  sel.innerHTML = '<option value="">كل الفروع</option>' + boBranchesList.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+  sel.parentElement.style.display = boBranchesList.length <= 1 ? 'none' : '';
+  setInventoryDateRange('30days', f.id, t.id);
+  runActReport(key);
+}
+async function runActReport(key) {
+  const cfg = ACT_REPORTS[key];
+  const f = document.getElementById(`act-${key}-from`).value, t = document.getElementById(`act-${key}-to`).value, b = document.getElementById(`act-${key}-branch`).value;
+  if (!f || !t) return;
+  const cardsEl = document.getElementById(`act-${key}-cards`), tablesEl = document.getElementById(`act-${key}-tables`);
+  tablesEl.innerHTML = '<div class="bo-empty" style="padding:12px;">جاري التحميل...</div>';
+  try {
+    let data = await cfg.load(f, t, b);
+    const stSel = document.getElementById(`act-${key}-status`).value;
+    if (stSel && cfg.filter) data = cfg.filter(data, stSel);
+    const res = cfg.compute(data);
+    cardsEl.innerHTML = res.cards.map(([l, v, neg]) => `<div class="report-card"><div class="report-card-label">${escapeHtml(l)}</div><div class="report-card-value num${neg ? ' negative' : ''}">${escapeHtml(String(v))}</div></div>`).join('');
+    tablesEl.innerHTML = res.tables.map(tb => `<div class="report-subtitle" style="font-size:14px;margin:14px 0 8px;">${escapeHtml(tb.title)}</div><div class="bo-table-wrap"><table class="bo-table"><thead><tr>${tb.heads.map(h => `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead><tbody>${tb.rows.length ? tb.rows.slice(0, ACT_DETAIL_LIMIT).map(r => `<tr>${r.map((c, i) => `<td${i ? ' class="num"' : ''}>${escapeHtml(String(c))}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${tb.heads.length}" class="bo-empty">لا توجد بيانات</td></tr>`}</tbody></table></div>${tb.rows.length > ACT_DETAIL_LIMIT ? `<div class="bo-empty" style="padding:8px;font-size:12.5px;">يعرض أول ${ACT_DETAIL_LIMIT} صف من ${tb.rows.length} — التصدير يشمل الكل</div>` : ''}`).join('');
+    lastActReport[key] = res;
+  } catch (e) { console.error(e); showToast('تعذر تحميل التقرير', true); tablesEl.innerHTML = ''; }
+}
+function exportActReport(key) {
+  const res = lastActReport[key];
+  if (!res) { showToast('لا توجد بيانات لتصديرها', true); return; }
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['المؤشر', 'القيمة'], ...res.cards.map(c => [c[0], c[1]])]), 'الملخص');
+  res.tables.forEach((tb, i) => XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([tb.heads, ...tb.rows]), tb.title.slice(0, 28) || 'جدول' + (i + 1)));
+  XLSX.writeFile(wb, `${ACT_REPORTS[key].title}-${new Date().toISOString().split('T')[0]}.xlsx`);
+}
+
 // ---- طلبات العملاء على مقاسات غير متوفرة ----
 let lastMsrRows = [];
 
@@ -51767,6 +52190,12 @@ const INVENTORY_QUICK_RANGE_CONFIGS = [
   { rowId: 'expensesAnalysisQuickRange', fromId: 'expensesAnalysisFromDate', toId: 'expensesAnalysisToDate', refresh: () => refreshExpensesAnalysisReport() },
   { rowId: 'otherReturnsQuickRange', fromId: 'otherReturnsFromDate', toId: 'otherReturnsToDate', refresh: () => refreshReturnsAnalysisReport() },
   { rowId: 'etaLogQuickRange', fromId: 'etaLogFromDate', toId: 'etaLogToDate', refresh: () => runEtaLogReport() },
+  { rowId: 'einvQuickRange', fromId: 'einvFromDate', toId: 'einvToDate', refresh: () => runEinvSummaryReport() },
+  { rowId: 'act-gym-report-qr', fromId: 'act-gym-report-from', toId: 'act-gym-report-to', refresh: () => runActReport('gym-report') },
+  { rowId: 'act-salon-report-qr', fromId: 'act-salon-report-from', toId: 'act-salon-report-to', refresh: () => runActReport('salon-report') },
+  { rowId: 'act-clinic-report-qr', fromId: 'act-clinic-report-from', toId: 'act-clinic-report-to', refresh: () => runActReport('clinic-report') },
+  { rowId: 'act-academy-report-qr', fromId: 'act-academy-report-from', toId: 'act-academy-report-to', refresh: () => runActReport('academy-report') },
+  { rowId: 'act-venue-report-qr', fromId: 'act-venue-report-from', toId: 'act-venue-report-to', refresh: () => runActReport('venue-report') },
   { rowId: 'overtimeQuickRange', fromId: 'overtimeFromDate', toId: 'overtimeToDate', refresh: () => runOvertimeReport() },
   { rowId: 'fieldVisitsReportQuickRange', fromId: 'fieldVisitsReportFromDate', toId: 'fieldVisitsReportToDate', refresh: () => runFieldVisitsReport() },
   { rowId: 'hrKpiQuickRange', fromId: 'hrKpiFromDate', toId: 'hrKpiToDate', refresh: () => runHrKpiReport() },
@@ -53639,34 +54068,46 @@ function zatcaRiyadhParts(iso) {
 }
 
 // يحسب سطور الفاتورة والضريبة. tax_amount على السطر لو موجود وإلا توزيع نسبي من ضريبة الفاتورة (مع تحذير).
-function zatcaComputeLines(sale, items) {
+// opts.rate (اختياري): نسبة ضريبة ثابتة (للإشعارات الدائنة). opts.discount: خصم عام على المستند.
+function zatcaComputeLines(sale, items, opts = {}) {
   const warnings = []; const itemTax = items.reduce((a, i) => a + (Number(i.tax_amount) || 0), 0);
   const saleTax = Number(sale.tax) || 0;
-  const useItem = itemTax > 0 && Math.abs(itemTax - saleTax) < 0.05;
   const baseSum = items.reduce((a, i) => a + (Number(i.total) || 0), 0);
-  if (!useItem && saleTax > 0) warnings.push('ضريبة السطور غير مسجلة أو لا تطابق ضريبة الفاتورة؛ تم توزيعها نسبيًا');
+  const disc = Math.min(Number(opts.discount) || 0, baseSum);
+  const k = baseSum > 0 ? 1 - disc / baseSum : 1; // معامل الخصم العام على كل سطر
+  const fixedRate = opts.rate !== undefined;
+  const useItem = !fixedRate && itemTax > 0 && Math.abs(itemTax - saleTax) < 0.05;
+  if (!fixedRate && !useItem && saleTax > 0) warnings.push('ضريبة السطور غير مسجلة أو لا تطابق ضريبة الفاتورة؛ تم توزيعها نسبيًا');
   const lines = items.map((i, idx) => {
-    const net = Number(i.total) || 0;
-    const tax = useItem ? Number(i.tax_amount) || 0 : (baseSum > 0 ? saleTax * net / baseSum : 0);
-    const pct = net > 0 ? Math.round(tax / net * 10000) / 100 : 0;
+    const net = Number(i.total) || 0; const eff = net * k;
+    const tax = fixedRate ? eff * opts.rate : useItem ? Number(i.tax_amount) || 0 : (baseSum > 0 ? saleTax * net / baseSum : 0);
+    const pct = eff > 0 ? Math.round(tax / eff * 10000) / 100 : 0;
     if (pct !== 0 && Math.abs(pct - ZATCA_VAT_RATE) > 0.01) warnings.push(`سطر ${idx + 1}: نسبة الضريبة ${pct}% غير قياسية (المتوقع ${ZATCA_VAT_RATE}% أو 0%)`);
-    return { id: idx + 1, name: i.name || i.product_name || ('صنف ' + (idx + 1)), qty: Number(i.quantity) || 1, price: Number(i.unit_price) || 0, net, tax, pct: pct === 0 ? 0 : ZATCA_VAT_RATE, cat: pct === 0 ? 'Z' : 'S' };
+    return { id: idx + 1, name: i.name || i.product_name || ('صنف ' + (idx + 1)), qty: Number(i.quantity) || 1, price: Number(i.unit_price) || 0, net, eff, tax, pct: pct === 0 ? 0 : ZATCA_VAT_RATE, cat: pct === 0 ? 'Z' : 'S' };
   });
-  return { lines, warnings };
+  return { lines, warnings, discount: disc };
 }
 
-function zatcaBuildXml({ sale, items, customer, settings, icv, uuid, pih }) {
-  const { lines, warnings } = zatcaComputeLines(sale, items);
+// credit: { origInvoiceId, reason, number } لإشعار دائن (نوع 381) — rate = نسبة ضريبة الفاتورة الأصلية
+function zatcaBuildXml({ sale, items, customer, settings, icv, uuid, pih, credit }) {
+  const { lines, warnings, discount } = zatcaComputeLines(sale, items, { discount: credit ? 0 : sale.discount, rate: credit ? credit.rate : undefined });
   const std = !!(customer && (customer.tax_registration_number || '').trim());
   const dt = zatcaRiyadhParts(sale.created_at);
   const cur = settings.currency || 'SAR';
-  const net = lines.reduce((a, l) => a + l.net, 0), tax = lines.reduce((a, l) => a + l.tax, 0);
+  const lineSum = lines.reduce((a, l) => a + l.net, 0);
+  const net = lineSum - discount, tax = lines.reduce((a, l) => a + l.tax, 0);
   const total = net + tax;
   const pay = sale.payment_method === 'card' ? '48' : '10';
-  const bySub = {}; lines.forEach(l => { const k = l.cat + '|' + l.pct; (bySub[k] = bySub[k] || { cat: l.cat, pct: l.pct, base: 0, tax: 0 }); bySub[k].base += l.net; bySub[k].tax += l.tax; });
-  const sub = Object.values(bySub).map(s => `<cac:TaxSubtotal><cbc:TaxableAmount currencyID="${cur}">${zm(s.base)}</cbc:TaxableAmount><cbc:TaxAmount currencyID="${cur}">${zm(s.tax)}</cbc:TaxAmount><cac:TaxCategory><cbc:ID>${s.cat}</cbc:ID><cbc:Percent>${zm(s.pct)}</cbc:Percent>${s.cat === 'Z' ? '<cbc:TaxExemptionReasonCode>VATEX-SA-34-1</cbc:TaxExemptionReasonCode>' : ''}<cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:TaxCategory></cac:TaxSubtotal>`).join('');
+  const bySub = {}; lines.forEach(l => { const kk = l.cat + '|' + l.pct; (bySub[kk] = bySub[kk] || { cat: l.cat, pct: l.pct, base: 0, tax: 0 }); bySub[kk].base += l.eff; bySub[kk].tax += l.tax; });
+  const catXml = (cat, pct) => `<cac:TaxCategory><cbc:ID>${cat}</cbc:ID><cbc:Percent>${zm(pct)}</cbc:Percent>${cat === 'Z' ? '<cbc:TaxExemptionReasonCode>VATEX-SA-34-1</cbc:TaxExemptionReasonCode>' : ''}<cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:TaxCategory>`;
+  const sub = Object.values(bySub).map(s => `<cac:TaxSubtotal><cbc:TaxableAmount currencyID="${cur}">${zm(s.base)}</cbc:TaxableAmount><cbc:TaxAmount currencyID="${cur}">${zm(s.tax)}</cbc:TaxAmount>${catXml(s.cat, s.pct)}</cac:TaxSubtotal>`).join('');
   const addr = (a) => `<cac:PostalAddress><cbc:StreetName>${zx(a.street)}</cbc:StreetName><cbc:BuildingNumber>${zx(a.building)}</cbc:BuildingNumber><cbc:CitySubdivisionName>${zx(a.district)}</cbc:CitySubdivisionName><cbc:CityName>${zx(a.city)}</cbc:CityName><cbc:PostalZone>${zx(a.postal)}</cbc:PostalZone><cac:Country><cbc:IdentificationCode>SA</cbc:IdentificationCode></cac:Country></cac:PostalAddress>`;
-  const invId = `${settings.zatca_invoice_prefix || 'INV'}-${sale.invoice_number}`;
+  const pre = settings.zatca_invoice_prefix || 'INV';
+  const invId = credit ? `${pre}-CN-${icv}` : `${pre}-${sale.invoice_number}`;
+  // الخصم العام: AllowanceCharge واحد بفئة الضريبة الغالبة
+  const mainCat = lines.find(l => l.cat === 'S') || lines[0];
+  const allowance = discount > 0 ? `<cac:AllowanceCharge><cbc:ChargeIndicator>false</cbc:ChargeIndicator><cbc:AllowanceChargeReason>discount</cbc:AllowanceChargeReason><cbc:Amount currencyID="${cur}">${zm(discount)}</cbc:Amount>${catXml(mainCat.cat, mainCat.pct)}</cac:AllowanceCharge>\n` : '';
+  const billing = credit ? `<cac:BillingReference><cac:InvoiceDocumentReference><cbc:ID>${zx(credit.origInvoiceId)}</cbc:ID></cac:InvoiceDocumentReference></cac:BillingReference>\n` : '';
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2">
 <cbc:ProfileID>reporting:1.0</cbc:ProfileID>
@@ -53674,35 +54115,58 @@ function zatcaBuildXml({ sale, items, customer, settings, icv, uuid, pih }) {
 <cbc:UUID>${zx(uuid)}</cbc:UUID>
 <cbc:IssueDate>${dt.date}</cbc:IssueDate>
 <cbc:IssueTime>${dt.time}</cbc:IssueTime>
-<cbc:InvoiceTypeCode name="${std ? '0100000' : '0200000'}">388</cbc:InvoiceTypeCode>
+<cbc:InvoiceTypeCode name="${std ? '0100000' : '0200000'}">${credit ? '381' : '388'}</cbc:InvoiceTypeCode>
 <cbc:DocumentCurrencyCode>${cur}</cbc:DocumentCurrencyCode>
 <cbc:TaxCurrencyCode>${cur}</cbc:TaxCurrencyCode>
-<cac:AdditionalDocumentReference><cbc:ID>ICV</cbc:ID><cbc:UUID>${icv}</cbc:UUID></cac:AdditionalDocumentReference>
+${billing}<cac:AdditionalDocumentReference><cbc:ID>ICV</cbc:ID><cbc:UUID>${icv}</cbc:UUID></cac:AdditionalDocumentReference>
 <cac:AdditionalDocumentReference><cbc:ID>PIH</cbc:ID><cac:Attachment><cbc:EmbeddedDocumentBinaryObject mimeCode="text/plain">${zx(pih)}</cbc:EmbeddedDocumentBinaryObject></cac:Attachment></cac:AdditionalDocumentReference>
 <cac:AccountingSupplierParty><cac:Party><cac:PartyIdentification><cbc:ID schemeID="CRN">${zx(settings.crn)}</cbc:ID></cac:PartyIdentification>${addr({ street: settings.street, building: settings.building_number, district: settings.district, city: settings.city, postal: settings.postal_code })}<cac:PartyTaxScheme><cbc:CompanyID>${zx(settings.vat_number)}</cbc:CompanyID><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:PartyTaxScheme><cac:PartyLegalEntity><cbc:RegistrationName>${zx(settings.seller_name)}</cbc:RegistrationName></cac:PartyLegalEntity></cac:Party></cac:AccountingSupplierParty>
 <cac:AccountingCustomerParty><cac:Party>${std ? `<cac:PartyTaxScheme><cbc:CompanyID>${zx(customer.tax_registration_number)}</cbc:CompanyID><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:PartyTaxScheme>` : ''}<cac:PartyLegalEntity><cbc:RegistrationName>${zx(customer?.name || '')}</cbc:RegistrationName></cac:PartyLegalEntity></cac:Party></cac:AccountingCustomerParty>
-<cac:PaymentMeans><cbc:PaymentMeansCode>${pay}</cbc:PaymentMeansCode></cac:PaymentMeans>
-<cac:TaxTotal><cbc:TaxAmount currencyID="${cur}">${zm(tax)}</cbc:TaxAmount></cac:TaxTotal>
+<cac:PaymentMeans><cbc:PaymentMeansCode>${pay}</cbc:PaymentMeansCode>${credit ? `<cbc:InstructionNote>${zx(credit.reason || 'return')}</cbc:InstructionNote>` : ''}</cac:PaymentMeans>
+${allowance}<cac:TaxTotal><cbc:TaxAmount currencyID="${cur}">${zm(tax)}</cbc:TaxAmount></cac:TaxTotal>
 <cac:TaxTotal><cbc:TaxAmount currencyID="${cur}">${zm(tax)}</cbc:TaxAmount>${sub}</cac:TaxTotal>
-<cac:LegalMonetaryTotal><cbc:LineExtensionAmount currencyID="${cur}">${zm(net)}</cbc:LineExtensionAmount><cbc:TaxExclusiveAmount currencyID="${cur}">${zm(net)}</cbc:TaxExclusiveAmount><cbc:TaxInclusiveAmount currencyID="${cur}">${zm(total)}</cbc:TaxInclusiveAmount><cbc:AllowanceTotalAmount currencyID="${cur}">0.00</cbc:AllowanceTotalAmount><cbc:PrepaidAmount currencyID="${cur}">0.00</cbc:PrepaidAmount><cbc:PayableAmount currencyID="${cur}">${zm(total)}</cbc:PayableAmount></cac:LegalMonetaryTotal>
+<cac:LegalMonetaryTotal><cbc:LineExtensionAmount currencyID="${cur}">${zm(lineSum)}</cbc:LineExtensionAmount><cbc:TaxExclusiveAmount currencyID="${cur}">${zm(net)}</cbc:TaxExclusiveAmount><cbc:TaxInclusiveAmount currencyID="${cur}">${zm(total)}</cbc:TaxInclusiveAmount><cbc:AllowanceTotalAmount currencyID="${cur}">${zm(discount)}</cbc:AllowanceTotalAmount><cbc:PrepaidAmount currencyID="${cur}">0.00</cbc:PrepaidAmount><cbc:PayableAmount currencyID="${cur}">${zm(total)}</cbc:PayableAmount></cac:LegalMonetaryTotal>
 ${lines.map(l => `<cac:InvoiceLine><cbc:ID>${l.id}</cbc:ID><cbc:InvoicedQuantity unitCode="PCE">${l.qty}</cbc:InvoicedQuantity><cbc:LineExtensionAmount currencyID="${cur}">${zm(l.net)}</cbc:LineExtensionAmount><cac:TaxTotal><cbc:TaxAmount currencyID="${cur}">${zm(l.tax)}</cbc:TaxAmount><cbc:RoundingAmount currencyID="${cur}">${zm(l.net + l.tax)}</cbc:RoundingAmount></cac:TaxTotal><cac:Item><cbc:Name>${zx(l.name)}</cbc:Name><cac:ClassifiedTaxCategory><cbc:ID>${l.cat}</cbc:ID><cbc:Percent>${zm(l.pct)}</cbc:Percent><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:ClassifiedTaxCategory></cac:Item><cac:Price><cbc:PriceAmount currencyID="${cur}">${zm(l.price)}</cbc:PriceAmount></cac:Price></cac:InvoiceLine>`).join('\n')}
 </Invoice>`;
-  if (Math.abs(total - Number(sale.total)) > 0.05) warnings.push(`إجمالي UBL (${zm(total)}) لا يطابق إجمالي الفاتورة (${zm(sale.total)})`);
-  if (Number(sale.discount) > 0) warnings.push('الفاتورة عليها خصم عام: لم يُضف كـ AllowanceCharge في هذه المرحلة');
+  if (credit) { warnings.push('قيمة المرتجع المسجلة بدون ضريبة؛ حُسبت الضريبة بنسبة الفاتورة الأصلية'); if (credit.refundTotal != null && Math.abs(net - credit.refundTotal) > 0.05) warnings.push(`صافي الإشعار (${zm(net)}) لا يطابق قيمة المرتجع (${zm(credit.refundTotal)})`); }
+  else if (Math.abs(total - Number(sale.total)) > 0.05) warnings.push(`إجمالي UBL (${zm(total)}) لا يطابق إجمالي الفاتورة (${zm(sale.total)})`);
   const iso = new Date(sale.created_at).toISOString().replace(/\.\d+Z$/, 'Z');
   const qr = zatcaTlv([[1, settings.seller_name], [2, settings.vat_number], [3, iso], [4, zm(total)], [5, zm(tax)]]);
-  return { xml, qr, warnings, docKind: std ? 'zatca_standard' : 'zatca_simplified', total, tax };
+  const docKind = (credit ? 'zatca_credit_' : 'zatca_') + (std ? 'standard' : 'simplified');
+  return { xml, qr, warnings, docKind, total, tax };
 }
 
 function zatcaUuid() { return crypto.randomUUID(); }
 
+async function zatcaLoadSettingsChecked(branchId) {
+  const { data: st } = await supabaseClient.from('einvoice_settings').select('*').eq('branch_id', branchId).maybeSingle();
+  const problems = zatcaValidateSettings(st);
+  if (problems.length) throw new Error('إعدادات الفرع ناقصة: ' + problems.join('، '));
+  return st;
+}
+async function zatcaSaveDoc(base, buildFn) { // buildFn(icv, uuid, pih) -> {xml, qr, warnings, docKind}
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const { data: nx, error: e3 } = await supabaseClient.rpc('einvoice_next', { p_branch: base.branch_id, p_authority: 'zatca' });
+    if (e3) throw new Error('تعذر الحصول على العداد: ' + e3.message);
+    const pih = nx.previous_hash || await zatcaInitialPih();
+    const uuid = zatcaUuid();
+    const b = buildFn(nx.icv, uuid, pih);
+    const hash = await zatcaSha256B64(b.xml);
+    const { error: e4 } = await supabaseClient.from('einvoice_documents').insert({
+      ...base, authority: 'zatca', doc_kind: b.docKind, doc_uuid: uuid, icv: nx.icv,
+      previous_hash: pih, doc_hash: hash, payload: b.xml, qr_base64: b.qr, status: 'prepared', warnings: b.warnings, created_by: null
+    });
+    if (!e4) return { icv: nx.icv, warnings: b.warnings };
+    if (e4.code !== '23505') throw new Error(e4.message);
+  }
+  throw new Error('تعارض في العداد، حاول مرة أخرى');
+}
+
 async function zatcaPrepareForSale(saleId) {
   const { data: sale, error: e1 } = await supabaseClient.from('sales').select('id, invoice_number, branch_id, customer_id, subtotal, discount, tax, total, created_at, payment_method, status').eq('id', saleId).single();
   if (e1 || !sale) throw new Error('الفاتورة غير موجودة');
-  const { data: st } = await supabaseClient.from('einvoice_settings').select('*').eq('branch_id', sale.branch_id).maybeSingle();
-  const problems = zatcaValidateSettings(st);
-  if (problems.length) throw new Error('إعدادات الفرع ناقصة: ' + problems.join('، '));
-  const { data: ex } = await supabaseClient.from('einvoice_documents').select('id').eq('sale_id', saleId).eq('authority', 'zatca').maybeSingle();
+  const st = await zatcaLoadSettingsChecked(sale.branch_id);
+  const { data: ex } = await supabaseClient.from('einvoice_documents').select('id').eq('sale_id', saleId).eq('authority', 'zatca').is('return_id', null).maybeSingle();
   if (ex) throw new Error('الفاتورة مجهزة بالفعل');
   const [{ data: items }, custRes] = await Promise.all([
     supabaseClient.from('sale_items').select('quantity, unit_price, discount, total, tax_amount, products(name)').eq('sale_id', saleId),
@@ -53710,22 +54174,74 @@ async function zatcaPrepareForSale(saleId) {
   ]);
   const rows = (items || []).map(i => ({ ...i, name: i.products?.name }));
   if (!rows.length) throw new Error('الفاتورة بدون أصناف');
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const { data: nx, error: e3 } = await supabaseClient.rpc('einvoice_next', { p_branch: sale.branch_id, p_authority: 'zatca' });
-    if (e3) throw new Error('تعذر الحصول على العداد: ' + e3.message);
-    const pih = nx.previous_hash || await zatcaInitialPih();
-    const uuid = zatcaUuid();
-    const b = zatcaBuildXml({ sale, items: rows, customer: custRes.data, settings: st, icv: nx.icv, uuid, pih });
-    const hash = await zatcaSha256B64(b.xml);
-    const { error: e4 } = await supabaseClient.from('einvoice_documents').insert({
-      sale_id: saleId, branch_id: sale.branch_id, authority: 'zatca', doc_kind: b.docKind, doc_uuid: uuid, icv: nx.icv,
-      previous_hash: pih, doc_hash: hash, payload: b.xml, qr_base64: b.qr, status: 'prepared', warnings: b.warnings,
-      created_by: null
-    });
-    if (!e4) return { icv: nx.icv, warnings: b.warnings };
-    if (e4.code !== '23505') throw new Error(e4.message);
-  }
-  throw new Error('تعارض في العداد، حاول مرة أخرى');
+  return zatcaSaveDoc({ sale_id: saleId, branch_id: sale.branch_id }, (icv, uuid, pih) => zatcaBuildXml({ sale, items: rows, customer: custRes.data, settings: st, icv, uuid, pih }));
+}
+
+// إشعار دائن لمرتجع بيع — لازم الفاتورة الأصلية تكون مجهزة أولًا
+async function zatcaPrepareCreditNote(returnId) {
+  const { data: ret, error: e1 } = await supabaseClient.from('sale_returns').select('id, sale_id, branch_id, customer_id, reason, total, created_at').eq('id', returnId).single();
+  if (e1 || !ret) throw new Error('المرتجع غير موجود');
+  const { data: sale } = await supabaseClient.from('sales').select('id, invoice_number, branch_id, subtotal, discount, tax, total, payment_method').eq('id', ret.sale_id).single();
+  const st = await zatcaLoadSettingsChecked(ret.branch_id);
+  const { data: orig } = await supabaseClient.from('einvoice_documents').select('id').eq('sale_id', ret.sale_id).eq('authority', 'zatca').is('return_id', null).maybeSingle();
+  if (!orig) throw new Error('جهّز الفاتورة الأصلية أولًا');
+  const { data: ex } = await supabaseClient.from('einvoice_documents').select('id').eq('return_id', returnId).eq('authority', 'zatca').maybeSingle();
+  if (ex) throw new Error('المرتجع مجهز بالفعل');
+  const [{ data: items }, custRes] = await Promise.all([
+    supabaseClient.from('sale_return_items').select('quantity, unit_price, total, products(name)').eq('sale_return_id', returnId),
+    ret.customer_id ? supabaseClient.from('customers').select('name, tax_registration_number').eq('id', ret.customer_id).maybeSingle() : Promise.resolve({ data: null })
+  ]);
+  const rows = (items || []).map(i => ({ ...i, name: i.products?.name }));
+  if (!rows.length) throw new Error('المرتجع بدون أصناف');
+  const base = (Number(sale.subtotal) || 0) - (Number(sale.discount) || 0);
+  const rate = base > 0 ? (Number(sale.tax) || 0) / base : 0;
+  const pre = st.zatca_invoice_prefix || 'INV';
+  const fake = { ...sale, created_at: ret.created_at, tax: 0, discount: 0 };
+  return zatcaSaveDoc({ sale_id: ret.sale_id, branch_id: ret.branch_id, return_id: returnId }, (icv, uuid, pih) =>
+    zatcaBuildXml({ sale: fake, items: rows, customer: custRes.data, settings: st, icv, uuid, pih, credit: { origInvoiceId: `${pre}-${sale.invoice_number}`, reason: ret.reason, rate, refundTotal: Number(ret.total) } }));
+}
+
+// تجهيز جماعي: بالترتيب الزمني (مهم لسلسلة ICV/PIH)، واحدة واحدة، ويقف عند أول إعدادات ناقصة.
+async function zatcaBulkPrepare() {
+  const out = document.getElementById('zatcaPrepMsg'); const btn = document.getElementById('zatcaBulkBtn');
+  const from = document.getElementById('zatcaBulkFrom').value, to = document.getElementById('zatcaBulkTo').value;
+  if (!from || !to || from > to) { out.textContent = 'اختر فترة صحيحة'; return; }
+  const bid = document.getElementById('zatcaBranchSel').value;
+  btn.disabled = true;
+  try {
+    const { data: sales, error } = await supabaseClient.from('sales').select('id, invoice_number').eq('branch_id', bid).eq('status', 'completed')
+      .gte('created_at', from + 'T00:00:00+03:00').lte('created_at', to + 'T23:59:59+03:00').order('created_at', { ascending: true }).limit(1000);
+    if (error) throw new Error(error.message);
+    const { data: done } = await supabaseClient.from('einvoice_documents').select('sale_id').eq('branch_id', bid).eq('authority', 'zatca').is('return_id', null);
+    const doneSet = new Set((done || []).map(d => d.sale_id));
+    const todo = (sales || []).filter(x => !doneSet.has(x.id)).slice(0, 200);
+    if (!todo.length) { out.textContent = 'لا توجد فواتير غير مجهزة في الفترة'; return; }
+    let ok = 0, warn = 0; const fails = [];
+    for (let i = 0; i < todo.length; i++) {
+      out.textContent = `جاري التجهيز ${i + 1}/${todo.length}...`;
+      try { const r = await zatcaPrepareForSale(todo[i].id); ok++; if (r.warnings.length) warn++; }
+      catch (e) { if ((e.message || '').startsWith('إعدادات الفرع ناقصة')) { fails.push(e.message); break; } fails.push('#' + todo[i].invoice_number + ': ' + e.message); }
+    }
+    out.textContent = `تم تجهيز ${ok} فاتورة (${warn} بها تنبيهات)` + (fails.length ? ` — فشل ${fails.length}: ` + fails.slice(0, 3).join('؛ ') : '');
+    loadZatcaDocs();
+  } catch (e) { out.textContent = e.message; }
+  finally { btn.disabled = false; }
+}
+async function zatcaListReturnsClick() {
+  const n = document.getElementById('zatcaInvNo').value.trim(); const out = document.getElementById('zatcaPrepMsg'); const sel = document.getElementById('zatcaReturnSel');
+  if (!/^\d+$/.test(n)) { out.textContent = 'اكتب رقم فاتورة صحيح'; return; }
+  const bid = document.getElementById('zatcaBranchSel').value;
+  const { data: s } = await supabaseClient.from('sales').select('id').eq('invoice_number', n).eq('branch_id', bid).maybeSingle();
+  if (!s) { out.textContent = 'الفاتورة غير موجودة في هذا الفرع'; return; }
+  const { data: rets } = await supabaseClient.from('sale_returns').select('id, total, created_at').eq('sale_id', s.id).order('created_at');
+  sel.innerHTML = (rets || []).map(r => `<option value="${r.id}">${new Date(r.created_at).toLocaleDateString('ar-EG')} — ${zm(r.total)}</option>`).join('');
+  out.textContent = (rets || []).length ? 'اختر المرتجع واضغط "تجهيز إشعار دائن"' : 'لا توجد مرتجعات على هذه الفاتورة';
+}
+async function zatcaPrepareCreditClick() {
+  const id = document.getElementById('zatcaReturnSel').value; const out = document.getElementById('zatcaPrepMsg');
+  if (!id) { out.textContent = 'اعرض المرتجعات أولًا'; return; }
+  try { const r = await zatcaPrepareCreditNote(id); out.textContent = 'تم تجهيز الإشعار الدائن (ICV ' + r.icv + ')' + (r.warnings.length ? ' — تنبيهات: ' + r.warnings.join('؛ ') : ''); loadZatcaDocs(); }
+  catch (err) { out.textContent = err.message; }
 }
 
 // ---- شاشة الإعداد والجاهزية ----
@@ -53785,7 +54301,7 @@ async function loadZatcaDocs() {
   const tb = document.getElementById('zatcaDocsBody');
   if (error) { tb.innerHTML = '<tr><td colspan="6" class="bo-empty">تعذر التحميل</td></tr>'; return; }
   window.zatcaDocsMap = Object.fromEntries((data || []).map(d => [d.id, d]));
-  tb.innerHTML = (data || []).length ? data.map(d => `<tr><td class="num">${d.icv}</td><td class="num">${d.sales?.invoice_number ?? '—'}</td><td>${d.doc_kind === 'zatca_standard' ? 'ضريبية (B2B)' : 'مبسطة (B2C)'}</td><td>${escapeHtml(d.status)}</td><td>${(d.warnings || []).length ? '⚠️ ' + (d.warnings || []).length : '—'}</td><td><button type="button" class="bo-icon-btn" onclick="zatcaDownloadXml('${d.id}')">XML</button></td></tr>`).join('') : '<tr><td colspan="6" class="bo-empty">لا توجد فواتير مجهزة</td></tr>';
+  tb.innerHTML = (data || []).length ? data.map(d => `<tr><td class="num">${d.icv}</td><td class="num">${d.sales?.invoice_number ?? '—'}</td><td>${({zatca_standard:'ضريبية (B2B)',zatca_simplified:'مبسطة (B2C)',zatca_credit_standard:'إشعار دائن (B2B)',zatca_credit_simplified:'إشعار دائن (B2C)'})[d.doc_kind] || d.doc_kind}</td><td>${escapeHtml(d.status)}</td><td>${(d.warnings || []).length ? '⚠️ ' + (d.warnings || []).length : '—'}</td><td><button type="button" class="bo-icon-btn" onclick="zatcaDownloadXml('${d.id}')">XML</button></td></tr>`).join('') : '<tr><td colspan="6" class="bo-empty">لا توجد فواتير مجهزة</td></tr>';
 }
 async function zatcaDownloadXml(id) {
   const { data } = await supabaseClient.from('einvoice_documents').select('payload, icv').eq('id', id).single();
@@ -53797,6 +54313,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('zatcaSettingsForm').addEventListener('submit', saveZatcaSettings);
   document.getElementById('zatcaBranchSel').addEventListener('change', loadZatcaBranch);
   document.getElementById('zatcaPrepBtn').addEventListener('click', zatcaPrepareClick);
+  document.getElementById('zatcaBulkBtn').addEventListener('click', zatcaBulkPrepare);
+  document.getElementById('zatcaListRetBtn').addEventListener('click', zatcaListReturnsClick);
+  document.getElementById('zatcaCreditBtn').addEventListener('click', zatcaPrepareCreditClick);
   ['zVat','zSeller','zCrn','zBuilding','zStreet','zDistrict','zCity','zPostal','zAuthority'].forEach(id => document.getElementById(id).addEventListener('input', renderZatcaReadiness));
 });
 </script>
