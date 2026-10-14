@@ -1632,6 +1632,7 @@ a { color: inherit; }
             <button class="bo-nav-sub-item" data-section="customers">العملاء</button>
             <button class="bo-nav-sub-item" data-section="customer-types">أنواع العملاء</button>
             <button class="bo-nav-sub-item" data-section="sale-returns">مرتجعات البيع</button>
+            <button class="bo-nav-sub-item" data-section="einvoice-zatca">الفاتورة الإلكترونية (ZATCA)</button>
           </div>
         </div>
 
@@ -3102,6 +3103,31 @@ a { color: inherit; }
         </div>
 
         <!-- تتبع الحاويات -->
+        <div id="bo-section-einvoice-zatca" style="display:none;">
+          <div class="bo-section-header"><div class="bo-section-title">الفاتورة الإلكترونية — هيئة الزكاة (المرحلة الثانية)</div></div>
+          <div class="field" style="max-width:320px;margin-bottom:12px;"><label>الفرع</label><select id="zatcaBranchSel"></select></div>
+          <form id="zatcaSettingsForm" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px;">
+            <div class="field"><label>الجهة</label><select id="zAuthority"><option value="none">غير مفعّل</option><option value="zatca">ZATCA (السعودية)</option><option value="eta">ETA (مصر)</option></select></div>
+            <div class="field"><label>البيئة</label><select id="zEnv"><option value="sandbox">تجريبية</option><option value="simulation">محاكاة</option><option value="production">إنتاج</option></select></div>
+            <div class="field"><label>اسم البائع</label><input type="text" id="zSeller"></div>
+            <div class="field"><label>الرقم الضريبي (15 رقم)</label><input type="text" id="zVat" style="direction:ltr;text-align:right;" maxlength="15"></div>
+            <div class="field"><label>السجل التجاري</label><input type="text" id="zCrn" style="direction:ltr;text-align:right;"></div>
+            <div class="field"><label>رقم المبنى</label><input type="text" id="zBuilding" maxlength="4" style="direction:ltr;text-align:right;"></div>
+            <div class="field"><label>الشارع</label><input type="text" id="zStreet"></div>
+            <div class="field"><label>الحي</label><input type="text" id="zDistrict"></div>
+            <div class="field"><label>المدينة</label><input type="text" id="zCity"></div>
+            <div class="field"><label>الرمز البريدي</label><input type="text" id="zPostal" maxlength="5" style="direction:ltr;text-align:right;"></div>
+            <div class="field"><label>بادئة رقم الفاتورة</label><input type="text" id="zPrefix" style="direction:ltr;text-align:right;"></div>
+            <div style="align-self:end;"><button type="submit" class="submit-btn" style="margin-top:0;">حفظ الإعدادات</button></div>
+          </form>
+          <div class="bo-section-title" style="font-size:15px;margin:10px 0;">حالة الجاهزية</div>
+          <div id="zatcaReadiness" style="margin-bottom:16px;"></div>
+          <div class="bo-section-title" style="font-size:15px;margin:10px 0;">تجهيز فاتورة (بدون إرسال)</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;"><input type="text" id="zatcaInvNo" placeholder="رقم الفاتورة" inputmode="numeric" style="max-width:180px;"><button type="button" class="submit-btn" style="margin-top:0;" id="zatcaPrepBtn">تجهيز</button></div>
+          <div id="zatcaPrepMsg" style="font-size:13px;margin-bottom:14px;"></div>
+          <div class="bo-table-wrap"><table class="bo-table"><thead><tr><th>ICV</th><th>رقم الفاتورة</th><th>النوع</th><th>الحالة</th><th>تنبيهات</th><th></th></tr></thead><tbody id="zatcaDocsBody"><tr><td colspan="6" class="bo-empty">—</td></tr></tbody></table></div>
+        </div>
+
         <div id="bo-section-import-containers" style="display:none;">
           <div class="bo-section-header">
             <div class="bo-section-title">تتبع الحاويات</div>
@@ -20437,7 +20463,7 @@ async function enterBackoffice() {
 }
 
 const boAllSections = ['dashboard','products','categories','unit-types','tax-rates','price-tiers','quick-discounts','customer-types',
-  'sales-list','sale-orders','delivery','delivery-zones','delivery-companies','sales-channels','driver-settlements','customers','suppliers','supplier-prices','payments','purchase-orders','purchases','purchase-returns','sale-returns','purchase-requisitions',
+  'sales-list','sale-orders','delivery','delivery-zones','delivery-companies','sales-channels','driver-settlements','customers','suppliers','supplier-prices','payments','purchase-orders','purchases','purchase-returns','sale-returns','einvoice-zatca','purchase-requisitions',
   'assets',
   'service-orders',
   'service-visits',
@@ -20457,7 +20483,7 @@ const boAllSections = ['dashboard','products','categories','unit-types','tax-rat
 const boNavGroups = [
   { toggle: 'stockNavToggle', group: 'stockNavGroup', sections: ['products','categories','unit-types','tax-rates','price-tiers','quick-discounts','modifier-groups','recipes','stock','stocktake','product-batches','product-serials'] },
   { toggle: 'marketingNavToggle', group: 'marketingNavGroup', sections: ['promotions','coupons'] },
-  { toggle: 'salesNavToggle', group: 'salesNavGroup', sections: ['sales-list','sale-orders','delivery','delivery-zones','delivery-companies','sales-channels','driver-settlements','customers','customer-types','sale-returns'] },
+  { toggle: 'salesNavToggle', group: 'salesNavGroup', sections: ['sales-list','sale-orders','delivery','delivery-zones','delivery-companies','sales-channels','driver-settlements','customers','customer-types','sale-returns','einvoice-zatca'] },
   { toggle: 'purchasesNavToggle', group: 'purchasesNavGroup', sections: ['suppliers','supplier-prices','purchase-requisitions','purchase-orders','purchases','purchase-returns'] },
   { toggle: 'serviceMgmtNavToggle', group: 'serviceMgmtNavGroup', sections: ['assets', 'service-orders', 'service-visits', 'contracts', 'my-visits', 'asset-faults'] },
   { toggle: 'gymNavToggle', group: 'gymNavGroup', sections: ['gym-dashboard', 'gym-members', 'gym-packages', 'gym-subscriptions', 'gym-attendance', 'gym-trainers', 'gym-classes'] },
@@ -20481,7 +20507,7 @@ const SECTION_PERMISSION_MAP = {
   'product-serials': 'stock_management',
   'modifier-groups': 'stock_management',
   'recipes': 'stock_management',
-  'promotions': 'admin', 'coupons': 'admin',
+  'promotions': 'admin', 'coupons': 'admin', 'einvoice-zatca': 'admin',
   'sales-list': 'sales_management', 'sale-orders': 'sales_management', 'delivery': 'sales_management', 'delivery-zones': 'sales_management', 'delivery-companies': 'sales_management', 'sales-channels': 'sales_management', 'driver-settlements': 'sales_management', 'customers': 'sales_management', 'customer-types': 'sales_management', 'sale-returns': 'sales_management',
   'suppliers': 'purchases_management', 'supplier-prices': 'purchases_management', 'purchase-orders': 'purchases_management', 'purchases': 'purchases_management', 'purchase-returns': 'purchases_management', 'purchase-requisitions': 'purchases_management',
   'assets': 'service_management',
@@ -20594,7 +20620,7 @@ const SCREEN_LABELS = {
   'modifier-groups': 'الإضافات والتعديلات',
   'recipes': 'الوصفات (منتجات مركّبة)',
   'promotions': 'العروض', 'coupons': 'الكوبونات',
-  'sales-list': 'فواتير البيع', 'customers': 'العملاء', 'customer-types': 'أنواع العملاء', 'sale-returns': 'مرتجعات البيع',
+  'sales-list': 'فواتير البيع', 'customers': 'العملاء', 'customer-types': 'أنواع العملاء', 'sale-returns': 'مرتجعات البيع', 'einvoice-zatca': 'الفاتورة الإلكترونية (ZATCA)',
   'sale-orders': 'طلبات البيع', 'delivery': 'تفاصيل التوصيل', 'delivery-zones': 'مناطق التوصيل', 'delivery-companies': 'شركات التوصيل', 'sales-channels': 'قنوات البيع', 'driver-settlements': 'تحصيل السائقين',
   'suppliers': 'الموردون', 'purchases': 'فواتير الشراء', 'purchase-returns': 'مرتجعات الشراء', 'purchase-requisitions': 'طلبات التوريد',
   'purchase-orders': 'طلبات الشراء',
@@ -21459,6 +21485,7 @@ function activateBoSection(section, btn) {
   if (section === 'purchase-requisitions') { loadBoRequisitions().then(renderRequisitionsTable); }
   if (section === 'purchase-returns') { loadBoPurchaseReturns().then(renderPurchaseReturnsTable); }
   if (section === 'sale-returns') { loadBoSaleReturns().then(renderSaleReturnsTable); }
+  if (section === 'einvoice-zatca') { loadZatcaSection(); }
   if (section === 'stock' && !stockSectionLoadedOnce) { initStockSection(); stockSectionLoadedOnce = true; }
   if (section === 'reset-data' && !resetDataLoadedOnce) { initResetDataSection(); resetDataLoadedOnce = true; }
   if (section === 'company-info' && !companyInfoLoadedOnce) { initCompanyInfoSection(); companyInfoLoadedOnce = true; }
@@ -53558,6 +53585,220 @@ async function rdExecute() {
   document.addEventListener('DOMContentLoaded', scanAll);
   scanAll();
 })();
+// ==================== الفاتورة الإلكترونية — هيئة الزكاة (ZATCA) المرحلة الثانية: تجهيز فقط ====================
+// تجهيز بدون إرسال: بناء UBL 2.1 + هاش + سلسلة PIH + QR (المرحلة الأولى 1-5).
+// التوقيع (XAdES) والشهادات (CSID) والإرسال (Clearance/Reporting) يتم لاحقًا في دالة خلفية؛
+// المفاتيح الخاصة لا توضع في هذا الملف أبدًا.
+const ZATCA_VAT_RATE = 15;
+const zx = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+const zm = n => (Math.round((Number(n) || 0) * 100) / 100).toFixed(2);
+
+function zatcaValidateSettings(s) {
+  const p = [];
+  if (!s || s.authority !== 'zatca') p.push('الجهة غير مضبوطة على ZATCA');
+  if (!s) return p;
+  if (!(s.seller_name || '').trim()) p.push('اسم البائع مطلوب');
+  if (!/^3\d{13}3$/.test(String(s.vat_number || '').trim())) p.push('الرقم الضريبي لازم 15 رقم يبدأ وينتهي بـ 3');
+  if (!(s.crn || '').trim()) p.push('رقم السجل التجاري مطلوب');
+  if (!/^\d{4}$/.test(String(s.building_number || '').trim())) p.push('رقم المبنى لازم 4 أرقام');
+  if (!(s.street || '').trim()) p.push('الشارع مطلوب');
+  if (!(s.district || '').trim()) p.push('الحي مطلوب');
+  if (!(s.city || '').trim()) p.push('المدينة مطلوبة');
+  if (!/^\d{5}$/.test(String(s.postal_code || '').trim())) p.push('الرمز البريدي لازم 5 أرقام');
+  return p;
+}
+
+function zatcaTlv(fields) { // fields: [[tag, string]] -> base64
+  const enc = new TextEncoder(); const parts = [];
+  for (const [tag, val] of fields) {
+    const b = enc.encode(String(val));
+    if (b.length > 255) throw new Error('قيمة QR أطول من 255 بايت (tag ' + tag + ')');
+    parts.push(Uint8Array.of(tag, b.length), b);
+  }
+  const out = new Uint8Array(parts.reduce((a, x) => a + x.length, 0)); let o = 0;
+  for (const x of parts) { out.set(x, o); o += x.length; }
+  let bin = ''; out.forEach(c => bin += String.fromCharCode(c));
+  return btoa(bin);
+}
+
+async function zatcaSha256B64(text) {
+  const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  let bin = ''; new Uint8Array(d).forEach(c => bin += String.fromCharCode(c));
+  return btoa(bin);
+}
+// الهاش الابتدائي المحدد من الهيئة: base64(hex(sha256("0")))
+async function zatcaInitialPih() {
+  const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('0'));
+  const hex = Array.from(new Uint8Array(d)).map(b => b.toString(16).padStart(2, '0')).join('');
+  return btoa(hex);
+}
+
+function zatcaRiyadhParts(iso) {
+  const s = new Date(iso).toLocaleString('sv-SE', { timeZone: 'Asia/Riyadh' }); // YYYY-MM-DD HH:MM:SS
+  return { date: s.slice(0, 10), time: s.slice(11, 19) };
+}
+
+// يحسب سطور الفاتورة والضريبة. tax_amount على السطر لو موجود وإلا توزيع نسبي من ضريبة الفاتورة (مع تحذير).
+function zatcaComputeLines(sale, items) {
+  const warnings = []; const itemTax = items.reduce((a, i) => a + (Number(i.tax_amount) || 0), 0);
+  const saleTax = Number(sale.tax) || 0;
+  const useItem = itemTax > 0 && Math.abs(itemTax - saleTax) < 0.05;
+  const baseSum = items.reduce((a, i) => a + (Number(i.total) || 0), 0);
+  if (!useItem && saleTax > 0) warnings.push('ضريبة السطور غير مسجلة أو لا تطابق ضريبة الفاتورة؛ تم توزيعها نسبيًا');
+  const lines = items.map((i, idx) => {
+    const net = Number(i.total) || 0;
+    const tax = useItem ? Number(i.tax_amount) || 0 : (baseSum > 0 ? saleTax * net / baseSum : 0);
+    const pct = net > 0 ? Math.round(tax / net * 10000) / 100 : 0;
+    if (pct !== 0 && Math.abs(pct - ZATCA_VAT_RATE) > 0.01) warnings.push(`سطر ${idx + 1}: نسبة الضريبة ${pct}% غير قياسية (المتوقع ${ZATCA_VAT_RATE}% أو 0%)`);
+    return { id: idx + 1, name: i.name || i.product_name || ('صنف ' + (idx + 1)), qty: Number(i.quantity) || 1, price: Number(i.unit_price) || 0, net, tax, pct: pct === 0 ? 0 : ZATCA_VAT_RATE, cat: pct === 0 ? 'Z' : 'S' };
+  });
+  return { lines, warnings };
+}
+
+function zatcaBuildXml({ sale, items, customer, settings, icv, uuid, pih }) {
+  const { lines, warnings } = zatcaComputeLines(sale, items);
+  const std = !!(customer && (customer.tax_registration_number || '').trim());
+  const dt = zatcaRiyadhParts(sale.created_at);
+  const cur = settings.currency || 'SAR';
+  const net = lines.reduce((a, l) => a + l.net, 0), tax = lines.reduce((a, l) => a + l.tax, 0);
+  const total = net + tax;
+  const pay = sale.payment_method === 'card' ? '48' : '10';
+  const bySub = {}; lines.forEach(l => { const k = l.cat + '|' + l.pct; (bySub[k] = bySub[k] || { cat: l.cat, pct: l.pct, base: 0, tax: 0 }); bySub[k].base += l.net; bySub[k].tax += l.tax; });
+  const sub = Object.values(bySub).map(s => `<cac:TaxSubtotal><cbc:TaxableAmount currencyID="${cur}">${zm(s.base)}</cbc:TaxableAmount><cbc:TaxAmount currencyID="${cur}">${zm(s.tax)}</cbc:TaxAmount><cac:TaxCategory><cbc:ID>${s.cat}</cbc:ID><cbc:Percent>${zm(s.pct)}</cbc:Percent>${s.cat === 'Z' ? '<cbc:TaxExemptionReasonCode>VATEX-SA-34-1</cbc:TaxExemptionReasonCode>' : ''}<cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:TaxCategory></cac:TaxSubtotal>`).join('');
+  const addr = (a) => `<cac:PostalAddress><cbc:StreetName>${zx(a.street)}</cbc:StreetName><cbc:BuildingNumber>${zx(a.building)}</cbc:BuildingNumber><cbc:CitySubdivisionName>${zx(a.district)}</cbc:CitySubdivisionName><cbc:CityName>${zx(a.city)}</cbc:CityName><cbc:PostalZone>${zx(a.postal)}</cbc:PostalZone><cac:Country><cbc:IdentificationCode>SA</cbc:IdentificationCode></cac:Country></cac:PostalAddress>`;
+  const invId = `${settings.zatca_invoice_prefix || 'INV'}-${sale.invoice_number}`;
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2" xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2">
+<cbc:ProfileID>reporting:1.0</cbc:ProfileID>
+<cbc:ID>${zx(invId)}</cbc:ID>
+<cbc:UUID>${zx(uuid)}</cbc:UUID>
+<cbc:IssueDate>${dt.date}</cbc:IssueDate>
+<cbc:IssueTime>${dt.time}</cbc:IssueTime>
+<cbc:InvoiceTypeCode name="${std ? '0100000' : '0200000'}">388</cbc:InvoiceTypeCode>
+<cbc:DocumentCurrencyCode>${cur}</cbc:DocumentCurrencyCode>
+<cbc:TaxCurrencyCode>${cur}</cbc:TaxCurrencyCode>
+<cac:AdditionalDocumentReference><cbc:ID>ICV</cbc:ID><cbc:UUID>${icv}</cbc:UUID></cac:AdditionalDocumentReference>
+<cac:AdditionalDocumentReference><cbc:ID>PIH</cbc:ID><cac:Attachment><cbc:EmbeddedDocumentBinaryObject mimeCode="text/plain">${zx(pih)}</cbc:EmbeddedDocumentBinaryObject></cac:Attachment></cac:AdditionalDocumentReference>
+<cac:AccountingSupplierParty><cac:Party><cac:PartyIdentification><cbc:ID schemeID="CRN">${zx(settings.crn)}</cbc:ID></cac:PartyIdentification>${addr({ street: settings.street, building: settings.building_number, district: settings.district, city: settings.city, postal: settings.postal_code })}<cac:PartyTaxScheme><cbc:CompanyID>${zx(settings.vat_number)}</cbc:CompanyID><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:PartyTaxScheme><cac:PartyLegalEntity><cbc:RegistrationName>${zx(settings.seller_name)}</cbc:RegistrationName></cac:PartyLegalEntity></cac:Party></cac:AccountingSupplierParty>
+<cac:AccountingCustomerParty><cac:Party>${std ? `<cac:PartyTaxScheme><cbc:CompanyID>${zx(customer.tax_registration_number)}</cbc:CompanyID><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:PartyTaxScheme>` : ''}<cac:PartyLegalEntity><cbc:RegistrationName>${zx(customer?.name || '')}</cbc:RegistrationName></cac:PartyLegalEntity></cac:Party></cac:AccountingCustomerParty>
+<cac:PaymentMeans><cbc:PaymentMeansCode>${pay}</cbc:PaymentMeansCode></cac:PaymentMeans>
+<cac:TaxTotal><cbc:TaxAmount currencyID="${cur}">${zm(tax)}</cbc:TaxAmount></cac:TaxTotal>
+<cac:TaxTotal><cbc:TaxAmount currencyID="${cur}">${zm(tax)}</cbc:TaxAmount>${sub}</cac:TaxTotal>
+<cac:LegalMonetaryTotal><cbc:LineExtensionAmount currencyID="${cur}">${zm(net)}</cbc:LineExtensionAmount><cbc:TaxExclusiveAmount currencyID="${cur}">${zm(net)}</cbc:TaxExclusiveAmount><cbc:TaxInclusiveAmount currencyID="${cur}">${zm(total)}</cbc:TaxInclusiveAmount><cbc:AllowanceTotalAmount currencyID="${cur}">0.00</cbc:AllowanceTotalAmount><cbc:PrepaidAmount currencyID="${cur}">0.00</cbc:PrepaidAmount><cbc:PayableAmount currencyID="${cur}">${zm(total)}</cbc:PayableAmount></cac:LegalMonetaryTotal>
+${lines.map(l => `<cac:InvoiceLine><cbc:ID>${l.id}</cbc:ID><cbc:InvoicedQuantity unitCode="PCE">${l.qty}</cbc:InvoicedQuantity><cbc:LineExtensionAmount currencyID="${cur}">${zm(l.net)}</cbc:LineExtensionAmount><cac:TaxTotal><cbc:TaxAmount currencyID="${cur}">${zm(l.tax)}</cbc:TaxAmount><cbc:RoundingAmount currencyID="${cur}">${zm(l.net + l.tax)}</cbc:RoundingAmount></cac:TaxTotal><cac:Item><cbc:Name>${zx(l.name)}</cbc:Name><cac:ClassifiedTaxCategory><cbc:ID>${l.cat}</cbc:ID><cbc:Percent>${zm(l.pct)}</cbc:Percent><cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:ClassifiedTaxCategory></cac:Item><cac:Price><cbc:PriceAmount currencyID="${cur}">${zm(l.price)}</cbc:PriceAmount></cac:Price></cac:InvoiceLine>`).join('\n')}
+</Invoice>`;
+  if (Math.abs(total - Number(sale.total)) > 0.05) warnings.push(`إجمالي UBL (${zm(total)}) لا يطابق إجمالي الفاتورة (${zm(sale.total)})`);
+  if (Number(sale.discount) > 0) warnings.push('الفاتورة عليها خصم عام: لم يُضف كـ AllowanceCharge في هذه المرحلة');
+  const iso = new Date(sale.created_at).toISOString().replace(/\.\d+Z$/, 'Z');
+  const qr = zatcaTlv([[1, settings.seller_name], [2, settings.vat_number], [3, iso], [4, zm(total)], [5, zm(tax)]]);
+  return { xml, qr, warnings, docKind: std ? 'zatca_standard' : 'zatca_simplified', total, tax };
+}
+
+function zatcaUuid() { return crypto.randomUUID(); }
+
+async function zatcaPrepareForSale(saleId) {
+  const { data: sale, error: e1 } = await supabaseClient.from('sales').select('id, invoice_number, branch_id, customer_id, subtotal, discount, tax, total, created_at, payment_method, status').eq('id', saleId).single();
+  if (e1 || !sale) throw new Error('الفاتورة غير موجودة');
+  const { data: st } = await supabaseClient.from('einvoice_settings').select('*').eq('branch_id', sale.branch_id).maybeSingle();
+  const problems = zatcaValidateSettings(st);
+  if (problems.length) throw new Error('إعدادات الفرع ناقصة: ' + problems.join('، '));
+  const { data: ex } = await supabaseClient.from('einvoice_documents').select('id').eq('sale_id', saleId).eq('authority', 'zatca').maybeSingle();
+  if (ex) throw new Error('الفاتورة مجهزة بالفعل');
+  const [{ data: items }, custRes] = await Promise.all([
+    supabaseClient.from('sale_items').select('quantity, unit_price, discount, total, tax_amount, products(name)').eq('sale_id', saleId),
+    sale.customer_id ? supabaseClient.from('customers').select('name, tax_registration_number').eq('id', sale.customer_id).maybeSingle() : Promise.resolve({ data: null })
+  ]);
+  const rows = (items || []).map(i => ({ ...i, name: i.products?.name }));
+  if (!rows.length) throw new Error('الفاتورة بدون أصناف');
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const { data: nx, error: e3 } = await supabaseClient.rpc('einvoice_next', { p_branch: sale.branch_id, p_authority: 'zatca' });
+    if (e3) throw new Error('تعذر الحصول على العداد: ' + e3.message);
+    const pih = nx.previous_hash || await zatcaInitialPih();
+    const uuid = zatcaUuid();
+    const b = zatcaBuildXml({ sale, items: rows, customer: custRes.data, settings: st, icv: nx.icv, uuid, pih });
+    const hash = await zatcaSha256B64(b.xml);
+    const { error: e4 } = await supabaseClient.from('einvoice_documents').insert({
+      sale_id: saleId, branch_id: sale.branch_id, authority: 'zatca', doc_kind: b.docKind, doc_uuid: uuid, icv: nx.icv,
+      previous_hash: pih, doc_hash: hash, payload: b.xml, qr_base64: b.qr, status: 'prepared', warnings: b.warnings,
+      created_by: null
+    });
+    if (!e4) return { icv: nx.icv, warnings: b.warnings };
+    if (e4.code !== '23505') throw new Error(e4.message);
+  }
+  throw new Error('تعارض في العداد، حاول مرة أخرى');
+}
+
+// ---- شاشة الإعداد والجاهزية ----
+let zatcaSettingsRow = null, zatcaBranches = [];
+async function loadZatcaSection() {
+  if (!zatcaBranches.length) {
+    const { data } = await supabaseClient.from('branches').select('id, name, tax_number, commercial_register, address1, city, postal_code').order('name');
+    zatcaBranches = data || [];
+  }
+  const sel = document.getElementById('zatcaBranchSel');
+  if (!sel.options.length) sel.innerHTML = zatcaBranches.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+  await loadZatcaBranch();
+}
+async function loadZatcaBranch() {
+  const bid = document.getElementById('zatcaBranchSel').value; if (!bid) return;
+  const { data } = await supabaseClient.from('einvoice_settings').select('*').eq('branch_id', bid).maybeSingle();
+  const br = zatcaBranches.find(b => b.id === bid) || {};
+  zatcaSettingsRow = data || { branch_id: bid, authority: 'none', environment: 'sandbox', seller_name: '', vat_number: br.tax_number || '', crn: br.commercial_register || '', city: br.city || '', postal_code: br.postal_code || '', zatca_invoice_prefix: 'INV' };
+  const f = { zAuthority: 'authority', zEnv: 'environment', zSeller: 'seller_name', zVat: 'vat_number', zCrn: 'crn', zBuilding: 'building_number', zStreet: 'street', zDistrict: 'district', zCity: 'city', zPostal: 'postal_code', zPrefix: 'zatca_invoice_prefix' };
+  Object.entries(f).forEach(([id, k]) => { document.getElementById(id).value = zatcaSettingsRow[k] ?? ''; });
+  renderZatcaReadiness(); loadZatcaDocs();
+}
+function readZatcaForm() {
+  const v = id => document.getElementById(id).value.trim();
+  return { branch_id: document.getElementById('zatcaBranchSel').value, authority: v('zAuthority'), environment: v('zEnv'), seller_name: v('zSeller'), vat_number: v('zVat'), crn: v('zCrn'), building_number: v('zBuilding'), street: v('zStreet'), district: v('zDistrict'), city: v('zCity'), postal_code: v('zPostal'), zatca_invoice_prefix: v('zPrefix') || 'INV', country_code: 'SA', currency: 'SAR' };
+}
+async function saveZatcaSettings(e) {
+  e.preventDefault();
+  const row = readZatcaForm();
+  const { error } = await supabaseClient.from('einvoice_settings').upsert({ ...row, updated_at: new Date().toISOString() }, { onConflict: 'branch_id' });
+  if (error) { showToast('تعذر الحفظ: ' + error.message, true); return; }
+  zatcaSettingsRow = row; showToast('تم حفظ الإعدادات'); renderZatcaReadiness();
+}
+function renderZatcaReadiness() {
+  const s = readZatcaForm(); const probs = zatcaValidateSettings(s);
+  const item = (ok, t) => `<li style="margin:4px 0;">${ok ? '✅' : '⛔'} ${escapeHtml(t)}</li>`;
+  const data = probs.length ? probs.map(p => item(false, p)).join('') : item(true, 'بيانات البائع والعنوان مكتملة');
+  document.getElementById('zatcaReadiness').innerHTML = `<ul style="list-style:none;padding:0;margin:0;">${data}
+    ${item(false, 'شهادة الامتثال (Compliance CSID) — تُطلب من بوابة فاتورة بـ OTP (غير متوفرة بعد)')}
+    ${item(false, 'شهادة الإنتاج (Production CSID) — بعد اجتياز اختبارات الامتثال')}
+    ${item(false, 'التوقيع الرقمي XAdES والمفتاح الخاص — يتم في دالة خلفية فقط (غير منفذة)')}
+    ${item(false, 'الإرسال للهيئة (Clearance للشركات / Reporting للأفراد خلال 24 ساعة) — غير مفعّل')}</ul>
+    <div style="margin-top:8px;font-size:12px;opacity:.8;">الفواتير المجهزة هنا بدون توقيع: لا تُعتبر فواتير ضريبية معتمدة قبل التوقيع والإرسال.</div>`;
+}
+async function zatcaPrepareClick() {
+  const n = document.getElementById('zatcaInvNo').value.trim(); const out = document.getElementById('zatcaPrepMsg');
+  if (!/^\d+$/.test(n)) { out.textContent = 'اكتب رقم فاتورة صحيح'; return; }
+  const bid = document.getElementById('zatcaBranchSel').value;
+  const { data: s } = await supabaseClient.from('sales').select('id').eq('invoice_number', n).eq('branch_id', bid).maybeSingle();
+  if (!s) { out.textContent = 'الفاتورة غير موجودة في هذا الفرع'; return; }
+  try { const r = await zatcaPrepareForSale(s.id); out.textContent = 'تم التجهيز (ICV ' + r.icv + ')' + (r.warnings.length ? ' — تنبيهات: ' + r.warnings.join('؛ ') : ''); loadZatcaDocs(); }
+  catch (err) { out.textContent = err.message; }
+}
+async function loadZatcaDocs() {
+  const bid = document.getElementById('zatcaBranchSel').value;
+  const { data, error } = await supabaseClient.from('einvoice_documents').select('id, icv, doc_kind, doc_uuid, status, warnings, created_at, sales(invoice_number)').eq('branch_id', bid).eq('authority', 'zatca').order('icv', { ascending: false }).limit(100);
+  const tb = document.getElementById('zatcaDocsBody');
+  if (error) { tb.innerHTML = '<tr><td colspan="6" class="bo-empty">تعذر التحميل</td></tr>'; return; }
+  window.zatcaDocsMap = Object.fromEntries((data || []).map(d => [d.id, d]));
+  tb.innerHTML = (data || []).length ? data.map(d => `<tr><td class="num">${d.icv}</td><td class="num">${d.sales?.invoice_number ?? '—'}</td><td>${d.doc_kind === 'zatca_standard' ? 'ضريبية (B2B)' : 'مبسطة (B2C)'}</td><td>${escapeHtml(d.status)}</td><td>${(d.warnings || []).length ? '⚠️ ' + (d.warnings || []).length : '—'}</td><td><button type="button" class="bo-icon-btn" onclick="zatcaDownloadXml('${d.id}')">XML</button></td></tr>`).join('') : '<tr><td colspan="6" class="bo-empty">لا توجد فواتير مجهزة</td></tr>';
+}
+async function zatcaDownloadXml(id) {
+  const { data } = await supabaseClient.from('einvoice_documents').select('payload, icv').eq('id', id).single();
+  if (!data) return;
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data.payload], { type: 'application/xml' })); a.download = 'invoice-' + data.icv + '.xml'; a.click();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('zatcaSettingsForm').addEventListener('submit', saveZatcaSettings);
+  document.getElementById('zatcaBranchSel').addEventListener('change', loadZatcaBranch);
+  document.getElementById('zatcaPrepBtn').addEventListener('click', zatcaPrepareClick);
+  ['zVat','zSeller','zCrn','zBuilding','zStreet','zDistrict','zCity','zPostal','zAuthority'].forEach(id => document.getElementById(id).addEventListener('input', renderZatcaReadiness));
+});
 </script>
 
 <!-- فرز كل جداول النظام: الضغط على عنوان أي عمود في أي جدول يفرزه تصاعديًا/تنازليًا -->
