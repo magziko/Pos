@@ -1634,6 +1634,8 @@ a { color: inherit; }
             <button class="bo-nav-sub-item" data-section="delivery-companies">شركات التوصيل</button>
             <button class="bo-nav-sub-item" data-section="sales-channels">قنوات البيع</button>
             <button class="bo-nav-sub-item" data-section="driver-settlements">تحصيل السائقين</button>
+            <button class="bo-nav-sub-item" data-section="packages">تعريف الباقات</button>
+            <button class="bo-nav-sub-item" data-section="package-subscriptions">اشتراكات الباقات</button>
             <button class="bo-nav-sub-item" data-section="customers">العملاء</button>
             <button class="bo-nav-sub-item" data-section="customer-types">أنواع العملاء</button>
             <button class="bo-nav-sub-item" data-section="sale-returns">مرتجعات البيع</button>
@@ -2669,6 +2671,57 @@ a { color: inherit; }
               <tbody id="gymMembersTableBody">
                 <tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr>
               </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم تعريف الباقات (عام لكل الأنشطة) -->
+        <div id="bo-section-packages" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">تعريف الباقات</div>
+            <button class="bo-add-btn" id="addPackageBtn">+ باقة جديدة</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;">
+            <input type="text" id="packageSearchInput" placeholder="ابحث باسم الباقة...">
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>الاسم</th><th>نوع مدة الباقة</th><th>مدة الباقة</th><th>السعر</th><th>الضريبة</th>
+                  <th>المبلغ الإجمالي</th><th>تطبق الكمية على</th><th>الفروع</th><th>أنواع الطلبات</th><th>الحالة</th><th></th>
+                </tr>
+              </thead>
+              <tbody id="packagesTableBody"><tr><td colspan="11" class="bo-empty">جاري التحميل...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- قسم اشتراكات العملاء في الباقات -->
+        <div id="bo-section-package-subscriptions" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">اشتراكات العملاء في الباقات</div>
+            <button class="bo-add-btn" id="addPkgSubBtn">+ اشتراك جديد</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px; display:flex; gap:10px; flex-wrap:wrap;">
+            <input type="text" id="pkgSubSearchInput" placeholder="ابحث باسم العميل أو الهاتف أو الباقة..." style="flex:1; min-width:200px;">
+            <select id="pkgSubStatusFilter" style="max-width:180px;">
+              <option value="">كل الحالات</option>
+              <option value="active">نشط</option>
+              <option value="expired">منتهي</option>
+              <option value="consumed">تم الاستهلاك</option>
+              <option value="cancelled">ملغي</option>
+            </select>
+          </div>
+          <div class="bo-table-wrap">
+            <table class="bo-table">
+              <thead>
+                <tr>
+                  <th>العميل</th><th>الباقة</th><th>الفرع</th><th>البداية</th><th>النهاية</th><th>المستهلك / الإجمالي</th>
+                  <th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th><th></th>
+                </tr>
+              </thead>
+              <tbody id="pkgSubsTableBody"><tr><td colspan="11" class="bo-empty">جاري التحميل...</td></tr></tbody>
             </table>
           </div>
         </div>
@@ -9743,6 +9796,180 @@ a { color: inherit; }
     </form>
   </div>
 </div>
+
+<!-- Modal: تعريف باقة (عام) -->
+<div class="modal-overlay" id="packageModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title" id="packageModalTitle">باقة جديدة</div>
+    <form id="packageForm">
+      <input type="hidden" id="packageId">
+      <div class="modal-grid">
+        <div class="field field-full"><label>اسم الباقة *</label><input type="text" id="packageName" required placeholder="مثال: باقة شهرية، باقة 20 كيلو غسيل..."></div>
+        <div class="field field-full">
+          <label>مدة الباقة *</label>
+          <div class="pkg-seg" id="packageDurationTypeSeg">
+            <button type="button" data-v="months" class="on">📅 شهور</button>
+            <button type="button" data-v="days">☀️ أيام</button>
+            <button type="button" data-v="consumption">🛒 حتى استهلاك الكمية</button>
+          </div>
+          <input type="number" id="packageDurationValue" min="1" step="1" placeholder="اختر مدة الباقة" style="margin-top:8px;">
+        </div>
+        <div class="field field-full">
+          <label>الفرع (الفروع) *</label>
+          <div class="pkg-checks" id="packageBranchesBox"></div>
+          <div style="font-size:11.5px; color:var(--ink-soft);">لو ما اخترتش أي فرع تبقى الباقة متاحة لكل الفروع.</div>
+        </div>
+        <div class="field field-full">
+          <label>أنواع الطلبات *</label>
+          <div class="pkg-checks" id="packageOrderTypesBox"></div>
+        </div>
+        <div class="field"><label>سعر الباقة *</label><input type="number" id="packagePrice" min="0" step="0.01" required placeholder="ادخل السعر"></div>
+        <div class="field"><label>الضريبة</label><select id="packageTaxRate"></select></div>
+        <div class="field"><label>قيمة الضريبة</label><input type="number" id="packageTaxAmount" readonly value="0"></div>
+        <div class="field" style="display:flex; align-items:flex-end;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:10px;"><input type="checkbox" id="packagePriceIncludesTax" style="width:auto;"> السعر شامل الضريبة</label>
+        </div>
+        <div class="field"><label>المبلغ الإجمالي *</label><input type="number" id="packageTotalAmount" readonly value="0"></div>
+        <div class="field"><label>تطبق الكمية على *</label>
+          <select id="packageApplyOn">
+            <option value="visit">الزيارة (حد أقصى في كل زيارة)</option>
+            <option value="package">الباقة (رصيد إجمالي يُخصم)</option>
+          </select>
+        </div>
+        <div class="field field-full">
+          <label>الكميات المشمولة في الباقة</label>
+          <div class="bo-table-wrap" style="margin-bottom:8px;">
+            <table class="bo-table">
+              <thead><tr><th>الصنف (اختياري)</th><th style="width:130px;">الكمية</th><th style="width:70px;">إجراءات</th></tr></thead>
+              <tbody id="packageItemsBody"><tr><td colspan="3" class="bo-empty">لا يوجد بيانات</td></tr></tbody>
+            </table>
+          </div>
+          <button type="button" class="btn-secondary" id="addPackageItemRowBtn" style="font-size:13px;">+ إضافة كمية</button>
+        </div>
+        <div class="field field-full"><label>ملاحظات</label><input type="text" id="packageNotes"></div>
+        <div class="field field-full">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="packageIsActive" checked style="width:auto;"> الباقة نشطة</label>
+        </div>
+      </div>
+      <div class="error-msg" id="packageModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelPackageBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="savePackageBtn">حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: اشتراك عميل في باقة -->
+<div class="modal-overlay" id="pkgSubModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title">اشتراك جديد في باقة</div>
+    <form id="pkgSubForm">
+      <div class="modal-grid">
+        <div class="field field-full">
+          <label>العميل *</label>
+          <div class="smart-search">
+            <input type="text" id="pkgSubCustomerInput" autocomplete="off" placeholder="اكتب اسم العميل أو رقم هاتفه..." required>
+            <input type="hidden" id="pkgSubCustomer">
+            <div class="smart-search-dropdown" id="pkgSubCustomerDropdown"></div>
+          </div>
+        </div>
+        <div class="field"><label>الباقة *</label><select id="pkgSubPackage" required></select></div>
+        <div class="field"><label>الفرع *</label><select id="pkgSubBranch" required></select></div>
+        <div class="field"><label>تاريخ البداية *</label><input type="date" id="pkgSubStartDate" required></div>
+        <div class="field"><label>تاريخ النهاية</label><input type="date" id="pkgSubEndDate"><div id="pkgSubEndHint" style="font-size:11.5px; color:var(--ink-soft);"></div></div>
+        <div class="field"><label>إجمالي السعر *</label><input type="number" id="pkgSubTotal" min="0" step="0.01" required></div>
+        <div class="field"><label>المبلغ المدفوع الآن</label><input type="number" id="pkgSubPaid" min="0" step="0.01" value="0"></div>
+        <div class="field"><label>الإيداع في خزينة</label><select id="pkgSubCashAccount"></select></div>
+        <div class="field"><label>طريقة الدفع</label>
+          <select id="pkgSubPayMethod"><option value="cash">نقدي</option><option value="card">بطاقة</option><option value="transfer">تحويل</option></select>
+        </div>
+        <div class="field field-full" id="pkgSubItemsPreview" style="font-size:12.5px; color:var(--ink-soft);"></div>
+        <div class="field field-full"><label>ملاحظات</label><input type="text" id="pkgSubNotes"></div>
+      </div>
+      <div class="error-msg" id="pkgSubModalError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="cancelPkgSubBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="savePkgSubBtn">حفظ الاشتراك</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: استهلاك من الباقة -->
+<div class="modal-overlay" id="pkgUsageModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title" id="pkgUsageModalTitle">استهلاك من الباقة</div>
+    <div id="pkgUsageSummary" style="font-size:13px; margin-bottom:10px;"></div>
+    <div class="bo-table-wrap" style="margin-bottom:12px;">
+      <table class="bo-table">
+        <thead><tr><th>الصنف</th><th>الإجمالي</th><th>المستهلك</th><th>المتبقي</th></tr></thead>
+        <tbody id="pkgUsageBalances"></tbody>
+      </table>
+    </div>
+    <form id="pkgUsageForm">
+      <input type="hidden" id="pkgUsageSubId">
+      <div class="modal-grid">
+        <div class="field" id="pkgUsageItemWrap"><label>الصنف</label><select id="pkgUsageItem"></select></div>
+        <div class="field"><label>الكمية *</label><input type="number" id="pkgUsageQty" min="0.01" step="0.01" value="1" required></div>
+        <div class="field"><label>نوع الطلب</label><select id="pkgUsageOrderType"></select></div>
+        <div class="field"><label>ملاحظات</label><input type="text" id="pkgUsageNotes"></div>
+      </div>
+      <div class="error-msg" id="pkgUsageError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="closePkgUsageBtn">إغلاق</button>
+        <button type="submit" class="submit-btn" id="savePkgUsageBtn">تسجيل استهلاك</button>
+      </div>
+    </form>
+    <div style="font-weight:700; margin:14px 0 6px;">سجل الاستهلاك</div>
+    <div class="bo-table-wrap">
+      <table class="bo-table">
+        <thead><tr><th>التاريخ</th><th>الصنف</th><th>الكمية</th><th>نوع الطلب</th><th>ملاحظات</th></tr></thead>
+        <tbody id="pkgUsageHistory"><tr><td colspan="5" class="bo-empty">—</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: مدفوعات اشتراك باقة -->
+<div class="modal-overlay" id="pkgPayModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title" id="pkgPayModalTitle">مدفوعات الاشتراك</div>
+    <div class="bo-table-wrap" style="margin-bottom:14px;">
+      <table class="bo-table">
+        <thead><tr><th>التاريخ</th><th>المبلغ</th><th>طريقة الدفع</th><th>ملاحظات</th></tr></thead>
+        <tbody id="pkgPayList"><tr><td colspan="4" class="bo-empty">لا توجد مدفوعات</td></tr></tbody>
+      </table>
+    </div>
+    <form id="pkgPayForm">
+      <input type="hidden" id="pkgPaySubId">
+      <div class="modal-grid">
+        <div class="field"><label>المبلغ</label><input type="number" id="pkgPayAmount" min="0.01" step="0.01" required></div>
+        <div class="field"><label>تاريخ الدفع</label><input type="date" id="pkgPayDate" required></div>
+        <div class="field"><label>طريقة الدفع</label>
+          <select id="pkgPayMethod"><option value="cash">نقدي</option><option value="card">بطاقة</option><option value="transfer">تحويل</option></select>
+        </div>
+        <div class="field"><label>الإيداع في خزينة</label><select id="pkgPayCashAccount" required></select></div>
+        <div class="field field-full"><label>ملاحظات</label><input type="text" id="pkgPayNotes"></div>
+      </div>
+      <div class="error-msg" id="pkgPayError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="closePkgPayBtn">إغلاق</button>
+        <button type="submit" class="submit-btn" id="savePkgPayBtn">تسجيل دفعة</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+.pkg-seg { display:flex; gap:8px; flex-wrap:wrap; }
+.pkg-seg button { border:1px solid var(--teal-600, #0f766e); background:#fff; color:var(--teal-700, #0f766e); border-radius:6px; padding:7px 14px; font-size:13px; cursor:pointer; font-family:inherit; }
+.pkg-seg button.on { background:var(--teal-600, #0f766e); color:#fff; }
+.pkg-checks { display:flex; flex-wrap:wrap; gap:8px 18px; }
+.pkg-checks label { display:flex; align-items:center; gap:6px; font-size:13px; cursor:pointer; margin:0; }
+.pkg-checks input { width:auto; }
+.pkg-tag { display:inline-block; background:#0f766e; color:#fff; border-radius:4px; padding:2px 8px; font-size:12px; margin:1px 2px; }
+</style>
 
 <!-- Modal: باقة اشتراك جديدة -->
 <div class="modal-overlay" id="gymPackageModalOverlay">
@@ -21581,7 +21808,7 @@ async function enterBackoffice() {
 }
 
 const boAllSections = ['dashboard','products','categories','unit-types','tax-rates','price-tiers','quick-discounts','customer-types',
-  'sales-list','sale-orders','delivery','delivery-zones','delivery-companies','sales-channels','driver-settlements','customers','suppliers','supplier-prices','payments','purchase-orders','purchases','purchase-returns','sale-returns','einvoice-zatca','purchase-requisitions',
+  'sales-list','sale-orders','delivery','delivery-zones','delivery-companies','sales-channels','driver-settlements','customers','packages','package-subscriptions','suppliers','supplier-prices','payments','purchase-orders','purchases','purchase-returns','sale-returns','einvoice-zatca','purchase-requisitions',
   'assets',
   'service-orders',
   'service-visits',
@@ -21601,7 +21828,7 @@ const boAllSections = ['dashboard','products','categories','unit-types','tax-rat
 const boNavGroups = [
   { toggle: 'stockNavToggle', group: 'stockNavGroup', sections: ['products','categories','unit-types','tax-rates','price-tiers','quick-discounts','modifier-groups','recipes','stock','stocktake','product-batches','product-serials'] },
   { toggle: 'marketingNavToggle', group: 'marketingNavGroup', sections: ['promotions','coupons'] },
-  { toggle: 'salesNavToggle', group: 'salesNavGroup', sections: ['sales-list','sale-orders','delivery','delivery-zones','delivery-companies','sales-channels','driver-settlements','customers','customer-types','sale-returns','einvoice-zatca'] },
+  { toggle: 'salesNavToggle', group: 'salesNavGroup', sections: ['sales-list','sale-orders','delivery','delivery-zones','delivery-companies','sales-channels','driver-settlements','customers','packages','package-subscriptions','customer-types','sale-returns','einvoice-zatca'] },
   { toggle: 'purchasesNavToggle', group: 'purchasesNavGroup', sections: ['suppliers','supplier-prices','purchase-requisitions','purchase-orders','purchases','purchase-returns'] },
   { toggle: 'serviceMgmtNavToggle', group: 'serviceMgmtNavGroup', sections: ['assets', 'service-orders', 'service-visits', 'contracts', 'my-visits', 'asset-faults'] },
   { toggle: 'gymNavToggle', group: 'gymNavGroup', sections: ['gym-dashboard', 'gym-members', 'gym-packages', 'gym-subscriptions', 'gym-attendance', 'gym-trainers', 'gym-classes'] },
@@ -21626,7 +21853,7 @@ const SECTION_PERMISSION_MAP = {
   'modifier-groups': 'stock_management',
   'recipes': 'stock_management',
   'promotions': 'admin', 'coupons': 'admin', 'einvoice-zatca': 'admin',
-  'sales-list': 'sales_management', 'sale-orders': 'sales_management', 'delivery': 'sales_management', 'delivery-zones': 'sales_management', 'delivery-companies': 'sales_management', 'sales-channels': 'sales_management', 'driver-settlements': 'sales_management', 'customers': 'sales_management', 'customer-types': 'sales_management', 'sale-returns': 'sales_management',
+  'sales-list': 'sales_management', 'packages': 'sales_management', 'package-subscriptions': 'sales_management', 'sale-orders': 'sales_management', 'delivery': 'sales_management', 'delivery-zones': 'sales_management', 'delivery-companies': 'sales_management', 'sales-channels': 'sales_management', 'driver-settlements': 'sales_management', 'customers': 'sales_management', 'customer-types': 'sales_management', 'sale-returns': 'sales_management',
   'suppliers': 'purchases_management', 'supplier-prices': 'purchases_management', 'purchase-orders': 'purchases_management', 'purchases': 'purchases_management', 'purchase-returns': 'purchases_management', 'purchase-requisitions': 'purchases_management',
   'assets': 'service_management',
   'service-orders': 'service_management',
@@ -21780,7 +22007,7 @@ const SCREEN_LABELS = {
   'modifier-groups': 'الإضافات والتعديلات',
   'recipes': 'الوصفات (منتجات مركّبة)',
   'promotions': 'العروض', 'coupons': 'الكوبونات',
-  'sales-list': 'فواتير البيع', 'customers': 'العملاء', 'customer-types': 'أنواع العملاء', 'sale-returns': 'مرتجعات البيع', 'einvoice-zatca': 'الفاتورة الإلكترونية (ZATCA)',
+  'sales-list': 'فواتير البيع', 'packages': 'تعريف الباقات', 'package-subscriptions': 'اشتراكات الباقات', 'customers': 'العملاء', 'customer-types': 'أنواع العملاء', 'sale-returns': 'مرتجعات البيع', 'einvoice-zatca': 'الفاتورة الإلكترونية (ZATCA)',
   'sale-orders': 'طلبات البيع', 'delivery': 'تفاصيل التوصيل', 'delivery-zones': 'مناطق التوصيل', 'delivery-companies': 'شركات التوصيل', 'sales-channels': 'قنوات البيع', 'driver-settlements': 'تحصيل السائقين',
   'suppliers': 'الموردون', 'purchases': 'فواتير الشراء', 'purchase-returns': 'مرتجعات الشراء', 'purchase-requisitions': 'طلبات التوريد',
   'purchase-orders': 'طلبات الشراء',
@@ -22322,6 +22549,8 @@ const ACTION_CAPABLE_SCREENS = {
   'contracts': { add: true, edit: true, delete: true },
   'asset-faults': { add: true, edit: true, delete: true },
   'gym-members': { add: true, edit: true, delete: true },
+  'packages': { add: true, edit: true, delete: true },
+  'package-subscriptions': { add: true, delete: true },
   'gym-packages': { add: true, edit: true, delete: true },
   'gym-subscriptions': { add: true, edit: true, delete: true },
   'gym-attendance': { add: true, delete: true },
@@ -22392,7 +22621,7 @@ const ADD_BUTTON_MAP = {
   'service-visits': 'addServiceVisitBtn',
   'contracts': 'addContractBtn',
   'asset-faults': 'addAssetFaultBtn',
-  'gym-members': 'addGymMemberBtn', 'gym-packages': 'addGymPackageBtn', 'gym-subscriptions': 'addGymSubscriptionBtn',
+  'packages': 'addPackageBtn', 'package-subscriptions': 'addPkgSubBtn', 'gym-members': 'addGymMemberBtn', 'gym-packages': 'addGymPackageBtn', 'gym-subscriptions': 'addGymSubscriptionBtn',
   'gym-attendance': 'addGymAttendanceBtn', 'gym-trainers': 'addGymTrainerBtn', 'gym-classes': 'addGymClassBtn',
   'salon-specialists': 'addSalonSpecialistBtn', 'salon-services': 'addSalonServiceBtn', 'salon-appointments': 'addSalonAppointmentBtn',
   'clinic-patients': 'addClinicPatientBtn', 'clinic-doctors': 'addClinicDoctorBtn', 'clinic-appointments': 'addClinicAppointmentBtn',
@@ -22584,6 +22813,8 @@ function activateBoSection(section, btn) {
   if (section === 'asset-faults' && !boAssetFaultsLoadedOnce) { loadAssetFaults().then(renderAssetFaultsTable); boAssetFaultsLoadedOnce = true; }
   if (section === 'gym-dashboard') { refreshGymDashboard(); }
   if (section === 'gym-members' && !boGymMembersLoadedOnce) { loadBoGymMembers().then(renderGymMembersTable); boGymMembersLoadedOnce = true; }
+  if (section === 'packages') { Promise.all([loadBoPackages(), loadBoTaxRates()]).then(renderPackagesTable); }
+  if (section === 'package-subscriptions') { Promise.all([loadBoPackages(), loadBoPkgSubs()]).then(renderPkgSubsTable); }
   if (section === 'gym-packages' && !boGymPackagesLoadedOnce) { loadBoGymPackages().then(renderGymPackagesTable); boGymPackagesLoadedOnce = true; }
   if (section === 'gym-subscriptions' && !boGymSubscriptionsLoadedOnce) {
     Promise.all([loadBoGymMembers(), loadBoGymPackages(), loadBoGymSubscriptions()]).then(renderGymSubscriptionsTable);
@@ -24068,6 +24299,7 @@ function bindBackofficeEvents() {
   document.getElementById('gymMemberForm').addEventListener('submit', saveGymMember);
   document.getElementById('gymMemberSearchInput').addEventListener('input', renderGymMembersTable);
 
+  bindPackagesEvents();
   // ---- Gym Package modal ----
   document.getElementById('addGymPackageBtn').addEventListener('click', () => openGymPackageModal(null));
   document.getElementById('cancelGymPackageBtn').addEventListener('click', closeGymPackageModal);
@@ -32406,7 +32638,7 @@ function renderBusinessTypeAssetTypesList() {
 // نقطة بداية مقترحة يقدر صاحب البرنامج يعدّلها/يرجعلها في أي وقت. ====
 const SEC = {
   stockBasic: ['products', 'categories', 'unit-types', 'tax-rates', 'price-tiers', 'quick-discounts', 'stock', 'stocktake'],
-  salesBasic: ['sales-list', 'sale-orders', 'customers', 'customer-types', 'sale-returns'],
+  salesBasic: ['sales-list', 'sale-orders', 'packages', 'package-subscriptions', 'customers', 'customer-types', 'sale-returns'],
   purchasesBasic: ['suppliers', 'supplier-prices', 'purchase-orders', 'purchases', 'purchase-returns', 'purchase-requisitions'],
   financeBasic: ['treasuries', 'payments', 'expense-items', 'expenses'],
   financeAdvanced: ['capital', 'fixed-assets'],
@@ -38150,6 +38382,663 @@ async function deleteSupplier(supplier) {
 
 // ==================== الجيم والصالات الرياضية ====================
 let boGymMembers = [];
+// ===================== الباقات والاشتراكات (عام لكل الأنشطة) =====================
+const PKG_ORDER_TYPES = {
+  pickup: 'الاستلام من المحل', internal: 'الطلبات الداخلية', delivery: 'طلبات التوصيل',
+  car: 'طلبات السيارات', dine_in: 'طلبات تناول الطعام في المكان',
+};
+const PKG_DURATION_LABELS = { months: 'شهور', days: 'أيام', consumption: 'حتى استهلاك الكمية' };
+const PKG_APPLY_LABELS = { visit: 'الزيارة', package: 'الباقة' };
+let boPackages = [];
+let boPkgSubs = [];
+let pkgItemsDraft = [];
+let pkgDurationType = 'months';
+let pkgSubCustomerSearch = null;
+let pkgUsageSub = null;
+let pkgPaySub = null;
+
+function pkgDateStr(d) {
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+function pkgTodayStr() { return pkgDateStr(new Date()); }
+function pkgNum(v) { return Number(v || 0); }
+function pkgFmt(n) { return Number(n || 0).toFixed(2); }
+
+// ---------- تعريف الباقات ----------
+async function loadBoPackages() {
+  const { data, error } = await supabaseClient.from('service_packages').select('*, service_package_items(*)').order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل الباقات', true); return; }
+  boPackages = data || [];
+}
+
+function pkgDurationText(p) {
+  if (p.duration_type === 'consumption') {
+    const total = (p.service_package_items || []).reduce((s, i) => s + pkgNum(i.quantity), 0);
+    return `حتى استهلاك ${total}`;
+  }
+  return `${p.duration_value || '—'} ${PKG_DURATION_LABELS[p.duration_type] || ''}`;
+}
+function pkgBranchesText(ids) {
+  if (!ids || ids.length === 0) return 'كل الفروع';
+  return ids.map(id => boBranchesList.find(b => b.id === id)?.name || '—').join('، ');
+}
+function pkgOrderTypesHtml(types) {
+  if (!types || types.length === 0) return '<span style="color:var(--ink-soft);">كل الأنواع</span>';
+  return types.map(t => `<span class="pkg-tag">${escapeHtml(PKG_ORDER_TYPES[t] || t)}</span>`).join('');
+}
+
+function renderPackagesTable() {
+  const tbody = document.getElementById('packagesTableBody');
+  const q = (document.getElementById('packageSearchInput').value || '').trim().toLowerCase();
+  const filtered = boPackages.filter(p => !q || p.name.toLowerCase().includes(q));
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="11" class="bo-empty">${boPackages.length === 0 ? 'لا توجد باقات مضافة حتى الآن' : 'لا توجد نتائج مطابقة للبحث'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(p => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(p.name)}</td>
+      <td>${PKG_DURATION_LABELS[p.duration_type] || ''}</td>
+      <td class="num">${escapeHtml(pkgDurationText(p))}</td>
+      <td class="num">${pkgFmt(p.price)}</td>
+      <td class="num">${pkgNum(p.tax_rate) ? pkgNum(p.tax_rate) + '% (' + pkgFmt(p.tax_amount) + ')' : '—'}</td>
+      <td class="num">${pkgFmt(p.total_amount)}</td>
+      <td>${PKG_APPLY_LABELS[p.apply_on] || ''}</td>
+      <td>${escapeHtml(pkgBranchesText(p.branch_ids))}</td>
+      <td>${pkgOrderTypesHtml(p.order_types)}</td>
+      <td>${p.is_active ? '<span class="bo-badge active">نشط</span>' : '<span class="bo-badge inactive">غير نشط</span>'}</td>
+      <td><div class="bo-row-actions">
+        <button class="bo-icon-btn" data-action="edit">تعديل</button>
+        <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+      </div></td>`;
+    tr.querySelector('[data-action="edit"]').addEventListener('click', () => openPackageModal(p));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deletePackage(p));
+    applyRowActionPerm(tr, 'packages');
+    tbody.appendChild(tr);
+  });
+}
+
+function pkgSetDurationType(type) {
+  pkgDurationType = type;
+  document.querySelectorAll('#packageDurationTypeSeg button').forEach(b => b.classList.toggle('on', b.dataset.v === type));
+  const valInput = document.getElementById('packageDurationValue');
+  const applySel = document.getElementById('packageApplyOn');
+  if (type === 'consumption') {
+    valInput.style.display = 'none'; valInput.required = false;
+    applySel.value = 'package'; applySel.disabled = true;
+  } else {
+    valInput.style.display = ''; valInput.required = true;
+    valInput.placeholder = type === 'months' ? 'عدد الشهور' : 'عدد الأيام';
+    applySel.disabled = false;
+  }
+}
+
+function pkgRecalcTotals() {
+  const price = pkgNum(document.getElementById('packagePrice').value);
+  const sel = document.getElementById('packageTaxRate');
+  const rate = pkgNum(sel.selectedOptions[0]?.dataset.rate);
+  const inc = document.getElementById('packagePriceIncludesTax').checked;
+  let tax, total;
+  if (inc) { tax = rate > 0 ? price - price / (1 + rate / 100) : 0; total = price; }
+  else { tax = price * rate / 100; total = price + tax; }
+  document.getElementById('packageTaxAmount').value = tax.toFixed(2);
+  document.getElementById('packageTotalAmount').value = total.toFixed(2);
+}
+
+function renderPackageItemsDraft() {
+  const body = document.getElementById('packageItemsBody');
+  if (pkgItemsDraft.length === 0) { body.innerHTML = '<tr><td colspan="3" class="bo-empty">لا يوجد بيانات</td></tr>'; return; }
+  body.innerHTML = '';
+  pkgItemsDraft.forEach((row, idx) => {
+    const tr = document.createElement('tr');
+    const opts = '<option value="">— أي صنف / كمية عامة —</option>' +
+      boProducts.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+    tr.innerHTML = `
+      <td><select data-f="product">${opts}</select></td>
+      <td><input type="number" data-f="qty" min="0.01" step="0.01" value="${row.quantity ?? ''}"></td>
+      <td><button type="button" class="bo-icon-btn danger" data-f="del">حذف</button></td>`;
+    tr.querySelector('[data-f="product"]').value = row.product_id || '';
+    tr.querySelector('[data-f="product"]').addEventListener('change', e => { row.product_id = e.target.value || null; });
+    tr.querySelector('[data-f="qty"]').addEventListener('input', e => { row.quantity = e.target.value; });
+    tr.querySelector('[data-f="del"]').addEventListener('click', () => { pkgItemsDraft.splice(idx, 1); renderPackageItemsDraft(); });
+    body.appendChild(tr);
+  });
+}
+
+async function openPackageModal(pkg) {
+  if (boTaxRates.length === 0) await loadBoTaxRates();
+  if (boProducts.length === 0) { try { await loadBoProducts(); } catch (e) { console.error(e); } }
+  document.getElementById('packageModalTitle').textContent = pkg ? 'تعديل باقة' : 'باقة جديدة';
+  document.getElementById('packageId').value = pkg ? pkg.id : '';
+  document.getElementById('packageName').value = pkg?.name || '';
+  document.getElementById('packageDurationValue').value = pkg?.duration_value || '';
+  document.getElementById('packagePrice').value = pkg ? pkg.price : '';
+  document.getElementById('packagePriceIncludesTax').checked = !!pkg?.price_includes_tax;
+  document.getElementById('packageNotes').value = pkg?.notes || '';
+  document.getElementById('packageIsActive').checked = pkg ? !!pkg.is_active : true;
+
+  const taxSel = document.getElementById('packageTaxRate');
+  taxSel.innerHTML = '<option value="" data-rate="0">— بدون ضريبة —</option>' +
+    boTaxRates.filter(t => t.is_active || t.id === pkg?.tax_rate_id)
+      .map(t => `<option value="${t.id}" data-rate="${t.rate}">${escapeHtml(t.name)} (${t.rate}%)</option>`).join('');
+  taxSel.value = pkg?.tax_rate_id || '';
+
+  const selBranches = pkg?.branch_ids || [];
+  document.getElementById('packageBranchesBox').innerHTML = boBranchesList.map(b =>
+    `<label><input type="checkbox" value="${b.id}" ${selBranches.includes(b.id) ? 'checked' : ''}> ${escapeHtml(b.name)}</label>`).join('');
+  const selTypes = pkg ? (pkg.order_types || []) : Object.keys(PKG_ORDER_TYPES);
+  document.getElementById('packageOrderTypesBox').innerHTML = Object.entries(PKG_ORDER_TYPES).map(([k, v]) =>
+    `<label><input type="checkbox" value="${k}" ${selTypes.includes(k) ? 'checked' : ''}> ${v}</label>`).join('');
+
+  pkgSetDurationType(pkg?.duration_type || 'months');
+  document.getElementById('packageApplyOn').value = pkg?.apply_on || 'visit';
+  if (pkgDurationType === 'consumption') document.getElementById('packageApplyOn').value = 'package';
+  pkgItemsDraft = (pkg?.service_package_items || []).map(i => ({ product_id: i.product_id, quantity: i.quantity }));
+  renderPackageItemsDraft();
+  pkgRecalcTotals();
+  document.getElementById('packageModalError').classList.remove('show');
+  document.getElementById('packageModalOverlay').classList.add('show');
+}
+
+function closePackageModal() { document.getElementById('packageModalOverlay').classList.remove('show'); }
+
+async function savePackage(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('packageModalError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('savePackageBtn');
+  const fail = (msg) => { errEl.textContent = msg; errEl.classList.add('show'); btn.disabled = false; btn.textContent = 'حفظ'; };
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+
+  const id = document.getElementById('packageId').value || null;
+  const orderTypes = [...document.querySelectorAll('#packageOrderTypesBox input:checked')].map(i => i.value);
+  const branchIds = [...document.querySelectorAll('#packageBranchesBox input:checked')].map(i => i.value);
+  if (orderTypes.length === 0) return fail('اختر نوع طلب واحد على الأقل');
+  const items = pkgItemsDraft.filter(r => r.quantity !== '' && r.quantity != null).map(r => ({ product_id: r.product_id || null, quantity: Number(r.quantity) }));
+  if (items.some(r => !(r.quantity > 0))) return fail('الكمية لازم تكون أكبر من صفر');
+  if (pkgItemsDraft.length !== items.length) return fail('في صف كمية فاضي — املاه أو احذفه');
+  let durationValue = null;
+  if (pkgDurationType !== 'consumption') {
+    durationValue = parseInt(document.getElementById('packageDurationValue').value, 10);
+    if (!(durationValue > 0)) return fail('اختر مدة الباقة');
+  } else if (items.length === 0) {
+    return fail('الباقة المحدودة بالاستهلاك لازم يكون فيها كمية واحدة على الأقل في جدول الكميات');
+  }
+  pkgRecalcTotals();
+  const taxSel = document.getElementById('packageTaxRate');
+  const payload = {
+    name: document.getElementById('packageName').value.trim(),
+    duration_type: pkgDurationType,
+    duration_value: durationValue,
+    branch_ids: branchIds,
+    order_types: orderTypes,
+    price: pkgNum(document.getElementById('packagePrice').value),
+    tax_rate_id: taxSel.value || null,
+    tax_rate: pkgNum(taxSel.selectedOptions[0]?.dataset.rate),
+    tax_amount: pkgNum(document.getElementById('packageTaxAmount').value),
+    price_includes_tax: document.getElementById('packagePriceIncludesTax').checked,
+    total_amount: pkgNum(document.getElementById('packageTotalAmount').value),
+    apply_on: pkgDurationType === 'consumption' ? 'package' : document.getElementById('packageApplyOn').value,
+    is_active: document.getElementById('packageIsActive').checked,
+    notes: document.getElementById('packageNotes').value.trim() || null,
+  };
+  try {
+    let pkgId = id;
+    if (id) {
+      const { error } = await supabaseClient.from('service_packages').update(payload).eq('id', id);
+      if (error) throw error;
+      const { error: delErr } = await supabaseClient.from('service_package_items').delete().eq('package_id', id);
+      if (delErr) throw delErr;
+    } else {
+      payload.created_by = currentProfile.id;
+      const { data, error } = await supabaseClient.from('service_packages').insert(payload).select().single();
+      if (error) throw error;
+      pkgId = data.id;
+    }
+    if (items.length > 0) {
+      const rows = items.map(r => ({
+        package_id: pkgId, product_id: r.product_id, quantity: r.quantity,
+        item_name: r.product_id ? (boProducts.find(p => p.id === r.product_id)?.name || null) : null,
+      }));
+      const { error } = await supabaseClient.from('service_package_items').insert(rows);
+      if (error) throw error;
+    }
+    showToast(id ? 'تم تحديث الباقة' : 'تمت إضافة الباقة بنجاح');
+    closePackageModal();
+    await loadBoPackages();
+    renderPackagesTable();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'حدث خطأ أثناء الحفظ';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ';
+  }
+}
+
+async function deletePackage(pkg) {
+  if (!hasBoActionPermission('packages', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (!confirm(`هل أنت متأكد أنك تريد حذف باقة "${pkg.name}"؟`)) return;
+  const { error } = await supabaseClient.from('service_packages').delete().eq('id', pkg.id);
+  if (error) { console.error(error); showToast('تعذر حذف الباقة — مرتبطة باشتراكات، يمكنك إيقافها (غير نشطة) بدل الحذف', true); return; }
+  showToast('تم حذف الباقة');
+  await loadBoPackages();
+  renderPackagesTable();
+}
+
+// ---------- الاشتراكات ----------
+async function loadBoPkgSubs() {
+  const { data, error } = await supabaseClient.from('package_subscriptions')
+    .select('*, customers(name, phone), service_packages(name, duration_type, apply_on, order_types), branches(name)')
+    .order('created_at', { ascending: false });
+  if (error) { console.error(error); showToast('تعذر تحميل الاشتراكات', true); return; }
+  boPkgSubs = data || [];
+}
+
+function pkgSubEffectiveStatus(s) {
+  if (s.status === 'active' && s.end_date && s.end_date < pkgTodayStr()) return 'expired';
+  return s.status;
+}
+function pkgSubStatusBadge(s) {
+  const st = pkgSubEffectiveStatus(s);
+  const map = {
+    active: '<span class="bo-badge active">نشط</span>',
+    expired: '<span class="bo-badge inactive">منتهي</span>',
+    consumed: '<span class="bo-badge inactive">تم الاستهلاك</span>',
+    cancelled: '<span class="bo-badge inactive">ملغي</span>',
+  };
+  return map[st] || escapeHtml(st);
+}
+
+function renderPkgSubsTable() {
+  const tbody = document.getElementById('pkgSubsTableBody');
+  const q = (document.getElementById('pkgSubSearchInput').value || '').trim().toLowerCase();
+  const stF = document.getElementById('pkgSubStatusFilter').value;
+  const filtered = boPkgSubs.filter(s => {
+    if (stF && pkgSubEffectiveStatus(s) !== stF) return false;
+    if (!q) return true;
+    return `${s.customers?.name || ''} ${s.customers?.phone || ''} ${s.service_packages?.name || ''}`.toLowerCase().includes(q);
+  });
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="11" class="bo-empty">${boPkgSubs.length === 0 ? 'لا توجد اشتراكات مسجلة حتى الآن' : 'لا توجد نتائج مطابقة'}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = '';
+  filtered.forEach(s => {
+    const remaining = pkgNum(s.total_amount) - pkgNum(s.paid_amount);
+    const eff = pkgSubEffectiveStatus(s);
+    const usage = s.quantity_total != null ? `${pkgNum(s.quantity_used)} / ${pkgNum(s.quantity_total)}` : `${pkgNum(s.quantity_used)} زيارة`;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(s.customers?.name || '—')}${s.customers?.phone ? `<div style="font-size:11.5px; color:var(--ink-soft);">${escapeHtml(s.customers.phone)}</div>` : ''}</td>
+      <td>${escapeHtml(s.service_packages?.name || '—')}</td>
+      <td>${escapeHtml(s.branches?.name || '—')}</td>
+      <td class="num">${s.start_date || '—'}</td>
+      <td class="num">${s.end_date || 'مفتوحة'}</td>
+      <td class="num">${usage}</td>
+      <td class="num">${pkgFmt(s.total_amount)}</td>
+      <td class="num">${pkgFmt(s.paid_amount)}</td>
+      <td class="num" style="${remaining > 0.005 ? 'color:#b91c1c; font-weight:700;' : ''}">${pkgFmt(remaining)}</td>
+      <td>${pkgSubStatusBadge(s)}</td>
+      <td><div class="bo-row-actions">
+        ${eff === 'active' ? '<button class="bo-icon-btn" data-action="use" style="color:var(--teal-700); font-weight:700;">استهلاك</button>' : '<button class="bo-icon-btn" data-action="use">السجل</button>'}
+        <button class="bo-icon-btn" data-action="pay" style="color:var(--teal-700);">المدفوعات</button>
+        ${eff === 'active' ? '<button class="bo-icon-btn" data-action="cancel" style="color:#b45309;">إلغاء</button>' : ''}
+        <button class="bo-icon-btn danger" data-action="delete">حذف</button>
+      </div></td>`;
+    tr.querySelector('[data-action="use"]').addEventListener('click', () => openPkgUsageModal(s));
+    tr.querySelector('[data-action="pay"]').addEventListener('click', () => openPkgPayModal(s));
+    const c = tr.querySelector('[data-action="cancel"]');
+    if (c) c.addEventListener('click', () => cancelPkgSub(s));
+    tr.querySelector('[data-action="delete"]').addEventListener('click', () => deletePkgSub(s));
+    applyRowActionPerm(tr, 'package-subscriptions');
+    tbody.appendChild(tr);
+  });
+}
+
+function pkgComputeEnd(pkg, startStr) {
+  if (!pkg || pkg.duration_type === 'consumption' || !startStr) return '';
+  const d = new Date(startStr + 'T00:00:00');
+  if (pkg.duration_type === 'months') {
+    const day = d.getDate();
+    d.setMonth(d.getMonth() + pkg.duration_value);
+    if (d.getDate() !== day) d.setDate(0); // 31 يناير + شهر → آخر فبراير
+  } else {
+    d.setDate(d.getDate() + pkg.duration_value);
+  }
+  return pkgDateStr(d);
+}
+
+function pkgSubAllowedBranches(pkg) {
+  const ids = pkg?.branch_ids || [];
+  return ids.length === 0 ? boBranchesList : boBranchesList.filter(b => ids.includes(b.id));
+}
+
+function pkgSubRefreshTreasuries() {
+  const branchId = document.getElementById('pkgSubBranch').value;
+  const list = boTreasuries.filter(t => t.is_active && t.branch_id === branchId);
+  const use = list.length > 0 ? list : boTreasuries.filter(t => t.is_active);
+  document.getElementById('pkgSubCashAccount').innerHTML = use
+    .map(t => `<option value="${t.id}">${escapeHtml(t.branches?.name || '')} — ${escapeHtml(t.name)}</option>`).join('');
+}
+
+function pkgSubApplyPackage() {
+  const pkg = boPackages.find(p => p.id === document.getElementById('pkgSubPackage').value);
+  const brSel = document.getElementById('pkgSubBranch');
+  const allowed = pkgSubAllowedBranches(pkg);
+  const prev = brSel.value || currentProfile.branch_id;
+  brSel.innerHTML = allowed.map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+  brSel.value = allowed.some(b => b.id === prev) ? prev : (allowed[0]?.id || '');
+  const start = document.getElementById('pkgSubStartDate').value || pkgTodayStr();
+  document.getElementById('pkgSubEndDate').value = pkgComputeEnd(pkg, start);
+  document.getElementById('pkgSubEndHint').textContent = pkg?.duration_type === 'consumption' ? 'باقة بدون تاريخ انتهاء — تنتهي باستهلاك الكمية' : '';
+  document.getElementById('pkgSubTotal').value = pkg ? pkgNum(pkg.total_amount).toFixed(2) : '';
+  const items = pkg?.service_package_items || [];
+  document.getElementById('pkgSubItemsPreview').innerHTML = pkg
+    ? `<strong>تطبق الكمية على ${PKG_APPLY_LABELS[pkg.apply_on]}:</strong> ` + (items.length
+        ? items.map(i => `${escapeHtml(i.item_name || 'كمية عامة')} × ${pkgNum(i.quantity)}`).join('، ')
+        : 'بدون كميات محددة (يتم تسجيل الزيارات فقط)')
+    : '';
+  pkgSubRefreshTreasuries();
+}
+
+async function openPkgSubModal() {
+  if (boCustomers.length === 0) await loadBoCustomers();
+  await loadBoPackages();
+  if (boTreasuries.length === 0) await loadBoTreasuries();
+  const active = boPackages.filter(p => p.is_active);
+  if (active.length === 0) { showToast('عرّف باقة نشطة أولًا من شاشة تعريف الباقات', true); return; }
+  document.getElementById('pkgSubPackage').innerHTML = active.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+  document.getElementById('pkgSubStartDate').value = pkgTodayStr();
+  document.getElementById('pkgSubPaid').value = 0;
+  document.getElementById('pkgSubNotes').value = '';
+  document.getElementById('pkgSubCustomerInput').value = '';
+  document.getElementById('pkgSubCustomer').value = '';
+  if (!pkgSubCustomerSearch) {
+    pkgSubCustomerSearch = createSmartSearch({
+      input: document.getElementById('pkgSubCustomerInput'),
+      hidden: document.getElementById('pkgSubCustomer'),
+      dropdown: document.getElementById('pkgSubCustomerDropdown'),
+      getItems: () => boCustomers.map(c => ({ value: c.id, label: c.name, sublabel: c.phone || '', search: `${c.name} ${c.phone || ''}` })),
+    });
+  }
+  pkgSubApplyPackage();
+  document.getElementById('pkgSubModalError').classList.remove('show');
+  document.getElementById('pkgSubModalOverlay').classList.add('show');
+}
+function closePkgSubModal() { document.getElementById('pkgSubModalOverlay').classList.remove('show'); }
+
+async function savePkgSub(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('pkgSubModalError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('savePkgSubBtn');
+  const fail = (msg) => { errEl.textContent = msg; errEl.classList.add('show'); btn.disabled = false; btn.textContent = 'حفظ الاشتراك'; };
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+
+  const customerId = document.getElementById('pkgSubCustomer').value;
+  if (!customerId) return fail('اختر العميل أولًا');
+  const pkg = boPackages.find(p => p.id === document.getElementById('pkgSubPackage').value);
+  if (!pkg) return fail('اختر الباقة');
+  const branchId = document.getElementById('pkgSubBranch').value;
+  if (!branchId) return fail('اختر الفرع');
+  const total = pkgNum(document.getElementById('pkgSubTotal').value);
+  const paid = pkgNum(document.getElementById('pkgSubPaid').value);
+  if (paid < 0 || paid > total + 0.005) return fail('المبلغ المدفوع لا يمكن أن يتجاوز إجمالي الاشتراك');
+  const cashAccountId = document.getElementById('pkgSubCashAccount').value;
+  if (paid > 0 && !cashAccountId) return fail('اختر الخزينة التي سيتم إيداع المبلغ فيها');
+  const items = pkg.service_package_items || [];
+  const qtyTotal = items.length ? items.reduce((s, i) => s + pkgNum(i.quantity), 0) : null;
+
+  let subId = null;
+  try {
+    const { data: sub, error } = await supabaseClient.from('package_subscriptions').insert({
+      package_id: pkg.id, customer_id: customerId, branch_id: branchId,
+      start_date: document.getElementById('pkgSubStartDate').value,
+      end_date: document.getElementById('pkgSubEndDate').value || null,
+      total_amount: total, paid_amount: paid, quantity_total: qtyTotal,
+      notes: document.getElementById('pkgSubNotes').value.trim() || null,
+      created_by: currentProfile.id,
+    }).select().single();
+    if (error) throw error;
+    subId = sub.id;
+    if (items.length) {
+      const { error: iErr } = await supabaseClient.from('package_subscription_items').insert(items.map(i => ({
+        subscription_id: subId, product_id: i.product_id, item_name: i.item_name || (i.product_id ? null : 'كمية عامة'), quantity_total: i.quantity,
+      })));
+      if (iErr) throw iErr;
+    }
+    if (paid > 0) {
+      const { data: pay, error: pErr } = await supabaseClient.from('package_subscription_payments').insert({
+        subscription_id: subId, amount: paid, payment_date: pkgTodayStr(),
+        payment_method: document.getElementById('pkgSubPayMethod').value,
+        cash_account_id: cashAccountId, received_by: currentProfile.id, notes: 'دفعة عند الاشتراك',
+      }).select().single();
+      if (pErr) throw pErr;
+      const custName = boCustomers.find(c => c.id === customerId)?.name || '';
+      await postCashAccountAdjustment(cashAccountId, Math.abs(paid), 'customer_receipt', pay.id, `دفعة اشتراك باقة ${pkg.name}${custName ? ' — ' + custName : ''}`);
+    }
+    showToast('تم تسجيل الاشتراك بنجاح');
+    closePkgSubModal();
+    await loadBoPkgSubs();
+    renderPkgSubsTable();
+  } catch (err) {
+    console.error(err);
+    if (subId) { await supabaseClient.from('package_subscriptions').delete().eq('id', subId); }
+    fail(err.message || 'حدث خطأ أثناء الحفظ');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ الاشتراك';
+  }
+}
+
+async function cancelPkgSub(s) {
+  if (!confirm(`إلغاء اشتراك "${s.customers?.name || ''}" في باقة "${s.service_packages?.name || ''}"؟ لن يمكن الاستهلاك منه بعد ذلك.`)) return;
+  const { error } = await supabaseClient.from('package_subscriptions').update({ status: 'cancelled' }).eq('id', s.id);
+  if (error) { console.error(error); showToast('تعذر إلغاء الاشتراك', true); return; }
+  showToast('تم إلغاء الاشتراك');
+  await loadBoPkgSubs(); renderPkgSubsTable();
+}
+
+async function deletePkgSub(s) {
+  if (!hasBoActionPermission('package-subscriptions', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+  if (pkgNum(s.paid_amount) > 0) { showToast('الاشتراك عليه مدفوعات مسجلة في الخزينة — استخدم "إلغاء" بدل الحذف', true); return; }
+  if (!confirm('هل أنت متأكد أنك تريد حذف هذا الاشتراك وسجل استهلاكه؟')) return;
+  const { error } = await supabaseClient.from('package_subscriptions').delete().eq('id', s.id);
+  if (error) { console.error(error); showToast('تعذر حذف الاشتراك', true); return; }
+  showToast('تم حذف الاشتراك');
+  await loadBoPkgSubs(); renderPkgSubsTable();
+}
+
+// ---------- الاستهلاك ----------
+async function refreshPkgUsageModal() {
+  const s = pkgUsageSub;
+  const [{ data: items, error: e1 }, { data: usage, error: e2 }, { data: fresh }] = await Promise.all([
+    supabaseClient.from('package_subscription_items').select('*').eq('subscription_id', s.id).order('id'),
+    supabaseClient.from('package_usage').select('*, package_subscription_items(item_name, products(name))').eq('subscription_id', s.id).order('created_at', { ascending: false }).limit(100),
+    supabaseClient.from('package_subscriptions').select('*, customers(name, phone), service_packages(name, duration_type, apply_on, order_types), branches(name)').eq('id', s.id).single(),
+  ]);
+  if (e1 || e2) { console.error(e1 || e2); showToast('تعذر تحميل بيانات الاستهلاك', true); return; }
+  if (fresh) { pkgUsageSub = fresh; }
+  const sub = pkgUsageSub;
+  const eff = pkgSubEffectiveStatus(sub);
+  const pk = sub.service_packages || {};
+  const itemLabel = i => i.item_name || i.products?.name || 'كمية عامة';
+  document.getElementById('pkgUsageSummary').innerHTML =
+    `<strong>${escapeHtml(sub.customers?.name || '')}</strong> — ${escapeHtml(pk.name || '')} — ${pkgSubStatusBadge(sub)}` +
+    ` — ${sub.end_date ? 'ينتهي ' + sub.end_date : 'بدون تاريخ انتهاء'}` +
+    ` — <span style="color:var(--ink-soft);">الكمية تطبق على ${PKG_APPLY_LABELS[pk.apply_on] || ''}${pk.apply_on === 'visit' && pk.duration_type !== 'consumption' ? ' (الحد في اليوم الواحد)' : ''}</span>`;
+  const bal = document.getElementById('pkgUsageBalances');
+  bal.innerHTML = (items || []).length === 0
+    ? '<tr><td colspan="4" class="bo-empty">الباقة بدون كميات محددة — يتم تسجيل الزيارات فقط</td></tr>'
+    : items.map(i => `<tr><td>${escapeHtml(itemLabel(i))}</td><td class="num">${pkgNum(i.quantity_total)}</td><td class="num">${pkgNum(i.quantity_used)}</td><td class="num"><strong>${pkgNum(i.quantity_total) - pkgNum(i.quantity_used)}</strong></td></tr>`).join('');
+  const itemSel = document.getElementById('pkgUsageItem');
+  itemSel.innerHTML = (items || []).map(i => `<option value="${i.id}">${escapeHtml(itemLabel(i))}</option>`).join('');
+  document.getElementById('pkgUsageItemWrap').style.display = (items || []).length ? '' : 'none';
+  const types = (pk.order_types && pk.order_types.length) ? pk.order_types : Object.keys(PKG_ORDER_TYPES);
+  document.getElementById('pkgUsageOrderType').innerHTML = '<option value="">— غير محدد —</option>' + types.map(t => `<option value="${t}">${PKG_ORDER_TYPES[t] || t}</option>`).join('');
+  const canUse = eff === 'active';
+  document.getElementById('pkgUsageForm').style.display = canUse ? '' : 'none';
+  const hist = document.getElementById('pkgUsageHistory');
+  hist.innerHTML = (usage || []).length === 0
+    ? '<tr><td colspan="5" class="bo-empty">لا يوجد استهلاك مسجل بعد</td></tr>'
+    : usage.map(u => `<tr><td class="num">${u.usage_date}</td><td>${escapeHtml(u.package_subscription_items?.item_name || u.package_subscription_items?.products?.name || '—')}</td><td class="num">${pkgNum(u.quantity)}</td><td>${escapeHtml(PKG_ORDER_TYPES[u.order_type] || '—')}</td><td>${escapeHtml(u.notes || '—')}</td></tr>`).join('');
+}
+
+async function openPkgUsageModal(s) {
+  pkgUsageSub = s;
+  document.getElementById('pkgUsageModalTitle').textContent = 'استهلاك من الباقة';
+  document.getElementById('pkgUsageSubId').value = s.id;
+  document.getElementById('pkgUsageQty').value = 1;
+  document.getElementById('pkgUsageNotes').value = '';
+  document.getElementById('pkgUsageError').classList.remove('show');
+  await refreshPkgUsageModal();
+  document.getElementById('pkgUsageModalOverlay').classList.add('show');
+}
+async function closePkgUsageModal() {
+  document.getElementById('pkgUsageModalOverlay').classList.remove('show');
+  pkgUsageSub = null;
+  await loadBoPkgSubs(); renderPkgSubsTable();
+}
+
+async function savePkgUsage(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('pkgUsageError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('savePkgUsageBtn');
+  btn.disabled = true; btn.textContent = 'جاري التسجيل...';
+  try {
+    const itemWrapVisible = document.getElementById('pkgUsageItemWrap').style.display !== 'none';
+    const { error } = await supabaseClient.rpc('consume_package_usage', {
+      p_subscription_id: pkgUsageSub.id,
+      p_item_id: itemWrapVisible ? (document.getElementById('pkgUsageItem').value || null) : null,
+      p_qty: Number(document.getElementById('pkgUsageQty').value),
+      p_order_type: document.getElementById('pkgUsageOrderType').value || null,
+      p_notes: document.getElementById('pkgUsageNotes').value.trim() || null,
+    });
+    if (error) throw error;
+    showToast('تم تسجيل الاستهلاك');
+    document.getElementById('pkgUsageQty').value = 1;
+    document.getElementById('pkgUsageNotes').value = '';
+    await refreshPkgUsageModal();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'تعذر تسجيل الاستهلاك';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'تسجيل استهلاك';
+  }
+}
+
+// ---------- مدفوعات الاشتراك ----------
+async function renderPkgPayList(subId) {
+  const tbody = document.getElementById('pkgPayList');
+  const { data, error } = await supabaseClient.from('package_subscription_payments').select('*').eq('subscription_id', subId).order('payment_date', { ascending: false });
+  if (error) { console.error(error); return; }
+  const labels = { cash: 'نقدي', card: 'بطاقة', transfer: 'تحويل' };
+  tbody.innerHTML = (data || []).length === 0
+    ? '<tr><td colspan="4" class="bo-empty">لا توجد مدفوعات مسجلة بعد</td></tr>'
+    : data.map(p => `<tr><td class="num">${p.payment_date}</td><td class="num">${pkgFmt(p.amount)}</td><td>${labels[p.payment_method] || escapeHtml(p.payment_method || '—')}</td><td>${escapeHtml(p.notes || '—')}</td></tr>`).join('');
+}
+async function openPkgPayModal(s) {
+  pkgPaySub = s;
+  if (boTreasuries.length === 0) await loadBoTreasuries();
+  document.getElementById('pkgPayModalTitle').textContent = `مدفوعات اشتراك: ${s.customers?.name || ''} (المتبقي ${pkgFmt(pkgNum(s.total_amount) - pkgNum(s.paid_amount))})`;
+  document.getElementById('pkgPaySubId').value = s.id;
+  document.getElementById('pkgPayDate').value = pkgTodayStr();
+  document.getElementById('pkgPayAmount').value = '';
+  document.getElementById('pkgPayNotes').value = '';
+  const list = boTreasuries.filter(t => t.is_active && t.branch_id === s.branch_id);
+  const use = list.length ? list : boTreasuries.filter(t => t.is_active);
+  document.getElementById('pkgPayCashAccount').innerHTML = use.map(t => `<option value="${t.id}">${escapeHtml(t.branches?.name || '')} — ${escapeHtml(t.name)}</option>`).join('');
+  document.getElementById('pkgPayError').classList.remove('show');
+  await renderPkgPayList(s.id);
+  document.getElementById('pkgPayModalOverlay').classList.add('show');
+}
+async function closePkgPayModal() {
+  document.getElementById('pkgPayModalOverlay').classList.remove('show');
+  pkgPaySub = null;
+  await loadBoPkgSubs(); renderPkgSubsTable();
+}
+async function savePkgPay(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('pkgPayError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('savePkgPayBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  const fail = (m) => { errEl.textContent = m; errEl.classList.add('show'); btn.disabled = false; btn.textContent = 'تسجيل دفعة'; };
+  const subId = document.getElementById('pkgPaySubId').value;
+  const amount = Number(document.getElementById('pkgPayAmount').value);
+  const cashId = document.getElementById('pkgPayCashAccount').value;
+  if (!cashId) return fail('اختر الخزينة');
+  try {
+    const { data: fresh, error: fErr } = await supabaseClient.from('package_subscriptions').select('total_amount, paid_amount').eq('id', subId).single();
+    if (fErr) throw fErr;
+    if (amount > pkgNum(fresh.total_amount) - pkgNum(fresh.paid_amount) + 0.005) return fail('المبلغ أكبر من المتبقي على الاشتراك');
+    const { data: pay, error: pErr } = await supabaseClient.from('package_subscription_payments').insert({
+      subscription_id: subId, amount, payment_date: document.getElementById('pkgPayDate').value,
+      payment_method: document.getElementById('pkgPayMethod').value, cash_account_id: cashId,
+      received_by: currentProfile.id, notes: document.getElementById('pkgPayNotes').value.trim() || null,
+    }).select().single();
+    if (pErr) throw pErr;
+    try {
+      await postCashAccountAdjustment(cashId, Math.abs(amount), 'customer_receipt', pay.id, `دفعة اشتراك باقة — ${pkgPaySub?.customers?.name || ''}`);
+    } catch (cErr) {
+      await supabaseClient.from('package_subscription_payments').delete().eq('id', pay.id);
+      throw cErr;
+    }
+    const { error: uErr } = await supabaseClient.from('package_subscriptions').update({ paid_amount: pkgNum(fresh.paid_amount) + amount }).eq('id', subId);
+    if (uErr) throw uErr;
+    showToast('تم تسجيل الدفعة وإيداعها في الخزينة');
+    pkgPaySub = { ...pkgPaySub, paid_amount: pkgNum(fresh.paid_amount) + amount };
+    document.getElementById('pkgPayAmount').value = '';
+    document.getElementById('pkgPayNotes').value = '';
+    await renderPkgPayList(subId);
+  } catch (err) {
+    console.error(err);
+    fail(err.message || 'تعذر تسجيل الدفعة');
+  } finally {
+    btn.disabled = false; btn.textContent = 'تسجيل دفعة';
+  }
+}
+
+function bindPackagesEvents() {
+  document.getElementById('addPackageBtn').addEventListener('click', () => openPackageModal(null));
+  document.getElementById('cancelPackageBtn').addEventListener('click', closePackageModal);
+  document.getElementById('packageModalOverlay').addEventListener('click', e => { if (e.target.id === 'packageModalOverlay') closePackageModal(); });
+  document.getElementById('packageForm').addEventListener('submit', savePackage);
+  document.getElementById('packageSearchInput').addEventListener('input', renderPackagesTable);
+  document.querySelectorAll('#packageDurationTypeSeg button').forEach(b => b.addEventListener('click', () => pkgSetDurationType(b.dataset.v)));
+  ['packagePrice', 'packageTaxRate', 'packagePriceIncludesTax'].forEach(id => {
+    document.getElementById(id).addEventListener('input', pkgRecalcTotals);
+    document.getElementById(id).addEventListener('change', pkgRecalcTotals);
+  });
+  document.getElementById('addPackageItemRowBtn').addEventListener('click', () => { pkgItemsDraft.push({ product_id: null, quantity: '' }); renderPackageItemsDraft(); });
+
+  document.getElementById('addPkgSubBtn').addEventListener('click', openPkgSubModal);
+  document.getElementById('cancelPkgSubBtn').addEventListener('click', closePkgSubModal);
+  document.getElementById('pkgSubModalOverlay').addEventListener('click', e => { if (e.target.id === 'pkgSubModalOverlay') closePkgSubModal(); });
+  document.getElementById('pkgSubForm').addEventListener('submit', savePkgSub);
+  document.getElementById('pkgSubPackage').addEventListener('change', pkgSubApplyPackage);
+  document.getElementById('pkgSubBranch').addEventListener('change', pkgSubRefreshTreasuries);
+  document.getElementById('pkgSubStartDate').addEventListener('change', () => {
+    const pkg = boPackages.find(p => p.id === document.getElementById('pkgSubPackage').value);
+    document.getElementById('pkgSubEndDate').value = pkgComputeEnd(pkg, document.getElementById('pkgSubStartDate').value);
+  });
+  document.getElementById('pkgSubSearchInput').addEventListener('input', renderPkgSubsTable);
+  document.getElementById('pkgSubStatusFilter').addEventListener('change', renderPkgSubsTable);
+
+  document.getElementById('pkgUsageForm').addEventListener('submit', savePkgUsage);
+  document.getElementById('closePkgUsageBtn').addEventListener('click', closePkgUsageModal);
+  document.getElementById('pkgUsageModalOverlay').addEventListener('click', e => { if (e.target.id === 'pkgUsageModalOverlay') closePkgUsageModal(); });
+  document.getElementById('pkgPayForm').addEventListener('submit', savePkgPay);
+  document.getElementById('closePkgPayBtn').addEventListener('click', closePkgPayModal);
+  document.getElementById('pkgPayModalOverlay').addEventListener('click', e => { if (e.target.id === 'pkgPayModalOverlay') closePkgPayModal(); });
+}
+
+
 let boGymPackages = [];
 let boGymSubscriptions = [];
 let boGymMembersLoadedOnce = false;
