@@ -897,6 +897,11 @@ a { color: inherit; }
 .report-type-icon { width: 44px; height: 44px; border-radius: var(--radius-md); background: var(--teal-100); color: var(--teal-700); display: grid; place-items: center; font-size: 21px; }
 .report-type-label { font-size: 12.5px; font-weight: 600; color: var(--ink); line-height: 1.5; }
 
+.report-type-card { position: relative; }
+.report-type-card[data-sh="1"] { display: none !important; }
+.rpt-fav-star { position: absolute; top: 6px; inset-inline-end: 8px; font-size: 17px; line-height: 1; color: var(--ink-3, #9ca3af); cursor: pointer; user-select: none; }
+.rpt-fav-star.on { color: #f59e0b; }
+.rpt-search { width: 100%; max-width: 340px; margin: 4px 0 10px; }
 .report-back-btn { background: none; color: var(--teal-700); font-size: 13px; font-weight: 600; padding: 6px 0; margin-bottom: 16px; }
 .report-back-btn:hover { text-decoration: underline; }
 
@@ -6161,6 +6166,62 @@ a { color: inherit; }
               <div class="report-type-icon">🧾</div>
               <div class="report-type-label">مستحقات موردي الاستيراد</div>
             </button>
+            <button type="button" class="report-type-card" data-report="purchases-by-product">
+              <div class="report-type-icon">🛒</div>
+              <div class="report-type-label">المشتريات حسب الصنف (الكمية والتكلفة)</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="product-data-quality">
+              <div class="report-type-icon">🧹</div>
+              <div class="report-type-label">جودة بيانات الأصناف (تسعير ناقص)</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="new-vs-returning">
+              <div class="report-type-icon">🆕</div>
+              <div class="report-type-label">العملاء الجدد مقابل المتكررين</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="collections-report">
+              <div class="report-type-icon">💰</div>
+              <div class="report-type-label">تحصيلات العملاء (الخزائن)</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="supplier-payments-report">
+              <div class="report-type-icon">💸</div>
+              <div class="report-type-label">مدفوعات الموردين (الخزائن)</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="leave-report">
+              <div class="report-type-icon">🏖️</div>
+              <div class="report-type-label">تقرير الإجازات</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="branch-stock-matrix">
+              <div class="report-type-icon">🏬</div>
+              <div class="report-type-label">المخزون بالفروع والمخازن</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="gym-classes-report">
+              <div class="report-type-icon">🏋️</div>
+              <div class="report-type-label">حصص الجيم (الحجز والحضور وملء الحصص)</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="gym-dormant">
+              <div class="report-type-icon">😴</div>
+              <div class="report-type-label">مشتركو الجيم غير المنتظمين</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="academy-sessions-report">
+              <div class="report-type-icon">🎓</div>
+              <div class="report-type-label">جلسات الأكاديمية (الدورات والمدرسون)</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="laundry-detail">
+              <div class="report-type-icon">🧺</div>
+              <div class="report-type-label">المغسلة التفصيلي (الحالات والتأخير)</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="service-orders-report">
+              <div class="report-type-icon">🛠️</div>
+              <div class="report-type-label">أوامر الخدمة والصيانة (الفنيون والأصول)</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="warranty-expiry">
+              <div class="report-type-icon">🛡️</div>
+              <div class="report-type-label">ضمان الأصول (المنتهي والقريب)</div>
+            </button>
+            <button type="button" class="report-type-card" data-report="sales-by-channel">
+              <div class="report-type-icon">📡</div>
+              <div class="report-type-label">المبيعات حسب قناة البيع</div>
+            </button>
             <button type="button" class="report-type-card" data-report="peak-hours">
               <div class="report-type-icon">⏰</div>
               <div class="report-type-label">أوقات الذروة (المبيعات بالساعة واليوم)</div>
@@ -7180,6 +7241,314 @@ a { color: inherit; }
               </div>
               <div class="report-cards" id="act-import-suppliers-report-cards"></div>
               <div id="act-import-suppliers-report-tables"></div>
+            </div>
+
+            <div id="otherReportDetail-purchases-by-product" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">المشتريات حسب الصنف (الكمية والتكلفة)</div>
+                <div class="report-subtitle-actions"><button class="bo-icon-btn" id="act-purchases-by-product-export">تصدير إكسل</button></div>
+              </div>
+              <div class="quick-range-row" id="act-purchases-by-product-qr" style="margin-bottom:12px;">
+                <button class="quick-range-btn" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn active" data-invqr="30days">آخر 30 يوم</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+              </div>
+              <div class="report-filters">
+                <div class="field"><label>من تاريخ</label><input type="date" id="act-purchases-by-product-from"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="act-purchases-by-product-to"></div>
+                <div class="field"><label>الفرع</label><select id="act-purchases-by-product-branch"><option value="">كل الفروع</option></select></div>
+                <select id="act-purchases-by-product-status" style="display:none;"><option value="">الكل</option></select>
+                <button class="bo-add-btn" id="act-purchases-by-product-run">تحديث</button>
+              </div>
+              <div class="report-cards" id="act-purchases-by-product-cards"></div>
+              <div id="act-purchases-by-product-tables"></div>
+            </div>
+
+            <div id="otherReportDetail-product-data-quality" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">جودة بيانات الأصناف (تسعير ناقص)</div>
+                <div class="report-subtitle-actions"><button class="bo-icon-btn" id="act-product-data-quality-export">تصدير إكسل</button></div>
+              </div>
+              <div class="quick-range-row" id="act-product-data-quality-qr" style="margin-bottom:12px;">
+                <button class="quick-range-btn" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn active" data-invqr="30days">آخر 30 يوم</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+              </div>
+              <div class="report-filters">
+                <div class="field"><label>من تاريخ</label><input type="date" id="act-product-data-quality-from"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="act-product-data-quality-to"></div>
+                <div class="field"><label>الفرع</label><select id="act-product-data-quality-branch"><option value="">كل الفروع</option></select></div>
+                <select id="act-product-data-quality-status" style="display:none;"><option value="">الكل</option></select>
+                <button class="bo-add-btn" id="act-product-data-quality-run">تحديث</button>
+              </div>
+              <div class="report-cards" id="act-product-data-quality-cards"></div>
+              <div id="act-product-data-quality-tables"></div>
+            </div>
+
+            <div id="otherReportDetail-new-vs-returning" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">العملاء الجدد مقابل المتكررين</div>
+                <div class="report-subtitle-actions"><button class="bo-icon-btn" id="act-new-vs-returning-export">تصدير إكسل</button></div>
+              </div>
+              <div class="quick-range-row" id="act-new-vs-returning-qr" style="margin-bottom:12px;">
+                <button class="quick-range-btn" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn active" data-invqr="30days">آخر 30 يوم</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+              </div>
+              <div class="report-filters">
+                <div class="field"><label>من تاريخ</label><input type="date" id="act-new-vs-returning-from"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="act-new-vs-returning-to"></div>
+                <div class="field"><label>الفرع</label><select id="act-new-vs-returning-branch"><option value="">كل الفروع</option></select></div>
+                <select id="act-new-vs-returning-status" style="display:none;"><option value="">الكل</option></select>
+                <button class="bo-add-btn" id="act-new-vs-returning-run">تحديث</button>
+              </div>
+              <div class="report-cards" id="act-new-vs-returning-cards"></div>
+              <div id="act-new-vs-returning-tables"></div>
+            </div>
+
+            <div id="otherReportDetail-collections-report" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">تحصيلات العملاء (الخزائن)</div>
+                <div class="report-subtitle-actions"><button class="bo-icon-btn" id="act-collections-report-export">تصدير إكسل</button></div>
+              </div>
+              <div class="quick-range-row" id="act-collections-report-qr" style="margin-bottom:12px;">
+                <button class="quick-range-btn" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn active" data-invqr="30days">آخر 30 يوم</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+              </div>
+              <div class="report-filters">
+                <div class="field"><label>من تاريخ</label><input type="date" id="act-collections-report-from"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="act-collections-report-to"></div>
+                <div class="field"><label>الفرع</label><select id="act-collections-report-branch"><option value="">كل الفروع</option></select></div>
+                <select id="act-collections-report-status" style="display:none;"><option value="">الكل</option></select>
+                <button class="bo-add-btn" id="act-collections-report-run">تحديث</button>
+              </div>
+              <div class="report-cards" id="act-collections-report-cards"></div>
+              <div id="act-collections-report-tables"></div>
+            </div>
+
+            <div id="otherReportDetail-supplier-payments-report" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">مدفوعات الموردين (الخزائن)</div>
+                <div class="report-subtitle-actions"><button class="bo-icon-btn" id="act-supplier-payments-report-export">تصدير إكسل</button></div>
+              </div>
+              <div class="quick-range-row" id="act-supplier-payments-report-qr" style="margin-bottom:12px;">
+                <button class="quick-range-btn" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn active" data-invqr="30days">آخر 30 يوم</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+              </div>
+              <div class="report-filters">
+                <div class="field"><label>من تاريخ</label><input type="date" id="act-supplier-payments-report-from"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="act-supplier-payments-report-to"></div>
+                <div class="field"><label>الفرع</label><select id="act-supplier-payments-report-branch"><option value="">كل الفروع</option></select></div>
+                <select id="act-supplier-payments-report-status" style="display:none;"><option value="">الكل</option></select>
+                <button class="bo-add-btn" id="act-supplier-payments-report-run">تحديث</button>
+              </div>
+              <div class="report-cards" id="act-supplier-payments-report-cards"></div>
+              <div id="act-supplier-payments-report-tables"></div>
+            </div>
+
+            <div id="otherReportDetail-leave-report" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">تقرير الإجازات</div>
+                <div class="report-subtitle-actions"><button class="bo-icon-btn" id="act-leave-report-export">تصدير إكسل</button></div>
+              </div>
+              <div class="quick-range-row" id="act-leave-report-qr" style="margin-bottom:12px;">
+                <button class="quick-range-btn" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn active" data-invqr="30days">آخر 30 يوم</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+              </div>
+              <div class="report-filters">
+                <div class="field"><label>من تاريخ</label><input type="date" id="act-leave-report-from"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="act-leave-report-to"></div>
+                <div class="field"><label>الفرع</label><select id="act-leave-report-branch"><option value="">كل الفروع</option></select></div>
+                <div class="field"><label>الحالة</label><select id="act-leave-report-status"><option value="">الكل</option><option value="pending">قيد المراجعة</option><option value="approved">موافَق عليها</option><option value="rejected">مرفوضة</option><option value="cancelled">ملغاة</option></select></div>
+                <button class="bo-add-btn" id="act-leave-report-run">تحديث</button>
+              </div>
+              <div class="report-cards" id="act-leave-report-cards"></div>
+              <div id="act-leave-report-tables"></div>
+            </div>
+
+            <div id="otherReportDetail-branch-stock-matrix" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">المخزون بالفروع والمخازن</div>
+                <div class="report-subtitle-actions"><button class="bo-icon-btn" id="act-branch-stock-matrix-export">تصدير إكسل</button></div>
+              </div>
+              <div class="quick-range-row" id="act-branch-stock-matrix-qr" style="margin-bottom:12px;">
+                <button class="quick-range-btn" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn active" data-invqr="30days">آخر 30 يوم</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+              </div>
+              <div class="report-filters">
+                <div class="field"><label>من تاريخ</label><input type="date" id="act-branch-stock-matrix-from"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="act-branch-stock-matrix-to"></div>
+                <div class="field"><label>الفرع</label><select id="act-branch-stock-matrix-branch"><option value="">كل الفروع</option></select></div>
+                <select id="act-branch-stock-matrix-status" style="display:none;"><option value="">الكل</option></select>
+                <button class="bo-add-btn" id="act-branch-stock-matrix-run">تحديث</button>
+              </div>
+              <div class="report-cards" id="act-branch-stock-matrix-cards"></div>
+              <div id="act-branch-stock-matrix-tables"></div>
+            </div>
+
+            <div id="otherReportDetail-gym-classes-report" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">حصص الجيم (الحجز والحضور وملء الحصص)</div>
+                <div class="report-subtitle-actions"><button class="bo-icon-btn" id="act-gym-classes-report-export">تصدير إكسل</button></div>
+              </div>
+              <div class="quick-range-row" id="act-gym-classes-report-qr" style="margin-bottom:12px;">
+                <button class="quick-range-btn" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn active" data-invqr="30days">آخر 30 يوم</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+              </div>
+              <div class="report-filters">
+                <div class="field"><label>من تاريخ</label><input type="date" id="act-gym-classes-report-from"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="act-gym-classes-report-to"></div>
+                <div class="field"><label>الفرع</label><select id="act-gym-classes-report-branch"><option value="">كل الفروع</option></select></div>
+                <select id="act-gym-classes-report-status" style="display:none;"><option value="">الكل</option></select>
+                <button class="bo-add-btn" id="act-gym-classes-report-run">تحديث</button>
+              </div>
+              <div class="report-cards" id="act-gym-classes-report-cards"></div>
+              <div id="act-gym-classes-report-tables"></div>
+            </div>
+
+            <div id="otherReportDetail-gym-dormant" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">مشتركو الجيم غير المنتظمين</div>
+                <div class="report-subtitle-actions"><button class="bo-icon-btn" id="act-gym-dormant-export">تصدير إكسل</button></div>
+              </div>
+              <div class="quick-range-row" id="act-gym-dormant-qr" style="margin-bottom:12px;">
+                <button class="quick-range-btn" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn active" data-invqr="30days">آخر 30 يوم</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+              </div>
+              <div class="report-filters">
+                <div class="field"><label>من تاريخ</label><input type="date" id="act-gym-dormant-from"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="act-gym-dormant-to"></div>
+                <div class="field"><label>الفرع</label><select id="act-gym-dormant-branch"><option value="">كل الفروع</option></select></div>
+                <select id="act-gym-dormant-status" style="display:none;"><option value="">الكل</option></select>
+                <button class="bo-add-btn" id="act-gym-dormant-run">تحديث</button>
+              </div>
+              <div class="report-cards" id="act-gym-dormant-cards"></div>
+              <div id="act-gym-dormant-tables"></div>
+            </div>
+
+            <div id="otherReportDetail-academy-sessions-report" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">جلسات الأكاديمية (الدورات والمدرسون)</div>
+                <div class="report-subtitle-actions"><button class="bo-icon-btn" id="act-academy-sessions-report-export">تصدير إكسل</button></div>
+              </div>
+              <div class="quick-range-row" id="act-academy-sessions-report-qr" style="margin-bottom:12px;">
+                <button class="quick-range-btn" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn active" data-invqr="30days">آخر 30 يوم</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+              </div>
+              <div class="report-filters">
+                <div class="field"><label>من تاريخ</label><input type="date" id="act-academy-sessions-report-from"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="act-academy-sessions-report-to"></div>
+                <div class="field"><label>الفرع</label><select id="act-academy-sessions-report-branch"><option value="">كل الفروع</option></select></div>
+                <select id="act-academy-sessions-report-status" style="display:none;"><option value="">الكل</option></select>
+                <button class="bo-add-btn" id="act-academy-sessions-report-run">تحديث</button>
+              </div>
+              <div class="report-cards" id="act-academy-sessions-report-cards"></div>
+              <div id="act-academy-sessions-report-tables"></div>
+            </div>
+
+            <div id="otherReportDetail-laundry-detail" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">المغسلة التفصيلي (الحالات والتأخير)</div>
+                <div class="report-subtitle-actions"><button class="bo-icon-btn" id="act-laundry-detail-export">تصدير إكسل</button></div>
+              </div>
+              <div class="quick-range-row" id="act-laundry-detail-qr" style="margin-bottom:12px;">
+                <button class="quick-range-btn" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn active" data-invqr="30days">آخر 30 يوم</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+              </div>
+              <div class="report-filters">
+                <div class="field"><label>من تاريخ</label><input type="date" id="act-laundry-detail-from"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="act-laundry-detail-to"></div>
+                <div class="field"><label>الفرع</label><select id="act-laundry-detail-branch"><option value="">كل الفروع</option></select></div>
+                <div class="field"><label>الحالة</label><select id="act-laundry-detail-status"><option value="">الكل</option><option value="received">تم الاستلام</option><option value="in_progress">قيد الغسيل</option><option value="ready">جاهز للاستلام</option><option value="delivered">تم التسليم</option><option value="cancelled">ملغي</option></select></div>
+                <button class="bo-add-btn" id="act-laundry-detail-run">تحديث</button>
+              </div>
+              <div class="report-cards" id="act-laundry-detail-cards"></div>
+              <div id="act-laundry-detail-tables"></div>
+            </div>
+
+            <div id="otherReportDetail-service-orders-report" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">أوامر الخدمة والصيانة (الفنيون والأصول)</div>
+                <div class="report-subtitle-actions"><button class="bo-icon-btn" id="act-service-orders-report-export">تصدير إكسل</button></div>
+              </div>
+              <div class="quick-range-row" id="act-service-orders-report-qr" style="margin-bottom:12px;">
+                <button class="quick-range-btn" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn active" data-invqr="30days">آخر 30 يوم</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+              </div>
+              <div class="report-filters">
+                <div class="field"><label>من تاريخ</label><input type="date" id="act-service-orders-report-from"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="act-service-orders-report-to"></div>
+                <div class="field"><label>الفرع</label><select id="act-service-orders-report-branch"><option value="">كل الفروع</option></select></div>
+                <div class="field"><label>الحالة</label><select id="act-service-orders-report-status"><option value="">الكل</option><option value="draft">مسودة</option><option value="confirmed">مؤكد</option><option value="in_progress">قيد التنفيذ</option><option value="completed">منتهي</option><option value="cancelled">ملغي</option></select></div>
+                <button class="bo-add-btn" id="act-service-orders-report-run">تحديث</button>
+              </div>
+              <div class="report-cards" id="act-service-orders-report-cards"></div>
+              <div id="act-service-orders-report-tables"></div>
+            </div>
+
+            <div id="otherReportDetail-warranty-expiry" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">ضمان الأصول (المنتهي والقريب)</div>
+                <div class="report-subtitle-actions"><button class="bo-icon-btn" id="act-warranty-expiry-export">تصدير إكسل</button></div>
+              </div>
+              <div class="quick-range-row" id="act-warranty-expiry-qr" style="margin-bottom:12px;">
+                <button class="quick-range-btn" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn active" data-invqr="30days">آخر 30 يوم</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+              </div>
+              <div class="report-filters">
+                <div class="field"><label>من تاريخ</label><input type="date" id="act-warranty-expiry-from"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="act-warranty-expiry-to"></div>
+                <div class="field"><label>الفرع</label><select id="act-warranty-expiry-branch"><option value="">كل الفروع</option></select></div>
+                <select id="act-warranty-expiry-status" style="display:none;"><option value="">الكل</option></select>
+                <button class="bo-add-btn" id="act-warranty-expiry-run">تحديث</button>
+              </div>
+              <div class="report-cards" id="act-warranty-expiry-cards"></div>
+              <div id="act-warranty-expiry-tables"></div>
+            </div>
+
+            <div id="otherReportDetail-sales-by-channel" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">المبيعات حسب قناة البيع</div>
+                <div class="report-subtitle-actions"><button class="bo-icon-btn" id="act-sales-by-channel-export">تصدير إكسل</button></div>
+              </div>
+              <div class="quick-range-row" id="act-sales-by-channel-qr" style="margin-bottom:12px;">
+                <button class="quick-range-btn" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn active" data-invqr="30days">آخر 30 يوم</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+              </div>
+              <div class="report-filters">
+                <div class="field"><label>من تاريخ</label><input type="date" id="act-sales-by-channel-from"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="act-sales-by-channel-to"></div>
+                <div class="field"><label>الفرع</label><select id="act-sales-by-channel-branch"><option value="">كل الفروع</option></select></div>
+                <select id="act-sales-by-channel-status" style="display:none;"><option value="">الكل</option></select>
+                <button class="bo-add-btn" id="act-sales-by-channel-run">تحديث</button>
+              </div>
+              <div class="report-cards" id="act-sales-by-channel-cards"></div>
+              <div id="act-sales-by-channel-tables"></div>
             </div>
 
             <div id="otherReportDetail-peak-hours" class="report-detail" style="display:none;">
@@ -21366,6 +21735,20 @@ const REPORT_TABS = {
     { key: 'lc-report', title: 'الاعتمادات المستندية (استيراد وتصدير)' },
     { key: 'containers-report', title: 'الحاويات والغرامات' },
     { key: 'import-suppliers-report', title: 'مستحقات موردي الاستيراد' },
+    { key: 'purchases-by-product', title: 'المشتريات حسب الصنف (الكمية والتكلفة)' },
+    { key: 'product-data-quality', title: 'جودة بيانات الأصناف (تسعير ناقص)' },
+    { key: 'new-vs-returning', title: 'العملاء الجدد مقابل المتكررين' },
+    { key: 'collections-report', title: 'تحصيلات العملاء (الخزائن)' },
+    { key: 'supplier-payments-report', title: 'مدفوعات الموردين (الخزائن)' },
+    { key: 'leave-report', title: 'تقرير الإجازات' },
+    { key: 'branch-stock-matrix', title: 'المخزون بالفروع والمخازن' },
+    { key: 'gym-classes-report', title: 'حصص الجيم (الحجز والحضور وملء الحصص)' },
+    { key: 'gym-dormant', title: 'مشتركو الجيم غير المنتظمين' },
+    { key: 'academy-sessions-report', title: 'جلسات الأكاديمية (الدورات والمدرسون)' },
+    { key: 'laundry-detail', title: 'المغسلة التفصيلي (الحالات والتأخير)' },
+    { key: 'service-orders-report', title: 'أوامر الخدمة والصيانة (الفنيون والأصول)' },
+    { key: 'warranty-expiry', title: 'ضمان الأصول (المنتهي والقريب)' },
+    { key: 'sales-by-channel', title: 'المبيعات حسب قناة البيع' },
     { key: 'peak-hours', title: 'أوقات الذروة (المبيعات بالساعة واليوم)' },
     { key: 'abc-analysis', title: 'تحليل ABC للأصناف (حسب الإيراد)' },
     { key: 'ar-aging', title: 'أعمار ديون العملاء (حتى اليوم)' },
@@ -23249,7 +23632,13 @@ function bindBackofficeEvents() {
   document.getElementById('exportCouponsReportBtn').addEventListener('click', exportCouponsReportToExcel);
   document.getElementById('runEtaLogBtn').addEventListener('click', runEtaLogReport);
   document.getElementById('runEinvSummaryBtn').addEventListener('click', runEinvSummaryReport);
-  Object.keys(ACT_REPORTS).forEach(k => { document.getElementById(`act-${k}-run`).addEventListener('click', () => runActReport(k)); document.getElementById(`act-${k}-export`).addEventListener('click', () => exportActReport(k)); });
+  Object.keys(ACT_REPORTS).forEach(k => {
+    document.getElementById(`act-${k}-run`).addEventListener('click', () => runActReport(k)); document.getElementById(`act-${k}-export`).addEventListener('click', () => exportActReport(k));
+    const ex = document.getElementById(`act-${k}-export`);
+    if (ex && !document.getElementById(`act-${k}-print`)) { const pb = document.createElement('button'); pb.className = 'bo-icon-btn'; pb.id = `act-${k}-print`; pb.textContent = 'طباعة / PDF'; pb.style.marginInlineStart = '6px'; ex.insertAdjacentElement('beforebegin', pb); pb.addEventListener('click', () => printActReport(k)); }
+  });
+  injectGenericPrintButtons();
+  initReportGridTools();
   document.getElementById('exportEinvSummaryBtn').addEventListener('click', exportEinvSummaryToExcel);
   document.getElementById('exportEtaLogBtn').addEventListener('click', exportEtaLogToExcel);
   document.getElementById('etaLogStatusFilter').addEventListener('change', runEtaLogReport);
@@ -49895,7 +50284,286 @@ Object.assign(GEN_REPORTS, {
     }
   }
 });
+// ---- دفعة تقارير ثالثة (مشتريات بالصنف / جودة بيانات الأصناف / عملاء جدد / تحصيلات / إجازات / مخزون بالفروع / مدفوعات الموردين) ----
+const GEN3_LEAVE_T = { annual: 'سنوية', sick: 'مرضية', unpaid: 'بدون أجر', other: 'أخرى' };
+const GEN3_LEAVE_S = { pending: 'قيد المراجعة', approved: 'موافَق عليها', rejected: 'مرفوضة', cancelled: 'ملغاة' };
+const gen3Cash = (f, t, b, types) => einvFetchAll(() => applyBranchScope(supabaseClient.from('cash_account_transactions').select('type, amount, created_at, note, user_id, cash_accounts!inner(name, branch_id)').in('type', types).gte('created_at', f + 'T00:00:00').lte('created_at', t + 'T23:59:59').order('created_at'), b, 'cash_accounts.branch_id'));
+const gen3CashCompute = (rows, label) => {
+  const v = r => Math.abs(actNum(r.amount)); const tot = rows.reduce((x, r) => x + v(r), 0);
+  const byA = actGroupBy(rows, r => r.cash_accounts?.name || '—', k => ({ k, c: 0, v: 0 }), (g, r) => { g.c++; g.v += v(r); }).sort((a, b) => b.v - a.v);
+  const byD = actGroupBy(rows, r => genD(r.created_at), k => ({ k, c: 0, v: 0 }), (g, r) => { g.c++; g.v += v(r); }).sort((a, b) => a.k < b.k ? -1 : 1);
+  return {
+    cards: [['إجمالي ' + label, einvMoney(tot)], ['عدد الحركات', rows.length], ['متوسط الحركة', einvMoney(rows.length ? tot / rows.length : 0)], ['أيام فيها حركة', byD.length]],
+    tables: [
+      { title: 'حسب الحساب / الخزينة', heads: ['الحساب', 'الحركات', 'القيمة'], rows: byA.map(g => [g.k, g.c, einvMoney(g.v)]) },
+      { title: 'حسب اليوم', heads: ['اليوم', 'الحركات', 'القيمة'], rows: byD.map(g => [g.k, g.c, einvMoney(g.v)]) },
+      { title: 'التفاصيل', heads: ['التاريخ', 'الحساب', 'البيان', 'القيمة'], rows: [...rows].reverse().map(r => [genD(r.created_at), r.cash_accounts?.name || '—', r.note || '—', einvMoney(v(r))]) }
+    ]
+  };
+};
+Object.assign(GEN_REPORTS, {
+  'purchases-by-product': {
+    title: 'المشتريات حسب الصنف (الكمية والتكلفة)', gate: () => true,
+    load: (f, t, b) => einvFetchAll(() => applyBranchScope(supabaseClient.from('purchase_items').select('quantity, unit_cost, total, product_id, products(name), purchases!inner(created_at, branch_id, suppliers(name))').gte('purchases.created_at', f + 'T00:00:00').lte('purchases.created_at', t + 'T23:59:59').order('id'), b, 'purchases.branch_id')),
+    compute(rows) {
+      const tot = rows.reduce((x, r) => x + actNum(r.total), 0);
+      const g = actGroupBy(rows, r => r.product_id || '-', (k, r) => ({ n: r.products?.name || '—', q: 0, v: 0, mn: Infinity, mx: 0, last: '', lc: 0, sup: {} }), (x, r) => { x.q += actNum(r.quantity); x.v += actNum(r.total); const u = actNum(r.unit_cost); if (u) { x.mn = Math.min(x.mn, u); x.mx = Math.max(x.mx, u); } const d = r.purchases?.created_at || ''; if (d >= x.last) { x.last = d; x.lc = u; } x.sup[r.purchases?.suppliers?.name || '—'] = 1; }).sort((a, b) => b.v - a.v);
+      const bySup = actGroupBy(rows, r => r.purchases?.suppliers?.name || '—', k => ({ k, n: 0, v: 0 }), (x, r) => { x.n++; x.v += actNum(r.total); }).sort((a, b) => b.v - a.v);
+      return {
+        cards: [['إجمالي المشتريات', einvMoney(tot)], ['أصناف تم شراؤها', g.length], ['بنود الشراء', rows.length], ['موردون', bySup.length]],
+        tables: [
+          { title: 'حسب الصنف', heads: ['الصنف', 'الكمية', 'القيمة', 'متوسط التكلفة', 'أقل تكلفة', 'أعلى تكلفة', 'آخر تكلفة', 'التغير عن المتوسط'], rows: g.map(x => { const avg = x.q ? x.v / x.q : 0; return [x.n, x.q, einvMoney(x.v), einvMoney(avg), einvMoney(isFinite(x.mn) ? x.mn : 0), einvMoney(x.mx), einvMoney(x.lc), (avg ? (x.lc - avg) / avg * 100 : 0).toFixed(1) + '%']; }) },
+          { title: 'حسب المورد', heads: ['المورد', 'البنود', 'القيمة'], rows: bySup.map(x => [x.k, x.n, einvMoney(x.v)]) }
+        ]
+      };
+    }
+  },
+  'product-data-quality': {
+    title: 'جودة بيانات الأصناف (تسعير ناقص / سعر أقل من التكلفة)', gate: () => true,
+    load: (f, t, b) => einvFetchAll(() => supabaseClient.from('products').select('name, cost_price, sale_price, min_price, category_id, is_active, item_kind, is_bundle, categories(name)').eq('is_active', true).order('name')),
+    compute(rows) {
+      const real = rows.filter(r => !r.is_bundle);
+      const noCost = real.filter(r => !actNum(r.cost_price)), noPrice = rows.filter(r => !actNum(r.sale_price)), loss = real.filter(r => actNum(r.cost_price) && actNum(r.sale_price) && actNum(r.sale_price) < actNum(r.cost_price)), noCat = rows.filter(r => !r.category_id), lowMargin = real.filter(r => actNum(r.cost_price) && actNum(r.sale_price) >= actNum(r.cost_price) && (actNum(r.sale_price) - actNum(r.cost_price)) / actNum(r.sale_price) < 0.05), minBelow = real.filter(r => actNum(r.min_price) && actNum(r.cost_price) && actNum(r.min_price) < actNum(r.cost_price));
+      const T = (title, a) => ({ title: title + ' (' + a.length + ')', heads: ['الصنف', 'القسم', 'التكلفة', 'سعر البيع', 'الحد الأدنى', 'الهامش %'], rows: a.map(r => [r.name, r.categories?.name || '—', einvMoney(r.cost_price), einvMoney(r.sale_price), einvMoney(r.min_price), actNum(r.sale_price) ? ((actNum(r.sale_price) - actNum(r.cost_price)) / actNum(r.sale_price) * 100).toFixed(1) : '—']) });
+      return {
+        cards: [['أصناف نشطة', rows.length], ['بدون سعر بيع', noPrice.length, noPrice.length > 0], ['بدون تكلفة', noCost.length, noCost.length > 0], ['سعر البيع أقل من التكلفة', loss.length, loss.length > 0], ['هامش أقل من 5%', lowMargin.length], ['بدون قسم', noCat.length], ['حد أدنى أقل من التكلفة', minBelow.length]],
+        tables: [T('سعر البيع أقل من التكلفة', loss), T('بدون سعر بيع', noPrice), T('بدون تكلفة', noCost), T('هامش أقل من 5%', lowMargin), T('الحد الأدنى للبيع أقل من التكلفة', minBelow), T('بدون قسم', noCat)]
+      };
+    }
+  },
+  'new-vs-returning': {
+    title: 'العملاء الجدد مقابل المتكررين', gate: () => true,
+    async load(f, t, b) {
+      const all = await einvFetchAll(() => applyBranchScope(supabaseClient.from('sales').select('customer_id, created_at, total').eq('status', 'completed').not('customer_id', 'is', null).order('created_at'), b));
+      return { all, f, t };
+    },
+    compute({ all, f, t }) {
+      const first = {}; all.forEach(s => { const d = genD(s.created_at); if (!first[s.customer_id] || d < first[s.customer_id]) first[s.customer_id] = d; });
+      const inR = all.filter(s => { const d = genD(s.created_at); return d >= f && d <= t; });
+      const act = {}; inR.forEach(s => { const a = act[s.customer_id] = act[s.customer_id] || { n: 0, v: 0 }; a.n++; a.v += actNum(s.total); });
+      const ids = Object.keys(act); const isNew = id => first[id] >= f;
+      const nw = ids.filter(isNew), rt = ids.filter(id => !isNew(id)); const sv = a => a.reduce((x, id) => x + act[id].v, 0);
+      const mon = actGroupBy(inR, s => genD(s.created_at).slice(0, 7), k => ({ k, ids: new Set(), nw: new Set() }), (g, s) => { g.ids.add(s.customer_id); if (first[s.customer_id].slice(0, 7) === g.k) g.nw.add(s.customer_id); }).sort((a, b) => a.k < b.k ? -1 : 1);
+      return {
+        cards: [['عملاء نشطون في الفترة', ids.length], ['عملاء جدد', nw.length], ['عملاء متكررون', rt.length], ['مبيعات الجدد', einvMoney(sv(nw))], ['مبيعات المتكررين', einvMoney(sv(rt))], ['نسبة التكرار', (ids.length ? rt.length / ids.length * 100 : 0).toFixed(1) + '%']],
+        tables: [
+          { title: 'حسب الشهر', heads: ['الشهر', 'عملاء نشطون', 'جدد', 'متكررون'], rows: mon.map(g => [g.k, g.ids.size, g.nw.size, g.ids.size - g.nw.size]) },
+          { title: 'الجدد مقابل المتكررين', heads: ['النوع', 'العملاء', 'الفواتير', 'المبيعات', 'متوسط العميل'], rows: [['جدد', nw, ], ['متكررون', rt]].map(([k, a]) => [k, a.length, a.reduce((x, id) => x + act[id].n, 0), einvMoney(sv(a)), einvMoney(a.length ? sv(a) / a.length : 0)]) }
+        ]
+      };
+    }
+  },
+  'collections-report': { title: 'تقرير التحصيلات من العملاء (الخزائن)', gate: () => true, load: (f, t, b) => gen3Cash(f, t, b, ['customer_receipt']), compute: rows => gen3CashCompute(rows, 'التحصيلات') },
+  'supplier-payments-report': { title: 'تقرير مدفوعات الموردين (الخزائن)', gate: () => true, load: (f, t, b) => gen3Cash(f, t, b, ['supplier_payment']), compute: rows => gen3CashCompute(rows, 'المدفوعات') },
+  'leave-report': {
+    title: 'تقرير الإجازات (حسب الموظف والنوع)', gate: () => true,
+    statuses: Object.entries(GEN3_LEAVE_S),
+    load: (f, t, b) => einvFetchAll(() => supabaseClient.from('leave_requests').select('leave_type, start_date, end_date, days_count, status, employee_id, employees(full_name, job_title)').lte('start_date', t).gte('end_date', f).order('start_date')),
+    filter: (d, st) => d.filter(r => r.status === st),
+    compute(rows) {
+      const byE = actGroupBy(rows, r => r.employee_id || '-', (k, r) => ({ n: r.employees?.full_name || '—', c: 0, d: 0, an: 0, si: 0, un: 0, ot: 0 }), (g, r) => { const d = actNum(r.days_count); g.c++; g.d += d; if (r.leave_type === 'annual') g.an += d; else if (r.leave_type === 'sick') g.si += d; else if (r.leave_type === 'unpaid') g.un += d; else g.ot += d; }).sort((a, b) => b.d - a.d);
+      const byT = actGroupBy(rows, r => r.leave_type, k => ({ k, c: 0, d: 0 }), (g, r) => { g.c++; g.d += actNum(r.days_count); });
+      const byS = actGroupBy(rows, r => r.status, k => ({ k, c: 0, d: 0 }), (g, r) => { g.c++; g.d += actNum(r.days_count); });
+      return {
+        cards: [['الطلبات', rows.length], ['قيد المراجعة', rows.filter(r => r.status === 'pending').length], ['موافَق عليها', rows.filter(r => r.status === 'approved').length], ['مرفوضة', rows.filter(r => r.status === 'rejected').length, true], ['إجمالي الأيام', rows.reduce((x, r) => x + actNum(r.days_count), 0)]],
+        tables: [
+          { title: 'حسب الموظف', heads: ['الموظف', 'الطلبات', 'إجمالي الأيام', 'سنوية', 'مرضية', 'بدون أجر', 'أخرى'], rows: byE.map(g => [g.n, g.c, g.d, g.an, g.si, g.un, g.ot]) },
+          { title: 'حسب النوع', heads: ['النوع', 'الطلبات', 'الأيام'], rows: byT.map(g => [GEN3_LEAVE_T[g.k] || g.k, g.c, g.d]) },
+          { title: 'حسب الحالة', heads: ['الحالة', 'الطلبات', 'الأيام'], rows: byS.map(g => [GEN3_LEAVE_S[g.k] || g.k, g.c, g.d]) },
+          { title: 'التفاصيل', heads: ['الموظف', 'النوع', 'من', 'إلى', 'الأيام', 'الحالة'], rows: rows.map(r => [r.employees?.full_name || '—', GEN3_LEAVE_T[r.leave_type] || r.leave_type, r.start_date, r.end_date, actNum(r.days_count), GEN3_LEAVE_S[r.status] || r.status]) }
+        ]
+      };
+    }
+  },
+  'branch-stock-matrix': {
+    title: 'المخزون بالفروع والمخازن (الكمية والقيمة بالتكلفة)', gate: () => true,
+    load: (f, t, b) => einvFetchAll(() => applyBranchScope(supabaseClient.from('stock_balances').select('quantity, product_id, warehouses!inner(name, branch_id, branches(name)), products(name, cost_price)').order('product_id'), b, 'warehouses.branch_id')),
+    compute(rows) {
+      const val = r => actNum(r.quantity) * actNum(r.products?.cost_price);
+      const byB = actGroupBy(rows, r => r.warehouses?.name || '—', (k, r) => ({ n: r.warehouses?.name || '—', br: r.warehouses?.branches?.name || '—', items: 0, q: 0, v: 0, neg: 0 }), (g, r) => { if (actNum(r.quantity) > 0) g.items++; g.q += actNum(r.quantity); g.v += val(r); if (actNum(r.quantity) < 0) g.neg++; }).sort((a, b) => b.v - a.v);
+      const names = byB.map(g => g.n);
+      const byP = actGroupBy(rows, r => r.product_id, (k, r) => ({ n: r.products?.name || '—', w: {}, tot: 0, v: 0 }), (g, r) => { const w = r.warehouses?.name || '—'; g.w[w] = (g.w[w] || 0) + actNum(r.quantity); g.tot += actNum(r.quantity); g.v += val(r); }).sort((a, b) => b.v - a.v);
+      return {
+        cards: [['قيمة المخزون (بالتكلفة)', einvMoney(byB.reduce((x, g) => x + g.v, 0))], ['مخازن', byB.length], ['أصناف بأرصدة سالبة', byB.reduce((x, g) => x + g.neg, 0), true], ['أصناف لها رصيد', new Set(rows.filter(r => actNum(r.quantity) > 0).map(r => r.product_id)).size]],
+        tables: [
+          { title: 'حسب المخزن', heads: ['المخزن', 'الفرع', 'أصناف بها رصيد', 'إجمالي الكمية', 'القيمة', 'أرصدة سالبة'], rows: byB.map(g => [g.n, g.br, g.items, g.q, einvMoney(g.v), g.neg]) },
+          { title: 'مصفوفة الأصناف × المخازن (الأعلى قيمة أولًا)', heads: ['الصنف', ...names, 'الإجمالي', 'القيمة'], rows: byP.map(g => [g.n, ...names.map(n => g.w[n] || 0), g.tot, einvMoney(g.v)]), detail: true }
+        ]
+      };
+    }
+  }
+});
+// ---- دفعة تقارير تفصيلية للأنشطة (جيم / أكاديمية / مغسلة / خدمات / قنوات البيع) ----
+const GEN4_WD = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+const gen4Wd = d => GEN4_WD[new Date(d + 'T00:00:00').getDay()];
+const gen4Hrs = (a, b) => { if (!a || !b) return 0; const [h1, m1] = String(a).split(':').map(Number), [h2, m2] = String(b).split(':').map(Number); return Math.max(0, (h2 * 60 + m2 - h1 * 60 - m1) / 60); };
+const GEN4_LDRY = { received: 'تم الاستلام', in_progress: 'قيد الغسيل', ready: 'جاهز للاستلام', delivered: 'تم التسليم', cancelled: 'ملغي' };
+const GEN4_SO_T = { installation: 'تركيب', maintenance: 'صيانة دورية', breakdown: 'عطل', support_ticket: 'تذكرة دعم فني' };
+const GEN4_SO_S = { draft: 'مسودة', confirmed: 'مؤكد', in_progress: 'قيد التنفيذ', completed: 'منتهي', cancelled: 'ملغي' };
+Object.assign(GEN_REPORTS, {
+  'gym-classes-report': {
+    title: 'تقرير حصص الجيم (الحجز والحضور وملء الحصص)', gate: () => isGymBranch(),
+    load: (f, t, b) => einvFetchAll(() => applyBranchScope(supabaseClient.from('gym_classes').select('name, class_date, start_time, end_time, capacity, trainer_id, gym_trainers(name), gym_class_bookings(status)').gte('class_date', f).lte('class_date', t).order('class_date'), b)),
+    compute(rows) {
+      const bk = r => r.gym_class_bookings || []; const act = r => bk(r).filter(x => x.status !== 'cancelled').length;
+      const attd = r => bk(r).filter(x => x.status === 'attended').length;
+      const cap = rows.reduce((x, r) => x + actNum(r.capacity), 0), booked = rows.reduce((x, r) => x + act(r), 0), att = rows.reduce((x, r) => x + attd(r), 0);
+      const canc = rows.reduce((x, r) => x + bk(r).filter(y => y.status === 'cancelled').length, 0);
+      const pct = (a, b) => (b ? a / b * 100 : 0).toFixed(0) + '%';
+      const byT = actGroupBy(rows, r => r.gym_trainers?.name || 'بدون مدرب', k => ({ k, c: 0, cap: 0, b: 0, a: 0 }), (g, r) => { g.c++; g.cap += actNum(r.capacity); g.b += act(r); g.a += attd(r); }).sort((a, b) => b.b - a.b);
+      const byN = actGroupBy(rows, r => r.name || '—', k => ({ k, c: 0, cap: 0, b: 0, a: 0 }), (g, r) => { g.c++; g.cap += actNum(r.capacity); g.b += act(r); g.a += attd(r); }).sort((a, b) => b.b - a.b);
+      const byW = actGroupBy(rows, r => new Date(r.class_date + 'T00:00:00').getDay(), k => ({ k: +k, c: 0, cap: 0, b: 0 }), (g, r) => { g.c++; g.cap += actNum(r.capacity); g.b += act(r); }).sort((a, b) => a.k - b.k);
+      return {
+        cards: [['الحصص', rows.length], ['السعة الكلية', cap], ['الحجوزات الفعلية', booked], ['نسبة الإشغال', pct(booked, cap)], ['حضروا فعلًا', att], ['نسبة الحضور من الحجز', pct(att, booked)], ['حجوزات ملغاة', canc, true]],
+        tables: [
+          { title: 'حسب المدرب', heads: ['المدرب', 'الحصص', 'السعة', 'الحجوزات', 'الإشغال', 'الحضور', 'نسبة الحضور'], rows: byT.map(g => [g.k, g.c, g.cap, g.b, pct(g.b, g.cap), g.a, pct(g.a, g.b)]) },
+          { title: 'حسب نوع الحصة', heads: ['الحصة', 'المرات', 'السعة', 'الحجوزات', 'الإشغال', 'الحضور'], rows: byN.map(g => [g.k, g.c, g.cap, g.b, pct(g.b, g.cap), g.a]) },
+          { title: 'حسب يوم الأسبوع', heads: ['اليوم', 'الحصص', 'السعة', 'الحجوزات', 'الإشغال'], rows: byW.map(g => [GEN4_WD[g.k], g.c, g.cap, g.b, pct(g.b, g.cap)]) },
+          { title: 'تفاصيل الحصص', heads: ['التاريخ', 'الحصة', 'المدرب', 'من', 'إلى', 'السعة', 'الحجوزات', 'الحضور', 'الإشغال'], rows: rows.map(r => [r.class_date, r.name, r.gym_trainers?.name || '—', String(r.start_time || '').slice(0, 5), String(r.end_time || '').slice(0, 5), actNum(r.capacity), act(r), attd(r), pct(act(r), actNum(r.capacity))]), detail: true }
+        ]
+      };
+    }
+  },
+  'gym-dormant': {
+    title: 'مشتركو الجيم غير المنتظمين (اشتراك ساري بدون حضور)', gate: () => isGymBranch(),
+    async load(f, t, b) {
+      const today = genToday(); const since = genAddDays(today, -90);
+      const [subs, att] = await Promise.all([
+        einvFetchAll(() => applyBranchScope(supabaseClient.from('gym_subscriptions').select('member_id, end_date, status, total_price, paid_amount, gym_members(name, phone)').eq('status', 'active').gte('end_date', today).order('end_date'), b)),
+        einvFetchAll(() => applyBranchScope(supabaseClient.from('gym_attendance').select('member_id, checked_in_at').gte('checked_in_at', since + 'T00:00:00').order('checked_in_at'), b))
+      ]);
+      return { subs, att };
+    },
+    compute({ subs, att }) {
+      const today = genToday(); const last = {}, cnt = {};
+      att.forEach(a => { const d = genD(a.checked_in_at); if (!last[a.member_id] || d > last[a.member_id]) last[a.member_id] = d; if (genDaysBetween(d, today) <= 30) cnt[a.member_id] = (cnt[a.member_id] || 0) + 1; });
+      const seen = {}; const list = subs.filter(s => !seen[s.member_id] && (seen[s.member_id] = 1)).map(s => { const l = last[s.member_id]; return { s, last: l, days: l ? genDaysBetween(l, today) : null, c30: cnt[s.member_id] || 0, left: genDaysBetween(today, s.end_date) }; });
+      const never = list.filter(x => !x.last), d14 = list.filter(x => x.last && x.days > 14), d7 = list.filter(x => x.last && x.days > 7 && x.days <= 14);
+      const row = x => [x.s.gym_members?.name || '—', x.s.gym_members?.phone || '', x.last || 'لم يحضر (90 يوم)', x.days === null ? '—' : x.days, x.c30, x.left, einvMoney(actNum(x.s.total_price) - actNum(x.s.paid_amount))];
+      const heads = ['المشترك', 'الهاتف', 'آخر حضور', 'منذ (يوم)', 'حضور آخر 30 يوم', 'المتبقي من الاشتراك (يوم)', 'المتبقي سداده'];
+      return {
+        cards: [['مشتركون بسريان اشتراك', list.length], ['لم يحضروا خلال 90 يوم', never.length, true], ['غائبون أكثر من 14 يوم', d14.length, true], ['غائبون 8-14 يوم', d7.length], ['منتظمون (8+ حضور/30 يوم)', list.filter(x => x.c30 >= 8).length]],
+        tables: [
+          { title: 'لم يحضروا إطلاقًا خلال 90 يوم', heads, rows: never.map(row) },
+          { title: 'غائبون أكثر من 14 يوم', heads, rows: [...d14].sort((a, b) => b.days - a.days).map(row) },
+          { title: 'الأكثر انتظامًا (آخر 30 يوم)', heads, rows: [...list].filter(x => x.c30).sort((a, b) => b.c30 - a.c30).slice(0, 20).map(row), detail: true }
+        ]
+      };
+    }
+  },
+  'academy-sessions-report': {
+    title: 'تقرير جلسات الأكاديمية (الدورات والمدرسون والساعات)', gate: () => isAcademyBranch(),
+    load: (f, t, b) => einvFetchAll(() => applyBranchScope(supabaseClient.from('academy_sessions').select('session_date, start_time, end_time, is_active, course_id, instructor_id, academy_courses(name), academy_instructors(name)').gte('session_date', f).lte('session_date', t).order('session_date'), b)),
+    compute(rows) {
+      const live = rows.filter(r => r.is_active !== false); const hrs = r => gen4Hrs(r.start_time, r.end_time);
+      const byC = actGroupBy(live, r => r.course_id || '-', (k, r) => ({ n: r.academy_courses?.name || '—', c: 0, h: 0 }), (g, r) => { g.c++; g.h += hrs(r); }).sort((a, b) => b.h - a.h);
+      const byI = actGroupBy(live, r => r.instructor_id || '-', (k, r) => ({ n: r.academy_instructors?.name || 'بدون مدرس', c: 0, h: 0, days: new Set() }), (g, r) => { g.c++; g.h += hrs(r); g.days.add(r.session_date); }).sort((a, b) => b.h - a.h);
+      const byW = actGroupBy(live, r => new Date(r.session_date + 'T00:00:00').getDay(), k => ({ k: +k, c: 0, h: 0 }), (g, r) => { g.c++; g.h += hrs(r); }).sort((a, b) => a.k - b.k);
+      const byM = actGroupBy(live, r => r.session_date.slice(0, 7), k => ({ k, c: 0, h: 0 }), (g, r) => { g.c++; g.h += hrs(r); }).sort((a, b) => a.k < b.k ? -1 : 1);
+      const th = live.reduce((x, r) => x + hrs(r), 0);
+      return {
+        cards: [['الجلسات', live.length], ['إجمالي الساعات', th.toFixed(1)], ['دورات لها جلسات', byC.length], ['مدرسون', byI.length], ['جلسات ملغاة/متوقفة', rows.length - live.length, true]],
+        tables: [
+          { title: 'حسب الدورة', heads: ['الدورة', 'الجلسات', 'الساعات'], rows: byC.map(g => [g.n, g.c, g.h.toFixed(1)]) },
+          { title: 'حسب المدرس (عبء العمل)', heads: ['المدرس', 'الجلسات', 'الساعات', 'أيام العمل'], rows: byI.map(g => [g.n, g.c, g.h.toFixed(1), g.days.size]) },
+          { title: 'حسب يوم الأسبوع', heads: ['اليوم', 'الجلسات', 'الساعات'], rows: byW.map(g => [GEN4_WD[g.k], g.c, g.h.toFixed(1)]) },
+          { title: 'حسب الشهر', heads: ['الشهر', 'الجلسات', 'الساعات'], rows: byM.map(g => [g.k, g.c, g.h.toFixed(1)]) },
+          { title: 'تفاصيل الجلسات', heads: ['التاريخ', 'اليوم', 'الدورة', 'المدرس', 'من', 'إلى', 'الساعات'], rows: rows.map(r => [r.session_date, gen4Wd(r.session_date), r.academy_courses?.name || '—', r.academy_instructors?.name || '—', String(r.start_time || '').slice(0, 5), String(r.end_time || '').slice(0, 5), hrs(r).toFixed(1)]), detail: true }
+        ]
+      };
+    }
+  },
+  'laundry-detail': {
+    title: 'تقرير المغسلة التفصيلي (الحالات والتأخير والعملاء)', gate: () => isLaundryBranch(),
+    statuses: Object.entries(GEN4_LDRY),
+    load: (f, t, b) => einvFetchAll(() => applyBranchScope(supabaseClient.from('laundry_orders').select('customer_name, customer_phone, item_count, status, expected_ready_at, created_at, updated_at, customer_id, customers(name, phone)').gte('created_at', f + 'T00:00:00').lte('created_at', t + 'T23:59:59').order('created_at'), b)),
+    filter: (d, st) => d.filter(r => r.status === st),
+    compute(rows) {
+      const now = new Date(); const nm = r => r.customers?.name || r.customer_name || '—'; const ph = r => r.customers?.phone || r.customer_phone || '';
+      const open = r => ['received', 'in_progress'].includes(r.status); const late = rows.filter(r => open(r) && r.expected_ready_at && new Date(r.expected_ready_at) < now);
+      const waiting = rows.filter(r => r.status === 'ready');
+      const pieces = rows.reduce((x, r) => x + actNum(r.item_count), 0);
+      const byS = actGroupBy(rows, r => r.status, k => ({ k, c: 0, p: 0 }), (g, r) => { g.c++; g.p += actNum(r.item_count); });
+      const byC = actGroupBy(rows, r => ph(r) || nm(r), (k, r) => ({ n: nm(r), p: ph(r), c: 0, pcs: 0 }), (g, r) => { g.c++; g.pcs += actNum(r.item_count); }).sort((a, b) => b.c - a.c).slice(0, 20);
+      const byD = actGroupBy(rows, r => genD(r.created_at), k => ({ k, c: 0, p: 0 }), (g, r) => { g.c++; g.p += actNum(r.item_count); }).sort((a, b) => a.k < b.k ? -1 : 1);
+      const days = d => Math.floor((now - new Date(d)) / 86400000);
+      const done = rows.filter(r => r.status === 'delivered' && r.updated_at); const avgT = done.length ? done.reduce((x, r) => x + (new Date(r.updated_at) - new Date(r.created_at)) / 86400000, 0) / done.length : 0;
+      return {
+        cards: [['الطلبات', rows.length], ['إجمالي القطع', pieces], ['متأخرة عن موعد الجاهزية', late.length, true], ['جاهزة ولم تُستلم', waiting.length, waiting.length > 0], ['متوسط القطع/طلب', (rows.length ? pieces / rows.length : 0).toFixed(1)], ['متوسط مدة التسليم (يوم)', avgT.toFixed(1)]],
+        tables: [
+          { title: 'حسب الحالة', heads: ['الحالة', 'الطلبات', 'القطع'], rows: byS.map(g => [GEN4_LDRY[g.k] || g.k, g.c, g.p]) },
+          { title: 'طلبات متأخرة عن موعد الجاهزية', heads: ['العميل', 'الهاتف', 'القطع', 'الموعد', 'تأخير (يوم)', 'الحالة'], rows: late.sort((a, b) => new Date(a.expected_ready_at) - new Date(b.expected_ready_at)).map(r => [nm(r), ph(r), actNum(r.item_count), genD(r.expected_ready_at), Math.max(0, days(r.expected_ready_at)), GEN4_LDRY[r.status]]) },
+          { title: 'جاهزة ولم يستلمها العميل', heads: ['العميل', 'الهاتف', 'القطع', 'آخر تحديث', 'منذ (يوم)'], rows: waiting.sort((a, b) => new Date(a.updated_at) - new Date(b.updated_at)).map(r => [nm(r), ph(r), actNum(r.item_count), genD(r.updated_at), days(r.updated_at)]) },
+          { title: 'أكثر العملاء طلبًا', heads: ['العميل', 'الهاتف', 'الطلبات', 'القطع'], rows: byC.map(g => [g.n, g.p, g.c, g.pcs]) },
+          { title: 'حسب اليوم', heads: ['اليوم', 'الطلبات', 'القطع'], rows: byD.map(g => [g.k, g.c, g.p]), detail: true }
+        ]
+      };
+    }
+  },
+  'service-orders-report': {
+    title: 'تقرير أوامر الخدمة والصيانة (الفنيون والأصول والزيارات)', gate: () => true,
+    statuses: Object.entries(GEN4_SO_S),
+    async load(f, t, b) {
+      const [orders, visits] = await Promise.all([
+        einvFetchAll(() => applyBranchScope(supabaseClient.from('service_orders').select('order_number, order_type, status, created_at, contract_id, asset_id, technician_employee_id, employees(full_name), assets(name), customers(name)').gte('created_at', f + 'T00:00:00').lte('created_at', t + 'T23:59:59').order('created_at'), b)),
+        einvFetchAll(() => applyBranchScope(supabaseClient.from('service_visits').select('started_at, ended_at, technician_employee_id, employees(full_name)').gte('created_at', f + 'T00:00:00').lte('created_at', t + 'T23:59:59').order('created_at'), b))
+      ]);
+      return { orders, visits };
+    },
+    filter: (d, st) => ({ orders: d.orders.filter(r => r.status === st), visits: d.visits }),
+    compute({ orders, visits }) {
+      const vh = v => (v.started_at && v.ended_at) ? Math.max(0, (new Date(v.ended_at) - new Date(v.started_at)) / 3600000) : 0;
+      const byT = actGroupBy(orders, r => r.order_type, k => ({ k, c: 0, done: 0, canc: 0 }), (g, r) => { g.c++; if (r.status === 'completed') g.done++; if (r.status === 'cancelled') g.canc++; }).sort((a, b) => b.c - a.c);
+      const byS = actGroupBy(orders, r => r.status, k => ({ k, c: 0 }), g => { g.c++; });
+      const byTech = actGroupBy(orders, r => r.technician_employee_id || '-', (k, r) => ({ n: r.employees?.full_name || 'غير مسند', c: 0, done: 0 }), (g, r) => { g.c++; if (r.status === 'completed') g.done++; }).sort((a, b) => b.c - a.c);
+      const vis = actGroupBy(visits, v => v.technician_employee_id || '-', (k, v) => ({ n: v.employees?.full_name || '—', c: 0, h: 0, open: 0 }), (g, v) => { g.c++; g.h += vh(v); if (!v.ended_at) g.open++; }).sort((a, b) => b.h - a.h);
+      const byA = actGroupBy(orders.filter(r => r.asset_id), r => r.asset_id, (k, r) => ({ n: r.assets?.name || '—', c: 0, br: 0 }), (g, r) => { g.c++; if (r.order_type === 'breakdown') g.br++; }).sort((a, b) => b.c - a.c).slice(0, 15);
+      const open = orders.filter(r => !['completed', 'cancelled'].includes(r.status));
+      return {
+        cards: [['أوامر الخدمة', orders.length], ['مفتوحة', open.length, open.length > 0], ['منتهية', orders.filter(r => r.status === 'completed').length], ['أعطال', orders.filter(r => r.order_type === 'breakdown').length, true], ['ضمن عقود صيانة', orders.filter(r => r.contract_id).length], ['زيارات', visits.length], ['ساعات الزيارات', visits.reduce((x, v) => x + vh(v), 0).toFixed(1)]],
+        tables: [
+          { title: 'حسب النوع', heads: ['النوع', 'الأوامر', 'منتهية', 'ملغاة'], rows: byT.map(g => [GEN4_SO_T[g.k] || g.k, g.c, g.done, g.canc]) },
+          { title: 'حسب الحالة', heads: ['الحالة', 'الأوامر'], rows: byS.map(g => [GEN4_SO_S[g.k] || g.k, g.c]) },
+          { title: 'حسب الفني (الأوامر)', heads: ['الفني', 'الأوامر', 'منتهية', 'نسبة الإنجاز'], rows: byTech.map(g => [g.n, g.c, g.done, (g.c ? g.done / g.c * 100 : 0).toFixed(0) + '%']) },
+          { title: 'زيارات الفنيين', heads: ['الفني', 'الزيارات', 'الساعات', 'زيارات مفتوحة'], rows: vis.map(g => [g.n, g.c, g.h.toFixed(1), g.open]) },
+          { title: 'الأصول الأكثر طلبًا للخدمة', heads: ['الأصل', 'أوامر الخدمة', 'منها أعطال'], rows: byA.map(g => [g.n, g.c, g.br]) },
+          { title: 'الأوامر المفتوحة (الأقدم أولًا)', heads: ['رقم الأمر', 'العميل', 'النوع', 'الحالة', 'الفني', 'منذ (يوم)'], rows: open.map(r => [r.order_number, r.customers?.name || '—', GEN4_SO_T[r.order_type] || r.order_type, GEN4_SO_S[r.status] || r.status, r.employees?.full_name || '—', genDaysBetween(genD(r.created_at), genToday())]), detail: true }
+        ]
+      };
+    }
+  },
+  'warranty-expiry': {
+    title: 'ضمان الأصول (المنتهي والقريب الانتهاء)', gate: () => true,
+    load: (f, t, b) => einvFetchAll(() => applyBranchScope(supabaseClient.from('assets').select('name, asset_code, serial_number, model, manufacturer, warranty_end, is_active, customers(name, phone)').eq('is_active', true).not('warranty_end', 'is', null).order('warranty_end'), b)),
+    compute(rows) {
+      const today = genToday(); const left = r => genDaysBetween(today, r.warranty_end);
+      const exp = rows.filter(r => left(r) < 0), s30 = rows.filter(r => left(r) >= 0 && left(r) <= 30), s90 = rows.filter(r => left(r) > 30 && left(r) <= 90);
+      const row = r => [r.name, r.asset_code || '', r.serial_number || '', r.model || '', r.customers?.name || '—', r.customers?.phone || '', r.warranty_end, left(r)];
+      const heads = ['الأصل', 'الكود', 'السيريال', 'الموديل', 'العميل', 'الهاتف', 'انتهاء الضمان', 'المتبقي (يوم)'];
+      return {
+        cards: [['أصول لها تاريخ ضمان', rows.length], ['انتهى ضمانها', exp.length, true], ['تنتهي خلال 30 يوم', s30.length], ['خلال 31-90 يوم', s90.length]],
+        tables: [{ title: 'تنتهي خلال 30 يوم', heads, rows: s30.map(row) }, { title: 'تنتهي خلال 31-90 يوم', heads, rows: s90.map(row) }, { title: 'انتهى ضمانها', heads, rows: [...exp].reverse().map(row), detail: true }]
+      };
+    }
+  },
+  'sales-by-channel': {
+    title: 'المبيعات حسب قناة البيع (والعمولات التقديرية)', gate: () => true,
+    load: (f, t, b) => genSalesQ(f, t, b, 'total, channel_id, sales_channels(name, commission_type, commission_value)'),
+    compute(rows) {
+      const comm = r => { const c = r.sales_channels; if (!c || !c.commission_type) return 0; const v = actNum(c.commission_value); return /percent|pct|%/.test(String(c.commission_type)) ? actNum(r.total) * v / 100 : v; };
+      const tot = rows.reduce((x, r) => x + actNum(r.total), 0);
+      const g = actGroupBy(rows, r => r.channel_id || '-', (k, r) => ({ n: r.sales_channels?.name || 'مباشر (بدون قناة)', c: 0, v: 0, cm: 0 }), (x, r) => { x.c++; x.v += actNum(r.total); x.cm += comm(r); }).sort((a, b) => b.v - a.v);
+      const cm = g.reduce((x, y) => x + y.cm, 0);
+      return {
+        cards: [['إجمالي المبيعات', einvMoney(tot)], ['عدد القنوات', g.length], ['العمولات التقديرية', einvMoney(cm), true], ['الصافي بعد العمولة', einvMoney(tot - cm)]],
+        tables: [{ title: 'حسب القناة', heads: ['القناة', 'الفواتير', 'المبيعات', 'نسبة المبيعات', 'عمولة تقديرية', 'الصافي', 'متوسط الفاتورة'], rows: g.map(x => [x.n, x.c, einvMoney(x.v), (tot ? x.v / tot * 100 : 0).toFixed(1) + '%', einvMoney(x.cm), einvMoney(x.v - x.cm), einvMoney(x.c ? x.v / x.c : 0)]) }]
+      };
+    }
+  }
+});
 Object.assign(ACT_REPORTS, GEN_REPORTS);
+
+
 
 
 function applyActivityReportsVisibility() {
@@ -49930,6 +50598,61 @@ async function runActReport(key) {
     tablesEl.innerHTML = res.tables.map(tb => `<div class="report-subtitle" style="font-size:14px;margin:14px 0 8px;">${escapeHtml(tb.title)}</div><div class="bo-table-wrap"><table class="bo-table"><thead><tr>${tb.heads.map(h => `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead><tbody>${tb.rows.length ? tb.rows.slice(0, ACT_DETAIL_LIMIT).map(r => `<tr>${r.map((c, i) => `<td${i ? ' class="num"' : ''}>${escapeHtml(String(c))}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${tb.heads.length}" class="bo-empty">لا توجد بيانات</td></tr>`}</tbody></table></div>${tb.rows.length > ACT_DETAIL_LIMIT ? `<div class="bo-empty" style="padding:8px;font-size:12.5px;">يعرض أول ${ACT_DETAIL_LIMIT} صف من ${tb.rows.length} — التصدير يشمل الكل</div>` : ''}`).join('');
     lastActReport[key] = res;
   } catch (e) { console.error(e); showToast('تعذر تحميل التقرير', true); tablesEl.innerHTML = ''; }
+}
+function initReportGridTools() {
+  let favs = []; try { favs = JSON.parse(localStorage.getItem('rptFavorites') || '[]'); } catch (e) { favs = []; }
+  const save = () => { try { localStorage.setItem('rptFavorites', JSON.stringify(favs)); } catch (e) { /* ignore */ } };
+  document.querySelectorAll('.report-type-grid').forEach(grid => {
+    if (grid.dataset.tools) return; grid.dataset.tools = '1';
+    const gid = grid.id || 'grid';
+    const apply = () => grid.querySelectorAll('.report-type-card').forEach(c => { const on = favs.includes(gid + ':' + c.dataset.report); c.style.order = on ? '-1' : ''; const st = c.querySelector('.rpt-fav-star'); if (st) { st.classList.toggle('on', on); st.textContent = on ? '★' : '☆'; st.title = on ? 'إزالة من المفضلة' : 'إضافة للمفضلة'; } });
+    grid.querySelectorAll('.report-type-card').forEach(c => {
+      const st = document.createElement('span'); st.className = 'rpt-fav-star'; st.setAttribute('role', 'button');
+      st.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); const k = gid + ':' + c.dataset.report; favs = favs.includes(k) ? favs.filter(x => x !== k) : [...favs, k]; save(); apply(); });
+      c.appendChild(st);
+    });
+    const inp = document.createElement('input'); inp.type = 'search'; inp.className = 'rpt-search'; inp.placeholder = 'ابحث عن تقرير...';
+    inp.addEventListener('input', () => { const q = inp.value.trim().toLowerCase(); grid.querySelectorAll('.report-type-card').forEach(c => { c.dataset.sh = (q && !(c.querySelector('.report-type-label')?.textContent || '').toLowerCase().includes(q)) ? '1' : ''; }); });
+    grid.insertAdjacentElement('beforebegin', inp);
+    apply();
+  });
+}
+function injectGenericPrintButtons() {
+  document.querySelectorAll('.report-detail').forEach(d => {
+    if (d.querySelector('[id$="-print"], .gen-print-btn')) return;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'bo-icon-btn gen-print-btn'; b.textContent = 'طباعة / PDF';
+    const box = d.querySelector('.report-subtitle-actions');
+    if (box) { b.style.marginInlineEnd = '6px'; box.insertAdjacentElement('afterbegin', b); }
+    else { const row = document.createElement('div'); row.style.cssText = 'margin-bottom:10px;'; row.appendChild(b); d.insertAdjacentElement('afterbegin', row); }
+  });
+}
+function printGenericReport(btn) {
+  const detail = btn.closest('.report-detail'); if (!detail) return;
+  const title = (detail.querySelector('.report-subtitle')?.textContent || document.querySelector(`[data-report="${(detail.id || '').replace(/^[a-zA-Z]+ReportDetail-/, '')}"] .report-type-label`)?.textContent || 'تقرير').trim();
+  const filters = [...detail.querySelectorAll('.report-filters .field')].map(f => {
+    const lab = f.querySelector('label')?.textContent?.trim(); const el = f.querySelector('input,select'); if (!el || !lab) return '';
+    const val = el.tagName === 'SELECT' ? (el.selectedIndex >= 0 ? el.options[el.selectedIndex].text : '') : el.value; return val ? `${lab}: ${val}` : '';
+  }).filter(Boolean);
+  const c = detail.cloneNode(true);
+  c.querySelectorAll('.report-filters, .quick-range-row, .report-subtitle-row, button, input, select, script').forEach(n => n.remove());
+  if (!c.textContent.trim()) { showToast('لا توجد بيانات للطباعة — حدّث التقرير أولًا', true); return; }
+  const css = '<style>.report-cards{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}.report-card{border:1px solid #d1d5db;border-radius:8px;padding:8px 12px;min-width:130px}.report-card-label{font-size:11.5px;color:#6b7280}.report-card-value{font-size:15px;font-weight:700}.negative{color:#b91c1c}.report-subtitle{font-size:14px;font-weight:700;margin:14px 0 4px;color:#0f766e}.bo-badge{font-size:12px}</style>';
+  const meta = [...filters, 'طُبع: ' + new Date().toLocaleString('ar-EG')].map(escapeHtml).join(' | ');
+  openPrintWindow(escapeHtml(title), `${css}<div class="doc-header"><div><div class="doc-title">${escapeHtml(title)}</div><div style="font-size:12.5px;color:#4b5563;margin-top:4px;">${meta}</div></div></div>${c.innerHTML}`);
+}
+document.addEventListener('click', e => { const b = e.target.closest?.('.gen-print-btn'); if (b) printGenericReport(b); });
+function printActReport(key) {
+  const res = lastActReport[key];
+  if (!res) { showToast('لا توجد بيانات للطباعة — حدّث التقرير أولًا', true); return; }
+  const cfg = ACT_REPORTS[key];
+  const f = document.getElementById(`act-${key}-from`).value, t = document.getElementById(`act-${key}-to`).value, bsel = document.getElementById(`act-${key}-branch`);
+  const bName = bsel.value ? (bsel.options[bsel.selectedIndex]?.text || '') : (boBranchesList.length > 1 ? 'كل الفروع' : (boBranchesList[0]?.name || ''));
+  const stSel = document.getElementById(`act-${key}-status`); const stName = stSel && stSel.value ? stSel.options[stSel.selectedIndex].text : '';
+  const e = escapeHtml;
+  const cards = `<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">${res.cards.map(([l, v, neg]) => `<div style="border:1px solid #d1d5db;border-radius:8px;padding:8px 12px;min-width:130px;"><div style="font-size:11.5px;color:#6b7280;">${e(l)}</div><div style="font-size:15px;font-weight:700;${neg ? 'color:#b91c1c;' : ''}">${e(String(v))}</div></div>`).join('')}</div>`;
+  const tables = res.tables.map(tb => `<div style="font-size:14px;font-weight:700;margin:16px 0 4px;color:#0f766e;">${e(tb.title)}</div><table><thead><tr>${tb.heads.map(h => `<th>${e(h)}</th>`).join('')}</tr></thead><tbody>${tb.rows.length ? tb.rows.map(r => `<tr>${r.map(c => `<td>${e(String(c))}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${tb.heads.length}">لا توجد بيانات</td></tr>`}</tbody></table>`).join('');
+  const meta = [bName, (f && t) ? `من ${f} إلى ${t}` : '', stName ? `الحالة: ${stName}` : '', 'طُبع: ' + new Date().toLocaleString('ar-EG')].filter(Boolean).map(e).join(' | ');
+  openPrintWindow(e(cfg.title), `<div class="doc-header"><div><div class="doc-title">${e(cfg.title)}</div><div style="font-size:12.5px;color:#4b5563;margin-top:4px;">${meta}</div></div></div>${cards}${tables}`);
 }
 function exportActReport(key) {
   const res = lastActReport[key];
@@ -53316,6 +54039,20 @@ const INVENTORY_QUICK_RANGE_CONFIGS = [
   { rowId: 'act-lc-report-qr', fromId: 'act-lc-report-from', toId: 'act-lc-report-to', refresh: () => runActReport('lc-report') },
   { rowId: 'act-containers-report-qr', fromId: 'act-containers-report-from', toId: 'act-containers-report-to', refresh: () => runActReport('containers-report') },
   { rowId: 'act-import-suppliers-report-qr', fromId: 'act-import-suppliers-report-from', toId: 'act-import-suppliers-report-to', refresh: () => runActReport('import-suppliers-report') },
+  { rowId: 'act-purchases-by-product-qr', fromId: 'act-purchases-by-product-from', toId: 'act-purchases-by-product-to', refresh: () => runActReport('purchases-by-product') },
+  { rowId: 'act-product-data-quality-qr', fromId: 'act-product-data-quality-from', toId: 'act-product-data-quality-to', refresh: () => runActReport('product-data-quality') },
+  { rowId: 'act-new-vs-returning-qr', fromId: 'act-new-vs-returning-from', toId: 'act-new-vs-returning-to', refresh: () => runActReport('new-vs-returning') },
+  { rowId: 'act-collections-report-qr', fromId: 'act-collections-report-from', toId: 'act-collections-report-to', refresh: () => runActReport('collections-report') },
+  { rowId: 'act-supplier-payments-report-qr', fromId: 'act-supplier-payments-report-from', toId: 'act-supplier-payments-report-to', refresh: () => runActReport('supplier-payments-report') },
+  { rowId: 'act-leave-report-qr', fromId: 'act-leave-report-from', toId: 'act-leave-report-to', refresh: () => runActReport('leave-report') },
+  { rowId: 'act-branch-stock-matrix-qr', fromId: 'act-branch-stock-matrix-from', toId: 'act-branch-stock-matrix-to', refresh: () => runActReport('branch-stock-matrix') },
+  { rowId: 'act-gym-classes-report-qr', fromId: 'act-gym-classes-report-from', toId: 'act-gym-classes-report-to', refresh: () => runActReport('gym-classes-report') },
+  { rowId: 'act-gym-dormant-qr', fromId: 'act-gym-dormant-from', toId: 'act-gym-dormant-to', refresh: () => runActReport('gym-dormant') },
+  { rowId: 'act-academy-sessions-report-qr', fromId: 'act-academy-sessions-report-from', toId: 'act-academy-sessions-report-to', refresh: () => runActReport('academy-sessions-report') },
+  { rowId: 'act-laundry-detail-qr', fromId: 'act-laundry-detail-from', toId: 'act-laundry-detail-to', refresh: () => runActReport('laundry-detail') },
+  { rowId: 'act-service-orders-report-qr', fromId: 'act-service-orders-report-from', toId: 'act-service-orders-report-to', refresh: () => runActReport('service-orders-report') },
+  { rowId: 'act-warranty-expiry-qr', fromId: 'act-warranty-expiry-from', toId: 'act-warranty-expiry-to', refresh: () => runActReport('warranty-expiry') },
+  { rowId: 'act-sales-by-channel-qr', fromId: 'act-sales-by-channel-from', toId: 'act-sales-by-channel-to', refresh: () => runActReport('sales-by-channel') },
   { rowId: 'act-peak-hours-qr', fromId: 'act-peak-hours-from', toId: 'act-peak-hours-to', refresh: () => runActReport('peak-hours') },
   { rowId: 'act-abc-analysis-qr', fromId: 'act-abc-analysis-from', toId: 'act-abc-analysis-to', refresh: () => runActReport('abc-analysis') },
   { rowId: 'act-ar-aging-qr', fromId: 'act-ar-aging-from', toId: 'act-ar-aging-to', refresh: () => runActReport('ar-aging') },
