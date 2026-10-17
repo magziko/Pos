@@ -1429,6 +1429,7 @@ a { color: inherit; }
             <select id="customerSelect" style="display:none;"><option value="">عميل نقدي (بدون تسجيل)</option></select>
           </div>
           <div id="customerPreferredSizeNote" style="display:none; font-size:12px; color:var(--teal-700); padding:4px 2px 0;"></div>
+          <div id="posPkgPanel" style="display:none; margin-top:6px;"></div>
         </div>
         <div class="cart-scroll-area">
           <div class="cart-items" id="cartItems"><div class="cart-empty">لا توجد أصناف مضافة للفاتورة حتى الآن</div></div>
@@ -1888,6 +1889,10 @@ a { color: inherit; }
             <div class="report-card">
               <div class="report-card-label">أصناف نفدت من المخزون</div>
               <div class="report-card-value num negative" id="dashOutOfStockCount">0</div>
+            </div>
+            <div class="report-card" id="dashPackagesCard" style="cursor:pointer; display:none;" title="اضغط لعرض اشتراكات الباقات">
+              <div class="report-card-label">باقات تحتاج متابعة (تنتهي خلال 7 أيام أو رصيد منخفض)</div>
+              <div class="report-card-value num negative" id="dashPackagesCount">0</div>
             </div>
           </div>
 
@@ -2708,6 +2713,7 @@ a { color: inherit; }
             <select id="pkgSubStatusFilter" style="max-width:180px;">
               <option value="">كل الحالات</option>
               <option value="active">نشط</option>
+              <option value="frozen">مجمّد</option>
               <option value="expired">منتهي</option>
               <option value="consumed">تم الاستهلاك</option>
               <option value="cancelled">ملغي</option>
@@ -6271,6 +6277,10 @@ a { color: inherit; }
               <div class="report-type-icon">🛡️</div>
               <div class="report-type-label">ضمان الأصول (المنتهي والقريب)</div>
             </button>
+            <button type="button" class="report-type-card" data-report="packages-report">
+              <div class="report-type-icon">📦</div>
+              <div class="report-type-label">تقرير الباقات والاشتراكات (الانتهاء والأرصدة والاستهلاك)</div>
+            </button>
             <button type="button" class="report-type-card" data-report="sales-by-channel">
               <div class="report-type-icon">📡</div>
               <div class="report-type-label">المبيعات حسب قناة البيع</div>
@@ -7580,6 +7590,28 @@ a { color: inherit; }
               </div>
               <div class="report-cards" id="act-warranty-expiry-cards"></div>
               <div id="act-warranty-expiry-tables"></div>
+            </div>
+
+            <div id="otherReportDetail-packages-report" class="report-detail" style="display:none;">
+              <div class="report-subtitle-row">
+                <div class="report-subtitle">تقرير الباقات والاشتراكات (الانتهاء والأرصدة والاستهلاك)</div>
+                <div class="report-subtitle-actions"><button class="bo-icon-btn" id="act-packages-report-export">تصدير إكسل</button></div>
+              </div>
+              <div class="quick-range-row" id="act-packages-report-qr" style="margin-bottom:12px;">
+                <button class="quick-range-btn" data-invqr="today">اليوم</button>
+                <button class="quick-range-btn" data-invqr="7days">آخر 7 أيام</button>
+                <button class="quick-range-btn active" data-invqr="30days">آخر 30 يوم</button>
+                <button class="quick-range-btn" data-invqr="month">الشهر الحالي</button>
+              </div>
+              <div class="report-filters">
+                <div class="field"><label>من تاريخ (للاستهلاك)</label><input type="date" id="act-packages-report-from"></div>
+                <div class="field"><label>إلى تاريخ</label><input type="date" id="act-packages-report-to"></div>
+                <div class="field"><label>الفرع</label><select id="act-packages-report-branch"><option value="">كل الفروع</option></select></div>
+                <select id="act-packages-report-status" style="display:none;"><option value="">الكل</option></select>
+                <button class="bo-add-btn" id="act-packages-report-run">تحديث</button>
+              </div>
+              <div class="report-cards" id="act-packages-report-cards"></div>
+              <div id="act-packages-report-tables"></div>
             </div>
 
             <div id="otherReportDetail-sales-by-channel" class="report-detail" style="display:none;">
@@ -9891,6 +9923,31 @@ a { color: inherit; }
       <div class="modal-actions">
         <button type="button" class="modal-cancel-btn" id="cancelPkgSubBtn">إلغاء</button>
         <button type="submit" class="submit-btn" id="savePkgSubBtn">حفظ الاشتراك</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: استهلاك باقة من الكاشير -->
+<div class="modal-overlay" id="posPkgModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">استهلاك من باقة العميل</div>
+    <div id="posPkgModalSummary" style="font-size:13px; margin-bottom:10px;"></div>
+    <form id="posPkgForm">
+      <input type="hidden" id="posPkgSubId">
+      <div class="modal-grid">
+        <div class="field" id="posPkgItemWrap"><label>الصنف</label><select id="posPkgItem"></select></div>
+        <div class="field"><label>الكمية *</label><input type="number" id="posPkgQty" min="0.01" step="0.01" value="1" required></div>
+        <div class="field"><label>نوع الطلب</label><select id="posPkgOrderType"></select></div>
+        <div class="field"><label>ملاحظات</label><input type="text" id="posPkgNotes"></div>
+        <div class="field field-full" id="posPkgAddToCartWrap">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="posPkgAddToCart" checked style="width:auto;"> إضافة الصنف إلى الفاتورة الحالية بسعر صفر (يُخصم من الباقة والمخزون عند إتمام البيع)</label>
+        </div>
+      </div>
+      <div class="error-msg" id="posPkgError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="posPkgCancelBtn">إلغاء</button>
+        <button type="submit" class="submit-btn" id="posPkgSaveBtn">تسجيل استهلاك</button>
       </div>
     </form>
   </div>
@@ -17085,6 +17142,11 @@ function bindPosEvents() {
   });
   posEls.customerSelect.addEventListener('change', () => {
     delete posEls.paidInput.dataset.touched;
+    if (cart.some(l => l.packageConsume && l.packageConsume.customerId !== posEls.customerSelect.value)) {
+      cart = cart.filter(l => !l.packageConsume || l.packageConsume.customerId === posEls.customerSelect.value);
+      showToast('تم حذف أسطر الباقة الخاصة بالعميل السابق من الفاتورة', true);
+    }
+    if (typeof refreshPosPackages === 'function') refreshPosPackages();
     recalcCartPricesForCustomer();
     renderCart();
     renderProducts();
@@ -17121,6 +17183,7 @@ function bindPosEvents() {
 
   posEls.holdBtn.addEventListener('click', () => {
     if (cart.length === 0) return showToast('الفاتورة فارغة، لا يوجد ما يمكن تعليقه', true);
+    if (cart.some(l => l.packageConsume)) return showToast('لا يمكن تعليق فاتورة بها استهلاك من باقة — أتمم البيع أو احذف سطر الباقة', true);
     heldOrders.push({
       id: crypto.randomUUID(), time: new Date().toISOString(),
       cart: cart.map(l => ({
@@ -17773,7 +17836,7 @@ function resolveProductPrice(product) {
 // يعكس شريحة العميل الجديد فورًا من غير ما المستخدم يحتاج يمسح السلة ويبدأ تاني.
 function recalcCartPricesForCustomer() {
   cart.forEach(line => {
-    if (line.productUnitId || line.overridePrice != null) return;
+    if (line.productUnitId || line.overridePrice != null || line.packageConsume) return;
     const delta = (line.modifiers || []).reduce((s, m) => s + Number(m.price_delta || 0), 0);
     line.basePrice = resolveProductPrice(line.product);
     line.unitPrice = line.basePrice + delta;
@@ -20047,6 +20110,9 @@ function renderCart() {
       const nameLabel = line.unitLabel && line.productUnitId
         ? `${escapeHtml(line.product.name)} <span style="color:var(--ink-soft); font-weight:500;">(${escapeHtml(line.unitLabel)})</span>`
         : escapeHtml(line.product.name);
+      const pkgLabel = line.packageConsume
+        ? `<div style="font-size:11px; color:#047857; font-weight:700; margin-top:2px;">📦 من الباقة: ${escapeHtml(line.packageConsume.packageName || '')} — يُخصم من رصيد العميل عند إتمام البيع</div>`
+        : '';
       const modifiersLabel = (line.modifiers && line.modifiers.length > 0)
         ? `<div style="font-size:11px; color:var(--ink-soft); margin-top:2px;">${line.modifiers.map(m => escapeHtml(m.option_name)).join('، ')}</div>`
         : '';
@@ -20056,7 +20122,7 @@ function renderCart() {
       row.innerHTML = `
         <div class="cart-line-swipe-bg">حذف</div>
         <div class="cart-line-content">
-          <div class="cart-line-name">${nameLabel}${modifiersLabel}</div>
+          <div class="cart-line-name">${nameLabel}${modifiersLabel}${pkgLabel}</div>
           <div class="cart-line-total"><span class="num">${lineTotal}</span></div>
           <div class="cart-line-controls">
             ${qtyControlsHtml}
@@ -20507,6 +20573,10 @@ async function doCheckout() {
       : '';
     const ctx = { subtotal, discount: totalDiscountForRecord, tax, total, customerId, customerName, paymentLines, paymentMethod, paidAmount, remaining, saleWarehouseId, instantNote, couponDiscountAmount, loyaltyPointsUsed, channelId: posEls.salesChannelSelect?.value || null };
 
+    const pkgLines = cart.filter(l => l.packageConsume);
+    if (pkgLines.length && (!sessionUsable() || (currentShift && currentShift.pending))) {
+      throw new Error('الاستهلاك من الباقات يحتاج اتصالًا بالإنترنت — احذف سطر الباقة أو أعد المحاولة عند عودة الاتصال');
+    }
     let receiptData;
     // إذا كانت الوردية نفسها لا تزال بانتظار المزامنة، يجب أن يُسجَّل البيع دون اتصال أيضًا (حتى لو كان الإنترنت متاحًا)
     // للحفاظ على الترتيب الصحيح والارتباط بالوردية بشكل سليم لحظة المزامنة
@@ -20518,6 +20588,7 @@ async function doCheckout() {
       } catch (err) {
         // انقطع الإنترنت أثناء المحاولة نفسها — نعود تلقائيًا إلى مسار العمل دون اتصال بدلاً من فقدان عملية البيع
         if (isNetworkError(err)) {
+          if (pkgLines.length) throw new Error('انقطع الاتصال أثناء الحفظ — لم تُسجَّل الفاتورة. أعد المحاولة عند عودة الاتصال (الباقات تحتاج اتصالًا)');
           appIsOnline = false; updateOfflineBanner();
           receiptData = await queueOfflineSale(ctx);
         } else {
@@ -20527,6 +20598,7 @@ async function doCheckout() {
     }
 
     showReceipt(receiptData);
+    if (pkgLines.length) await consumePosPackageLines(pkgLines);
 
     // لو الفاتورة دي كانت لطاولة/كرسي، نقفل الطلبية المؤقتة (draft) اللي
     // كانت شايلة أوردر الطاولة — الفاتورة الحقيقية اتسجلت خلاص في sales.
@@ -20588,6 +20660,7 @@ async function doCheckout() {
 async function saveSaleOrder(opts) {
   const silentReturn = opts?.silentReturn;
   if (cart.length === 0) return;
+  if (cart.some(l => l.packageConsume)) { showToast('لا يمكن حفظ طلبية بها استهلاك من باقة — أتمم البيع أو احذف سطر الباقة', true); return; }
   if (currentProfile.roles?.permissions?.read_only === true) {
     showToast('هذا الدور "قراءة فقط" ولا يمكنه حفظ طلبيات بيع', true);
     return;
@@ -20700,6 +20773,7 @@ async function saveSaleOrder(opts) {
 // المتابعة والتأكيد بعد كده من شاشة "تفاصيل التوصيل".
 // ============================================================
 async function savePosDeliveryOrder() {
+  if (cart.some(l => l.packageConsume)) { showToast('لا يمكن حفظ طلب توصيل به استهلاك من باقة — أتمم البيع أو احذف سطر الباقة', true); return; }
   if (cart.length === 0) return;
   if (currentProfile.roles?.permissions?.read_only === true) {
     showToast('هذا الدور "قراءة فقط" ولا يمكنه إنشاء طلبات توصيل', true);
@@ -21975,6 +22049,7 @@ const REPORT_TABS = {
     { key: 'laundry-detail', title: 'المغسلة التفصيلي (الحالات والتأخير)' },
     { key: 'service-orders-report', title: 'أوامر الخدمة والصيانة (الفنيون والأصول)' },
     { key: 'warranty-expiry', title: 'ضمان الأصول (المنتهي والقريب)' },
+    { key: 'packages-report', title: 'تقرير الباقات والاشتراكات (الانتهاء والأرصدة والاستهلاك)' },
     { key: 'sales-by-channel', title: 'المبيعات حسب قناة البيع' },
     { key: 'peak-hours', title: 'أوقات الذروة (المبيعات بالساعة واليوم)' },
     { key: 'abc-analysis', title: 'تحليل ABC للأصناف (حسب الإيراد)' },
@@ -22916,6 +22991,37 @@ function activateBoSection(section, btn) {
   }
 }
 
+// بطاقة الباقات في الرئيسية: اشتراكات نشطة تنتهي خلال 7 أيام أو رصيدها 20% أو أقل (للباقات ذات الرصيد الإجمالي).
+// تظهر فقط لو فيه اشتراكات نشطة، وأي فشل (جدول غير موجود/صلاحية) يخفيها بصمت.
+async function loadDashPackagesCard() {
+  const card = document.getElementById('dashPackagesCard');
+  if (!card) return;
+  try {
+    const { data, error } = await applyBranchScope(
+      supabaseClient.from('package_subscriptions').select('id, end_date, service_packages(apply_on, duration_type), package_subscription_items(quantity_total, quantity_used)').eq('status', 'active'),
+      ''
+    );
+    if (error) throw error;
+    const today = pkgTodayStr();
+    const lim = new Date(today + 'T00:00:00'); lim.setDate(lim.getDate() + 7);
+    const limStr = pkgDateStr(lim);
+    const live = (data || []).filter(r => !(r.end_date && r.end_date < today));
+    const needs = live.filter(r => {
+      if (r.end_date && r.end_date <= limStr) return true;
+      const pk = r.service_packages || {};
+      if (!(pk.apply_on === 'package' || pk.duration_type === 'consumption')) return false;
+      const items = r.package_subscription_items || [];
+      const tot = items.reduce((x, i) => x + Number(i.quantity_total || 0), 0);
+      const used = items.reduce((x, i) => x + Number(i.quantity_used || 0), 0);
+      return tot > 0 && (tot - used) / tot <= 0.2;
+    });
+    card.style.display = live.length ? '' : 'none';
+    document.getElementById('dashPackagesCount').textContent = needs.length;
+  } catch (err) {
+    card.style.display = 'none';
+  }
+}
+
 async function loadDashboard(fromDate, toDate) {
   try {
     // يقرأ نطاق التاريخ من حقول الفلترة إذا لم يُرسَل تاريخ مباشرة
@@ -22933,6 +23039,7 @@ async function loadDashboard(fromDate, toDate) {
     const payload = await computeDashboardPayload(fromDate, toDate, quickRange);
     renderDashboardPayload(payload);
     saveDashboardCache(payload);
+    loadDashPackagesCard();
   } catch (err) {
     console.error(err);
     showToast('تعذر تحميل بيانات الرئيسية', true);
@@ -23756,6 +23863,12 @@ function bindBackofficeEvents() {
   });
   document.getElementById('refreshDebtRemindersBtn').addEventListener('click', () => refreshDebtReminders());
   document.getElementById('applyDebtReminderDaysBtn').addEventListener('click', () => saveDebtReminderSettings());
+  document.getElementById('dashPackagesCard').addEventListener('click', () => {
+    const boBtn = document.querySelector('.bo-nav-sub-item[data-section="package-subscriptions"]');
+    activateBoSection('package-subscriptions', boBtn);
+    const f = document.getElementById('pkgSubStatusFilter');
+    if (f) { f.value = 'active'; if (typeof renderPkgSubsTable === 'function') renderPkgSubsTable(); }
+  });
   document.getElementById('dashOverdueDebtsCard').addEventListener('click', () => {
     const boBtn = document.querySelector('.bo-nav-sub-item[data-section="reports-accounting"]');
     activateBoSection('reports-accounting', boBtn);
@@ -38632,7 +38745,7 @@ async function deletePackage(pkg) {
 // ---------- الاشتراكات ----------
 async function loadBoPkgSubs() {
   const { data, error } = await supabaseClient.from('package_subscriptions')
-    .select('*, customers(name, phone), service_packages(name, duration_type, apply_on, order_types), branches(name)')
+    .select('*, customers(name, phone), service_packages(name, duration_type, apply_on, order_types), branches(name), package_subscription_items(item_name, quantity_total, quantity_used)')
     .order('created_at', { ascending: false });
   if (error) { console.error(error); showToast('تعذر تحميل الاشتراكات', true); return; }
   boPkgSubs = data || [];
@@ -38646,6 +38759,7 @@ function pkgSubStatusBadge(s) {
   const st = pkgSubEffectiveStatus(s);
   const map = {
     active: '<span class="bo-badge active">نشط</span>',
+    frozen: '<span class="bo-badge inactive" style="background:#e0f2fe; color:#0369a1;">مجمّد</span>',
     expired: '<span class="bo-badge inactive">منتهي</span>',
     consumed: '<span class="bo-badge inactive">تم الاستهلاك</span>',
     cancelled: '<span class="bo-badge inactive">ملغي</span>',
@@ -38686,17 +38800,68 @@ function renderPkgSubsTable() {
       <td><div class="bo-row-actions">
         ${eff === 'active' ? '<button class="bo-icon-btn" data-action="use" style="color:var(--teal-700); font-weight:700;">استهلاك</button>' : '<button class="bo-icon-btn" data-action="use">السجل</button>'}
         <button class="bo-icon-btn" data-action="pay" style="color:var(--teal-700);">المدفوعات</button>
-        ${eff === 'active' ? '<button class="bo-icon-btn" data-action="cancel" style="color:#b45309;">إلغاء</button>' : ''}
+        ${(eff === 'active' || eff === 'expired') && s.customers?.phone ? '<button class="bo-icon-btn" data-action="remind" style="color:#15803d;">تذكير واتساب</button>' : ''}
+        ${eff !== 'cancelled' ? '<button class="bo-icon-btn" data-action="renew" style="color:#047857; font-weight:700;">تجديد</button>' : ''}
+        ${eff === 'active' ? '<button class="bo-icon-btn" data-action="freeze" style="color:#0369a1;">تجميد</button>' : ''}
+        ${eff === 'frozen' ? '<button class="bo-icon-btn" data-action="unfreeze" style="color:#0369a1; font-weight:700;">إلغاء التجميد</button>' : ''}
+        ${(eff === 'active' || eff === 'frozen') ? '<button class="bo-icon-btn" data-action="cancel" style="color:#b45309;">إلغاء</button>' : ''}
         <button class="bo-icon-btn danger" data-action="delete">حذف</button>
       </div></td>`;
     tr.querySelector('[data-action="use"]').addEventListener('click', () => openPkgUsageModal(s));
     tr.querySelector('[data-action="pay"]').addEventListener('click', () => openPkgPayModal(s));
+    const fz = tr.querySelector('[data-action="freeze"]');
+    if (fz) fz.addEventListener('click', () => freezePkgSub(s));
+    const ufz = tr.querySelector('[data-action="unfreeze"]');
+    if (ufz) ufz.addEventListener('click', () => unfreezePkgSub(s));
+    const rm = tr.querySelector('[data-action="remind"]');
+    if (rm) rm.addEventListener('click', () => sendPkgReminderWhatsapp(s));
+    const rn = tr.querySelector('[data-action="renew"]');
+    if (rn) rn.addEventListener('click', () => openPkgSubModal(s));
     const c = tr.querySelector('[data-action="cancel"]');
     if (c) c.addEventListener('click', () => cancelPkgSub(s));
     tr.querySelector('[data-action="delete"]').addEventListener('click', () => deletePkgSub(s));
     applyRowActionPerm(tr, 'package-subscriptions');
     tbody.appendChild(tr);
   });
+}
+
+// أكواد الاتصال الدولية حسب دولة الفرع (حقل branches.country برمز ISO)
+const WA_DIAL_CODES = { EG: '20', SA: '966', AE: '971', KW: '965', QA: '974', BH: '973', OM: '968', JO: '962', LB: '961', IQ: '964', SY: '963', YE: '967', PS: '970', LY: '218', TN: '216', DZ: '213', MA: '212', SD: '249', SO: '252', DJ: '253', MR: '222', KM: '269', TR: '90', US: '1', CA: '1', GB: '44', DE: '49', FR: '33', IT: '39', ES: '34', IN: '91', PK: '92' };
+
+// تجهيز رقم لرابط واتساب: يحذف الرموز، ولو الرقم محلي (يبدأ بصفر واحد) يضيف كود دولة الفرع.
+// لو دولة الفرع غير محددة نطبّق قاعدة الموبايل المصري فقط (01xxxxxxxxx). الأرقام اللي فيها كود دولة تبقى كما هي.
+function pkgWaPhone(raw, branchId) {
+  let d = String(raw || '').replace(/[^0-9]/g, '');
+  if (!d) return '';
+  if (d.startsWith('00')) return d.slice(2);
+  if (!d.startsWith('0')) return d;
+  const bid = branchId || (typeof currentProfile !== 'undefined' && currentProfile ? currentProfile.branch_id : null);
+  const country = (typeof boBranchesList !== 'undefined' ? (boBranchesList.find(b => b.id === bid)?.country) : null) || null;
+  const dial = country ? WA_DIAL_CODES[String(country).toUpperCase()] : null;
+  if (dial) return dial + d.slice(1);
+  if (/^01\d{9}$/.test(d)) return '20' + d.slice(1);
+  return d;
+}
+
+function sendPkgReminderWhatsapp(sub) {
+  const phoneDigits = pkgWaPhone(sub.customers?.phone, sub.branch_id);
+  if (!phoneDigits) { showToast('لا يوجد رقم هاتف مسجّل لهذا العميل', true); return; }
+  const name = sub.customers?.name || '';
+  const pkgName = sub.service_packages?.name || 'اشتراكك';
+  const eff = pkgSubEffectiveStatus(sub);
+  const items = sub.package_subscription_items || [];
+  const balances = items.map(i => `${i.item_name || 'الكمية'}: ${pkgNum(i.quantity_total) - pkgNum(i.quantity_used)}`).join('، ');
+  const balText = balances ? ` والمتبقي في رصيدك: ${balances}.` : '';
+  let message;
+  if (eff === 'expired') {
+    message = `مرحبًا ${name}، نود إعلامك بأن اشتراكك في (${pkgName}) انتهى بتاريخ ${sub.end_date}.${balText} يسعدنا تجديد الاشتراك في أقرب وقت. شكرًا لاختيارك لنا.`;
+  } else if (sub.end_date) {
+    const daysLeft = Math.round((new Date(sub.end_date + 'T00:00:00') - new Date(pkgTodayStr() + 'T00:00:00')) / 86400000);
+    message = `مرحبًا ${name}، نود تذكيرك بأن اشتراكك في (${pkgName}) ينتهي ${daysLeft > 0 ? 'بعد ' + daysLeft + ' يوم ' : 'اليوم '}بتاريخ ${sub.end_date}.${balText} يسعدنا تجديد الاشتراك في أقرب وقت.`;
+  } else {
+    message = `مرحبًا ${name}، نود تذكيرك باشتراكك في (${pkgName}).${balText || ''} يسعدنا خدمتك دائمًا.`;
+  }
+  window.open(`https://wa.me/${phoneDigits}?text=${encodeURIComponent(message)}`, '_blank');
 }
 
 function pkgComputeEnd(pkg, startStr) {
@@ -38745,18 +38910,26 @@ function pkgSubApplyPackage() {
   pkgSubRefreshTreasuries();
 }
 
-async function openPkgSubModal() {
+async function openPkgSubModal(renewFrom) {
+  if (!renewFrom || !renewFrom.customer_id) renewFrom = null;
   if (boCustomers.length === 0) await loadBoCustomers();
   await loadBoPackages();
   if (boTreasuries.length === 0) await loadBoTreasuries();
   const active = boPackages.filter(p => p.is_active);
   if (active.length === 0) { showToast('عرّف باقة نشطة أولًا من شاشة تعريف الباقات', true); return; }
+  if (renewFrom && renewFrom.package_id && !active.some(p => p.id === renewFrom.package_id)) { showToast('الباقة الأصلية غير نشطة أو محذوفة — اختر باقة أخرى من "اشتراك جديد"', true); return; }
   document.getElementById('pkgSubPackage').innerHTML = active.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
-  document.getElementById('pkgSubStartDate').value = pkgTodayStr();
+  if (renewFrom && renewFrom.package_id) document.getElementById('pkgSubPackage').value = renewFrom.package_id;
+  // التجديد يبدأ من اليوم التالي لانتهاء الاشتراك الحالي لو لسه سارٍ، وإلا من اليوم
+  let renewStart = pkgTodayStr();
+  if (renewFrom && renewFrom.end_date && renewFrom.end_date >= renewStart) {
+    const nd = new Date(renewFrom.end_date + 'T00:00:00'); nd.setDate(nd.getDate() + 1); renewStart = pkgDateStr(nd);
+  }
+  document.getElementById('pkgSubStartDate').value = renewStart;
   document.getElementById('pkgSubPaid').value = 0;
-  document.getElementById('pkgSubNotes').value = '';
-  document.getElementById('pkgSubCustomerInput').value = '';
-  document.getElementById('pkgSubCustomer').value = '';
+  document.getElementById('pkgSubNotes').value = (renewFrom && !renewFrom.sell) ? 'تجديد اشتراك' : '';
+  document.getElementById('pkgSubCustomerInput').value = renewFrom ? (renewFrom.customers?.name || '') : '';
+  document.getElementById('pkgSubCustomer').value = renewFrom ? renewFrom.customer_id : '';
   if (!pkgSubCustomerSearch) {
     pkgSubCustomerSearch = createSmartSearch({
       input: document.getElementById('pkgSubCustomerInput'),
@@ -38765,6 +38938,8 @@ async function openPkgSubModal() {
       getItems: () => boCustomers.map(c => ({ value: c.id, label: c.name, sublabel: c.phone || '', search: `${c.name} ${c.phone || ''}` })),
     });
   }
+  if (renewFrom && renewFrom.branch_id) document.getElementById('pkgSubBranch').innerHTML = `<option value="${renewFrom.branch_id}"></option>`;
+  if (renewFrom && renewFrom.branch_id) document.getElementById('pkgSubBranch').value = renewFrom.branch_id;
   pkgSubApplyPackage();
   document.getElementById('pkgSubModalError').classList.remove('show');
   document.getElementById('pkgSubModalOverlay').classList.add('show');
@@ -38825,6 +39000,7 @@ async function savePkgSub(e) {
     closePkgSubModal();
     await loadBoPkgSubs();
     renderPkgSubsTable();
+    if (typeof refreshPosPackages === 'function') refreshPosPackages(); // تحديث لوحة الباقات في الكاشير لو العميل مختار
   } catch (err) {
     console.error(err);
     if (subId) { await supabaseClient.from('package_subscriptions').delete().eq('id', subId); }
@@ -38832,6 +39008,26 @@ async function savePkgSub(e) {
   } finally {
     btn.disabled = false; btn.textContent = 'حفظ الاشتراك';
   }
+}
+
+async function freezePkgSub(s) {
+  const note = prompt(`تجميد اشتراك "${s.customers?.name || ''}" في باقة "${s.service_packages?.name || ''}" من اليوم.\nلن يمكن الاستهلاك أثناء التجميد، وعند إلغاء التجميد يتمدد تاريخ الانتهاء بعدد أيام التجميد.\n\nسبب التجميد (اختياري):`, '');
+  if (note === null) return;
+  const { error } = await supabaseClient.rpc('freeze_package_subscription', { p_subscription_id: s.id, p_note: note.trim() || null });
+  if (error) { console.error(error); showToast(error.message || 'تعذر تجميد الاشتراك', true); return; }
+  showToast('تم تجميد الاشتراك');
+  await loadBoPkgSubs(); renderPkgSubsTable();
+  if (typeof refreshPosPackages === 'function') refreshPosPackages();
+}
+
+async function unfreezePkgSub(s) {
+  if (!confirm(`إلغاء تجميد اشتراك "${s.customers?.name || ''}"؟ سيُمدَّد تاريخ الانتهاء بعدد أيام التجميد.`)) return;
+  const { data, error } = await supabaseClient.rpc('unfreeze_package_subscription', { p_subscription_id: s.id });
+  if (error) { console.error(error); showToast(error.message || 'تعذر إلغاء التجميد', true); return; }
+  const d = data && data.days_frozen != null ? data.days_frozen : 0;
+  showToast(`تم إلغاء التجميد${s.end_date ? ` — تمدد الانتهاء ${d} يوم${data && data.end_date ? ' ليصبح ' + data.end_date : ''}` : ''}`);
+  await loadBoPkgSubs(); renderPkgSubsTable();
+  if (typeof refreshPosPackages === 'function') refreshPosPackages();
 }
 
 async function cancelPkgSub(s) {
@@ -38850,6 +39046,175 @@ async function deletePkgSub(s) {
   if (error) { console.error(error); showToast('تعذر حذف الاشتراك', true); return; }
   showToast('تم حذف الاشتراك');
   await loadBoPkgSubs(); renderPkgSubsTable();
+}
+
+// ---------- باقات العميل داخل الكاشير ----------
+let posPkgSubs = [];
+async function refreshPosPackages() {
+  const panel = document.getElementById('posPkgPanel');
+  if (!panel) return;
+  const cid = posEls.customerSelect.value;
+  posPkgSubs = [];
+  if (!cid) { panel.style.display = 'none'; panel.innerHTML = ''; return; }
+  let data = null;
+  try {
+    const res = await supabaseClient.from('package_subscriptions')
+      .select('*, service_packages(name, apply_on, duration_type, order_types), package_subscription_items(*)')
+      .eq('customer_id', cid).eq('status', 'active');
+    if (res.error) throw res.error;
+    data = res.data;
+  } catch (err) {
+    console.error(err);
+    panel.style.display = 'none'; panel.innerHTML = '';
+    return;
+  }
+  if (posEls.customerSelect.value !== cid) return; // العميل اتغيّر أثناء التحميل
+  posPkgSubs = (data || []).filter(s => pkgSubEffectiveStatus(s) === 'active');
+  panel.style.display = '';
+  panel.innerHTML = '<div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:4px;"><div style="font-size:12px; font-weight:700; color:var(--teal-700);">📦 ' + (posPkgSubs.length ? 'باقات العميل النشطة' : 'لا توجد باقات نشطة للعميل') + '</div><button type="button" class="bo-icon-btn" id="posPkgSellBtn" style="color:#047857; font-weight:700;">+ بيع باقة</button></div>' +
+    posPkgSubs.map(s => {
+      const items = s.package_subscription_items || [];
+      const left = items.length
+        ? items.map(i => `${escapeHtml(i.item_name || 'كمية عامة')}: <strong>${pkgNum(i.quantity_total) - pkgNum(i.quantity_used)}</strong>`).join(' • ')
+        : 'زيارات بدون كميات محددة';
+      return `<div style="display:flex; align-items:center; gap:8px; justify-content:space-between; border:1px solid var(--line, #ddd); border-radius:8px; padding:6px 8px; margin-bottom:4px; font-size:12px;">
+        <div style="min-width:0;"><div style="font-weight:700;">${escapeHtml(s.service_packages?.name || '')}</div>
+        <div style="color:var(--ink-soft);">${left}${s.end_date ? ' — ينتهي ' + s.end_date : ''}</div></div>
+        <button type="button" class="bo-icon-btn" data-pos-pkg="${s.id}">استهلاك</button></div>`;
+    }).join('');
+  panel.querySelectorAll('[data-pos-pkg]').forEach(b => b.addEventListener('click', () => openPosPkgModal(b.dataset.posPkg)));
+  const sellBtn = document.getElementById('posPkgSellBtn');
+  if (sellBtn) sellBtn.addEventListener('click', () => openPkgSubModal({
+    customer_id: cid, sell: true, branch_id: currentProfile?.branch_id || null,
+    customers: { name: (posEls.customerSearchInput?.value || '').trim() },
+  }));
+}
+
+function openPosPkgModal(subId) {
+  const s = posPkgSubs.find(x => x.id === subId);
+  if (!s) return;
+  const pk = s.service_packages || {};
+  const items = s.package_subscription_items || [];
+  document.getElementById('posPkgSubId').value = s.id;
+  document.getElementById('posPkgModalSummary').innerHTML =
+    `<strong>${escapeHtml(posEls.customerSearchInput?.value || '')}</strong> — ${escapeHtml(pk.name || '')}` +
+    ` — <span style="color:var(--ink-soft);">الكمية تطبق على ${PKG_APPLY_LABELS[pk.apply_on] || ''}${pk.apply_on === 'visit' && pk.duration_type !== 'consumption' ? ' (الحد في اليوم الواحد)' : ''}</span>`;
+  document.getElementById('posPkgItem').innerHTML = items.map(i => `<option value="${i.id}">${escapeHtml(i.item_name || 'كمية عامة')} (متبقي ${pkgNum(i.quantity_total) - pkgNum(i.quantity_used)})</option>`).join('');
+  document.getElementById('posPkgItemWrap').style.display = items.length ? '' : 'none';
+  const types = (pk.order_types && pk.order_types.length) ? pk.order_types : Object.keys(PKG_ORDER_TYPES);
+  document.getElementById('posPkgOrderType').innerHTML = '<option value="">— غير محدد —</option>' + types.map(t => `<option value="${t}">${PKG_ORDER_TYPES[t] || t}</option>`).join('');
+  document.getElementById('posPkgQty').value = 1;
+  document.getElementById('posPkgNotes').value = '';
+  document.getElementById('posPkgError').classList.remove('show');
+  posPkgSyncAddToCart();
+  document.getElementById('posPkgItem').onchange = posPkgSyncAddToCart;
+  document.getElementById('posPkgModalOverlay').classList.add('show');
+}
+
+// خيار "إضافة للفاتورة" متاح فقط لو الصنف المختار مرتبط بصنف فعلي (product_id) موجود في قائمة أصناف الكاشير
+function posPkgSelectedItem() {
+  const s = posPkgSubs.find(x => x.id === document.getElementById('posPkgSubId').value);
+  const itemVisible = document.getElementById('posPkgItemWrap').style.display !== 'none';
+  const item = (s && itemVisible) ? (s.package_subscription_items || []).find(i => i.id === document.getElementById('posPkgItem').value) : null;
+  return { s, item };
+}
+function posPkgSyncAddToCart() {
+  const { item } = posPkgSelectedItem();
+  const prod = item && item.product_id ? allProducts.find(p => p.id === item.product_id) : null;
+  const wrap = document.getElementById('posPkgAddToCartWrap');
+  wrap.style.display = prod ? '' : 'none';
+  document.getElementById('posPkgAddToCart').checked = !!prod;
+}
+
+// بعد نجاح البيع: خصم الاستهلاك المرتبط بسطور الباقة. لو فشل شيء، الفاتورة محفوظة بالفعل فنُنبّه المستخدم ليسجّله يدويًا.
+async function consumePosPackageLines(lines) {
+  const failed = [];
+  for (const l of lines) {
+    const pc = l.packageConsume;
+    try {
+      const { error } = await supabaseClient.rpc('consume_package_usage', {
+        p_subscription_id: pc.subId, p_item_id: pc.itemId || null, p_qty: Number(l.quantity),
+        p_order_type: pc.orderType || null, p_notes: pc.notes || 'من فاتورة الكاشير',
+      });
+      if (error) throw error;
+    } catch (err) {
+      console.error(err);
+      failed.push(`${l.product.name} × ${l.quantity}: ${err.message || 'خطأ'}`);
+    }
+  }
+  if (failed.length) showToast('تم حفظ الفاتورة لكن تعذر الخصم من الباقة — سجّله من شاشة اشتراكات الباقات: ' + failed.join(' | '), true);
+  else showToast('تم الخصم من رصيد الباقة');
+  try { await appendPackageBalanceToReceipt(lines); } catch (e) { console.error(e); }
+}
+
+// يضيف للإيصال المعروض (قبل التذييل) رصيد الباقة المتبقي بعد الاستهلاك، بقراءة الأرصدة الفعلية من قاعدة البيانات
+async function appendPackageBalanceToReceipt(lines) {
+  const subIds = [...new Set(lines.map(l => l.packageConsume && l.packageConsume.subId).filter(Boolean))];
+  if (!subIds.length) return;
+  const { data, error } = await supabaseClient.from('package_subscriptions')
+    .select('id, end_date, service_packages(name), package_subscription_items(item_name, quantity_total, quantity_used, products(name))')
+    .in('id', subIds);
+  if (error || !data || !data.length) return;
+  const blocks = data.map(sub => {
+    const items = (sub.package_subscription_items || []).map(i =>
+      `<div class="r-row"><span>${escapeHtml(i.item_name || i.products?.name || 'الكمية')}</span><span class="num">${pkgNum(i.quantity_total) - pkgNum(i.quantity_used)} / ${pkgNum(i.quantity_total)}</span></div>`).join('');
+    return `<div class="r-divider"></div>
+      <div class="r-row" style="font-weight:700;"><span>📦 رصيد الباقة: ${escapeHtml(sub.service_packages?.name || '')}</span><span></span></div>
+      ${items}${sub.end_date ? `<div class="r-row"><span>تنتهي في</span><span class="num">${sub.end_date}</span></div>` : ''}`;
+  }).join('');
+  document.querySelectorAll('#receiptContent .r-footer').forEach(f => f.insertAdjacentHTML('beforebegin', blocks));
+}
+
+async function savePosPkgUsage(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('posPkgError');
+  errEl.classList.remove('show');
+  const btn = document.getElementById('posPkgSaveBtn');
+  btn.disabled = true; btn.textContent = 'جاري التسجيل...';
+  try {
+    const itemVisible = document.getElementById('posPkgItemWrap').style.display !== 'none';
+    // الإضافة للفاتورة: سطر بسعر صفر على صنف الباقة، والخصم الفعلي من الرصيد يحدث بعد إتمام البيع
+    if (document.getElementById('posPkgAddToCartWrap').style.display !== 'none' && document.getElementById('posPkgAddToCart').checked) {
+      const { s, item } = posPkgSelectedItem();
+      const prod = item && item.product_id ? allProducts.find(p => p.id === item.product_id) : null;
+      const qty = Number(document.getElementById('posPkgQty').value);
+      if (!s || !item || !prod) throw new Error('تعذر تحديد الصنف');
+      if (!(qty > 0)) throw new Error('الكمية غير صحيحة');
+      const key = 'pkg:' + s.id + ':' + item.id;
+      const already = cart.filter(l => l.packageConsume && l.packageConsume.itemId === item.id).reduce((x, l) => x + Number(l.quantity), 0);
+      const left = pkgNum(item.quantity_total) - pkgNum(item.quantity_used);
+      if (s.service_packages?.apply_on === 'package' && already + qty > left + 1e-9) throw new Error(`الرصيد المتبقي (${left}) لا يكفي مع ما أُضيف بالفاتورة (${already})`);
+      const existing = cart.find(l => l.modifiersKey === key);
+      if (existing) existing.quantity += qty;
+      else cart.push({
+        product: prod, quantity: qty, unitPrice: 0, productUnitId: null, unitLabel: null, factor: 1, basePrice: 0,
+        modifiers: [], modifiersKey: key, overridePrice: 0,
+        packageConsume: { subId: s.id, itemId: item.id, customerId: posEls.customerSelect.value, packageName: s.service_packages?.name || '',
+          orderType: document.getElementById('posPkgOrderType').value || null, notes: document.getElementById('posPkgNotes').value.trim() || null },
+      });
+      renderCart(); renderProducts();
+      showToast('أُضيف للفاتورة — يُخصم من الباقة عند إتمام البيع');
+      document.getElementById('posPkgModalOverlay').classList.remove('show');
+      return;
+    }
+    const { error } = await supabaseClient.rpc('consume_package_usage', {
+      p_subscription_id: document.getElementById('posPkgSubId').value,
+      p_item_id: itemVisible ? (document.getElementById('posPkgItem').value || null) : null,
+      p_qty: Number(document.getElementById('posPkgQty').value),
+      p_order_type: document.getElementById('posPkgOrderType').value || null,
+      p_notes: document.getElementById('posPkgNotes').value.trim() || null,
+    });
+    if (error) throw error;
+    showToast('تم تسجيل الاستهلاك من الباقة');
+    document.getElementById('posPkgModalOverlay').classList.remove('show');
+    await refreshPosPackages();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = err.message || 'تعذر تسجيل الاستهلاك';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = 'تسجيل استهلاك';
+  }
 }
 
 // ---------- الاستهلاك ----------
@@ -39031,6 +39396,8 @@ function bindPackagesEvents() {
   document.getElementById('pkgSubStatusFilter').addEventListener('change', renderPkgSubsTable);
 
   document.getElementById('pkgUsageForm').addEventListener('submit', savePkgUsage);
+  document.getElementById('posPkgForm').addEventListener('submit', savePosPkgUsage);
+  document.getElementById('posPkgCancelBtn').addEventListener('click', () => document.getElementById('posPkgModalOverlay').classList.remove('show'));
   document.getElementById('closePkgUsageBtn').addEventListener('click', closePkgUsageModal);
   document.getElementById('pkgUsageModalOverlay').addEventListener('click', e => { if (e.target.id === 'pkgUsageModalOverlay') closePkgUsageModal(); });
   document.getElementById('pkgPayForm').addEventListener('submit', savePkgPay);
@@ -40173,7 +40540,7 @@ async function refreshGymExpiringReport() {
 
 function sendGymExpiryReminderWhatsapp(sub, daysLeft) {
   const memberName = sub.gym_members?.name || '';
-  const phoneDigits = (sub.gym_members?.phone || '').replace(/[^0-9]/g, '');
+  const phoneDigits = pkgWaPhone(sub.gym_members?.phone, sub.branch_id);
   if (!phoneDigits) { showToast('لا يوجد رقم هاتف مسجّل لهذا العضو', true); return; }
   const packageName = sub.gym_packages?.name || 'اشتراكك';
   const message = daysLeft > 0
@@ -51450,6 +51817,49 @@ Object.assign(GEN_REPORTS, {
     }
   }
 });
+GEN_REPORTS['packages-report'] = {
+  title: 'تقرير الباقات والاشتراكات (الانتهاء والأرصدة والاستهلاك)', gate: () => true,
+  async load(f, t, b) {
+    const [subs, usage] = await Promise.all([
+      einvFetchAll(() => applyBranchScope(supabaseClient.from('package_subscriptions').select('id, status, start_date, end_date, total_amount, paid_amount, customers(name, phone), service_packages(name, apply_on), package_subscription_items(item_name, quantity_total, quantity_used)').order('end_date', { ascending: true, nullsFirst: false }), b)),
+      einvFetchAll(() => applyBranchScope(supabaseClient.from('package_usage').select('subscription_id, quantity, order_type, usage_date').gte('usage_date', f).lte('usage_date', t).order('usage_date'), b))
+    ]);
+    return { subs, usage };
+  },
+  compute({ subs, usage }) {
+    const today = genToday();
+    const eff = s => (s.status === 'active' && s.end_date && s.end_date < today) ? 'expired' : s.status;
+    const ST = { active: 'نشط', frozen: 'مجمّد', expired: 'منتهي', consumed: 'تم الاستهلاك', cancelled: 'ملغي' };
+    const tot = s => (s.package_subscription_items || []).reduce((x, i) => x + actNum(i.quantity_total), 0);
+    const used = s => (s.package_subscription_items || []).reduce((x, i) => x + actNum(i.quantity_used), 0);
+    const left = s => s.end_date ? genDaysBetween(today, s.end_date) : null;
+    const owed = s => Math.max(0, actNum(s.total_amount) - actNum(s.paid_amount));
+    const active = subs.filter(s => eff(s) === 'active');
+    const exp30 = active.filter(s => left(s) !== null && left(s) <= 30).sort((a, b) => left(a) - left(b));
+    const lowBal = active.filter(s => tot(s) > 0 && (tot(s) - used(s)) / tot(s) <= 0.2);
+    const expiredUnused = subs.filter(s => eff(s) === 'expired' && tot(s) - used(s) > 0);
+    const unpaid = subs.filter(s => eff(s) !== 'cancelled' && owed(s) > 0).sort((a, b) => owed(b) - owed(a));
+    const byId = {}; subs.forEach(s => { byId[s.id] = s; });
+    const OT = (typeof PKG_ORDER_TYPES !== 'undefined') ? PKG_ORDER_TYPES : {};
+    const byPkg = actGroupBy(usage, u => byId[u.subscription_id]?.service_packages?.name || '—', (k) => ({ n: k, c: 0, q: 0 }), (x, u) => { x.c++; x.q += actNum(u.quantity); }).sort((a, b) => b.q - a.q);
+    const byType = actGroupBy(usage, u => u.order_type || '-', (k) => ({ n: OT[k] || (k === '-' ? 'غير محدد' : k), c: 0, q: 0 }), (x, u) => { x.c++; x.q += actNum(u.quantity); }).sort((a, b) => b.q - a.q);
+    const bal = s => { const it = s.package_subscription_items || []; return it.length ? it.map(i => `${i.item_name || 'كمية عامة'}: ${actNum(i.quantity_total) - actNum(i.quantity_used)}`).join(' | ') : '—'; };
+    const row = s => [s.customers?.name || '—', s.customers?.phone || '', s.service_packages?.name || '—', ST[eff(s)] || eff(s), s.start_date || '', s.end_date || 'بدون', left(s) === null ? '—' : left(s), bal(s), einvMoney(s.total_amount), einvMoney(s.paid_amount), einvMoney(owed(s))];
+    const heads = ['العميل', 'الهاتف', 'الباقة', 'الحالة', 'البداية', 'النهاية', 'المتبقي (يوم)', 'الأرصدة المتبقية', 'الإجمالي', 'المدفوع', 'المتبقي سداده'];
+    return {
+      cards: [['اشتراكات نشطة', active.length], ['اشتراكات مجمّدة', subs.filter(s => s.status === 'frozen').length], ['تنتهي خلال 30 يوم', exp30.length, true], ['رصيد منخفض (≤20%)', lowBal.length], ['منتهية وبها رصيد غير مستهلك', expiredUnused.length, true], ['مستحقات غير مسددة', einvMoney(unpaid.reduce((x, s) => x + owed(s), 0)), true], ['عمليات استهلاك بالفترة', usage.length], ['إجمالي الكمية المستهلكة', usage.reduce((x, u) => x + actNum(u.quantity), 0)]],
+      tables: [
+        { title: 'تنتهي خلال 30 يوم (الأقرب أولًا)', heads, rows: exp30.map(row) },
+        { title: 'رصيد منخفض (20% أو أقل متبقٍ)', heads, rows: lowBal.map(row) },
+        { title: 'منتهية وبها رصيد غير مستهلك (فرصة تجديد)', heads, rows: expiredUnused.map(row) },
+        { title: 'مبالغ غير مسددة', heads, rows: unpaid.map(row) },
+        { title: 'الاستهلاك حسب الباقة (خلال الفترة)', heads: ['الباقة', 'عدد العمليات', 'الكمية'], rows: byPkg.map(x => [x.n, x.c, x.q]) },
+        { title: 'الاستهلاك حسب نوع الطلب (خلال الفترة)', heads: ['نوع الطلب', 'عدد العمليات', 'الكمية'], rows: byType.map(x => [x.n, x.c, x.q]) },
+        { title: 'كل الاشتراكات', heads, rows: subs.map(row), detail: true }
+      ]
+    };
+  }
+};
 Object.assign(ACT_REPORTS, GEN_REPORTS);
 
 
@@ -54729,7 +55139,7 @@ function renderDebtRemindersTable(rows) {
 }
 
 function sendDebtReminderWhatsapp(customer, daysOverdue) {
-  const phoneDigits = (customer.phone || '').replace(/[^0-9]/g, '');
+  const phoneDigits = pkgWaPhone(customer.phone, customer.branch_id);
   if (!phoneDigits) { showToast('لا يوجد رقم هاتف مسجّل لهذا العميل', true); return; }
   const message = `مرحبًا ${customer.name}، نود تذكيركم بوجود مبلغ مستحق قدره ${Number(customer.balance).toFixed(2)} منذ حوالي ${daysOverdue} يوم. برجاء التكرم بسداده في أقرب وقت ممكن. شكرًا لتعاملكم معنا.`;
   const url = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(message)}`;
@@ -54941,6 +55351,7 @@ const INVENTORY_QUICK_RANGE_CONFIGS = [
   { rowId: 'act-laundry-detail-qr', fromId: 'act-laundry-detail-from', toId: 'act-laundry-detail-to', refresh: () => runActReport('laundry-detail') },
   { rowId: 'act-service-orders-report-qr', fromId: 'act-service-orders-report-from', toId: 'act-service-orders-report-to', refresh: () => runActReport('service-orders-report') },
   { rowId: 'act-warranty-expiry-qr', fromId: 'act-warranty-expiry-from', toId: 'act-warranty-expiry-to', refresh: () => runActReport('warranty-expiry') },
+  { rowId: 'act-packages-report-qr', fromId: 'act-packages-report-from', toId: 'act-packages-report-to', refresh: () => runActReport('packages-report') },
   { rowId: 'act-sales-by-channel-qr', fromId: 'act-sales-by-channel-from', toId: 'act-sales-by-channel-to', refresh: () => runActReport('sales-by-channel') },
   { rowId: 'act-peak-hours-qr', fromId: 'act-peak-hours-from', toId: 'act-peak-hours-to', refresh: () => runActReport('peak-hours') },
   { rowId: 'act-abc-analysis-qr', fromId: 'act-abc-analysis-from', toId: 'act-abc-analysis-to', refresh: () => runActReport('abc-analysis') },
