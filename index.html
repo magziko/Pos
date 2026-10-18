@@ -9928,6 +9928,27 @@ a { color: inherit; }
   </div>
 </div>
 
+<!-- Modal: إلغاء اشتراك باقة مع رد مبلغ -->
+<div class="modal-overlay" id="pkgCancelModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">إلغاء اشتراك باقة</div>
+    <div id="pkgCancelSummary" style="font-size:13px; margin-bottom:10px;"></div>
+    <form id="pkgCancelForm">
+      <div class="modal-grid">
+        <div class="field"><label>المبلغ المردود للعميل</label><input type="number" id="pkgCancelRefund" min="0" step="0.01" value="0"></div>
+        <div class="field" id="pkgCancelAccountWrap"><label>الخزينة التي يُرد منها</label><select id="pkgCancelAccount"></select></div>
+        <div class="field field-full"><label>ملاحظات</label><input type="text" id="pkgCancelNote" placeholder="سبب الإلغاء (اختياري)"></div>
+      </div>
+      <div class="report-subtitle" style="margin-bottom:6px;">اكتب 0 لإلغاء الاشتراك بدون رد مبلغ. لن يمكن الاستهلاك من الاشتراك بعد الإلغاء.</div>
+      <div class="error-msg" id="pkgCancelError"></div>
+      <div class="modal-actions">
+        <button type="button" class="modal-cancel-btn" id="pkgCancelCloseBtn">رجوع</button>
+        <button type="submit" class="submit-btn" id="pkgCancelSaveBtn" style="background:#b45309;">تأكيد الإلغاء</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Modal: استهلاك باقة من الكاشير -->
 <div class="modal-overlay" id="posPkgModalOverlay">
   <div class="modal-box">
@@ -17123,7 +17144,8 @@ function bindPosEvents() {
     const q = posEls.searchInput.value.trim();
     if (!q) return;
     const exact = allProducts.find(p => (p.product_barcodes || []).some(b => b.barcode === q));
-    if (exact) { addToCart(exact); posEls.searchInput.value = ''; renderProducts(); }
+    if (exact) { addToCart(exact); posEls.searchInput.value = ''; renderProducts(); return; }
+    if (/^PK\d{7}$/i.test(q)) { posEls.searchInput.value = ''; renderProducts(); posHandlePackageCardScan(q); }
   });
   posEls.searchInput.addEventListener('input', renderProducts);
   posEls.discountInput.addEventListener('input', renderCart);
@@ -38794,13 +38816,14 @@ function renderPkgSubsTable() {
       <td class="num">${s.end_date || 'مفتوحة'}</td>
       <td class="num">${usage}</td>
       <td class="num">${pkgFmt(s.total_amount)}</td>
-      <td class="num">${pkgFmt(s.paid_amount)}</td>
+      <td class="num">${pkgFmt(s.paid_amount)}${pkgNum(s.refunded_amount) > 0 ? `<div style="font-size:11px; color:#b45309;">مردود ${pkgFmt(s.refunded_amount)}</div>` : ''}</td>
       <td class="num" style="${remaining > 0.005 ? 'color:#b91c1c; font-weight:700;' : ''}">${pkgFmt(remaining)}</td>
       <td>${pkgSubStatusBadge(s)}</td>
       <td><div class="bo-row-actions">
         ${eff === 'active' ? '<button class="bo-icon-btn" data-action="use" style="color:var(--teal-700); font-weight:700;">استهلاك</button>' : '<button class="bo-icon-btn" data-action="use">السجل</button>'}
         <button class="bo-icon-btn" data-action="pay" style="color:var(--teal-700);">المدفوعات</button>
         ${(eff === 'active' || eff === 'expired') && s.customers?.phone ? '<button class="bo-icon-btn" data-action="remind" style="color:#15803d;">تذكير واتساب</button>' : ''}
+        ${s.card_code ? '<button class="bo-icon-btn" data-action="card" style="color:var(--teal-700);">بطاقة</button>' : ''}
         ${eff !== 'cancelled' ? '<button class="bo-icon-btn" data-action="renew" style="color:#047857; font-weight:700;">تجديد</button>' : ''}
         ${eff === 'active' ? '<button class="bo-icon-btn" data-action="freeze" style="color:#0369a1;">تجميد</button>' : ''}
         ${eff === 'frozen' ? '<button class="bo-icon-btn" data-action="unfreeze" style="color:#0369a1; font-weight:700;">إلغاء التجميد</button>' : ''}
@@ -38809,6 +38832,8 @@ function renderPkgSubsTable() {
       </div></td>`;
     tr.querySelector('[data-action="use"]').addEventListener('click', () => openPkgUsageModal(s));
     tr.querySelector('[data-action="pay"]').addEventListener('click', () => openPkgPayModal(s));
+    const cd = tr.querySelector('[data-action="card"]');
+    if (cd) cd.addEventListener('click', () => printPkgSubCard(s));
     const fz = tr.querySelector('[data-action="freeze"]');
     if (fz) fz.addEventListener('click', () => freezePkgSub(s));
     const ufz = tr.querySelector('[data-action="unfreeze"]');
@@ -39010,6 +39035,73 @@ async function savePkgSub(e) {
   }
 }
 
+// ---------- بطاقة الاشتراك بالباركود ----------
+function printPkgSubCard(sub) {
+  if (!sub.card_code) { showToast('لا يوجد كود بطاقة لهذا الاشتراك', true); return; }
+  const win = window.open('', '_blank', 'width=420,height=360');
+  if (!win) { showToast('تعذر فتح نافذة الطباعة — تأكد أن المتصفح لا يمنع النوافذ المنبثقة', true); return; }
+  const closeScriptTag = '<' + '/script>';
+  const cust = sub.customers?.name || '';
+  const pkgName = sub.service_packages?.name || '';
+  const html = `<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8">
+    <title>بطاقة اشتراك — ${escapeHtml(cust)}</title>
+    <style>
+      body { font-family: Tahoma, Arial, sans-serif; margin:0; padding:16px; background:#f3f4f6; }
+      .card { width: 340px; margin: 0 auto; background: #fff; border-radius: 14px; padding: 18px 20px; box-shadow: 0 2px 10px rgba(0,0,0,.12); border: 1px solid #e5e7eb; }
+      .card-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+      .card-brand { font-weight:700; font-size:13px; color:#0f766e; }
+      .card-branch { font-size:11px; color:#6b7280; }
+      .card-name { font-size:18px; font-weight:700; margin:6px 0 2px; }
+      .card-pkg { font-size:14px; color:#0f766e; font-weight:700; margin-bottom:2px; }
+      .card-meta { font-size:12px; color:#4b5563; margin-bottom:4px; }
+      .card-barcode { text-align:center; margin-top:6px; }
+      @media print { body { background:#fff; padding:0; } .card { box-shadow:none; border:1px dashed #999; } .no-print { display:none; } }
+    </style>
+  </head><body>
+    <div class="card">
+      <div class="card-top">
+        <div class="card-brand">بطاقة اشتراك</div>
+        <div class="card-branch">${escapeHtml(sub.branches?.name || '')}</div>
+      </div>
+      <div class="card-name">${escapeHtml(cust)}</div>
+      <div class="card-pkg">${escapeHtml(pkgName)}</div>
+      <div class="card-meta">${sub.start_date ? 'من ' + escapeHtml(sub.start_date) : ''}${sub.end_date ? ' — حتى ' + escapeHtml(sub.end_date) : ' — بدون تاريخ انتهاء'}</div>
+      <div class="card-barcode"><svg id="cardBarcodeSvg"></svg></div>
+    </div>
+    <div class="no-print" style="text-align:center; margin-top:14px;">
+      <button onclick="window.print()" style="padding:8px 18px; border-radius:8px; border:none; background:#0f766e; color:#fff; font-size:13px; cursor:pointer;">طباعة</button>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js">${closeScriptTag}
+    <script>
+      JsBarcode("#cardBarcodeSvg", ${JSON.stringify(sub.card_code)}, { format: "CODE128", width: 2, height: 55, fontSize: 14, margin: 4, displayValue: true });
+      window.onload = () => { setTimeout(() => window.print(), 300); };
+    ${closeScriptTag}
+  </body></html>`;
+  win.document.write(html);
+  win.document.close();
+}
+
+// مسح بطاقة اشتراك في خانة بحث الكاشير: نحدد العميل صاحب الاشتراك ونُبرز الاشتراك في اللوحة. يرجع true لو الكود كان كود بطاقة.
+let posPkgHighlightSubId = null;
+async function posHandlePackageCardScan(code) {
+  if (!/^PK\d{7}$/i.test(code)) return false;
+  try {
+    const { data, error } = await supabaseClient.from('package_subscriptions')
+      .select('id, status, customer_id, customers(name), service_packages(name)').eq('card_code', code.toUpperCase()).maybeSingle();
+    if (error) throw error;
+    if (!data) { showToast('بطاقة غير معروفة: ' + code, true); return true; }
+    if (!allCustomers.some(c => c.id === data.customer_id)) { showToast('عميل هذه البطاقة غير موجود في قائمة عملاء الكاشير — حدّث العملاء أو افتح الاشتراك من شاشة اشتراكات الباقات', true); return true; }
+    posPkgHighlightSubId = data.id;
+    setCustomerSelection(data.customer_id);
+    if (data.status !== 'active') showToast(`تنبيه: هذا الاشتراك (${data.service_packages?.name || ''}) حالته: ${{ frozen: 'مجمّد', expired: 'منتهي', consumed: 'تم الاستهلاك', cancelled: 'ملغي' }[data.status] || data.status}`, true);
+    else showToast(`${data.customers?.name || ''} — ${data.service_packages?.name || ''}`);
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر قراءة بطاقة الاشتراك', true);
+  }
+  return true;
+}
+
 async function freezePkgSub(s) {
   const note = prompt(`تجميد اشتراك "${s.customers?.name || ''}" في باقة "${s.service_packages?.name || ''}" من اليوم.\nلن يمكن الاستهلاك أثناء التجميد، وعند إلغاء التجميد يتمدد تاريخ الانتهاء بعدد أيام التجميد.\n\nسبب التجميد (اختياري):`, '');
   if (note === null) return;
@@ -39030,12 +39122,65 @@ async function unfreezePkgSub(s) {
   if (typeof refreshPosPackages === 'function') refreshPosPackages();
 }
 
+let pkgCancelSub = null;
 async function cancelPkgSub(s) {
-  if (!confirm(`إلغاء اشتراك "${s.customers?.name || ''}" في باقة "${s.service_packages?.name || ''}"؟ لن يمكن الاستهلاك منه بعد ذلك.`)) return;
-  const { error } = await supabaseClient.from('package_subscriptions').update({ status: 'cancelled' }).eq('id', s.id);
-  if (error) { console.error(error); showToast('تعذر إلغاء الاشتراك', true); return; }
-  showToast('تم إلغاء الاشتراك');
+  const net = pkgNum(s.paid_amount) - pkgNum(s.refunded_amount);
+  if (net <= 0.005) {
+    if (!confirm(`إلغاء اشتراك "${s.customers?.name || ''}" في باقة "${s.service_packages?.name || ''}"؟ لن يمكن الاستهلاك منه بعد ذلك.`)) return;
+    await doCancelPkgSub(s, 0, null, null);
+    return;
+  }
+  if (boTreasuries.length === 0) await loadBoTreasuries();
+  pkgCancelSub = s;
+  document.getElementById('pkgCancelSummary').innerHTML =
+    `<strong>${escapeHtml(s.customers?.name || '')}</strong> — ${escapeHtml(s.service_packages?.name || '')}<br>` +
+    `المدفوع: <strong>${pkgFmt(s.paid_amount)}</strong>${pkgNum(s.refunded_amount) > 0 ? ` — سبق رد: ${pkgFmt(s.refunded_amount)}` : ''} — الصافي القابل للرد: <strong>${pkgFmt(net)}</strong>`;
+  const inp = document.getElementById('pkgCancelRefund');
+  inp.max = net.toFixed(2); inp.value = 0;
+  const list = boTreasuries.filter(t => t.is_active && t.branch_id === s.branch_id);
+  const use = list.length ? list : boTreasuries.filter(t => t.is_active);
+  document.getElementById('pkgCancelAccount').innerHTML = use.map(t => `<option value="${t.id}">${escapeHtml(t.branches?.name || '')} — ${escapeHtml(t.name)}</option>`).join('');
+  document.getElementById('pkgCancelNote').value = '';
+  document.getElementById('pkgCancelError').classList.remove('show');
+  document.getElementById('pkgCancelModalOverlay').classList.add('show');
+}
+
+async function doCancelPkgSub(s, refund, accountId, note) {
+  const { data, error } = await supabaseClient.rpc('cancel_package_subscription', {
+    p_subscription_id: s.id, p_refund: refund, p_cash_account_id: refund > 0 ? accountId : null, p_note: note || null,
+  });
+  if (error) { console.error(error); throw error; }
+  showToast(refund > 0 ? `تم إلغاء الاشتراك ورد ${pkgFmt(refund)} من الخزينة` : 'تم إلغاء الاشتراك');
   await loadBoPkgSubs(); renderPkgSubsTable();
+  if (typeof refreshPosPackages === 'function') refreshPosPackages();
+  return data;
+}
+
+async function savePkgCancel(e) {
+  e.preventDefault();
+  const errEl = document.getElementById('pkgCancelError');
+  errEl.classList.remove('show');
+  const s = pkgCancelSub;
+  if (!s) return;
+  const refund = pkgNum(document.getElementById('pkgCancelRefund').value);
+  const net = pkgNum(s.paid_amount) - pkgNum(s.refunded_amount);
+  const fail = (m) => { errEl.textContent = m; errEl.classList.add('show'); };
+  if (refund < 0) return fail('مبلغ الرد لا يمكن أن يكون سالبًا');
+  if (refund > net + 0.005) return fail('مبلغ الرد أكبر من المدفوع الصافي');
+  const acct = document.getElementById('pkgCancelAccount').value;
+  if (refund > 0 && !acct) return fail('اختر الخزينة التي سيُرد منها المبلغ');
+  if (!confirm(`تأكيد إلغاء الاشتراك${refund > 0 ? ' ورد ' + pkgFmt(refund) + ' للعميل' : ''}؟`)) return;
+  const btn = document.getElementById('pkgCancelSaveBtn');
+  btn.disabled = true; btn.textContent = 'جاري الإلغاء...';
+  try {
+    await doCancelPkgSub(s, refund, acct, document.getElementById('pkgCancelNote').value.trim());
+    document.getElementById('pkgCancelModalOverlay').classList.remove('show');
+    pkgCancelSub = null;
+  } catch (err) {
+    fail(err.message || 'تعذر إلغاء الاشتراك');
+  } finally {
+    btn.disabled = false; btn.textContent = 'تأكيد الإلغاء';
+  }
 }
 
 async function deletePkgSub(s) {
@@ -39052,7 +39197,7 @@ async function deletePkgSub(s) {
 let posPkgSubs = [];
 async function refreshPosPackages() {
   const panel = document.getElementById('posPkgPanel');
-  if (!panel) return;
+  if (!panel || !posEls.customerSelect) return;
   const cid = posEls.customerSelect.value;
   posPkgSubs = [];
   if (!cid) { panel.style.display = 'none'; panel.innerHTML = ''; return; }
@@ -39077,7 +39222,8 @@ async function refreshPosPackages() {
       const left = items.length
         ? items.map(i => `${escapeHtml(i.item_name || 'كمية عامة')}: <strong>${pkgNum(i.quantity_total) - pkgNum(i.quantity_used)}</strong>`).join(' • ')
         : 'زيارات بدون كميات محددة';
-      return `<div style="display:flex; align-items:center; gap:8px; justify-content:space-between; border:1px solid var(--line, #ddd); border-radius:8px; padding:6px 8px; margin-bottom:4px; font-size:12px;">
+      const hl = s.id === posPkgHighlightSubId;
+      return `<div style="display:flex; align-items:center; gap:8px; justify-content:space-between; border:${hl ? '2px solid #0f766e; background:#ecfdf5' : '1px solid var(--line, #ddd)'}; border-radius:8px; padding:6px 8px; margin-bottom:4px; font-size:12px;">
         <div style="min-width:0;"><div style="font-weight:700;">${escapeHtml(s.service_packages?.name || '')}</div>
         <div style="color:var(--ink-soft);">${left}${s.end_date ? ' — ينتهي ' + s.end_date : ''}</div></div>
         <button type="button" class="bo-icon-btn" data-pos-pkg="${s.id}">استهلاك</button></div>`;
@@ -39396,6 +39542,8 @@ function bindPackagesEvents() {
   document.getElementById('pkgSubStatusFilter').addEventListener('change', renderPkgSubsTable);
 
   document.getElementById('pkgUsageForm').addEventListener('submit', savePkgUsage);
+  document.getElementById('pkgCancelForm').addEventListener('submit', savePkgCancel);
+  document.getElementById('pkgCancelCloseBtn').addEventListener('click', () => document.getElementById('pkgCancelModalOverlay').classList.remove('show'));
   document.getElementById('posPkgForm').addEventListener('submit', savePosPkgUsage);
   document.getElementById('posPkgCancelBtn').addEventListener('click', () => document.getElementById('posPkgModalOverlay').classList.remove('show'));
   document.getElementById('closePkgUsageBtn').addEventListener('click', closePkgUsageModal);
