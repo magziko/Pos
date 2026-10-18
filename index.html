@@ -1891,7 +1891,7 @@ a { color: inherit; }
               <div class="report-card-value num negative" id="dashOutOfStockCount">0</div>
             </div>
             <div class="report-card" id="dashPackagesCard" style="cursor:pointer; display:none;" title="اضغط لعرض اشتراكات الباقات">
-              <div class="report-card-label">باقات تحتاج متابعة (تنتهي خلال 7 أيام أو رصيد منخفض)</div>
+              <div class="report-card-label">باقات تحتاج متابعة (تنتهي خلال 7 أيام أو رصيد منخفض أو قسط متأخر)</div>
               <div class="report-card-value num negative" id="dashPackagesCount">0</div>
             </div>
           </div>
@@ -2706,7 +2706,10 @@ a { color: inherit; }
         <div id="bo-section-package-subscriptions" style="display:none;">
           <div class="bo-section-header">
             <div class="bo-section-title">اشتراكات العملاء في الباقات</div>
-            <button class="bo-add-btn" id="addPkgSubBtn">+ اشتراك جديد</button>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="bo-add-btn" id="pkgBulkRemindBtn" style="background:#15803d;">📲 تذكيرات الانتهاء</button>
+              <button class="bo-add-btn" id="addPkgSubBtn">+ اشتراك جديد</button>
+            </div>
           </div>
           <div class="search-row" style="margin-bottom:14px; display:flex; gap:10px; flex-wrap:wrap;">
             <input type="text" id="pkgSubSearchInput" placeholder="ابحث باسم العميل أو الهاتف أو الباقة..." style="flex:1; min-width:200px;">
@@ -9916,6 +9919,16 @@ a { color: inherit; }
         <div class="field"><label>طريقة الدفع</label>
           <select id="pkgSubPayMethod"><option value="cash">نقدي</option><option value="card">بطاقة</option><option value="transfer">تحويل</option></select>
         </div>
+        <div class="field field-full" style="border-top:1px dashed #ccc; padding-top:8px;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;"><input type="checkbox" id="pkgSubInstToggle" style="width:auto;"> تقسيط المتبقي على أقساط شهرية</label>
+        </div>
+        <div class="field field-full" id="pkgSubInstWrap" style="display:none;">
+          <div class="modal-grid">
+            <div class="field"><label>عدد الأقساط (2 – 24)</label><input type="number" id="pkgSubInstCount" min="2" max="24" step="1" value="3"></div>
+            <div class="field"><label>تاريخ أول قسط</label><input type="date" id="pkgSubInstFirst"></div>
+          </div>
+          <div id="pkgSubInstPreview" style="font-size:12.5px; margin-top:6px;"></div>
+        </div>
         <div class="field field-full" id="pkgSubItemsPreview" style="font-size:12.5px; color:var(--ink-soft);"></div>
         <div class="field field-full"><label>ملاحظات</label><input type="text" id="pkgSubNotes"></div>
       </div>
@@ -9925,6 +9938,54 @@ a { color: inherit; }
         <button type="submit" class="submit-btn" id="savePkgSubBtn">حفظ الاشتراك</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Modal: جدول أقساط اشتراك -->
+<div class="modal-overlay" id="pkgInstModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title" id="pkgInstTitle">أقساط الاشتراك</div>
+    <div id="pkgInstSummary" style="font-size:13px; margin-bottom:10px;"></div>
+    <div class="bo-table-wrap" style="margin-bottom:12px;">
+      <table class="bo-table">
+        <thead><tr><th>#</th><th>البيان</th><th>الاستحقاق</th><th>المبلغ</th><th>المغطّى بالمدفوع</th><th>الحالة</th></tr></thead>
+        <tbody id="pkgInstBody"></tbody>
+      </table>
+    </div>
+    <div style="font-weight:700; margin-bottom:6px;">إنشاء / إعادة إنشاء الجدول</div>
+    <div class="report-subtitle" style="margin-bottom:8px;">يُقسَّم المتبقي حاليًا (الإجمالي − المدفوع) على الأقساط الجديدة، ويُستبدل الجدول الحالي. ما دُفع سابقًا يظهر كصف "مدفوع سابقًا".</div>
+    <div class="modal-grid">
+      <div class="field"><label>عدد الأقساط (2 – 24)</label><input type="number" id="pkgInstCount" min="2" max="24" step="1" value="3"></div>
+      <div class="field"><label>تاريخ أول قسط</label><input type="date" id="pkgInstFirst"></div>
+    </div>
+    <div class="error-msg" id="pkgInstError"></div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="pkgInstCloseBtn">إغلاق</button>
+      <button type="button" class="submit-btn" id="pkgInstGenBtn">إنشاء الجدول</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: تذكيرات انتهاء الباقات (واتساب) -->
+<div class="modal-overlay" id="pkgRemindModalOverlay">
+  <div class="modal-box wide">
+    <div class="modal-title">تذكيرات انتهاء الاشتراكات</div>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
+      <label style="display:flex; align-items:center; gap:6px;">تنتهي خلال
+        <select id="pkgRemindDays" style="width:auto;"><option value="3">3 أيام</option><option value="7" selected>7 أيام</option><option value="14">14 يوم</option><option value="30">30 يوم</option></select>
+      </label>
+      <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="checkbox" id="pkgRemindExpired" style="width:auto;"> مع المنتهية خلال آخر 14 يوم</label>
+    </div>
+    <div id="pkgRemindSummary" style="font-size:12.5px; color:var(--ink-soft); margin-bottom:8px;"></div>
+    <div class="bo-table-wrap" style="max-height:55vh; overflow:auto;">
+      <table class="bo-table">
+        <thead><tr><th>العميل</th><th>الهاتف</th><th>الباقة</th><th>الانتهاء</th><th>المتبقي</th><th>الأرصدة</th><th></th></tr></thead>
+        <tbody id="pkgRemindBody"></tbody>
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn" id="pkgRemindCloseBtn">إغلاق</button>
+    </div>
   </div>
 </div>
 
@@ -23020,7 +23081,7 @@ async function loadDashPackagesCard() {
   if (!card) return;
   try {
     const { data, error } = await applyBranchScope(
-      supabaseClient.from('package_subscriptions').select('id, end_date, service_packages(apply_on, duration_type), package_subscription_items(quantity_total, quantity_used)').eq('status', 'active'),
+      supabaseClient.from('package_subscriptions').select('id, end_date, paid_amount, service_packages(apply_on, duration_type), package_subscription_items(quantity_total, quantity_used), package_subscription_installments(seq, due_date, amount)').eq('status', 'active'),
       ''
     );
     if (error) throw error;
@@ -23030,6 +23091,7 @@ async function loadDashPackagesCard() {
     const live = (data || []).filter(r => !(r.end_date && r.end_date < today));
     const needs = live.filter(r => {
       if (r.end_date && r.end_date <= limStr) return true;
+      if ((r.package_subscription_installments || []).length && pkgInstState(r.package_subscription_installments, r.paid_amount, today).overdueCount > 0) return true;
       const pk = r.service_packages || {};
       if (!(pk.apply_on === 'package' || pk.duration_type === 'consumption')) return false;
       const items = r.package_subscription_items || [];
@@ -38767,7 +38829,7 @@ async function deletePackage(pkg) {
 // ---------- الاشتراكات ----------
 async function loadBoPkgSubs() {
   const { data, error } = await supabaseClient.from('package_subscriptions')
-    .select('*, customers(name, phone), service_packages(name, duration_type, apply_on, order_types), branches(name), package_subscription_items(item_name, quantity_total, quantity_used)')
+    .select('*, customers(name, phone), service_packages(name, duration_type, apply_on, order_types), branches(name), package_subscription_items(item_name, quantity_total, quantity_used), package_subscription_installments(seq, label, due_date, amount)')
     .order('created_at', { ascending: false });
   if (error) { console.error(error); showToast('تعذر تحميل الاشتراكات', true); return; }
   boPkgSubs = data || [];
@@ -38806,6 +38868,7 @@ function renderPkgSubsTable() {
   filtered.forEach(s => {
     const remaining = pkgNum(s.total_amount) - pkgNum(s.paid_amount);
     const eff = pkgSubEffectiveStatus(s);
+    const instSt = (eff !== 'cancelled' && (s.package_subscription_installments || []).length) ? pkgInstState(s.package_subscription_installments, s.paid_amount) : null;
     const usage = s.quantity_total != null ? `${pkgNum(s.quantity_used)} / ${pkgNum(s.quantity_total)}` : `${pkgNum(s.quantity_used)} زيارة`;
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -38817,12 +38880,14 @@ function renderPkgSubsTable() {
       <td class="num">${usage}</td>
       <td class="num">${pkgFmt(s.total_amount)}</td>
       <td class="num">${pkgFmt(s.paid_amount)}${pkgNum(s.refunded_amount) > 0 ? `<div style="font-size:11px; color:#b45309;">مردود ${pkgFmt(s.refunded_amount)}</div>` : ''}</td>
-      <td class="num" style="${remaining > 0.005 ? 'color:#b91c1c; font-weight:700;' : ''}">${pkgFmt(remaining)}</td>
+      <td class="num" style="${remaining > 0.005 ? 'color:#b91c1c; font-weight:700;' : ''}">${pkgFmt(remaining)}${instSt && instSt.overdueCount ? `<div style="font-size:11px; color:#b91c1c;">قسط متأخر ${pkgFmt(instSt.overdueAmount)}</div>` : (instSt && instSt.next ? `<div style="font-size:11px; color:var(--ink-soft);">القادم ${instSt.next.due_date}</div>` : '')}</td>
       <td>${pkgSubStatusBadge(s)}</td>
       <td><div class="bo-row-actions">
         ${eff === 'active' ? '<button class="bo-icon-btn" data-action="use" style="color:var(--teal-700); font-weight:700;">استهلاك</button>' : '<button class="bo-icon-btn" data-action="use">السجل</button>'}
         <button class="bo-icon-btn" data-action="pay" style="color:var(--teal-700);">المدفوعات</button>
         ${(eff === 'active' || eff === 'expired') && s.customers?.phone ? '<button class="bo-icon-btn" data-action="remind" style="color:#15803d;">تذكير واتساب</button>' : ''}
+        ${eff !== 'cancelled' ? '<button class="bo-icon-btn" data-action="inst" style="color:#7c3aed;">الأقساط</button>' : ''}
+        <button class="bo-icon-btn" data-action="stmt" style="color:#475569;">كشف حساب</button>
         ${s.card_code ? '<button class="bo-icon-btn" data-action="card" style="color:var(--teal-700);">بطاقة</button>' : ''}
         ${eff !== 'cancelled' ? '<button class="bo-icon-btn" data-action="renew" style="color:#047857; font-weight:700;">تجديد</button>' : ''}
         ${eff === 'active' ? '<button class="bo-icon-btn" data-action="freeze" style="color:#0369a1;">تجميد</button>' : ''}
@@ -38832,6 +38897,9 @@ function renderPkgSubsTable() {
       </div></td>`;
     tr.querySelector('[data-action="use"]').addEventListener('click', () => openPkgUsageModal(s));
     tr.querySelector('[data-action="pay"]').addEventListener('click', () => openPkgPayModal(s));
+    tr.querySelector('[data-action="stmt"]').addEventListener('click', () => printPkgCustomerStatement(s));
+    const ib = tr.querySelector('[data-action="inst"]');
+    if (ib) ib.addEventListener('click', () => openPkgInstModal(s));
     const cd = tr.querySelector('[data-action="card"]');
     if (cd) cd.addEventListener('click', () => printPkgSubCard(s));
     const fz = tr.querySelector('[data-action="freeze"]');
@@ -38966,6 +39034,10 @@ async function openPkgSubModal(renewFrom) {
   if (renewFrom && renewFrom.branch_id) document.getElementById('pkgSubBranch').innerHTML = `<option value="${renewFrom.branch_id}"></option>`;
   if (renewFrom && renewFrom.branch_id) document.getElementById('pkgSubBranch').value = renewFrom.branch_id;
   pkgSubApplyPackage();
+  document.getElementById('pkgSubInstToggle').checked = false;
+  document.getElementById('pkgSubInstCount').value = 3;
+  { const f = new Date(document.getElementById('pkgSubStartDate').value + 'T00:00:00'); f.setMonth(f.getMonth() + 1); document.getElementById('pkgSubInstFirst').value = pkgDateStr(f); }
+  pkgSubInstRefreshPreview();
   document.getElementById('pkgSubModalError').classList.remove('show');
   document.getElementById('pkgSubModalOverlay').classList.add('show');
 }
@@ -38993,6 +39065,13 @@ async function savePkgSub(e) {
   const items = pkg.service_package_items || [];
   const qtyTotal = items.length ? items.reduce((s, i) => s + pkgNum(i.quantity), 0) : null;
 
+  let instRows = null;
+  if (document.getElementById('pkgSubInstToggle').checked) {
+    const sch = pkgBuildSchedule(total, paid, document.getElementById('pkgSubInstCount').value, document.getElementById('pkgSubInstFirst').value, document.getElementById('pkgSubStartDate').value);
+    if (!sch.ok) return fail(sch.error);
+    instRows = sch.rows;
+  }
+
   let subId = null;
   try {
     const { data: sub, error } = await supabaseClient.from('package_subscriptions').insert({
@@ -39010,6 +39089,10 @@ async function savePkgSub(e) {
         subscription_id: subId, product_id: i.product_id, item_name: i.item_name || (i.product_id ? null : 'كمية عامة'), quantity_total: i.quantity,
       })));
       if (iErr) throw iErr;
+    }
+    if (instRows) {
+      const { error: nErr } = await supabaseClient.from('package_subscription_installments').insert(instRows.map(r => ({ ...r, subscription_id: subId })));
+      if (nErr) throw nErr;
     }
     if (paid > 0) {
       const { data: pay, error: pErr } = await supabaseClient.from('package_subscription_payments').insert({
@@ -39032,6 +39115,249 @@ async function savePkgSub(e) {
     fail(err.message || 'حدث خطأ أثناء الحفظ');
   } finally {
     btn.disabled = false; btn.textContent = 'حفظ الاشتراك';
+  }
+}
+
+// ---------- تذكيرات الانتهاء الجماعية (واتساب) ----------
+// المتصفح يمنع فتح عدة نوافذ بضغطة واحدة، فنعرض قائمة وزر واتساب لكل عميل، ونحفظ (في هذا المتصفح) من أُرسل له اليوم.
+const PKG_REMIND_KEY = 'pkgRemindSent';
+function pkgRemindSentMap() {
+  try { return JSON.parse(localStorage.getItem(PKG_REMIND_KEY) || '{}') || {}; } catch (e) { return {}; }
+}
+function pkgRemindMarkSent(subId) {
+  try {
+    const today = pkgTodayStr(); const m = pkgRemindSentMap();
+    Object.keys(m).forEach(k => { if (m[k] !== today) delete m[k]; });
+    m[subId] = today;
+    localStorage.setItem(PKG_REMIND_KEY, JSON.stringify(m));
+  } catch (e) { /* التخزين المحلي غير متاح: لا مشكلة */ }
+}
+function pkgRemindCandidates(days, withExpired) {
+  const today = pkgTodayStr();
+  const add = (n) => { const d = new Date(today + 'T00:00:00'); d.setDate(d.getDate() + n); return pkgDateStr(d); };
+  const limit = add(days), back = add(-14);
+  return boPkgSubs.filter(s => {
+    if (s.status !== 'active' || !s.end_date) return false;
+    if (s.end_date >= today) return s.end_date <= limit;
+    return withExpired && s.end_date >= back;
+  }).sort((a, b) => a.end_date.localeCompare(b.end_date));
+}
+function renderPkgRemindList() {
+  const days = Number(document.getElementById('pkgRemindDays').value) || 7;
+  const list = pkgRemindCandidates(days, document.getElementById('pkgRemindExpired').checked);
+  const withPhone = list.filter(s => (s.customers?.phone || '').replace(/[^0-9]/g, ''));
+  const sent = pkgRemindSentMap(); const today = pkgTodayStr();
+  document.getElementById('pkgRemindSummary').textContent =
+    `${list.length} اشتراك` + (list.length - withPhone.length ? ` — ${list.length - withPhone.length} بدون رقم هاتف (غير معروضين)` : '') +
+    ` — تم الإرسال اليوم: ${withPhone.filter(s => sent[s.id] === today).length}`;
+  const body = document.getElementById('pkgRemindBody');
+  if (withPhone.length === 0) { body.innerHTML = '<tr><td colspan="7" class="bo-empty">لا توجد اشتراكات تحتاج تذكيرًا في هذه الفترة</td></tr>'; return; }
+  body.innerHTML = '';
+  withPhone.forEach(s => {
+    const left = Math.round((new Date(s.end_date + 'T00:00:00') - new Date(today + 'T00:00:00')) / 86400000);
+    const items = (s.package_subscription_items || []).map(i => `${escapeHtml(i.item_name || 'الكمية')}: ${pkgNum(i.quantity_total) - pkgNum(i.quantity_used)}`).join('، ');
+    const done = sent[s.id] === today;
+    const tr = document.createElement('tr');
+    if (done) tr.style.opacity = '.55';
+    tr.innerHTML = `
+      <td>${escapeHtml(s.customers?.name || '—')}</td>
+      <td class="num" style="direction:ltr; text-align:right;">${escapeHtml(s.customers?.phone || '')}</td>
+      <td>${escapeHtml(s.service_packages?.name || '—')}</td>
+      <td class="num">${s.end_date}</td>
+      <td class="num" style="${left < 0 ? 'color:#b91c1c;' : ''}">${left < 0 ? 'منتهي منذ ' + (-left) : left} ${left < 0 ? 'يوم' : 'يوم'}</td>
+      <td>${items || '—'}</td>
+      <td><button class="bo-icon-btn" data-act="wa" style="color:#15803d; font-weight:700;">${done ? '✓ أُرسل — إعادة' : 'واتساب'}</button></td>`;
+    tr.querySelector('[data-act="wa"]').addEventListener('click', () => { sendPkgReminderWhatsapp(s); pkgRemindMarkSent(s.id); renderPkgRemindList(); });
+    body.appendChild(tr);
+  });
+}
+async function openPkgRemindModal() {
+  await loadBoPkgSubs();
+  renderPkgRemindList();
+  document.getElementById('pkgRemindModalOverlay').classList.add('show');
+}
+
+// ---------- أقساط الاشتراك ----------
+// الجدول يغطي إجمالي الاشتراك (صف "مدفوع سابقًا" + الأقساط). المدفوع يُوزَّع على الصفوف بترتيب الاستحقاق (الأقدم أولًا)،
+// فلا حاجة لربط كل دفعة بقسط: القسط مدفوع/جزئي/متأخر يُحسب من paid_amount.
+function pkgAddMonthsStr(dateStr, n) {
+  const d = new Date(dateStr + 'T00:00:00');
+  const day = d.getDate();
+  d.setDate(1); d.setMonth(d.getMonth() + n);
+  const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(day, last));
+  return pkgDateStr(d);
+}
+function pkgBuildSchedule(total, paid, count, firstDue, downDate) {
+  total = pkgNum(total); paid = pkgNum(paid); count = Math.floor(Number(count));
+  if (!(count >= 2 && count <= 24)) return { ok: false, error: 'عدد الأقساط يجب أن يكون بين 2 و24' };
+  if (!firstDue) return { ok: false, error: 'حدد تاريخ أول قسط' };
+  const remCents = Math.round((total - paid) * 100);
+  if (remCents <= 0) return { ok: false, error: 'لا يوجد مبلغ متبقٍ للتقسيط' };
+  if (remCents < count) return { ok: false, error: 'المتبقي أقل من عدد الأقساط' };
+  const rows = [];
+  if (paid > 0.004) rows.push({ seq: 0, label: 'مدفوع سابقًا', due_date: downDate || pkgTodayStr(), amount: Math.round(paid * 100) / 100 });
+  const base = Math.floor(remCents / count);
+  for (let k = 0; k < count; k++) {
+    const cents = k === count - 1 ? remCents - base * (count - 1) : base;
+    rows.push({ seq: k + 1, label: 'قسط ' + (k + 1), due_date: pkgAddMonthsStr(firstDue, k), amount: cents / 100 });
+  }
+  return { ok: true, rows };
+}
+// حالة كل قسط + ملخص المتأخر والقادم، بتوزيع المدفوع على الصفوف بترتيب الاستحقاق
+function pkgInstState(insts, paidAmount, today) {
+  today = today || pkgTodayStr();
+  const sorted = [...(insts || [])].sort((a, b) => (a.due_date < b.due_date ? -1 : a.due_date > b.due_date ? 1 : a.seq - b.seq));
+  let left = pkgNum(paidAmount);
+  let overdueAmount = 0, overdueCount = 0, next = null;
+  const rows = sorted.map(r => {
+    const amt = pkgNum(r.amount);
+    const covered = Math.max(0, Math.min(amt, left)); left -= covered;
+    const full = covered >= amt - 0.005;
+    let status;
+    if (full) status = 'paid';
+    else if (r.due_date < today) { status = 'overdue'; overdueAmount += amt - covered; overdueCount++; }
+    else if (r.due_date === today) status = 'due_today';
+    else status = covered > 0.004 ? 'partial' : 'upcoming';
+    if (!full && !next && r.due_date >= today) next = { ...r, remaining: amt - covered };
+    return { ...r, covered, status };
+  });
+  return { rows, overdueAmount, overdueCount, next };
+}
+const PKG_INST_LABELS = { paid: '✓ مدفوع', partial: 'جزئي', overdue: 'متأخر', due_today: 'يستحق اليوم', upcoming: 'قادم' };
+const PKG_INST_COLORS = { paid: '#15803d', partial: '#b45309', overdue: '#b91c1c', due_today: '#b45309', upcoming: 'var(--ink-soft)' };
+
+function pkgSubInstRefreshPreview() {
+  const on = document.getElementById('pkgSubInstToggle').checked;
+  document.getElementById('pkgSubInstWrap').style.display = on ? '' : 'none';
+  const box = document.getElementById('pkgSubInstPreview');
+  if (!on) { box.innerHTML = ''; return; }
+  const sch = pkgBuildSchedule(document.getElementById('pkgSubTotal').value, document.getElementById('pkgSubPaid').value,
+    document.getElementById('pkgSubInstCount').value, document.getElementById('pkgSubInstFirst').value, document.getElementById('pkgSubStartDate').value);
+  if (!sch.ok) { box.innerHTML = `<span style="color:#b91c1c;">${escapeHtml(sch.error)}</span>`; return; }
+  box.innerHTML = sch.rows.map(r => `<div style="display:flex; justify-content:space-between; gap:10px; border-bottom:1px dotted #ddd; padding:2px 0;"><span>${escapeHtml(r.label)} — ${r.due_date}</span><strong class="num">${pkgFmt(r.amount)}</strong></div>`).join('');
+}
+
+let pkgInstSub = null;
+function renderPkgInstModal() {
+  const s = pkgInstSub;
+  const st = pkgInstState(s.package_subscription_installments, s.paid_amount);
+  document.getElementById('pkgInstTitle').textContent = `أقساط اشتراك: ${s.customers?.name || ''} — ${s.service_packages?.name || ''}`;
+  document.getElementById('pkgInstSummary').innerHTML =
+    `الإجمالي <strong>${pkgFmt(s.total_amount)}</strong> — المدفوع <strong>${pkgFmt(s.paid_amount)}</strong> — المتبقي <strong>${pkgFmt(pkgNum(s.total_amount) - pkgNum(s.paid_amount))}</strong>` +
+    (st.overdueCount ? ` — <span style="color:#b91c1c; font-weight:700;">متأخر ${pkgFmt(st.overdueAmount)} (${st.overdueCount} قسط)</span>` : '') +
+    (st.next ? ` — القسط القادم: ${st.next.due_date} (${pkgFmt(st.next.remaining)})` : '');
+  document.getElementById('pkgInstBody').innerHTML = st.rows.length === 0
+    ? '<tr><td colspan="6" class="bo-empty">لا يوجد جدول أقساط لهذا الاشتراك</td></tr>'
+    : st.rows.map(r => `<tr><td class="num">${r.seq}</td><td>${escapeHtml(r.label || '')}</td><td class="num">${r.due_date}</td><td class="num">${pkgFmt(r.amount)}</td><td class="num">${pkgFmt(r.covered)}</td><td style="color:${PKG_INST_COLORS[r.status]}; font-weight:700;">${PKG_INST_LABELS[r.status]}</td></tr>`).join('');
+}
+function openPkgInstModal(sub) {
+  pkgInstSub = sub;
+  document.getElementById('pkgInstError').classList.remove('show');
+  const first = new Date(); first.setMonth(first.getMonth() + 1);
+  document.getElementById('pkgInstFirst').value = pkgDateStr(first);
+  document.getElementById('pkgInstCount').value = 3;
+  renderPkgInstModal();
+  document.getElementById('pkgInstModalOverlay').classList.add('show');
+}
+async function generatePkgInstallments() {
+  const s = pkgInstSub; if (!s) return;
+  const errEl = document.getElementById('pkgInstError');
+  errEl.classList.remove('show');
+  const fail = (m) => { errEl.textContent = m; errEl.classList.add('show'); };
+  if (s.status === 'cancelled') return fail('لا يمكن تقسيط اشتراك ملغي');
+  const sch = pkgBuildSchedule(s.total_amount, s.paid_amount, document.getElementById('pkgInstCount').value, document.getElementById('pkgInstFirst').value, s.start_date);
+  if (!sch.ok) return fail(sch.error);
+  const old = [...(s.package_subscription_installments || [])];
+  if (old.length && !confirm('سيُستبدل جدول الأقساط الحالي بجدول جديد. متابعة؟')) return;
+  const btn = document.getElementById('pkgInstGenBtn');
+  btn.disabled = true; btn.textContent = 'جاري الإنشاء...';
+  try {
+    if (old.length) {
+      const { error: dErr } = await supabaseClient.from('package_subscription_installments').delete().eq('subscription_id', s.id);
+      if (dErr) throw dErr;
+    }
+    const { error: iErr } = await supabaseClient.from('package_subscription_installments').insert(sch.rows.map(r => ({ ...r, subscription_id: s.id })));
+    if (iErr) {
+      if (old.length) { await supabaseClient.from('package_subscription_installments').insert(old.map(r => ({ ...r, subscription_id: s.id }))); }
+      throw iErr;
+    }
+    showToast('تم إنشاء جدول الأقساط');
+    pkgInstSub = { ...s, package_subscription_installments: sch.rows };
+    renderPkgInstModal();
+    await loadBoPkgSubs(); renderPkgSubsTable();
+  } catch (err) {
+    console.error(err);
+    fail(err.message || 'تعذر إنشاء الجدول');
+  } finally {
+    btn.disabled = false; btn.textContent = 'إنشاء الجدول';
+  }
+}
+
+// ---------- كشف حساب العميل (اشتراكات ومدفوعات واستهلاك) ----------
+function buildPkgStatementHtml(customer, subs, today) {
+  const ST = { active: 'نشط', frozen: 'مجمّد', expired: 'منتهي', consumed: 'تم الاستهلاك', cancelled: 'ملغي' };
+  const PM = { cash: 'نقدي', card: 'بطاقة', transfer: 'تحويل' };
+  const OT = (typeof PKG_ORDER_TYPES !== 'undefined') ? PKG_ORDER_TYPES : {};
+  const eff = x => (x.status === 'active' && x.end_date && x.end_date < today) ? 'expired' : x.status;
+  const live = subs.filter(x => x.status !== 'cancelled');
+  const totTotal = live.reduce((a, x) => a + pkgNum(x.total_amount), 0);
+  const totPaid = subs.reduce((a, x) => a + pkgNum(x.paid_amount), 0);
+  const totRef = subs.reduce((a, x) => a + pkgNum(x.refunded_amount), 0);
+  const totRem = live.reduce((a, x) => a + Math.max(0, pkgNum(x.total_amount) - pkgNum(x.paid_amount)), 0);
+  const brand = escapeHtml((typeof companyInfo !== 'undefined' && companyInfo && companyInfo.name) || (currentProfile?.branches?.name) || '');
+  const blocks = subs.map(x => {
+    const items = x.package_subscription_items || [];
+    const itemById = {}; items.forEach(i => { itemById[i.id] = i; });
+    const nm = i => escapeHtml(i.item_name || i.products?.name || 'الكمية');
+    const st = pkgInstState(x.package_subscription_installments, x.paid_amount, today);
+    const pays = [...(x.package_subscription_payments || [])].sort((a, b) => (a.payment_date < b.payment_date ? -1 : 1));
+    const usage = [...(x.package_usage || [])].sort((a, b) => (a.usage_date < b.usage_date ? 1 : -1));
+    const usageShown = usage.slice(0, 100);
+    const rem = x.status === 'cancelled' ? 0 : Math.max(0, pkgNum(x.total_amount) - pkgNum(x.paid_amount));
+    return `<div style="border:1px solid #d1d5db; border-radius:8px; padding:10px 12px; margin-bottom:14px; page-break-inside:avoid;">
+      <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:6px;">
+        <div style="font-weight:700; font-size:15px; color:#0f766e;">${escapeHtml(x.service_packages?.name || '—')}</div>
+        <div style="font-size:12.5px;">الحالة: <strong>${ST[eff(x)] || escapeHtml(eff(x))}</strong>${x.card_code ? ' — بطاقة ' + escapeHtml(x.card_code) : ''}</div>
+      </div>
+      <div style="font-size:12.5px; color:#4b5563; margin-bottom:6px;">${x.branches?.name ? 'الفرع: ' + escapeHtml(x.branches.name) + ' — ' : ''}من ${escapeHtml(x.start_date || '')} ${x.end_date ? 'إلى ' + escapeHtml(x.end_date) : '(بدون تاريخ انتهاء)'}</div>
+      <table><thead><tr><th>الإجمالي</th><th>المدفوع</th><th>المردود</th><th>المتبقي</th></tr></thead>
+        <tbody><tr><td>${pkgFmt(x.total_amount)}</td><td>${pkgFmt(x.paid_amount)}</td><td>${pkgFmt(x.refunded_amount)}</td><td>${pkgFmt(rem)}</td></tr></tbody></table>
+      ${items.length ? `<div style="font-weight:700; margin-top:10px; font-size:13px;">أرصدة الباقة</div>
+        <table><thead><tr><th>الصنف</th><th>الإجمالي</th><th>المستهلك</th><th>المتبقي</th></tr></thead><tbody>
+        ${items.map(i => `<tr><td>${nm(i)}</td><td>${pkgNum(i.quantity_total)}</td><td>${pkgNum(i.quantity_used)}</td><td>${pkgNum(i.quantity_total) - pkgNum(i.quantity_used)}</td></tr>`).join('')}</tbody></table>` : ''}
+      ${st.rows.length ? `<div style="font-weight:700; margin-top:10px; font-size:13px;">جدول الأقساط${st.overdueCount ? ` — <span style="color:#b91c1c;">متأخر ${pkgFmt(st.overdueAmount)}</span>` : ''}</div>
+        <table><thead><tr><th>البيان</th><th>الاستحقاق</th><th>المبلغ</th><th>المغطّى</th><th>الحالة</th></tr></thead><tbody>
+        ${st.rows.map(r => `<tr><td>${escapeHtml(r.label || '')}</td><td>${escapeHtml(r.due_date)}</td><td>${pkgFmt(r.amount)}</td><td>${pkgFmt(r.covered)}</td><td>${PKG_INST_LABELS[r.status]}</td></tr>`).join('')}</tbody></table>` : ''}
+      <div style="font-weight:700; margin-top:10px; font-size:13px;">المدفوعات</div>
+      <table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th><th>ملاحظات</th></tr></thead><tbody>
+      ${pays.length ? pays.map(pp => `<tr><td>${escapeHtml(pp.payment_date || '')}</td><td>${pkgFmt(pp.amount)}</td><td>${PM[pp.payment_method] || escapeHtml(pp.payment_method || '')}</td><td>${escapeHtml(pp.notes || '')}</td></tr>`).join('') : '<tr><td colspan="4">لا توجد مدفوعات مسجلة</td></tr>'}</tbody></table>
+      <div style="font-weight:700; margin-top:10px; font-size:13px;">سجل الاستهلاك${usage.length > usageShown.length ? ` (آخر ${usageShown.length} من ${usage.length})` : ''}</div>
+      <table><thead><tr><th>التاريخ</th><th>الصنف</th><th>الكمية</th><th>نوع الطلب</th><th>ملاحظات</th></tr></thead><tbody>
+      ${usageShown.length ? usageShown.map(u => `<tr><td>${escapeHtml(u.usage_date || '')}</td><td>${itemById[u.subscription_item_id] ? nm(itemById[u.subscription_item_id]) : '—'}</td><td>${pkgNum(u.quantity)}</td><td>${escapeHtml(OT[u.order_type] || u.order_type || '—')}</td><td>${escapeHtml(u.notes || '')}</td></tr>`).join('') : '<tr><td colspan="5">لا يوجد استهلاك مسجل</td></tr>'}</tbody></table>
+    </div>`;
+  }).join('');
+  return `<div class="doc-header"><div><div class="doc-title">كشف حساب الباقات والاشتراكات</div>${brand ? `<div style="font-size:12.5px; color:#4b5563;">${brand}</div>` : ''}</div>
+      <div class="doc-meta">${escapeHtml(today)}</div></div>
+    <div class="doc-section"><div class="doc-section-label">العميل</div><div class="doc-section-value">${escapeHtml(customer.name || '')}${customer.phone ? ' — ' + escapeHtml(customer.phone) : ''}</div></div>
+    <table><thead><tr><th>عدد الاشتراكات</th><th>إجمالي الاشتراكات (غير الملغاة)</th><th>إجمالي المدفوع</th><th>إجمالي المردود</th><th>المتبقي على العميل</th></tr></thead>
+      <tbody><tr class="doc-total-row"><td>${subs.length}</td><td>${pkgFmt(totTotal)}</td><td>${pkgFmt(totPaid)}</td><td>${pkgFmt(totRef)}</td><td>${pkgFmt(totRem)}</td></tr></tbody></table>
+    <div style="height:14px;"></div>
+    ${blocks || '<div style="text-align:center; color:#6b7280;">لا توجد اشتراكات لهذا العميل</div>'}`;
+}
+async function printPkgCustomerStatement(sub) {
+  const customerId = sub.customer_id;
+  if (!customerId) { showToast('لا يوجد عميل لهذا الاشتراك', true); return; }
+  try {
+    const { data, error } = await supabaseClient.from('package_subscriptions')
+      .select('*, service_packages(name, apply_on), branches(name), package_subscription_items(id, item_name, quantity_total, quantity_used, products(name)), package_subscription_installments(seq, label, due_date, amount), package_subscription_payments(payment_date, amount, payment_method, notes), package_usage(usage_date, quantity, order_type, notes, subscription_item_id)')
+      .eq('customer_id', customerId).order('start_date', { ascending: true });
+    if (error) throw error;
+    const customer = { name: sub.customers?.name || '', phone: sub.customers?.phone || '' };
+    openPrintWindow('كشف حساب باقات — ' + escapeHtml(customer.name), buildPkgStatementHtml(customer, data || [], pkgTodayStr()));
+  } catch (err) {
+    console.error(err);
+    showToast('تعذر تجهيز كشف الحساب', true);
   }
 }
 
@@ -39542,6 +39868,15 @@ function bindPackagesEvents() {
   document.getElementById('pkgSubStatusFilter').addEventListener('change', renderPkgSubsTable);
 
   document.getElementById('pkgUsageForm').addEventListener('submit', savePkgUsage);
+  document.getElementById('pkgBulkRemindBtn').addEventListener('click', openPkgRemindModal);
+  document.getElementById('pkgRemindDays').addEventListener('change', renderPkgRemindList);
+  document.getElementById('pkgRemindExpired').addEventListener('change', renderPkgRemindList);
+  document.getElementById('pkgRemindCloseBtn').addEventListener('click', () => document.getElementById('pkgRemindModalOverlay').classList.remove('show'));
+  ['pkgSubInstToggle', 'pkgSubInstCount', 'pkgSubInstFirst', 'pkgSubTotal', 'pkgSubPaid', 'pkgSubStartDate'].forEach(id => {
+    const el = document.getElementById(id); el.addEventListener('input', pkgSubInstRefreshPreview); el.addEventListener('change', pkgSubInstRefreshPreview);
+  });
+  document.getElementById('pkgInstGenBtn').addEventListener('click', generatePkgInstallments);
+  document.getElementById('pkgInstCloseBtn').addEventListener('click', async () => { document.getElementById('pkgInstModalOverlay').classList.remove('show'); pkgInstSub = null; });
   document.getElementById('pkgCancelForm').addEventListener('submit', savePkgCancel);
   document.getElementById('pkgCancelCloseBtn').addEventListener('click', () => document.getElementById('pkgCancelModalOverlay').classList.remove('show'));
   document.getElementById('posPkgForm').addEventListener('submit', savePosPkgUsage);
@@ -51969,7 +52304,7 @@ GEN_REPORTS['packages-report'] = {
   title: 'تقرير الباقات والاشتراكات (الانتهاء والأرصدة والاستهلاك)', gate: () => true,
   async load(f, t, b) {
     const [subs, usage] = await Promise.all([
-      einvFetchAll(() => applyBranchScope(supabaseClient.from('package_subscriptions').select('id, status, start_date, end_date, total_amount, paid_amount, customers(name, phone), service_packages(name, apply_on), package_subscription_items(item_name, quantity_total, quantity_used)').order('end_date', { ascending: true, nullsFirst: false }), b)),
+      einvFetchAll(() => applyBranchScope(supabaseClient.from('package_subscriptions').select('id, status, start_date, end_date, total_amount, paid_amount, customers(name, phone), service_packages(name, apply_on), package_subscription_items(item_name, quantity_total, quantity_used), package_subscription_installments(seq, label, due_date, amount)').order('end_date', { ascending: true, nullsFirst: false }), b)),
       einvFetchAll(() => applyBranchScope(supabaseClient.from('package_usage').select('subscription_id, quantity, order_type, usage_date').gte('usage_date', f).lte('usage_date', t).order('usage_date'), b))
     ]);
     return { subs, usage };
@@ -51987,6 +52322,12 @@ GEN_REPORTS['packages-report'] = {
     const lowBal = active.filter(s => tot(s) > 0 && (tot(s) - used(s)) / tot(s) <= 0.2);
     const expiredUnused = subs.filter(s => eff(s) === 'expired' && tot(s) - used(s) > 0);
     const unpaid = subs.filter(s => eff(s) !== 'cancelled' && owed(s) > 0).sort((a, b) => owed(b) - owed(a));
+    const instLate = subs.filter(s => eff(s) !== 'cancelled' && (s.package_subscription_installments || []).length)
+      .map(s => ({ s, st: pkgInstState(s.package_subscription_installments, s.paid_amount, today) })).filter(x => x.st.overdueCount > 0)
+      .sort((a, b) => b.st.overdueAmount - a.st.overdueAmount);
+    const instHeads = ['العميل', 'الهاتف', 'الباقة', 'أقساط متأخرة', 'المبلغ المتأخر', 'أقدم استحقاق', 'القسط القادم', 'المتبقي سداده'];
+    const instRow = ({ s, st }) => [s.customers?.name || '—', s.customers?.phone || '', s.service_packages?.name || '—', st.overdueCount, einvMoney(st.overdueAmount),
+      st.rows.find(r => r.status === 'overdue')?.due_date || '', st.next ? st.next.due_date + ' (' + einvMoney(st.next.remaining) + ')' : '—', einvMoney(owed(s))];
     const byId = {}; subs.forEach(s => { byId[s.id] = s; });
     const OT = (typeof PKG_ORDER_TYPES !== 'undefined') ? PKG_ORDER_TYPES : {};
     const byPkg = actGroupBy(usage, u => byId[u.subscription_id]?.service_packages?.name || '—', (k) => ({ n: k, c: 0, q: 0 }), (x, u) => { x.c++; x.q += actNum(u.quantity); }).sort((a, b) => b.q - a.q);
@@ -51995,12 +52336,13 @@ GEN_REPORTS['packages-report'] = {
     const row = s => [s.customers?.name || '—', s.customers?.phone || '', s.service_packages?.name || '—', ST[eff(s)] || eff(s), s.start_date || '', s.end_date || 'بدون', left(s) === null ? '—' : left(s), bal(s), einvMoney(s.total_amount), einvMoney(s.paid_amount), einvMoney(owed(s))];
     const heads = ['العميل', 'الهاتف', 'الباقة', 'الحالة', 'البداية', 'النهاية', 'المتبقي (يوم)', 'الأرصدة المتبقية', 'الإجمالي', 'المدفوع', 'المتبقي سداده'];
     return {
-      cards: [['اشتراكات نشطة', active.length], ['اشتراكات مجمّدة', subs.filter(s => s.status === 'frozen').length], ['تنتهي خلال 30 يوم', exp30.length, true], ['رصيد منخفض (≤20%)', lowBal.length], ['منتهية وبها رصيد غير مستهلك', expiredUnused.length, true], ['مستحقات غير مسددة', einvMoney(unpaid.reduce((x, s) => x + owed(s), 0)), true], ['عمليات استهلاك بالفترة', usage.length], ['إجمالي الكمية المستهلكة', usage.reduce((x, u) => x + actNum(u.quantity), 0)]],
+      cards: [['اشتراكات نشطة', active.length], ['اشتراكات مجمّدة', subs.filter(s => s.status === 'frozen').length], ['تنتهي خلال 30 يوم', exp30.length, true], ['رصيد منخفض (≤20%)', lowBal.length], ['منتهية وبها رصيد غير مستهلك', expiredUnused.length, true], ['مستحقات غير مسددة', einvMoney(unpaid.reduce((x, s) => x + owed(s), 0)), true], ['أقساط متأخرة (اشتراكات)', instLate.length, true], ['مبلغ الأقساط المتأخرة', einvMoney(instLate.reduce((x, y) => x + y.st.overdueAmount, 0)), true], ['عمليات استهلاك بالفترة', usage.length], ['إجمالي الكمية المستهلكة', usage.reduce((x, u) => x + actNum(u.quantity), 0)]],
       tables: [
         { title: 'تنتهي خلال 30 يوم (الأقرب أولًا)', heads, rows: exp30.map(row) },
         { title: 'رصيد منخفض (20% أو أقل متبقٍ)', heads, rows: lowBal.map(row) },
         { title: 'منتهية وبها رصيد غير مستهلك (فرصة تجديد)', heads, rows: expiredUnused.map(row) },
         { title: 'مبالغ غير مسددة', heads, rows: unpaid.map(row) },
+        { title: 'أقساط متأخرة (الأكبر مبلغًا أولًا)', heads: instHeads, rows: instLate.map(instRow) },
         { title: 'الاستهلاك حسب الباقة (خلال الفترة)', heads: ['الباقة', 'عدد العمليات', 'الكمية'], rows: byPkg.map(x => [x.n, x.c, x.q]) },
         { title: 'الاستهلاك حسب نوع الطلب (خلال الفترة)', heads: ['نوع الطلب', 'عدد العمليات', 'الكمية'], rows: byType.map(x => [x.n, x.c, x.q]) },
         { title: 'كل الاشتراكات', heads, rows: subs.map(row), detail: true }
