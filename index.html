@@ -1741,6 +1741,18 @@ a { color: inherit; }
           </div>
         </div>
 
+        <div class="bo-nav-group" id="rentalNavGroup">
+          <button class="bo-nav-item bo-nav-parent" id="rentalNavToggle" type="button">
+            <span>معرض تأجير السيارات</span>
+            <span class="bo-nav-chevron">‹</span>
+          </button>
+          <div class="bo-nav-sub" id="rentalNavSub">
+            <button class="bo-nav-sub-item" data-section="rental-contracts">عقود الإيجار</button>
+            <button class="bo-nav-sub-item" data-section="rental-cars">السيارات</button>
+            <button class="bo-nav-sub-item" data-section="rental-customers">عملاء التأجير</button>
+          </div>
+        </div>
+
         <div class="bo-nav-group" id="importExportNavGroup">
           <button class="bo-nav-item bo-nav-parent" id="importExportNavToggle" type="button">
             <span>الاستيراد والتصدير</span>
@@ -3068,6 +3080,52 @@ a { color: inherit; }
               <tbody id="academySessionsTableBody"><tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr></tbody>
             </table>
           </div>
+        </div>
+
+        <!-- معرض تأجير السيارات -->
+        <div id="bo-section-rental-cars" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">سيارات المعرض</div>
+            <button class="bo-add-btn" id="addRentalCarBtn">+ سيارة جديدة</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px; display:flex; gap:8px; flex-wrap:wrap;">
+            <input type="text" id="rentalCarSearch" placeholder="ابحث: اللوحة، الماركة، الموديل، الشاسيه...">
+            <select id="rentalCarStatusFilter" style="max-width:180px;"><option value="">كل الحالات</option><option value="available">متاحة</option><option value="rented">مؤجرة</option><option value="maintenance">صيانة</option><option value="sold">مباعة</option></select>
+          </div>
+          <div class="bo-table-wrap"><table class="bo-table">
+            <thead><tr><th>السيارة</th><th>اللوحة</th><th>السعر/يوم</th><th>العداد</th><th>الرخصة</th><th>التأمين</th><th>الزيت القادم</th><th>الحالة</th><th></th></tr></thead>
+            <tbody id="rentalCarsTableBody"><tr><td colspan="9" class="bo-empty">جاري التحميل...</td></tr></tbody>
+          </table></div>
+        </div>
+
+        <div id="bo-section-rental-customers" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">عملاء التأجير</div>
+            <button class="bo-add-btn" id="addRentalCustomerBtn">+ عميل جديد</button>
+          </div>
+          <div class="search-row" style="margin-bottom:14px;"><input type="text" id="rentalCustomerSearch" placeholder="ابحث: الاسم، الهاتف، الرقم القومي، رقم الرخصة..."></div>
+          <div class="bo-table-wrap"><table class="bo-table">
+            <thead><tr><th>الاسم</th><th>الهاتف</th><th>الرقم القومي / الجواز</th><th>رخصة القيادة</th><th>انتهاء الرخصة</th><th>عقود</th><th></th></tr></thead>
+            <tbody id="rentalCustomersTableBody"><tr><td colspan="7" class="bo-empty">جاري التحميل...</td></tr></tbody>
+          </table></div>
+        </div>
+
+        <div id="bo-section-rental-contracts" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">عقود الإيجار</div>
+            <div style="display:flex; gap:8px;">
+              <button class="bo-icon-btn" id="rentalSettingsBtn" type="button">إعدادات العقد</button>
+              <button class="bo-add-btn" id="addRentalContractBtn">+ عقد جديد</button>
+            </div>
+          </div>
+          <div class="search-row" style="margin-bottom:14px; display:flex; gap:8px; flex-wrap:wrap;">
+            <input type="text" id="rentalContractSearch" placeholder="ابحث: رقم العقد، العميل، اللوحة...">
+            <select id="rentalContractStatusFilter" style="max-width:180px;"><option value="">كل العقود</option><option value="open">مفتوحة</option><option value="late">متأخرة</option><option value="due">متبقي عليها مبالغ</option><option value="closed">مغلقة</option></select>
+          </div>
+          <div class="bo-table-wrap"><table class="bo-table">
+            <thead><tr><th>رقم</th><th>العميل</th><th>السيارة</th><th>الخروج</th><th>التسليم</th><th>الإجمالي</th><th>المتبقي</th><th>الحالة</th><th></th></tr></thead>
+            <tbody id="rentalContractsTableBody"><tr><td colspan="9" class="bo-empty">جاري التحميل...</td></tr></tbody>
+          </table></div>
         </div>
 
         <!-- قسم الملاعب/القاعات -->
@@ -21977,6 +22035,7 @@ const boAllSections = ['dashboard','products','categories','unit-types','tax-rat
   'clinic-patients','clinic-doctors','clinic-appointments',
   'academy-students','academy-courses','academy-instructors','academy-enrollments','academy-sessions',
   'venue-courts','venue-bookings',
+  'rental-cars','rental-customers','rental-contracts',
   'import-shipments','import-lcs','import-fx','import-cost-sheet','import-profit',
   'export-shipments','export-lcs','import-containers','import-export-dashboard',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
@@ -21993,6 +22052,7 @@ const boNavGroups = [
   { toggle: 'clinicNavToggle', group: 'clinicNavGroup', sections: ['clinic-patients', 'clinic-doctors', 'clinic-appointments'] },
   { toggle: 'academyNavToggle', group: 'academyNavGroup', sections: ['academy-students', 'academy-courses', 'academy-instructors', 'academy-enrollments', 'academy-sessions'] },
   { toggle: 'venueNavToggle', group: 'venueNavGroup', sections: ['venue-courts', 'venue-bookings'] },
+  { toggle: 'rentalNavToggle', group: 'rentalNavGroup', sections: ['rental-cars', 'rental-customers', 'rental-contracts'] },
   { toggle: 'importExportNavToggle', group: 'importExportNavGroup', sections: ['import-export-dashboard', 'import-shipments', 'import-lcs', 'import-fx', 'import-cost-sheet', 'import-profit', 'export-shipments', 'export-lcs', 'import-containers'] },
   { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
   { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['treasuries','payments','expense-items','expenses','capital','fixed-assets'] },
@@ -22026,6 +22086,7 @@ const SECTION_PERMISSION_MAP = {
   'academy-students': 'academy_management', 'academy-courses': 'academy_management', 'academy-instructors': 'academy_management',
   'academy-enrollments': 'academy_management', 'academy-sessions': 'academy_management',
   'venue-courts': 'venue_management', 'venue-bookings': 'venue_management',
+  'rental-cars': 'car_rental_management', 'rental-customers': 'car_rental_management', 'rental-contracts': 'car_rental_management',
   'import-shipments': 'import_export_management', 'import-lcs': 'import_export_management', 'import-fx': 'import_export_management', 'import-cost-sheet': 'import_export_management', 'import-profit': 'import_export_management',
   'export-shipments': 'import_export_management', 'export-lcs': 'import_export_management', 'import-containers': 'import_export_management', 'import-export-dashboard': 'import_export_management',
   'reports-sales': 'reports', 'reports-purchases': 'reports', 'reports-inventory': 'reports', 'reports-accounting': 'reports', 'reports-other': 'reports',
@@ -22186,6 +22247,7 @@ const SCREEN_LABELS = {
   'academy-students': 'الطلاب', 'academy-courses': 'الكورسات', 'academy-instructors': 'المدربين',
   'academy-enrollments': 'التسجيلات', 'academy-sessions': 'الحصص',
   'venue-courts': 'الملاعب/القاعات', 'venue-bookings': 'الحجوزات',
+  'rental-cars': 'السيارات', 'rental-customers': 'عملاء التأجير', 'rental-contracts': 'عقود الإيجار',
   'import-shipments': 'الشحنات', 'import-lcs': 'الاعتمادات المستندية', 'import-fx': 'فروق العملة', 'import-cost-sheet': 'كشف تكلفة الشحنة', 'import-profit': 'ربحية الشحنة',
   'export-shipments': 'شحنات التصدير', 'export-lcs': 'اعتمادات التصدير', 'import-containers': 'تتبع الحاويات', 'import-export-dashboard': 'لوحة تحكم الاستيراد والتصدير'
 };
@@ -22727,6 +22789,9 @@ const ACTION_CAPABLE_SCREENS = {
   'academy-sessions': { add: true, edit: true, delete: true },
   'venue-courts': { add: true, edit: true, delete: true },
   'venue-bookings': { add: true, edit: true, delete: true },
+  'rental-cars': { add: true, edit: true, delete: true },
+  'rental-customers': { add: true, edit: true, delete: true },
+  'rental-contracts': { add: true, edit: true, delete: true },
   'import-shipments': { add: true, edit: true, delete: true },
   'import-lcs': { add: true, edit: true, delete: true },
   'export-shipments': { add: true, edit: true, delete: true },
@@ -22786,6 +22851,7 @@ const ADD_BUTTON_MAP = {
   'academy-students': 'addAcademyStudentBtn', 'academy-courses': 'addAcademyCourseBtn', 'academy-instructors': 'addAcademyInstructorBtn',
   'academy-enrollments': 'addAcademyEnrollmentBtn', 'academy-sessions': 'addAcademySessionBtn',
   'venue-courts': 'addVenueCourtBtn', 'venue-bookings': 'addVenueBookingBtn',
+  'rental-cars': 'addRentalCarBtn', 'rental-customers': 'addRentalCustomerBtn', 'rental-contracts': 'addRentalContractBtn',
   'import-shipments': 'addImportShipmentBtn',
   'import-lcs': 'addImportLcBtn',
   'export-shipments': 'addExportShipmentBtn',
@@ -23015,6 +23081,7 @@ function activateBoSection(section, btn) {
     Promise.all([loadBoVenueCourts(), loadBoVenueBookings()]).then(renderVenueBookingsTable);
     boVenueBookingsLoadedOnce = true;
   }
+  if (typeof rentalOnSection === 'function') rentalOnSection(section);
   if (section === 'import-shipments' && !boImportShipmentsLoadedOnce) {
     loadBoImportShipments().then(renderImportShipmentsTable);
     boImportShipmentsLoadedOnce = true;
@@ -33638,6 +33705,7 @@ const PERMISSION_GROUPS = [
   { key: 'clinic_management', title: 'العيادة والمركز الطبي', desc: 'المرضى، الأطباء، حجز المواعيد', children: buildModuleScreens('clinic_management') },
   { key: 'academy_management', title: 'مركز التدريب/الأكاديمية', desc: 'الطلاب، الكورسات، المدربين، التسجيلات، الحصص', children: buildModuleScreens('academy_management') },
   { key: 'venue_management', title: 'حجز ملاعب وقاعات', desc: 'الملاعب/القاعات، الحجوزات بالساعة', children: buildModuleScreens('venue_management') },
+  { key: 'car_rental_management', title: 'معرض تأجير السيارات', desc: 'السيارات، عملاء التأجير، عقود الإيجار والاستلام', children: buildModuleScreens('car_rental_management') },
   { key: 'import_export_management', title: 'الاستيراد والتصدير', desc: 'الشحنات وتكلفة الشحن والجمارك', children: buildModuleScreens('import_export_management') },
   { key: 'technician', title: 'الفني الميداني (وصول محدود)', desc: 'وصول مقتصر على الزيارات المسندة للموظف المرتبط بحساب المستخدم نفسه فقط — منفصل عن إدارة الخدمات الكاملة', children: buildModuleScreens('technician') },
   { key: 'reports', title: 'التقارير', desc: 'تقارير المبيعات والمشتريات والمخزون والمحاسبة والتقارير الأخرى', reportGroups: REPORT_TABS },
@@ -58435,5 +58503,600 @@ document.addEventListener('DOMContentLoaded', () => {
   updatePaymentOptionsBadge();
 })();
 </script>
+<script>/* rental_module_start */
+/* ==================== معرض تأجير السيارات (المرحلة 1) ==================== */
+(function () {
+  'use strict';
+  const $id = (i) => document.getElementById(i);
+  const E = (s) => escapeHtml(s == null ? '' : String(s));
+  const N = (v) => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
+  const F = (n) => Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 2 });
+  const pad = (n) => String(n).padStart(2, '0');
+  const dateStr = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  const toInput = (d) => { d = new Date(d); return dateStr(d) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+  const nowInput = () => toInput(new Date());
+  const plusDaysInput = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return toInput(d); };
+  const fdOnly = (s) => { if (!s) return '—'; const [y, m, d] = String(s).slice(0, 10).split('-'); return `${d}/${m}/${y}`; };
+  const fdt = (s) => { if (!s) return '—'; const d = new Date(s); return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+  const ftime = (s) => { if (!s) return ''; const d = new Date(s); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+  const daysUntil = (s) => { const [y, m, d] = s.slice(0, 10).split('-').map(Number); const t = new Date(); return Math.round((Date.UTC(y, m - 1, d) - Date.UTC(t.getFullYear(), t.getMonth(), t.getDate())) / 864e5); };
+  const one = (x) => (Array.isArray(x) ? x[0] : x) || null;
+
+  const BRANDS = { 'تويوتا': ['كورولا', 'يارس', 'كامري', 'لاند كروزر', 'هايلكس', 'راف 4'], 'هيونداي': ['إلنترا', 'أكسنت', 'توسان', 'كريتا', 'i10', 'سوناتا'], 'كيا': ['سيراتو', 'بيجاس', 'سبورتاج', 'ريو', 'سورينتو', 'بيكانتو'], 'نيسان': ['صني', 'سنترا', 'قشقاي', 'جوك'], 'شيفروليه': ['أوبترا', 'لانوس', 'كروز', 'أفيو'], 'ميتسوبيشي': ['لانسر', 'أوتلاندر', 'إكليبس كروس', 'L200'], 'سكودا': ['أوكتافيا', 'سوبيرب', 'كودياك', 'فابيا'], 'رينو': ['لوجان', 'داستر', 'ميجان', 'كابتشر'], 'بيجو': ['301', '508', '2008', '3008'], 'MG': ['MG5', 'MG ZS', 'MG6', 'HS'], 'شيري': ['تيجو 7', 'تيجو 8', 'أريزو 5'], 'بي واي دي': ['F3', 'سونج', 'يوان'], 'سوزوكي': ['سويفت', 'ديزاير', 'فيتارا'], 'فيات': ['تيبو', '500', 'دوبلو'], 'بي إم دبليو': ['318', '520', 'X1', 'X3'], 'مرسيدس': ['C180', 'E200', 'GLA'], 'فولكس فاجن': ['جيتا', 'تيجوان', 'باسات'], 'جيلي': ['كولراي', 'إمجراند'], 'هوندا': ['سيفيك', 'أكورد', 'CR-V'] };
+  const DEFAULT_TERMS = `يحق للمعرض المؤجر سحب السيارة في حالة إذا ما وجدت بقيادة شخص آخر دون إذن.
+يقر المستأجر بأنه استلم السيارة المؤجرة بصفة أمانة وهي في حالة جيدة وصالحة للاستعمال، ويتعهد بالمحافظة عليها وردها بنفس الحالة التي كانت عليها.
+في حالة الحادث البسيط يتم إصلاح السيارة بمعرفة المعرض المؤجر على نفقة المستأجر، ويتحمل المستأجر قيمة الأضرار وكافة الأطوار التي تنجم عن الحادث.
+في حالة رغبة المستأجر تجديد مدة الإيجار عليه إخطار المعرض قبل انتهاء المدة بيوم واحد على الأقل، وفي حالة التأخير يحسب يوم إيجار كامل عن كل يوم تأخير.
+الحد الأقصى لاستخدام السيارة {kmPerDay} كم في اليوم، وما يزيد عن ذلك يحسب عن كل كيلو متر زيادة بمبلغ {extraKmFee} جنيه ويقوم المستأجر بسداده.
+في حالة الحادث الجسيم أو فقد السيارة أو سرقتها يلتزم المستأجر بدفع قيمة السيارة بالكامل والتي تقدر بمبلغ ({carValue}) جنيه، ويلتزم بإبلاغ الجهات المسئولة والمعرض فوراً.
+يلتزم المستأجر بجميع قوانين المرور والأمن العام، وعدم حمل أو نقل أي مواد ممنوعة قانوناً، ويكون مسئولاً مسئولية كاملة عن أي مخالفات أو غرامات أو حوادث تقع أثناء مدة الإيجار.
+المستأجر مسئول عن رخصة السيارة وعن أي تلفيات بها، ويتحمل قيمة استخراج بدل فاقد في حالة فقدها.
+إذا قام المستأجر برد السيارة قبل موعد انتهاء العقد فلا يجوز له المطالبة بقيمة المدة المتبقية.
+أقر المستأجر بأنه اطلع على جميع شروط العقد وجميع الشروط المدونة به ويتحمل كافة الشروط دون جهالة قاطعة للقانون.`;
+  const DEF_SET = { km_per_day: 250, extra_km_fee: 2, grace_hours: 2, alert_days: 30, oil_warn_km: 500, default_oil_km: 5000, default_oil_days: 180, terms: null };
+  const METHODS = ['نقدي', 'تحويل بنكي', 'فيزا', 'إنستاباي / محفظة'];
+  const FUEL_LEVELS = ['فارغ', '¼', '½', '¾', 'ممتلئ'];
+
+  let cars = [], contracts = [], rentalCustomers = [], settingsRows = {};
+  let loaded = { cars: false, contracts: false, customers: false };
+
+  // ---------- مساعدات واجهة ----------
+  function fld(label, html, full) { return `<div class="field ${full ? 'field-full' : ''}"><label>${label}</label>${html}</div>`; }
+  function inp(name, v, type, attrs) { return `<input name="${name}" type="${type || 'text'}" value="${E(v)}" ${attrs || ''}>`; }
+  function sel(name, opts, v, attrs) {
+    return `<select name="${name}" ${attrs || ''}>${opts.map(o => { const [val, lab] = Array.isArray(o) ? o : [o, o]; return `<option value="${E(val)}" ${String(val) === String(v ?? '') ? 'selected' : ''}>${E(lab)}</option>`; }).join('')}</select>`;
+  }
+  function readForm(root) {
+    const f = {};
+    root.querySelectorAll('[name]').forEach(el => { f[el.name] = el.type === 'checkbox' ? el.checked : (typeof el.value === 'string' ? el.value.trim() : el.value); });
+    return f;
+  }
+  function modal(title, body, o) {
+    o = o || {};
+    const ov = document.createElement('div');
+    ov.className = 'modal-overlay show';
+    ov.innerHTML = `<div class="modal-box wide" ${o.big ? 'style="max-width:820px"' : ''}><div class="modal-title">${E(title)}</div><form><div class="modal-grid">${body}</div><div class="error-msg"></div><div class="modal-actions">${o.btns || ''}<button type="button" class="modal-cancel-btn" data-close>${o.onSubmit ? 'إلغاء' : 'إغلاق'}</button>${o.onSubmit ? `<button type="submit" class="submit-btn">${o.submitText || 'حفظ'}</button>` : ''}</div></form></div>`;
+    document.body.appendChild(ov);
+    const form = ov.querySelector('form'), err = ov.querySelector('.error-msg');
+    ov.close = () => ov.remove();
+    ov.fail = (m) => { err.textContent = m; err.classList.add('show'); };
+    ov.q = (s) => ov.querySelector(s);
+    ov.g = (n) => ov.querySelector(`[name="${n}"]`);
+    ov.querySelector('[data-close]').onclick = ov.close;
+    ov.addEventListener('mousedown', (e) => { ov._down = e.target === ov; });
+    ov.addEventListener('click', (e) => { if (e.target === ov && ov._down) ov.close(); });
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault(); err.classList.remove('show');
+      const btn = form.querySelector('.submit-btn'); if (btn) btn.disabled = true;
+      try { if (o.onSubmit) await o.onSubmit(ov, readForm(ov)); }
+      catch (x) { console.error(x); ov.fail(x.message || 'حدث خطأ'); }
+      finally { if (btn) btn.disabled = false; }
+    });
+    if (o.init) o.init(ov);
+    return ov;
+  }
+  const dbMsg = (e) => {
+    const m = (e && e.message) || 'حدث خطأ';
+    if (e && e.code === '23505' && /plate/.test(m)) return 'رقم اللوحة مسجل لسيارة أخرى';
+    if (e && e.code === '23505' && /one_open_per_car/.test(m)) return 'هذه السيارة عليها عقد مفتوح بالفعل';
+    if (e && e.code === '23503') return 'لا يمكن الحذف — السجل مرتبط ببيانات أخرى';
+    return m;
+  };
+
+  // ---------- الإعدادات ----------
+  function S(branchId) { return Object.assign({}, DEF_SET, settingsRows[branchId || currentProfile.branch_id] || {}); }
+  async function loadSettings() {
+    const { data } = await supabaseClient.from('rental_settings').select('*');
+    settingsRows = {}; (data || []).forEach(r => { settingsRows[r.branch_id] = r; });
+  }
+  function openSettings() {
+    const bid = currentProfile.branch_id;
+    const st = S(bid);
+    modal('إعدادات عقود التأجير', `
+      ${fld('الفرع', `<select name="branch_id"></select>`, true)}
+      ${fld('الكيلومترات المسموحة باليوم', inp('km_per_day', st.km_per_day, 'number'))}
+      ${fld('سعر الكيلو الزائد (جنيه)', inp('extra_km_fee', st.extra_km_fee, 'number', 'step="any"'))}
+      ${fld('مهلة التأخير (ساعات) قبل احتساب يوم إضافي', inp('grace_hours', st.grace_hours, 'number', 'step="any"'))}
+      ${fld('التنبيه قبل انتهاء الرخص/التأمين (يوم)', inp('alert_days', st.alert_days, 'number'))}
+      ${fld('تنبيه الزيت قبل الموعد بـ (كم)', inp('oil_warn_km', st.oil_warn_km, 'number'))}
+      ${fld('غيار الزيت الافتراضي كل (كم)', inp('default_oil_km', st.default_oil_km, 'number'))}
+      ${fld('أو كل (يوم)', inp('default_oil_days', st.default_oil_days, 'number'))}
+      ${fld('شروط العقد (بند في كل سطر — يمكن استخدام {kmPerDay} {extraKmFee} {carValue})', `<textarea name="terms" rows="11" style="width:100%">${E(st.terms || DEFAULT_TERMS)}</textarea>`, true)}`, {
+      big: true,
+      init: (ov) => {
+        const s = ov.g('branch_id'); populateBranchSelect(s, bid, false);
+        s.onchange = () => { const x = S(s.value); ['km_per_day', 'extra_km_fee', 'grace_hours', 'alert_days', 'oil_warn_km', 'default_oil_km', 'default_oil_days'].forEach(k => { ov.g(k).value = x[k]; }); ov.g('terms').value = x.terms || DEFAULT_TERMS; };
+      },
+      onSubmit: async (ov, f) => {
+        const row = { branch_id: f.branch_id, km_per_day: N(f.km_per_day), extra_km_fee: N(f.extra_km_fee), grace_hours: N(f.grace_hours), alert_days: N(f.alert_days), oil_warn_km: N(f.oil_warn_km), default_oil_km: N(f.default_oil_km), default_oil_days: N(f.default_oil_days), terms: f.terms || null, updated_at: new Date().toISOString() };
+        const { error } = await supabaseClient.from('rental_settings').upsert(row);
+        if (error) throw error;
+        settingsRows[row.branch_id] = row; ov.close(); showToast('تم حفظ الإعدادات');
+      }
+    });
+  }
+
+  // ---------- تحميل البيانات ----------
+  async function loadCars() {
+    const { data, error } = await supabaseClient.from('rental_cars').select('*, branches(name)').order('created_at', { ascending: false });
+    if (error) { console.error(error); showToast('تعذر تحميل السيارات', true); return; }
+    cars = data || []; loaded.cars = true;
+  }
+  async function loadContracts() {
+    const { data, error } = await supabaseClient.from('rental_contracts')
+      .select('*, customers(name, phone), rental_cars(brand, model, plate, year)')
+      .order('out_at', { ascending: false }).limit(2000);
+    if (error) { console.error(error); showToast('تعذر تحميل العقود', true); return; }
+    contracts = data || []; loaded.contracts = true;
+  }
+  async function loadRentalCustomers() {
+    const { data, error } = await supabaseClient.from('customers').select('*, rental_customer_details!inner(*)').order('name');
+    if (error) { console.error(error); showToast('تعذر تحميل العملاء', true); return; }
+    rentalCustomers = (data || []).map(c => Object.assign({}, c, { d: one(c.rental_customer_details) || {} })); loaded.customers = true;
+  }
+  async function fetchAllCustomers() {
+    const { data, error } = await supabaseClient.from('customers').select('id, name, phone, rental_customer_details(customer_id, is_blacklisted, license_expiry, national_id, passport_no, license_no)').order('name').limit(3000);
+    if (error) { console.error(error); return []; }
+    return (data || []).map(c => Object.assign({}, c, { d: one(c.rental_customer_details) }));
+  }
+  async function reloadAll() {
+    await Promise.all([loadCars(), loadContracts(), loadRentalCustomers(), loadSettings()]);
+    renderCars(); renderCustomers(); renderContracts();
+  }
+
+  // ---------- منطق ----------
+  const openOf = (carId) => contracts.find(c => c.car_id === carId && c.status === 'open');
+  function carStatus(c) { if (c.status === 'sold') return 'sold'; if (openOf(c.id)) return 'rented'; if (c.status === 'maintenance') return 'maintenance'; return 'available'; }
+  const CAR_ST = { available: ['متاحة', 'active'], rented: ['مؤجرة', 'pending'], maintenance: ['صيانة', 'info'], sold: ['مباعة', 'neutral'] };
+  const carName = (c) => c ? `${c.brand} ${c.model}${c.year ? ' ' + c.year : ''} — ${c.plate}` : '—';
+  const plannedDays = (a, b) => Math.max(1, Math.ceil((new Date(b) - new Date(a)) / 864e5 - 1e-6));
+  const isLate = (c) => c.status === 'open' && new Date(c.due_at) < new Date();
+  const totalOf = (c) => c.status === 'closed' ? N(c.total_amount) : c.days * N(c.daily_price) - N(c.discount) + N(c.extra_charges);
+  const paidOf = (c) => N(c.paid_amount) + N(c.deducted_from_deposit);
+  const remOf = (c) => totalOf(c) - paidOf(c);
+  const heldOf = (c) => N(c.deposit_amount) - N(c.deducted_from_deposit) - N(c.deposit_refunded);
+  function calcClose(c, retAt, kmIn, other, st) {
+    const ad = Math.max(1, Math.ceil(((new Date(retAt) - new Date(c.out_at)) / 36e5 - st.grace_hours) / 24 - 1e-6));
+    const billed = Math.max(c.days, ad);
+    const base = billed * N(c.daily_price) - N(c.discount) + N(c.extra_charges);
+    const used = Math.max(0, kmIn - N(c.km_out)), allowed = N(c.km_per_day) * billed, extraKm = Math.max(0, used - allowed), kmCharge = extraKm * N(c.extra_km_fee);
+    return { ad, billed, base, used, allowed, extraKm, kmCharge, total: base + kmCharge + other };
+  }
+  function oilNext(c) {
+    const st = S(c.branch_id), iv = c.oil_interval_km || st.default_oil_km;
+    if (c.last_oil_km == null) return null;
+    return { next: N(c.last_oil_km) + iv, left: N(c.last_oil_km) + iv - N(c.odometer), warn: st.oil_warn_km };
+  }
+  function expBadge(d, st) {
+    if (!d) return '—';
+    const n = daysUntil(d);
+    return `<span class="bo-badge ${n < 0 ? 'inactive' : n <= st.alert_days ? 'pending' : 'neutral'}">${fdOnly(d)}</span>`;
+  }
+  async function treasuryOptions(branchId) {
+    if (!boTreasuries.length) await loadBoTreasuries();
+    let l = boTreasuries.filter(t => t.is_active && t.branch_id === branchId);
+    if (!l.length) l = boTreasuries.filter(t => t.is_active);
+    return l.map(t => [t.id, (t.branches?.name ? t.branches.name + ' — ' : '') + t.name]);
+  }
+  function waPhone(p) { p = String(p || '').replace(/\D/g, ''); if (/^0\d/.test(p)) p = '20' + p.slice(1); return p; }
+  const rpc = async (fn, args) => { const { data, error } = await supabaseClient.rpc(fn, args); if (error) throw error; return data; };
+
+  // ==================== السيارات ====================
+  function renderCars() {
+    const tb = $id('rentalCarsTableBody'); if (!tb) return;
+    const q = ($id('rentalCarSearch').value || '').trim().toLowerCase(), sf = $id('rentalCarStatusFilter').value;
+    const rows = cars.filter(c => (!sf || carStatus(c) === sf) && (!q || (c.plate + c.brand + c.model + (c.chassis || '') + (c.color || '')).toLowerCase().includes(q)));
+    if (!rows.length) { tb.innerHTML = `<tr><td colspan="9" class="bo-empty">${cars.length ? 'لا توجد نتائج مطابقة' : 'لا توجد سيارات — ابدأ بإضافة أول سيارة'}</td></tr>`; return; }
+    tb.innerHTML = rows.map(c => {
+      const st = carStatus(c), s = S(c.branch_id), o = oilNext(c);
+      return `<tr data-id="${c.id}">
+        <td><b>${E(c.brand)} ${E(c.model)}</b> <span class="num">${E(c.year || '')}</span><div style="font-size:11.5px;color:var(--ink-soft)">${E(c.color || '')} • ${c.transmission === 'manual' ? 'عادي' : 'أوتوماتيك'}</div></td>
+        <td>${E(c.plate)}</td><td class="num">${F(c.daily_price)}</td><td class="num">${F(c.odometer)}</td>
+        <td>${expBadge(c.license_expiry, s)}</td><td>${expBadge(c.insurance_expiry, s)}</td>
+        <td>${o ? `<span class="bo-badge ${o.left <= 0 ? 'inactive' : o.left <= o.warn ? 'pending' : 'neutral'}">${F(o.next)} كم</span>` : '—'}</td>
+        <td><span class="bo-badge ${CAR_ST[st][1]}">${CAR_ST[st][0]}</span></td>
+        <td><div class="bo-row-actions"><button class="bo-icon-btn" data-ra="file">السجل</button><button class="bo-icon-btn" data-action="edit" data-ra="edit">تعديل</button><button class="bo-icon-btn danger" data-action="delete" data-ra="delete">حذف</button></div></td></tr>`;
+    }).join('');
+    tb.querySelectorAll('tr[data-id]').forEach(tr => applyRowActionPerm(tr, 'rental-cars'));
+  }
+  function carModal(car) {
+    const c = car || { brand: '', model: '', year: new Date().getFullYear(), color: '', plate: '', chassis: '', motor: '', transmission: 'automatic', fuel: 'بنزين 92', seats: 5, category: 'اقتصادية', daily_price: '', car_value: '', odometer: 0, status: 'available', license_expiry: '', insurance_expiry: '', inspection_expiry: '', last_oil_km: '', last_oil_date: '', oil_interval_km: '', oil_interval_days: '', image_url: '', notes: '' };
+    const st = S(c.branch_id);
+    modal(car ? 'تعديل سيارة' : 'سيارة جديدة', `
+      ${fld('الفرع', `<select name="branch_id" required></select>`)}${fld('الحالة', sel('status', [['available', 'متاحة'], ['maintenance', 'في الصيانة'], ['sold', 'مباعة / خارج الخدمة']], c.status))}
+      ${fld('الماركة', `<input name="brand" list="rentalDlBrands" value="${E(c.brand)}" autocomplete="off" required><datalist id="rentalDlBrands">${Object.keys(BRANDS).map(b => `<option>${E(b)}</option>`).join('')}</datalist>`)}
+      ${fld('الموديل', `<input name="model" list="rentalDlModels" value="${E(c.model)}" autocomplete="off" required><datalist id="rentalDlModels"></datalist>`)}
+      ${fld('سنة الصنع', inp('year', c.year, 'number'))}${fld('اللون', inp('color', c.color))}
+      ${fld('رقم اللوحة', inp('plate', c.plate, 'text', 'required'))}${fld('رقم الشاسيه', inp('chassis', c.chassis))}
+      ${fld('رقم الموتور', inp('motor', c.motor))}${fld('ناقل الحركة', sel('transmission', [['automatic', 'أوتوماتيك'], ['manual', 'عادي (مانيوال)']], c.transmission))}
+      ${fld('الوقود', sel('fuel', ['بنزين 80', 'بنزين 92', 'بنزين 95', 'سولار', 'غاز طبيعي', 'كهرباء', 'هجين'], c.fuel))}${fld('عدد الركاب', inp('seats', c.seats, 'number'))}
+      ${fld('الفئة', sel('category', ['اقتصادية', 'عائلية', 'فاخرة', 'دفع رباعي', 'ميني باص', 'أخرى'], c.category))}${fld('رابط الصورة (اختياري)', inp('image_url', c.image_url, 'text', 'style="direction:ltr;text-align:right"'))}
+      ${fld('سعر الإيجار اليومي', inp('daily_price', c.daily_price, 'number', 'min="0" step="any" required'))}${fld('قراءة العداد الحالية (كم)', inp('odometer', c.odometer, 'number', 'min="0"'))}
+      ${fld('قيمة السيارة التقديرية (تظهر في بند الفقد بالعقد)', inp('car_value', c.car_value ?? '', 'number', 'step="any"'))}<div></div>
+      ${fld('انتهاء رخصة السيارة', inp('license_expiry', c.license_expiry || '', 'date'))}${fld('انتهاء التأمين', inp('insurance_expiry', c.insurance_expiry || '', 'date'))}
+      ${fld('انتهاء الفحص الفني (اختياري)', inp('inspection_expiry', c.inspection_expiry || '', 'date'))}<div></div>
+      ${fld('عداد آخر تغيير زيت (كم)', inp('last_oil_km', c.last_oil_km ?? '', 'number'))}${fld('تاريخ آخر تغيير زيت', inp('last_oil_date', c.last_oil_date || '', 'date'))}
+      ${fld(`التغيير كل كم (فارغ = ${st.default_oil_km})`, inp('oil_interval_km', c.oil_interval_km ?? '', 'number'))}${fld(`أو كل يوم (فارغ = ${st.default_oil_days})`, inp('oil_interval_days', c.oil_interval_days ?? '', 'number'))}
+      ${fld('ملاحظات', `<textarea name="notes" rows="2" style="width:100%">${E(c.notes || '')}</textarea>`, true)}`, {
+      big: true,
+      init: (ov) => {
+        populateBranchSelect(ov.g('branch_id'), c.branch_id || currentProfile.branch_id, false);
+        const upd = () => { ov.q('#rentalDlModels').innerHTML = (BRANDS[ov.g('brand').value] || []).map(m => `<option>${E(m)}</option>`).join(''); };
+        ov.g('brand').oninput = upd; upd();
+      },
+      onSubmit: async (ov, f) => {
+        const nz = (v) => v === '' ? null : N(v);
+        const payload = { branch_id: f.branch_id, status: f.status, brand: f.brand, model: f.model, year: nz(f.year), color: f.color || null, plate: f.plate, chassis: f.chassis || null, motor: f.motor || null, transmission: f.transmission, fuel: f.fuel, seats: nz(f.seats), category: f.category, image_url: f.image_url || null, daily_price: N(f.daily_price), odometer: N(f.odometer), car_value: nz(f.car_value), license_expiry: f.license_expiry || null, insurance_expiry: f.insurance_expiry || null, inspection_expiry: f.inspection_expiry || null, last_oil_km: nz(f.last_oil_km), last_oil_date: f.last_oil_date || null, oil_interval_km: nz(f.oil_interval_km), oil_interval_days: nz(f.oil_interval_days), notes: f.notes || null };
+        if (!payload.brand || !payload.model || !payload.plate) throw new Error('الماركة والموديل واللوحة مطلوبة');
+        const q = car ? supabaseClient.from('rental_cars').update(payload).eq('id', car.id) : supabaseClient.from('rental_cars').insert(payload);
+        const { error } = await q;
+        if (error) throw new Error(dbMsg(error));
+        ov.close(); showToast(car ? 'تم تحديث السيارة' : 'تمت إضافة السيارة');
+        await loadCars(); renderCars();
+      }
+    });
+  }
+  function carFile(c) {
+    const cs = contracts.filter(x => x.car_id === c.id);
+    const income = cs.reduce((a, x) => a + paidOf(x), 0);
+    modal('سجل السيارة — ' + carName(c), `
+      <div class="field field-full"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px 16px;font-size:13px">
+        <div><span style="color:var(--ink-soft)">الشاسيه</span><br>${E(c.chassis || '—')}</div><div><span style="color:var(--ink-soft)">الموتور</span><br>${E(c.motor || '—')}</div>
+        <div><span style="color:var(--ink-soft)">الوقود</span><br>${E(c.fuel || '—')}</div><div><span style="color:var(--ink-soft)">عدد الركاب</span><br>${E(c.seats || '—')}</div>
+        <div><span style="color:var(--ink-soft)">العداد</span><br><span class="num">${F(c.odometer)}</span> كم</div><div><span style="color:var(--ink-soft)">عدد العقود / المحصل</span><br><span class="num">${cs.length} / ${F(income)}</span></div></div></div>
+      <div class="field field-full"><label>العقود</label>${cs.length ? `<div class="bo-table-wrap"><table class="bo-table"><thead><tr><th>#</th><th>العميل</th><th>من</th><th>إلى</th><th>الإجمالي</th></tr></thead><tbody>${cs.map(x => `<tr><td class="num">${x.contract_no}</td><td>${E(x.customers?.name || '—')}</td><td>${fdt(x.out_at)}</td><td>${fdt(x.returned_at || x.due_at)}</td><td class="num">${F(totalOf(x))}</td></tr>`).join('')}</tbody></table></div>` : '<div style="color:var(--ink-soft)">لا توجد عقود</div>'}</div>`, { big: true });
+  }
+  async function deleteCar(c) {
+    if (!hasBoActionPermission('rental-cars', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+    if (!confirm(`حذف السيارة "${carName(c)}"؟`)) return;
+    const { error } = await supabaseClient.from('rental_cars').delete().eq('id', c.id);
+    if (error) { showToast(dbMsg(error), true); return; }
+    showToast('تم الحذف'); await loadCars(); renderCars();
+  }
+
+  // ==================== العملاء ====================
+  function renderCustomers() {
+    const tb = $id('rentalCustomersTableBody'); if (!tb) return;
+    const q = ($id('rentalCustomerSearch').value || '').trim().toLowerCase();
+    const rows = rentalCustomers.filter(c => !q || ((c.name || '') + (c.phone || '') + (c.d.national_id || '') + (c.d.passport_no || '') + (c.d.license_no || '')).toLowerCase().includes(q));
+    if (!rows.length) { tb.innerHTML = `<tr><td colspan="7" class="bo-empty">${rentalCustomers.length ? 'لا توجد نتائج مطابقة' : 'لا يوجد عملاء تأجير بعد'}</td></tr>`; return; }
+    tb.innerHTML = rows.map(c => {
+      const n = contracts.filter(x => x.customer_id === c.id).length;
+      return `<tr data-id="${c.id}"><td><b>${E(c.name)}</b> ${c.d.is_blacklisted ? '<span class="bo-badge inactive">قائمة سوداء</span>' : ''}<div style="font-size:11.5px;color:var(--ink-soft)">${E(c.d.nationality || '')}</div></td>
+        <td class="num">${E(c.phone || '')}</td><td class="num">${E(c.d.national_id || c.d.passport_no || '')}</td><td class="num">${E(c.d.license_no || '')}</td>
+        <td>${expBadge(c.d.license_expiry, S())}</td><td class="num">${n}</td>
+        <td><div class="bo-row-actions">${c.phone ? '<button class="bo-icon-btn" data-ra="wa">واتساب</button>' : ''}<button class="bo-icon-btn" data-action="edit" data-ra="edit">تعديل</button><button class="bo-icon-btn danger" data-action="delete" data-ra="delete">حذف</button></div></td></tr>`;
+    }).join('');
+    tb.querySelectorAll('tr[data-id]').forEach(tr => applyRowActionPerm(tr, 'rental-customers'));
+  }
+  function customerModal(cust, done) {
+    const d = (cust && cust.d) || {};
+    modal(cust ? 'تعديل عميل' : 'عميل تأجير جديد', `
+      ${fld('الاسم', inp('name', cust?.name || '', 'text', 'required'), true)}${fld('الهاتف', inp('phone', cust?.phone || '', 'tel', 'style="direction:ltr;text-align:right"'))}${fld('هاتف آخر', inp('phone2', d.phone2 || '', 'tel', 'style="direction:ltr;text-align:right"'))}
+      ${fld('الرقم القومي', inp('national_id', d.national_id || ''))}${fld('رقم جواز السفر', inp('passport_no', d.passport_no || ''))}
+      ${fld('الجنسية', inp('nationality', d.nationality || 'مصري'))}${fld('محل الإقامة', inp('address', cust?.address || ''))}
+      ${fld('رقم رخصة القيادة', inp('license_no', d.license_no || ''))}${fld('انتهاء رخصة القيادة', inp('license_expiry', d.license_expiry || '', 'date'))}
+      ${fld('ملاحظات', `<textarea name="notes" rows="2" style="width:100%">${E(d.notes || '')}</textarea>`, true)}
+      <div class="field field-full"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" name="is_blacklisted" style="width:auto" ${d.is_blacklisted ? 'checked' : ''}> قائمة سوداء (تحذير عند عمل عقد)</label></div>`, {
+      onSubmit: async (ov, f) => {
+        if (!f.name) throw new Error('الاسم مطلوب');
+        if (!f.phone) throw new Error('الهاتف مطلوب');
+        let id = cust?.id;
+        if (id) {
+          const { error } = await supabaseClient.from('customers').update({ name: f.name, phone: f.phone, address: f.address || null }).eq('id', id);
+          if (error) throw error;
+        } else {
+          const { data, error } = await supabaseClient.from('customers').insert({ name: f.name, phone: f.phone, address: f.address || null }).select('id').single();
+          if (error) throw error;
+          id = data.id;
+        }
+        const { error: e2 } = await supabaseClient.from('rental_customer_details').upsert({ customer_id: id, national_id: f.national_id || null, passport_no: f.passport_no || null, nationality: f.nationality || null, phone2: f.phone2 || null, license_no: f.license_no || null, license_expiry: f.license_expiry || null, is_blacklisted: !!f.is_blacklisted, notes: f.notes || null, updated_at: new Date().toISOString() });
+        if (e2) throw e2;
+        ov.close(); showToast('تم حفظ العميل');
+        await loadRentalCustomers(); renderCustomers();
+        if (done) done(id);
+      }
+    });
+  }
+  async function deleteCustomer(c) {
+    if (!hasBoActionPermission('rental-customers', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+    if (contracts.some(x => x.customer_id === c.id)) { showToast('لا يمكن حذف عميل له عقود', true); return; }
+    if (!confirm(`حذف بيانات التأجير للعميل "${c.name}"؟ (يظل العميل نفسه في قائمة العملاء العامة)`)) return;
+    const { error } = await supabaseClient.from('rental_customer_details').delete().eq('customer_id', c.id);
+    if (error) { showToast(dbMsg(error), true); return; }
+    showToast('تم الحذف'); await loadRentalCustomers(); renderCustomers();
+  }
+
+  // ==================== العقود ====================
+  function renderContracts() {
+    const tb = $id('rentalContractsTableBody'); if (!tb) return;
+    const q = ($id('rentalContractSearch').value || '').trim().toLowerCase(), sf = $id('rentalContractStatusFilter').value;
+    const rows = contracts.filter(c => {
+      const st = c.status === 'cancelled' ? 'cancelled' : isLate(c) ? 'late' : c.status;
+      const okS = !sf || st === sf || (sf === 'open' && st === 'late') || (sf === 'due' && remOf(c) > 0.009 && c.status !== 'cancelled');
+      return okS && (!q || (String(c.contract_no) + (c.customers?.name || '') + (c.customers?.phone || '') + (c.rental_cars?.plate || '') + (c.rental_cars?.model || '')).toLowerCase().includes(q));
+    });
+    if (!rows.length) { tb.innerHTML = `<tr><td colspan="9" class="bo-empty">${contracts.length ? 'لا توجد نتائج مطابقة' : 'لا توجد عقود'}</td></tr>`; return; }
+    tb.innerHTML = rows.map(c => {
+      const r = remOf(c);
+      const stBadge = c.status === 'closed' ? '<span class="bo-badge neutral">مغلق</span>' : c.status === 'cancelled' ? '<span class="bo-badge inactive">ملغي</span>' : isLate(c) ? '<span class="bo-badge inactive">متأخر</span>' : '<span class="bo-badge pending">مفتوح</span>';
+      return `<tr data-id="${c.id}"><td class="num">${c.contract_no}</td><td><b>${E(c.customers?.name || '—')}</b><div class="num" style="font-size:11.5px;color:var(--ink-soft)">${E(c.customers?.phone || '')}</div></td>
+        <td>${E(carName(c.rental_cars))}</td><td>${fdt(c.out_at)}</td><td>${fdt(c.returned_at || c.due_at)}</td><td class="num">${F(totalOf(c))}</td>
+        <td>${r > 0.009 ? `<span class="bo-badge pending">${F(r)}</span>` : `<span class="bo-badge active">${r < -0.009 ? 'زيادة ' + F(-r) : 'مسدد'}</span>`}</td><td>${stBadge}</td>
+        <td><div class="bo-row-actions"><button class="bo-icon-btn" data-ra="open">فتح</button><button class="bo-icon-btn" data-ra="print">طباعة</button></div></td></tr>`;
+    }).join('');
+  }
+
+  async function contractForm(contract) {
+    const c0 = contract;
+    if (!loaded.contracts) await loadContracts();
+    if (!loaded.cars) await loadCars();
+    const pickers = await fetchAllCustomers();
+    const avail = cars.filter(x => (carStatus(x) === 'available') || (c0 && x.id === c0.car_id));
+    if (!c0 && !avail.length) { modal('لا توجد سيارات متاحة', '<div class="field field-full">أضف سيارة أو أنهِ عقداً مفتوحاً أولاً.</div>'); return; }
+    const car0 = byIdCar(c0 ? c0.car_id : avail[0].id);
+    const st0 = S(car0.branch_id);
+    const v = c0 || { customer_id: '', car_id: car0.id, out_at: nowInput(), due_at: plusDaysInput(1), place: 'المعرض', daily_price: car0.daily_price, discount: 0, extra_charges: 0, km_out: car0.odometer, km_per_day: st0.km_per_day, extra_km_fee: st0.extra_km_fee, fuel_out: 'ممتلئ', witness: '', notes: '' };
+    const treas = await treasuryOptions(car0.branch_id);
+    const custOpts = [['', '— اختر العميل —'], ...pickers.map(x => [x.id, x.name + (x.phone ? ' — ' + x.phone : '') + (x.d ? '' : ' (بدون بيانات تأجير)')])];
+    modal(c0 ? `تعديل عقد ${c0.contract_no}` : 'عقد إيجار جديد', `
+      ${fld('العميل (المستأجر)', `<div style="display:flex;gap:6px">${sel('customer_id', custOpts, v.customer_id)}<button type="button" class="bo-icon-btn" data-newcust style="white-space:nowrap">+ جديد</button></div>`, true)}
+      ${fld('السيارة', sel('car_id', avail.map(x => [x.id, carName(x) + ' — ' + F(x.daily_price) + '/يوم']), v.car_id))}${fld('الشاهد / الضامن', inp('witness', v.witness || ''))}
+      ${fld('تاريخ ووقت الخروج', inp('out_at', toInput(v.out_at), 'datetime-local', 'required'))}${fld('موعد التسليم المتفق عليه', inp('due_at', toInput(v.due_at), 'datetime-local', 'required'))}
+      ${fld('مكان التسليم', inp('place', v.place || ''))}${fld('مستوى الوقود عند الخروج', sel('fuel_out', FUEL_LEVELS, v.fuel_out))}
+      ${fld('سعر اليوم', inp('daily_price', v.daily_price, 'number', 'min="0" step="any" required'))}${fld('خصم', inp('discount', v.discount, 'number', 'min="0" step="any"'))}
+      ${fld('رسوم إضافية (توصيل…)', inp('extra_charges', v.extra_charges, 'number', 'min="0" step="any"'))}${fld('عداد الخروج (كم)', inp('km_out', v.km_out, 'number', 'min="0"'))}
+      ${fld('كم مسموح باليوم', inp('km_per_day', v.km_per_day, 'number'))}${fld('سعر الكيلو الزائد', inp('extra_km_fee', v.extra_km_fee, 'number', 'step="any"'))}
+      ${c0 ? '' : `${fld('مبلغ التأمين المستلم (يُسترد)', inp('deposit', 0, 'number', 'min="0" step="any"'))}${fld('مدفوع من الإيجار الآن', inp('paid_now', 0, 'number', 'min="0" step="any"'))}
+        ${fld('الخزينة', sel('cash_account_id', treas.length ? treas : [['', '— لا توجد خزينة —']], treas[0]?.[0]))}${fld('طريقة الدفع', sel('method', METHODS))}`}
+      ${fld('ملاحظات (حالة السيارة، خدوش…)', `<textarea name="notes" rows="2" style="width:100%">${E(v.notes || '')}</textarea>`, true)}
+      <div class="field field-full"><div data-prev style="display:flex;gap:18px;flex-wrap:wrap;background:var(--surface-sunken);border-radius:8px;padding:10px 12px;font-size:13px"></div></div>`, {
+      big: true,
+      init: (ov) => {
+        const prev = () => {
+          const d = plannedDays(ov.g('out_at').value, ov.g('due_at').value), t = d * N(ov.g('daily_price').value) - N(ov.g('discount').value) + N(ov.g('extra_charges').value);
+          ov.q('[data-prev]').innerHTML = `<div>عدد الأيام: <b class="num">${isNaN(d) ? '—' : d}</b></div><div>الإجمالي: <b class="num">${F(t)}</b></div><div>الكيلومترات المسموحة: <b class="num">${F(d * N(ov.g('km_per_day').value))}</b></div>`;
+        };
+        ['out_at', 'due_at', 'daily_price', 'discount', 'extra_charges', 'km_per_day'].forEach(n => ov.g(n).oninput = prev);
+        ov.g('car_id').onchange = async () => {
+          const x = byIdCar(ov.g('car_id').value); if (!x) return;
+          ov.g('daily_price').value = x.daily_price; ov.g('km_out').value = x.odometer;
+          const s = S(x.branch_id); ov.g('km_per_day').value = s.km_per_day; ov.g('extra_km_fee').value = s.extra_km_fee;
+          const ca = ov.g('cash_account_id');
+          if (ca) { const o = await treasuryOptions(x.branch_id); ca.innerHTML = o.map(([i, l]) => `<option value="${i}">${E(l)}</option>`).join(''); }
+          prev();
+        };
+        ov.q('[data-newcust]').onclick = () => customerModal(null, async (nid) => {
+          const list = await fetchAllCustomers(); const s = ov.g('customer_id');
+          s.innerHTML = '<option value="">— اختر العميل —</option>' + list.map(x => `<option value="${x.id}">${E(x.name)}${x.phone ? ' — ' + E(x.phone) : ''}${x.d ? '' : ' (بدون بيانات تأجير)'}</option>`).join('');
+          s.value = nid;
+        });
+        prev();
+      },
+      onSubmit: async (ov, f) => {
+        const cust = pickers.find(x => x.id === f.customer_id), car = byIdCar(f.car_id), er = [];
+        if (!cust) er.push('اختر العميل'); if (!car) er.push('اختر السيارة');
+        if (!f.out_at || !f.due_at || new Date(f.due_at) <= new Date(f.out_at)) er.push('موعد التسليم يجب أن يكون بعد الخروج');
+        if (N(f.daily_price) <= 0) er.push('سعر اليوم مطلوب');
+        const dep = N(f.deposit), paidNow = N(f.paid_now);
+        if (!c0 && (dep > 0 || paidNow > 0) && !f.cash_account_id) er.push('اختر الخزينة لتسجيل الدفعة');
+        if (er.length) throw new Error(er.join(' • '));
+        const warn = [];
+        if (cust.d?.is_blacklisted) warn.push('العميل في القائمة السوداء');
+        if (cust.d?.license_expiry && cust.d.license_expiry < f.due_at.slice(0, 10)) warn.push('رخصة قيادة العميل تنتهي قبل نهاية العقد (' + fdOnly(cust.d.license_expiry) + ')');
+        if (!cust.d || (!cust.d.national_id && !cust.d.passport_no)) warn.push('لا يوجد رقم قومي أو جواز سفر للعميل');
+        if (warn.length && !confirm(warn.join('\n') + '\n\nهل تريد المتابعة؟')) return;
+        const days = plannedDays(f.out_at, f.due_at);
+        const total = days * N(f.daily_price) - N(f.discount) + N(f.extra_charges);
+        const base = { customer_id: f.customer_id, car_id: f.car_id, out_at: new Date(f.out_at).toISOString(), due_at: new Date(f.due_at).toISOString(), place: f.place || null, daily_price: N(f.daily_price), days, discount: N(f.discount), extra_charges: N(f.extra_charges), km_out: N(f.km_out), km_per_day: N(f.km_per_day), extra_km_fee: N(f.extra_km_fee), fuel_out: f.fuel_out, witness: f.witness || null, notes: f.notes || null };
+        if (c0) {
+          const { error } = await supabaseClient.from('rental_contracts').update(Object.assign({}, base, { branch_id: car.branch_id })).eq('id', c0.id);
+          if (error) throw new Error(dbMsg(error));
+          ov.close(); showToast('تم حفظ العقد'); await loadContracts(); renderContracts(); renderCars(); return;
+        }
+        if (!cust.d) await supabaseClient.from('rental_customer_details').upsert({ customer_id: cust.id });
+        const { data: row, error } = await supabaseClient.from('rental_contracts').insert(Object.assign({}, base, { branch_id: car.branch_id, total_amount: total, created_by: currentProfile.id })).select('*').single();
+        if (error) throw new Error(dbMsg(error));
+        let payErr = '';
+        try {
+          if (dep > 0) await rpc('rental_record_payment', { p_contract_id: row.id, p_kind: 'deposit', p_amount: dep, p_method: f.method, p_cash_account_id: f.cash_account_id, p_note: 'تأمين' });
+          if (paidNow > 0) await rpc('rental_record_payment', { p_contract_id: row.id, p_kind: 'rent', p_amount: paidNow, p_method: f.method, p_cash_account_id: f.cash_account_id, p_note: 'دفعة عند التعاقد' });
+        } catch (x) { console.error(x); payErr = x.message || 'تعذر تسجيل الدفعة'; }
+        ov.close();
+        if (car.odometer < N(f.km_out)) await supabaseClient.from('rental_cars').update({ odometer: N(f.km_out) }).eq('id', car.id);
+        await Promise.all([loadContracts(), loadCars(), loadRentalCustomers(), loadBoTreasuries()]);
+        renderContracts(); renderCars(); renderCustomers();
+        showToast(payErr ? 'تم إنشاء العقد لكن تعذر تسجيل الدفعة: ' + payErr : 'تم إنشاء العقد', !!payErr);
+        viewContract(row.id);
+      }
+    });
+  }
+  const byIdCar = (id) => cars.find(x => x.id === id);
+  const byIdContract = (id) => contracts.find(x => x.id === id);
+
+  async function viewContract(id) {
+    const c = byIdContract(id); if (!c) return;
+    const { data: pays } = await supabaseClient.from('rental_payments').select('*, cash_accounts(name)').eq('contract_id', id).order('paid_at');
+    const open = c.status === 'open', held = heldOf(c), r = remOf(c);
+    const KIND = { rent: 'إيجار', deposit: 'تأمين', deposit_refund: 'رد تأمين' };
+    modal(`عقد رقم ${c.contract_no}`, `
+      <div class="field field-full"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px 16px;font-size:13px">
+        <div><span style="color:var(--ink-soft)">العميل</span><br><b>${E(c.customers?.name || '—')}</b> <span class="num">${E(c.customers?.phone || '')}</span></div>
+        <div><span style="color:var(--ink-soft)">السيارة</span><br>${E(carName(c.rental_cars))}</div>
+        <div><span style="color:var(--ink-soft)">الخروج</span><br>${fdt(c.out_at)}</div>
+        <div><span style="color:var(--ink-soft)">${c.returned_at ? 'تم التسليم' : 'موعد التسليم'}</span><br>${fdt(c.returned_at || c.due_at)} ${isLate(c) ? '<span class="bo-badge inactive">متأخر</span>' : ''}</div>
+        <div><span style="color:var(--ink-soft)">أيام / سعر اليوم</span><br><span class="num">${c.billed_days || c.days} × ${F(c.daily_price)}</span></div>
+        <div><span style="color:var(--ink-soft)">العداد (خروج ← عودة)</span><br><span class="num">${F(c.km_out)} ← ${c.km_in != null ? F(c.km_in) : '—'}</span></div></div>
+        ${c.status === 'closed' && (N(c.km_charge) || N(c.other_charge)) ? `<div style="margin-top:8px;font-size:12.5px;color:var(--ink-soft)">رسوم عند الاستلام: كيلومترات زائدة ${F(c.km_charge)} • أخرى ${F(c.other_charge)} ${E(c.other_note || '')}</div>` : ''}</div>
+      <div class="field field-full"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;background:var(--surface-sunken);border-radius:8px;padding:10px 12px">
+        <div><span style="font-size:12px;color:var(--ink-soft)">الإجمالي</span><br><b class="num">${F(totalOf(c))}</b></div><div><span style="font-size:12px;color:var(--ink-soft)">المدفوع</span><br><b class="num">${F(paidOf(c))}</b></div>
+        <div><span style="font-size:12px;color:var(--ink-soft)">المتبقي</span><br><b class="num">${F(r)}</b></div><div><span style="font-size:12px;color:var(--ink-soft)">تأمين محتجز</span><br><b class="num">${F(held)}</b></div></div></div>
+      <div class="field field-full"><label>الدفعات</label>${(pays || []).length ? `<div class="bo-table-wrap"><table class="bo-table"><thead><tr><th>التاريخ</th><th>البند</th><th>الخزينة</th><th>المبلغ</th></tr></thead><tbody>${pays.map(p => `<tr><td>${fdt(p.paid_at)}</td><td>${KIND[p.kind]}</td><td>${E(p.cash_accounts?.name || '')} ${E(p.method || '')}</td><td class="num">${p.kind === 'deposit_refund' ? '−' : ''}${F(p.amount)}</td></tr>`).join('')}</tbody></table></div>` : '<div style="color:var(--ink-soft)">لا توجد دفعات</div>'}</div>
+      ${c.notes ? `<div class="field field-full" style="font-size:12.5px;color:var(--ink-soft)">ملاحظات: ${E(c.notes)}</div>` : ''}`, {
+      big: true,
+      btns: `<button type="button" class="modal-cancel-btn" data-pr>طباعة العقد</button>${c.customers?.phone ? '<button type="button" class="modal-cancel-btn" data-wa>واتساب</button>' : ''}
+        ${c.status !== 'cancelled' ? '<button type="button" class="modal-cancel-btn" data-pay>+ دفعة</button>' : ''}
+        ${open ? '<button type="button" class="modal-cancel-btn" data-ed>تعديل</button><button type="button" class="submit-btn" data-end>استلام السيارة وإنهاء العقد</button>' : ''}
+        ${!pays?.length ? '<button type="button" class="modal-cancel-btn" data-del style="color:var(--danger)">حذف</button>' : ''}`,
+      init: (ov) => {
+        ov.q('[data-pr]').onclick = () => printContract(id);
+        const w = ov.q('[data-wa]'); if (w) w.onclick = () => window.open('https://wa.me/' + waPhone(c.customers.phone) + '?text=' + encodeURIComponent(`مرحباً ${c.customers.name}، بخصوص عقد إيجار السيارة رقم ${c.contract_no}`), '_blank');
+        const p = ov.q('[data-pay]'); if (p) p.onclick = () => { ov.close(); payModal(id); };
+        const e = ov.q('[data-ed]'); if (e) e.onclick = () => { ov.close(); contractForm(c); };
+        const en = ov.q('[data-end]'); if (en) en.onclick = () => { ov.close(); closeModal(id); };
+        const d = ov.q('[data-del]'); if (d) d.onclick = async () => {
+          if (!hasBoActionPermission('rental-contracts', 'delete')) { showToast('ليس لديك صلاحية الحذف في هذه الشاشة', true); return; }
+          if (!confirm(`حذف العقد ${c.contract_no}؟`)) return;
+          const { error } = await supabaseClient.from('rental_contracts').delete().eq('id', id);
+          if (error) { showToast(dbMsg(error), true); return; }
+          ov.close(); showToast('تم الحذف'); await Promise.all([loadContracts(), loadCars()]); renderContracts(); renderCars();
+        };
+      }
+    });
+  }
+
+  async function payModal(id) {
+    const c = byIdContract(id), held = heldOf(c), r = remOf(c);
+    const treas = await treasuryOptions(c.branch_id);
+    const kinds = [['rent', 'تحصيل إيجار']]; if (c.status === 'open') kinds.push(['deposit', 'استلام تأمين إضافي']); if (held > 0) kinds.push(['deposit_refund', 'رد تأمين للعميل']);
+    modal(`دفعة — عقد ${c.contract_no}`, `
+      <div class="field field-full" style="font-size:13px">الإجمالي ${F(totalOf(c))} • المدفوع ${F(paidOf(c))} • المتبقي <b>${F(r)}</b> • التأمين المحتجز <b>${F(held)}</b></div>
+      ${fld('نوع الدفعة', sel('kind', kinds, 'rent'))}${fld('المبلغ', inp('amount', Math.max(0, r) || '', 'number', 'min="0.01" step="0.01" required'))}
+      ${fld('الخزينة', sel('cash_account_id', treas.length ? treas : [['', '— لا توجد خزينة —']], treas[0]?.[0]))}${fld('طريقة الدفع', sel('method', METHODS))}
+      ${fld('ملاحظة (اختياري)', inp('note', ''), true)}`, {
+      init: (ov) => { ov.g('kind').onchange = () => { const k = ov.g('kind').value; ov.g('amount').value = k === 'rent' ? (Math.max(0, r) || '') : k === 'deposit_refund' ? held : ''; }; },
+      onSubmit: async (ov, f) => {
+        if (N(f.amount) <= 0) throw new Error('أدخل المبلغ');
+        if (!f.cash_account_id) throw new Error('اختر الخزينة');
+        await rpc('rental_record_payment', { p_contract_id: id, p_kind: f.kind, p_amount: N(f.amount), p_method: f.method, p_cash_account_id: f.cash_account_id, p_note: f.note || '' });
+        ov.close(); showToast('تم تسجيل الدفعة في الخزينة');
+        await Promise.all([loadContracts(), loadBoTreasuries()]); renderContracts(); viewContract(id);
+      }
+    });
+  }
+
+  async function closeModal(id) {
+    const c = byIdContract(id), st = S(c.branch_id), held = heldOf(c);
+    const treas = await treasuryOptions(c.branch_id);
+    modal(`استلام السيارة — عقد ${c.contract_no}`, `
+      ${fld('تاريخ ووقت الاستلام', inp('ret_at', nowInput(), 'datetime-local', 'required'))}${fld('عداد العودة (كم)', inp('km_in', c.km_out, 'number', 'min="0" required'))}
+      ${fld('مستوى الوقود', sel('fuel_in', FUEL_LEVELS, c.fuel_out))}${fld('رسوم أخرى (تلفيات، وقود، مخالفات)', inp('other', 0, 'number', 'min="0" step="any"'))}
+      ${fld('بيان الرسوم الأخرى', inp('other_note', ''), true)}
+      ${fld('يُخصم من التأمين', inp('deduct', 0, 'number', 'min="0" step="any"'))}${fld('يُحصّل الآن', inp('collect', 0, 'number', 'min="0" step="any"'))}
+      <div class="field field-full"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" name="do_refund" style="width:auto" checked> رد باقي التأمين للعميل الآن</label></div>
+      ${fld('الخزينة', sel('cash_account_id', treas.length ? treas : [['', '— لا توجد خزينة —']], treas[0]?.[0]))}${fld('طريقة الدفع', sel('method', METHODS))}
+      <div class="field field-full"><div data-prev style="display:flex;gap:16px;flex-wrap:wrap;background:var(--surface-sunken);border-radius:8px;padding:10px 12px;font-size:13px"></div><div data-dd style="font-size:12.5px;color:var(--ink-soft);margin-top:6px"></div></div>`, {
+      big: true, submitText: 'إنهاء العقد',
+      init: (ov) => {
+        let touched = false;
+        const calc = () => {
+          const k = calcClose(c, ov.g('ret_at').value, N(ov.g('km_in').value), N(ov.g('other').value), st), rem = k.total - paidOf(c);
+          if (!touched) { const d = Math.max(0, Math.min(held, rem)); ov.g('deduct').value = d; ov.g('collect').value = Math.max(0, rem - d); }
+          const dd = N(ov.g('deduct').value), cl = N(ov.g('collect').value), over = Math.max(0, paidOf(c) + dd + cl - k.total);
+          ov.q('[data-prev]').innerHTML = `<div>أيام محاسبة: <b class="num">${k.billed}</b></div><div>كم مستخدمة / مسموحة: <b class="num">${F(k.used)} / ${F(k.allowed)}</b></div><div>رسوم كم زائد: <b class="num">${F(k.kmCharge)}</b></div><div>الإجمالي النهائي: <b class="num">${F(k.total)}</b></div><div>المدفوع سابقاً: <b class="num">${F(paidOf(c))}</b></div><div>المتبقي: <b class="num">${F(rem)}</b></div>`;
+          ov.q('[data-dd]').textContent = `تأمين محتجز ${F(held)} — سيُرد للعميل ${ov.g('do_refund').checked ? F(Math.max(0, held - dd)) : 0}${k.billed > c.days ? ' • تأخير: تم احتساب ' + (k.billed - c.days) + ' يوم إضافي' : ''}${over > 0.009 ? ' • تنبيه: المسدد أكبر من الإجمالي بـ ' + F(over) : ''}`;
+        };
+        ['ret_at', 'km_in', 'other'].forEach(n => ov.g(n).oninput = () => { touched = false; calc(); });
+        ['deduct', 'collect', 'do_refund'].forEach(n => ov.g(n).oninput = ov.g(n).onchange = () => { touched = true; calc(); });
+        calc();
+      },
+      onSubmit: async (ov, f) => {
+        const k = calcClose(c, f.ret_at, N(f.km_in), N(f.other), st), deduct = N(f.deduct), collect = N(f.collect);
+        const refund = f.do_refund ? Math.max(0, held - deduct) : 0;
+        if (new Date(f.ret_at) < new Date(c.out_at)) throw new Error('وقت الاستلام قبل وقت الخروج');
+        if (N(f.km_in) < N(c.km_out)) throw new Error('عداد العودة أقل من عداد الخروج');
+        if (deduct > held + 0.0001) throw new Error('الخصم من التأمين أكبر من التأمين المحتجز');
+        if ((collect > 0 || refund > 0) && !f.cash_account_id) throw new Error('اختر الخزينة');
+        await rpc('rental_close_contract', { p_contract_id: id, p_returned_at: new Date(f.ret_at).toISOString(), p_km_in: N(f.km_in), p_fuel_in: f.fuel_in, p_billed_days: k.billed, p_km_charge: k.kmCharge, p_other_charge: N(f.other), p_other_note: f.other_note || null, p_total: k.total, p_deduct: deduct, p_collect: collect, p_refund: refund, p_method: f.method, p_cash_account_id: f.cash_account_id || null });
+        ov.close(); showToast('تم استلام السيارة وإنهاء العقد');
+        await Promise.all([loadContracts(), loadCars(), loadBoTreasuries()]); renderContracts(); renderCars(); viewContract(id);
+      }
+    });
+  }
+
+  // ---------- الطباعة ----------
+  async function printContract(id) {
+    const c = byIdContract(id); if (!c) return;
+    const car = byIdCar(c.car_id) || {};
+    const { data: cu } = await supabaseClient.from('customers').select('*, rental_customer_details(*)').eq('id', c.customer_id).single();
+    const d = one(cu?.rental_customer_details) || {}; const st = S(c.branch_id);
+    const { data: br } = await supabaseClient.from('branches').select('name, address, phone').eq('id', c.branch_id).single();
+    const terms = (st.terms || DEFAULT_TERMS).split('\n').map(x => x.trim()).filter(Boolean).map(t => E(t).replace(/\{kmPerDay\}/g, F(c.km_per_day)).replace(/\{extraKmFee\}/g, F(c.extra_km_fee)).replace(/\{carValue\}/g, car.car_value ? F(car.car_value) : '................'));
+    const shop = br?.name || '', dots = '&nbsp;'.repeat(60);
+    const html = `<div class="tag"><b>${E(shop)}</b><span>${E(br?.address || '')} ${br?.phone ? '— ت: ' + E(br.phone) : ''}</span></div>
+<h1>عقد إيجار سيارة</h1><div class="sub">رقم العقد: <b>${c.contract_no}</b> — تحريراً في ${fdt(c.out_at).slice(0, 10)}</div>
+<table class="fl">
+<tr><td class="k">اسم المستأجر</td><td colspan="3">${E(cu?.name)}</td></tr>
+<tr><td class="k">محل الإقامة</td><td>${E(cu?.address)}</td><td class="k">الجنسية</td><td>${E(d.nationality)}</td></tr>
+<tr><td class="k">الرقم القومي</td><td>${E(d.national_id)}</td><td class="k">رقم الهاتف</td><td>${E(cu?.phone)}${d.phone2 ? ' / ' + E(d.phone2) : ''}</td></tr>
+<tr><td class="k">رقم جواز السفر</td><td>${E(d.passport_no)}</td><td class="k">رخصة القيادة / انتهاؤها</td><td>${E(d.license_no)} ${d.license_expiry ? '— ' + fdOnly(d.license_expiry) : ''}</td></tr>
+<tr><td class="k">السيارة رقم</td><td>${E(car.plate)}</td><td class="k">نوع وموديل السيارة</td><td>${E(car.brand)} ${E(car.model)} ${E(car.year)} — ${E(car.color)}</td></tr>
+<tr><td class="k">رقم الشاسيه</td><td>${E(car.chassis)}</td><td class="k">عداد الخروج / الوقود</td><td>${F(c.km_out)} كم — ${E(c.fuel_out)}</td></tr>
+<tr><td class="k">التاريخ</td><td>${fdt(c.out_at).slice(0, 10)}</td><td class="k">وقت الخروج</td><td>${ftime(c.out_at)}</td></tr>
+<tr><td class="k">يوم تسليم السيارة للمعرض</td><td>${fdt(c.due_at).slice(0, 10)}</td><td class="k">الوقت</td><td>${ftime(c.due_at)}</td></tr>
+<tr><td class="k">سعر اليوم × الأيام</td><td>${F(c.daily_price)} × ${c.days}${N(c.discount) ? ' — خصم ' + F(c.discount) : ''}${N(c.extra_charges) ? ' + رسوم ' + F(c.extra_charges) : ''}</td><td class="k">إجمالي الإيجار</td><td><b>${F(totalOf(c))}</b> جنيه</td></tr>
+<tr><td class="k">التأمين المدفوع</td><td>${N(c.deposit_amount) ? F(c.deposit_amount) : '—'}</td><td class="k">المدفوع / المتبقي</td><td>${F(paidOf(c))} / ${F(remOf(c))}</td></tr>
+${c.notes ? `<tr><td class="k">حالة السيارة</td><td colspan="3">${E(c.notes)}</td></tr>` : ''}
+</table>
+<h2>شروط تسليم السيارة للمعرض</h2><ol>${terms.map(t => `<li>${t}</li>`).join('')}</ol>
+<table class="fl" style="margin-top:8px"><tr><td class="k" style="width:50%;text-align:center">الطرف الأول (المؤجر)</td><td class="k" style="text-align:center">الطرف الثاني (المستأجر)</td></tr>
+<tr><td style="height:70px;vertical-align:top">الاسم: ${E(shop)}<br>التوقيع:</td><td style="vertical-align:top">الاسم: ${E(cu?.name)}<br>التوقيع:</td></tr>
+<tr><td colspan="2" style="height:40px;vertical-align:top">الشهود: ${E(c.witness || '')}${c.witness ? '' : dots}</td></tr></table>
+<div style="page-break-inside:avoid"><h2>إقرار استلام سيارة</h2>
+<p>أنا / <b>${E(cu?.name)}</b> — رقم قومي: <b>${E(d.national_id || d.passport_no)}</b> — رخصة قيادة رقم: <b>${E(d.license_no)}</b><br>
+أقر باستلامي السيارة رقم <b>${E(car.plate)}</b> نوع <b>${E(car.brand)} ${E(car.model)}</b> موديل <b>${E(car.year)}</b> شاسيه رقم <b>${E(car.chassis)}</b>،
+وأصبحت من تاريخه مسئولاً عن كافة المسئوليات المدنية والجنائية الناتجة عن أو بسبب السيارة، وأيضاً أكون مسئولاً عن أية مخالفات أو حوادث لا قدر الله، وأتعهد بالمحافظة عليها وردها بحالتها التي عليها، وقد تحرر هذا الإقرار بموجبه عند اللزوم.</p>
+<table class="fl"><tr><td class="k">الاسم</td><td>${E(cu?.name)}</td><td class="k">التوقيع</td><td style="height:44px"></td></tr><tr><td class="k">رقم البطاقة</td><td>${E(d.national_id)}</td><td class="k">رقم رخصة القيادة</td><td>${E(d.license_no)}</td></tr></table></div>`;
+    const win = window.open('', '_blank', 'width=900,height=1000');
+    if (!win) { showToast('تعذر فتح نافذة الطباعة — تأكد إن المتصفح مش شايل الـ popup', true); return; }
+    const closeTag = '<' + '/script>';
+    win.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>عقد إيجار ${c.contract_no}</title><style>
+@page{size:A4;margin:10mm}body{font-family:Tahoma,Arial,sans-serif;color:#000;background:#fff;font-size:12.5px;line-height:1.65;margin:0;padding:8px}
+h1{text-align:center;margin:0 0 2px;font-size:22px}.sub{text-align:center;margin-bottom:8px;font-size:12px}
+h2{font-size:15px;margin:10px 0 4px;background:#222;color:#fff;display:inline-block;padding:1px 16px;border-radius:3px}
+table{width:100%;border-collapse:collapse}td{border:1px solid #444;padding:4px 7px}.fl td.k{width:17%;background:#f1f1f1;font-weight:700}
+ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex;justify-content:space-between;font-size:12px}
+.no-print{text-align:center;margin:14px}@media print{.no-print{display:none}}</style></head><body>${html}
+<div class="no-print"><button onclick="window.print()" style="padding:8px 18px;border-radius:8px;border:none;background:#0f766e;color:#fff;font-size:13px;cursor:pointer">طباعة</button></div>
+<script>window.onload=function(){setTimeout(function(){window.print()},300)};${closeTag}</body></html>`);
+    win.document.close();
+  }
+
+  // ---------- ربط الأحداث ----------
+  function bind() {
+    const on = (id, ev, fn) => { const el = $id(id); if (el) el.addEventListener(ev, fn); };
+    on('addRentalCarBtn', 'click', () => carModal(null));
+    on('addRentalCustomerBtn', 'click', () => customerModal(null));
+    on('addRentalContractBtn', 'click', () => contractForm(null));
+    on('rentalSettingsBtn', 'click', openSettings);
+    on('rentalCarSearch', 'input', renderCars); on('rentalCarStatusFilter', 'change', renderCars);
+    on('rentalCustomerSearch', 'input', renderCustomers);
+    on('rentalContractSearch', 'input', renderContracts); on('rentalContractStatusFilter', 'change', renderContracts);
+    $id('rentalCarsTableBody').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-ra]'); const tr = e.target.closest('tr[data-id]'); if (!b || !tr) return;
+      const c = byIdCar(tr.dataset.id); if (!c) return;
+      if (b.dataset.ra === 'edit') carModal(c); else if (b.dataset.ra === 'delete') deleteCar(c); else if (b.dataset.ra === 'file') carFile(c);
+    });
+    $id('rentalCustomersTableBody').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-ra]'); const tr = e.target.closest('tr[data-id]'); if (!b || !tr) return;
+      const c = rentalCustomers.find(x => x.id === tr.dataset.id); if (!c) return;
+      if (b.dataset.ra === 'edit') customerModal(c); else if (b.dataset.ra === 'delete') deleteCustomer(c);
+      else if (b.dataset.ra === 'wa') window.open('https://wa.me/' + waPhone(c.phone), '_blank');
+    });
+    $id('rentalContractsTableBody').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-ra]'); const tr = e.target.closest('tr[data-id]'); if (!b || !tr) return;
+      if (b.dataset.ra === 'open') viewContract(tr.dataset.id); else if (b.dataset.ra === 'print') printContract(tr.dataset.id);
+    });
+  }
+  window.rentalOnSection = async function (section) {
+    if (section === 'rental-cars') { await Promise.all([loadCars(), loadContracts(), loadSettings()]); renderCars(); }
+    else if (section === 'rental-customers') { await Promise.all([loadRentalCustomers(), loadContracts(), loadSettings()]); renderCustomers(); }
+    else if (section === 'rental-contracts') { await Promise.all([loadContracts(), loadCars(), loadSettings()]); renderContracts(); }
+  };
+  window.__rental = { reloadAll, contractForm, carModal, customerModal, viewContract, closeModal, payModal, printContract, calcClose, S, get cars() { return cars; }, get contracts() { return contracts; } };
+  bind();
+})();
+
+/* rental_module_end */</script>
 </body>
 </html>
