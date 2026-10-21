@@ -1753,6 +1753,7 @@ a { color: inherit; }
             <button class="bo-nav-sub-item" data-section="rental-journal">يوميات الخزينة</button>
             <button class="bo-nav-sub-item" data-section="rental-oil">غيار الزيت والصيانة</button>
             <button class="bo-nav-sub-item" data-section="rental-alerts">التنبيهات</button>
+            <button class="bo-nav-sub-item" data-section="rental-reports">تقارير التأجير</button>
           </div>
         </div>
 
@@ -3160,6 +3161,19 @@ a { color: inherit; }
         <div id="bo-section-rental-alerts" style="display:none;">
           <div class="bo-section-header"><div class="bo-section-title">تنبيهات معرض التأجير</div></div>
           <div id="rentalAlertsList"><div class="bo-empty">جاري التحميل...</div></div>
+        </div>
+
+        <div id="bo-section-rental-reports" style="display:none;">
+          <div class="bo-section-header">
+            <div class="bo-section-title">تقارير التأجير</div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <label style="font-size:12px">من</label><input type="date" id="rentalRepFrom" style="max-width:150px;">
+              <label style="font-size:12px">إلى</label><input type="date" id="rentalRepTo" style="max-width:150px;">
+              <button class="bo-icon-btn" id="rentalRepMonth" type="button">الشهر الحالي</button>
+              <button class="bo-icon-btn" id="rentalRepPrint" type="button">طباعة</button>
+            </div>
+          </div>
+          <div id="rentalReportsBody"></div>
         </div>
 
         <!-- قسم الملاعب/القاعات -->
@@ -22069,7 +22083,7 @@ const boAllSections = ['dashboard','products','categories','unit-types','tax-rat
   'clinic-patients','clinic-doctors','clinic-appointments',
   'academy-students','academy-courses','academy-instructors','academy-enrollments','academy-sessions',
   'venue-courts','venue-bookings',
-  'rental-cars','rental-customers','rental-contracts','rental-journal','rental-oil','rental-alerts',
+  'rental-cars','rental-customers','rental-contracts','rental-journal','rental-oil','rental-alerts','rental-reports',
   'import-shipments','import-lcs','import-fx','import-cost-sheet','import-profit',
   'export-shipments','export-lcs','import-containers','import-export-dashboard',
   'reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other',
@@ -22086,7 +22100,7 @@ const boNavGroups = [
   { toggle: 'clinicNavToggle', group: 'clinicNavGroup', sections: ['clinic-patients', 'clinic-doctors', 'clinic-appointments'] },
   { toggle: 'academyNavToggle', group: 'academyNavGroup', sections: ['academy-students', 'academy-courses', 'academy-instructors', 'academy-enrollments', 'academy-sessions'] },
   { toggle: 'venueNavToggle', group: 'venueNavGroup', sections: ['venue-courts', 'venue-bookings'] },
-  { toggle: 'rentalNavToggle', group: 'rentalNavGroup', sections: ['rental-cars', 'rental-customers', 'rental-contracts', 'rental-journal', 'rental-oil', 'rental-alerts'] },
+  { toggle: 'rentalNavToggle', group: 'rentalNavGroup', sections: ['rental-cars', 'rental-customers', 'rental-contracts', 'rental-journal', 'rental-oil', 'rental-alerts', 'rental-reports'] },
   { toggle: 'importExportNavToggle', group: 'importExportNavGroup', sections: ['import-export-dashboard', 'import-shipments', 'import-lcs', 'import-fx', 'import-cost-sheet', 'import-profit', 'export-shipments', 'export-lcs', 'import-containers'] },
   { toggle: 'reportsNavToggle', group: 'reportsNavGroup', sections: ['reports-sales','reports-purchases','reports-inventory','reports-accounting','reports-other'] },
   { toggle: 'financeNavToggle', group: 'financeNavGroup', sections: ['treasuries','payments','expense-items','expenses','capital','fixed-assets'] },
@@ -22120,7 +22134,7 @@ const SECTION_PERMISSION_MAP = {
   'academy-students': 'academy_management', 'academy-courses': 'academy_management', 'academy-instructors': 'academy_management',
   'academy-enrollments': 'academy_management', 'academy-sessions': 'academy_management',
   'venue-courts': 'venue_management', 'venue-bookings': 'venue_management',
-  'rental-cars': 'car_rental_management', 'rental-customers': 'car_rental_management', 'rental-contracts': 'car_rental_management', 'rental-journal': 'car_rental_management', 'rental-oil': 'car_rental_management', 'rental-alerts': 'car_rental_management',
+  'rental-cars': 'car_rental_management', 'rental-customers': 'car_rental_management', 'rental-contracts': 'car_rental_management', 'rental-journal': 'car_rental_management', 'rental-oil': 'car_rental_management', 'rental-alerts': 'car_rental_management', 'rental-reports': 'car_rental_management',
   'import-shipments': 'import_export_management', 'import-lcs': 'import_export_management', 'import-fx': 'import_export_management', 'import-cost-sheet': 'import_export_management', 'import-profit': 'import_export_management',
   'export-shipments': 'import_export_management', 'export-lcs': 'import_export_management', 'import-containers': 'import_export_management', 'import-export-dashboard': 'import_export_management',
   'reports-sales': 'reports', 'reports-purchases': 'reports', 'reports-inventory': 'reports', 'reports-accounting': 'reports', 'reports-other': 'reports',
@@ -22281,7 +22295,7 @@ const SCREEN_LABELS = {
   'academy-students': 'الطلاب', 'academy-courses': 'الكورسات', 'academy-instructors': 'المدربين',
   'academy-enrollments': 'التسجيلات', 'academy-sessions': 'الحصص',
   'venue-courts': 'الملاعب/القاعات', 'venue-bookings': 'الحجوزات',
-  'rental-cars': 'السيارات', 'rental-customers': 'عملاء التأجير', 'rental-contracts': 'عقود الإيجار', 'rental-journal': 'يوميات الخزينة', 'rental-oil': 'غيار الزيت والصيانة', 'rental-alerts': 'تنبيهات التأجير',
+  'rental-cars': 'السيارات', 'rental-customers': 'عملاء التأجير', 'rental-contracts': 'عقود الإيجار', 'rental-journal': 'يوميات الخزينة', 'rental-oil': 'غيار الزيت والصيانة', 'rental-alerts': 'تنبيهات التأجير', 'rental-reports': 'تقارير التأجير',
   'import-shipments': 'الشحنات', 'import-lcs': 'الاعتمادات المستندية', 'import-fx': 'فروق العملة', 'import-cost-sheet': 'كشف تكلفة الشحنة', 'import-profit': 'ربحية الشحنة',
   'export-shipments': 'شحنات التصدير', 'export-lcs': 'اعتمادات التصدير', 'import-containers': 'تتبع الحاويات', 'import-export-dashboard': 'لوحة تحكم الاستيراد والتصدير'
 };
@@ -58539,7 +58553,7 @@ document.addEventListener('DOMContentLoaded', () => {
 })();
 </script>
 <script>/* rental_module_start */
-/* ==================== معرض تأجير السيارات (المرحلتان 1-2) ==================== */
+/* ==================== معرض تأجير السيارات (المراحل 1-3) ==================== */
 (function () {
   'use strict';
   const $id = (i) => document.getElementById(i);
@@ -59284,9 +59298,68 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
     });
   }
 
+  // ==================== تقارير التأجير ====================
+  let repData = null;
+  function repRange() {
+    const f = $id('rentalRepFrom'), t = $id('rentalRepTo');
+    if (!f.value || !t.value) { const n = new Date(); f.value = dateStr(new Date(n.getFullYear(), n.getMonth(), 1)); t.value = dateStr(n); }
+    const a = new Date(f.value + 'T00:00:00'), b = new Date(t.value + 'T00:00:00'); b.setDate(b.getDate() + 1);
+    return { a, b, days: Math.max(1, Math.round((b - a) / 864e5)) };
+  }
+  async function renderReports() {
+    const box = $id('rentalReportsBody'); if (!box) return;
+    const { a, b, days } = repRange();
+    box.innerHTML = '<div class="bo-empty">جاري التحميل...</div>';
+    const [pr, mr] = await Promise.all([
+      supabaseClient.from('rental_payments').select('kind, amount, method').gte('paid_at', a.toISOString()).lt('paid_at', b.toISOString()).limit(10000),
+      supabaseClient.from('rental_maintenance').select('car_id, kind, cost').gte('done_at', dateStr(a)).lt('done_at', dateStr(b)).limit(10000)
+    ]);
+    if (pr.error || mr.error) { box.innerHTML = '<div class="bo-empty">تعذر تحميل التقرير</div>'; return; }
+    const pays = pr.data || [], maint = mr.data || [];
+    const collected = pays.filter(p => p.kind === 'rent').reduce((x, p) => x + N(p.amount), 0);
+    const inPeriod = contracts.filter(c => c.status !== 'cancelled' && new Date(c.out_at) >= a && new Date(c.out_at) < b);
+    const revenue = inPeriod.reduce((x, c) => x + totalOf(c), 0);
+    const outstanding = inPeriod.reduce((x, c) => x + Math.max(0, remOf(c)), 0);
+    const maintCost = maint.reduce((x, m) => x + N(m.cost), 0);
+    const per = cars.map(car => {
+      const cs = inPeriod.filter(c => c.car_id === car.id);
+      let ms = 0; contracts.filter(c => c.car_id === car.id && c.status !== 'cancelled').forEach(c => {
+        const s = Math.max(new Date(c.out_at), a), e = Math.min(new Date(c.returned_at || Date.now()), b); if (e > s) ms += (e - s);
+      });
+      const rd = ms / 864e5, rev = cs.reduce((x, c) => x + totalOf(c), 0), mc = maint.filter(m => m.car_id === car.id).reduce((x, m) => x + N(m.cost), 0);
+      return { car, n: cs.length, rd, occ: Math.min(100, rd / days * 100), rev, mc, net: rev - mc };
+    }).sort((x, y) => y.rev - x.rev);
+    const cust = {}; inPeriod.forEach(c => { const n = (one(c.customers) || {}).name || '—'; (cust[n] = cust[n] || { n: 0, rev: 0 }); cust[n].n++; cust[n].rev += totalOf(c); });
+    const custRows = Object.entries(cust).sort((x, y) => y[1].rev - x[1].rev).slice(0, 10);
+    const fleet = cars.filter(c => c.status !== 'sold').length || 1, avgOcc = per.reduce((x, r) => x + r.occ, 0) / fleet;
+    repData = { a, b, days, collected, revenue, outstanding, maintCost, per, custRows, avgOcc, count: inPeriod.length };
+    const card = (l, v, c, plain) => `<div style="flex:1;min-width:150px;border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:10px 14px"><div style="font-size:12px;color:var(--ink-soft)">${l}</div><div class="num" style="font-size:20px;font-weight:700;${c ? 'color:' + c : ''}">${plain ? v : F(v)}</div></div>`;
+    box.innerHTML = `
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">${card('عدد العقود', inPeriod.length, '', true)}${card('إيراد العقود', revenue)}${card('المحصل (إيجار)', collected, '#0f766e')}${card('متبقي على العملاء', outstanding, '#b45309')}${card('مصروف الصيانة', maintCost, '#b91c1c')}${card('الصافي (الإيراد − الصيانة)', revenue - maintCost)}${card('متوسط الإشغال', avgOcc.toFixed(0) + '%', '', true)}</div>
+      <h3 style="margin:14px 0 8px">أداء السيارات</h3>
+      <div class="bo-table-wrap"><table class="bo-table"><thead><tr><th>السيارة</th><th>عقود</th><th>أيام التأجير</th><th>الإشغال</th><th>الإيراد</th><th>الصيانة</th><th>الصافي</th></tr></thead><tbody>${per.length ? per.map(r => `<tr><td><b>${E(r.car.brand)} ${E(r.car.model)}</b><div style="font-size:11.5px;color:var(--ink-soft)">${E(r.car.plate)}</div></td><td class="num">${r.n}</td><td class="num">${r.rd.toFixed(1)}</td><td class="num">${r.occ.toFixed(0)}%</td><td class="num">${F(r.rev)}</td><td class="num">${F(r.mc)}</td><td class="num">${F(r.net)}</td></tr>`).join('') : '<tr><td colspan="7" class="bo-empty">لا توجد سيارات</td></tr>'}</tbody></table></div>
+      <h3 style="margin:14px 0 8px">أكثر العملاء (أعلى 10)</h3>
+      <div class="bo-table-wrap"><table class="bo-table"><thead><tr><th>العميل</th><th>عقود</th><th>الإيراد</th></tr></thead><tbody>${custRows.length ? custRows.map(([n, v]) => `<tr><td>${E(n)}</td><td class="num">${v.n}</td><td class="num">${F(v.rev)}</td></tr>`).join('') : '<tr><td colspan="3" class="bo-empty">لا توجد عقود في الفترة</td></tr>'}</tbody></table></div>
+      <div style="font-size:12px;color:var(--ink-soft);margin-top:8px">الإيراد يُحسب على العقود التي بدأت داخل الفترة، والمحصل من الدفعات المسجلة فيها. التأمين المحتجز لا يدخل في الإيراد.</div>`;
+  }
+  function printReports() {
+    if (!repData) return; const r = repData, win = window.open('', '_blank', 'width=900,height=900'); if (!win) { showToast('اسمح بالنوافذ المنبثقة للطباعة', true); return; }
+    win.document.write(`<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>تقرير التأجير</title><style>body{font-family:Tahoma,Arial,sans-serif;padding:20px;font-size:13px}table{width:100%;border-collapse:collapse;margin:8px 0}th,td{border:1px solid #999;padding:5px 7px;text-align:right}th{background:#eee}.s{display:flex;flex-wrap:wrap;gap:18px;margin:10px 0}</style></head><body>
+      <h2>تقرير معرض التأجير — من ${fdOnly(dateStr(r.a))} إلى ${fdOnly(dateStr(new Date(r.b - 864e5)))}</h2>
+      <div class="s"><div>العقود: <b>${r.count}</b></div><div>الإيراد: <b>${F(r.revenue)}</b></div><div>المحصل: <b>${F(r.collected)}</b></div><div>المتبقي: <b>${F(r.outstanding)}</b></div><div>الصيانة: <b>${F(r.maintCost)}</b></div><div>الصافي: <b>${F(r.revenue - r.maintCost)}</b></div><div>الإشغال: <b>${r.avgOcc.toFixed(0)}%</b></div></div>
+      <table><thead><tr><th>السيارة</th><th>عقود</th><th>أيام</th><th>الإشغال</th><th>الإيراد</th><th>الصيانة</th><th>الصافي</th></tr></thead><tbody>${r.per.map(x => `<tr><td>${E(x.car.brand)} ${E(x.car.model)} ${E(x.car.plate)}</td><td>${x.n}</td><td>${x.rd.toFixed(1)}</td><td>${x.occ.toFixed(0)}%</td><td>${F(x.rev)}</td><td>${F(x.mc)}</td><td>${F(x.net)}</td></tr>`).join('')}</tbody></table>
+      <script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>`);
+    win.document.close();
+  }
+  function bind3() {
+    const on = (id, ev, fn) => { const el = $id(id); if (el) el.addEventListener(ev, fn); };
+    on('rentalRepFrom', 'change', renderReports); on('rentalRepTo', 'change', renderReports); on('rentalRepPrint', 'click', printReports);
+    on('rentalRepMonth', 'click', () => { $id('rentalRepFrom').value = ''; $id('rentalRepTo').value = ''; renderReports(); });
+  }
+
   // ---------- ربط الأحداث ----------
   function bind() {
-    bind2();
+    bind2(); bind3();
     const on = (id, ev, fn) => { const el = $id(id); if (el) el.addEventListener(ev, fn); };
     on('addRentalCarBtn', 'click', () => carModal(null));
     on('addRentalCustomerBtn', 'click', () => customerModal(null));
@@ -59317,10 +59390,11 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
     else if (section === 'rental-contracts') { await Promise.all([loadContracts(), loadCars(), loadSettings()]); renderContracts(); }
     else if (section === 'rental-journal') { await renderJournal(); }
     else if (section === 'rental-oil') { await Promise.all([loadCars(), loadSettings()]); renderOil(); }
+    else if (section === 'rental-reports') { await Promise.all([loadCars(), loadContracts(), loadSettings()]); await renderReports(); }
     else if (section === 'rental-alerts') { await Promise.all([loadCars(), loadContracts(), loadRentalCustomers(), loadSettings()]); renderAlerts(); }
     if (section.startsWith('rental-') && section !== 'rental-alerts') updateAlertBadge();
   };
-  window.__rental = { renderJournal, maintModal, computeAlerts, oilStatus, reloadAll, contractForm, carModal, customerModal, viewContract, closeModal, payModal, printContract, calcClose, S, get cars() { return cars; }, get contracts() { return contracts; } };
+  window.__rental = { renderReports, renderJournal, maintModal, computeAlerts, oilStatus, reloadAll, contractForm, carModal, customerModal, viewContract, closeModal, payModal, printContract, calcClose, S, get cars() { return cars; }, get contracts() { return contracts; } };
   bind();
 })();
 
