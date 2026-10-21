@@ -3201,6 +3201,7 @@ a { color: inherit; }
               <label style="font-size:12px">إلى</label><input type="date" id="rentalRepTo" style="max-width:150px;">
               <button class="bo-icon-btn" id="rentalRepMonth" type="button">الشهر الحالي</button>
               <button class="bo-icon-btn" id="rentalRepPrint" type="button">طباعة</button>
+              <button class="bo-icon-btn" id="rentalRepExcel" type="button">تصدير Excel</button>
             </div>
           </div>
           <div id="rentalReportsBody"></div>
@@ -58746,7 +58747,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const totalOf = (c) => c.status === 'closed' ? N(c.total_amount) : c.days * N(c.daily_price) - N(c.discount) + N(c.extra_charges);
   const paidOf = (c) => N(c.paid_amount) + N(c.deducted_from_deposit);
   const remOf = (c) => totalOf(c) - paidOf(c);
-  const heldOf = (c) => N(c.deposit_amount) - N(c.deducted_from_deposit) - N(c.deposit_refunded);
+  const heldOf = (c) => N(c.deposit_amount) - N(c.deducted_from_deposit) - N(c.deposit_refunded) - N(c.fines_deducted);
   function calcClose(c, retAt, kmIn, other, st) {
     const ad = Math.max(1, Math.ceil(((new Date(retAt) - new Date(c.out_at)) / 36e5 - st.grace_hours) / 24 - 1e-6));
     const billed = Math.max(c.days, ad);
@@ -59029,6 +59030,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div><span style="color:var(--ink-soft)">${c.returned_at ? 'تم التسليم' : 'موعد التسليم'}</span><br>${fdt(c.returned_at || c.due_at)} ${isLate(c) ? '<span class="bo-badge inactive">متأخر</span>' : ''}</div>
         <div><span style="color:var(--ink-soft)">أيام / سعر اليوم</span><br><span class="num">${c.billed_days || c.days} × ${F(c.daily_price)}</span></div>
         <div><span style="color:var(--ink-soft)">العداد (خروج ← عودة)</span><br><span class="num">${F(c.km_out)} ← ${c.km_in != null ? F(c.km_in) : '—'}</span></div></div>
+        ${N(c.fines_deducted) ? `<div style="margin-top:8px;font-size:12.5px;color:#b45309">مخالفات/تلفيات خُصمت من التأمين: <b class="num">${F(c.fines_deducted)}</b></div>` : ''}
         ${c.status === 'closed' && (N(c.km_charge) || N(c.other_charge)) ? `<div style="margin-top:8px;font-size:12.5px;color:var(--ink-soft)">رسوم عند الاستلام: كيلومترات زائدة ${F(c.km_charge)} • أخرى ${F(c.other_charge)} ${E(c.other_note || '')}</div>` : ''}</div>
       <div class="field field-full"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;background:var(--surface-sunken);border-radius:8px;padding:10px 12px">
         <div><span style="font-size:12px;color:var(--ink-soft)">الإجمالي</span><br><b class="num">${F(totalOf(c))}</b></div><div><span style="font-size:12px;color:var(--ink-soft)">المدفوع</span><br><b class="num">${F(paidOf(c))}</b></div>
@@ -59442,6 +59444,7 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
   function bind3() {
     const on = (id, ev, fn) => { const el = $id(id); if (el) el.addEventListener(ev, fn); };
     on('rentalRepFrom', 'change', renderReports); on('rentalRepTo', 'change', renderReports); on('rentalRepPrint', 'click', printReports);
+    on('rentalRepExcel', 'click', exportExcel);
     on('rentalRepMonth', 'click', () => { $id('rentalRepFrom').value = ''; $id('rentalRepTo').value = ''; renderReports(); });
   }
 
@@ -59643,7 +59646,7 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
         <td>${cu.name ? E(cu.name) + (ct.contract_no ? `<div style="font-size:11.5px;color:var(--ink-soft)">عقد ${ct.contract_no}</div>` : '') : '<span style="color:var(--ink-soft)">لا يوجد عقد وقتها</span>'}</td>
         <td class="num">${F(i.amount)}</td><td>${i.responsible === 'customer' ? 'العميل' : 'المعرض'}</td>
         <td><span class="bo-badge ${INC_ST[i.status][1]}">${INC_ST[i.status][0]}</span></td>
-        <td><div class="bo-row-actions">${i.status === 'open' ? `${N(i.amount) > 0 ? `<button class="bo-icon-btn" data-ra="settle">${i.responsible === 'customer' ? 'تحصيل من العميل' : 'سداد من الخزينة'}</button>` : ''}${i.customers && cuPhone(i) ? '<button class="bo-icon-btn" data-ra="wa">واتساب</button>' : ''}<button class="bo-icon-btn" data-ra="waive">إعفاء</button><button class="bo-icon-btn danger" data-action="delete" data-ra="del">حذف</button>` : ''}</div></td></tr>`;
+        <td><div class="bo-row-actions">${i.status === 'open' ? `${N(i.amount) > 0 && i.responsible === 'customer' && i.contract_id && contracts.some(k => k.id === i.contract_id && heldOf(k) >= N(i.amount) - 0.0001) ? '<button class="bo-icon-btn" data-ra="dep">خصم من التأمين</button>' : ''}${N(i.amount) > 0 ? `<button class="bo-icon-btn" data-ra="settle">${i.responsible === 'customer' ? 'تحصيل من العميل' : 'سداد من الخزينة'}</button>` : ''}${i.customers && cuPhone(i) ? '<button class="bo-icon-btn" data-ra="wa">واتساب</button>' : ''}<button class="bo-icon-btn" data-ra="waive">إعفاء</button><button class="bo-icon-btn danger" data-action="delete" data-ra="del">حذف</button>` : ''}</div></td></tr>`;
     }).join('');
     tb.querySelectorAll('tr[data-id]').forEach(tr => applyRowActionPerm(tr, 'rental-incidents'));
   }
@@ -59771,6 +59774,11 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
     $id('rentalIncTableBody').addEventListener('click', async (e) => {
       const b = e.target.closest('[data-ra]'), tr = e.target.closest('tr[data-id]'); if (!b || !tr) return; const i = incidents.find(x => x.id === tr.dataset.id); if (!i) return;
       if (b.dataset.ra === 'settle') settleIncident(i.id);
+      else if (b.dataset.ra === 'dep') {
+        const k = contracts.find(x => x.id === i.contract_id);
+        if (!confirm(`خصم ${F(i.amount)} جنيه من التأمين المحتجز على عقد ${k ? k.contract_no : ''}؟\nلن تتحرك الخزينة الآن، وسيقل المبلغ المسترد للعميل عند الاستلام.`)) return;
+        try { await rpc('rental_incident_deduct_deposit', { p_incident_id: i.id }); showToast('تم الخصم من التأمين'); await Promise.all([loadIncidents(), loadContracts()]); renderIncidents(); } catch (x) { showToast(dbMsg(x), true); }
+      }
       else if (b.dataset.ra === 'waive') { if (!confirm('إعفاء العميل/المعرض من هذا المبلغ؟')) return; const { error } = await supabaseClient.from('rental_incidents').update({ status: 'waived' }).eq('id', i.id); if (error) { showToast(dbMsg(error), true); return; } await loadIncidents(); renderIncidents(); }
       else if (b.dataset.ra === 'del') { if (!confirm('حذف السجل؟')) return; const { error } = await supabaseClient.from('rental_incidents').delete().eq('id', i.id); if (error) { showToast(dbMsg(error), true); return; } await loadIncidents(); renderIncidents(); }
       else if (b.dataset.ra === 'wa') { const cu = one(i.customers) || {}, car = one(i.rental_cars) || {}, shop = S(i.branch_id).shop_name || 'المعرض'; waModal(cu.phone, [['إخطار بمخالفة / حادث', `مرحباً ${cu.name || ''}،\nنفيدكم بتسجيل ${INC_KIND[i.kind]} ${i.ref_no || ''} على السيارة ${car.brand || ''} ${car.model || ''} (${car.plate || ''}) بتاريخ ${fdt(i.occurred_at)} أثناء فترة التعاقد، بمبلغ ${F(i.amount)} جنيه.\nبرجاء التواصل معنا لتسوية المبلغ.\n${shop}`]], 'واتساب'); }
@@ -59801,6 +59809,34 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
     ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => cv.addEventListener(ev, () => { down = false; }));
     ov.q('[data-clr]').onclick = () => { cx.clearRect(0, 0, cv.width, cv.height); drawn = false; };
     const rm = ov.q('[data-rm]'); if (rm) rm.onclick = async () => { const { error } = await supabaseClient.from('rental_contracts').update({ customer_signature: null }).eq('id', id); if (error) { ov.fail(dbMsg(error)); return; } c.customer_signature = null; ov.close(); showToast('تم حذف التوقيع'); };
+  }
+
+  // ==================== تصدير Excel ====================
+  async function exportExcel() {
+    if (typeof XLSX === 'undefined') { showToast('مكتبة Excel غير متاحة (تحقق من الاتصال)', true); return; }
+    const { a, b } = repRange();
+    showToast('جاري تجهيز الملف...');
+    await Promise.all([loadCars(), loadContracts(), loadRentalCustomers(), loadIncidents(), loadSettings()]);
+    const [pr, er, mr] = await Promise.all([
+      supabaseClient.from('rental_payments').select('*, cash_accounts(name), rental_contracts(contract_no, customers(name), rental_cars(plate))').gte('paid_at', a.toISOString()).lt('paid_at', b.toISOString()).order('paid_at').limit(20000),
+      supabaseClient.from('rental_cash_entries').select('*, cash_accounts(name)').gte('created_at', a.toISOString()).lt('created_at', b.toISOString()).order('created_at').limit(20000),
+      supabaseClient.from('rental_maintenance').select('*, rental_cars(plate, brand, model)').gte('done_at', dateStr(a)).lt('done_at', dateStr(b)).order('done_at').limit(20000)
+    ]);
+    if (pr.error || er.error || mr.error) { showToast('تعذر تحميل البيانات للتصدير', true); return; }
+    const PK = { rent: 'إيجار', deposit: 'تأمين مستلم', deposit_refund: 'تأمين مردود' };
+    const CS = { open: 'مفتوح', closed: 'مغلق', cancelled: 'ملغي' };
+    const inRange = (d) => new Date(d) >= a && new Date(d) < b;
+    const wb = XLSX.utils.book_new(), add = (name, rows) => XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows.length ? rows : [{ 'لا توجد بيانات': '' }]), name);
+    add('العقود', contracts.filter(c => inRange(c.out_at)).map(c => ({ 'رقم العقد': c.contract_no, 'الحالة': CS[c.status] || c.status, 'العميل': (one(c.customers) || {}).name, 'الهاتف': (one(c.customers) || {}).phone, 'السيارة': (one(c.rental_cars) || {}).plate, 'الخروج': fdt(c.out_at), 'موعد التسليم': fdt(c.due_at), 'تم التسليم': c.returned_at ? fdt(c.returned_at) : '', 'الأيام': c.billed_days || c.days, 'سعر اليوم': N(c.daily_price), 'الإجمالي': totalOf(c), 'المدفوع': paidOf(c), 'المتبقي': remOf(c), 'التأمين المحتجز': heldOf(c) })));
+    const pay = (pr.data || []).map(p => ({ 'التاريخ': fdt(p.paid_at), 'النوع': 'عقد: ' + (PK[p.kind] || p.kind), 'عقد': (one(p.rental_contracts) || {}).contract_no, 'العميل': (one(one(p.rental_contracts) || {}).customers || {}) .name, 'الطريقة': p.method, 'الخزينة': (one(p.cash_accounts) || {}).name, 'وارد': p.kind === 'deposit_refund' ? '' : N(p.amount), 'صادر': p.kind === 'deposit_refund' ? N(p.amount) : '', 'البيان': p.note || '' }));
+    const ent = (er.data || []).map(e => ({ 'التاريخ': fdt(e.created_at), 'النوع': (e.direction === 'in' ? 'وارد: ' : 'مصروف: ') + e.category, 'عقد': '', 'العميل': '', 'الطريقة': '', 'الخزينة': (one(e.cash_accounts) || {}).name, 'وارد': e.direction === 'in' ? N(e.amount) : '', 'صادر': e.direction === 'out' ? N(e.amount) : '', 'البيان': e.note }));
+    add('الخزينة', pay.concat(ent).sort((x, y) => String(x['التاريخ']).split(' ')[0].split('/').reverse().join('') < String(y['التاريخ']).split(' ')[0].split('/').reverse().join('') ? -1 : 1));
+    add('السيارات', cars.map(c => ({ 'الماركة': c.brand, 'الموديل': c.model, 'السنة': c.year, 'اللوحة': c.plate, 'اللون': c.color, 'الشاسيه': c.chassis, 'العداد': N(c.odometer), 'سعر اليوم': N(c.daily_price), 'انتهاء الرخصة': c.license_expiry || '', 'انتهاء التأمين': c.insurance_expiry || '', 'انتهاء الفحص': c.inspection_expiry || '', 'آخر تغيير زيت (كم)': c.last_oil_km ?? '', 'تاريخ آخر زيت': c.last_oil_date || '', 'الحالة': carStatus(c) })));
+    add('العملاء', rentalCustomers.map(c => ({ 'الاسم': c.name, 'الهاتف': c.phone, 'العنوان': c.address, 'الرقم القومي': c.d.national_id || '', 'جواز السفر': c.d.passport_no || '', 'رقم الرخصة': c.d.license_no || '', 'انتهاء الرخصة': c.d.license_expiry || '', 'قائمة سوداء': c.d.is_blacklisted ? 'نعم' : '' })));
+    add('الصيانة', (mr.data || []).map(x => ({ 'التاريخ': x.done_at, 'السيارة': (one(x.rental_cars) || {}).plate, 'النوع': MAINT_KIND[x.kind] || x.kind, 'العداد': x.odometer ?? '', 'التكلفة': N(x.cost), 'ملاحظة': x.note || '' })));
+    add('المخالفات والحوادث', incidents.filter(i => inRange(i.occurred_at)).map(i => ({ 'التاريخ': fdt(i.occurred_at), 'النوع': INC_KIND[i.kind], 'رقم': i.ref_no || '', 'السيارة': (one(i.rental_cars) || {}).plate, 'العميل': (one(i.customers) || {}).name || '', 'المبلغ': N(i.amount), 'المسؤول': i.responsible === 'customer' ? 'العميل' : 'المعرض', 'الحالة': INC_ST[i.status][0] })));
+    XLSX.writeFile(wb, `rental_${dateStr(a)}_${dateStr(new Date(b - 864e5))}.xlsx`);
+    showToast('تم تصدير الملف');
   }
 
   // ---------- ربط الأحداث ----------
@@ -59842,7 +59878,7 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
     else if (section === 'rental-alerts') { await Promise.all([loadCars(), loadContracts(), loadRentalCustomers(), loadSettings(), loadReservations()]); renderAlerts(); }
     if (section.startsWith('rental-') && section !== 'rental-alerts') updateAlertBadge();
   };
-  window.__rental = { loadReservations, reservationModal, convertReservation, incidentModal, settleIncident, conditionModal, signatureModal, rentalDashRefresh, extendModal, waTemplates, waModal, cashEntryModal, openSettings, renderReports, renderJournal, maintModal, computeAlerts, oilStatus, reloadAll, contractForm, carModal, customerModal, viewContract, closeModal, payModal, printContract, calcClose, S, get cars() { return cars; }, get contracts() { return contracts; } };
+  window.__rental = { exportExcel, loadReservations, reservationModal, convertReservation, incidentModal, settleIncident, conditionModal, signatureModal, rentalDashRefresh, extendModal, waTemplates, waModal, cashEntryModal, openSettings, renderReports, renderJournal, maintModal, computeAlerts, oilStatus, reloadAll, contractForm, carModal, customerModal, viewContract, closeModal, payModal, printContract, calcClose, S, get cars() { return cars; }, get contracts() { return contracts; } };
   bind();
 })();
 
