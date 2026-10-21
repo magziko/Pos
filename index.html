@@ -58756,14 +58756,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const carName = (c) => c ? `${c.brand} ${c.model}${c.year ? ' ' + c.year : ''} — ${c.plate}` : '—';
   const plannedDays = (a, b) => Math.max(1, Math.ceil((new Date(b) - new Date(a)) / 864e5 - 1e-6));
   const isLate = (c) => c.status === 'open' && new Date(c.due_at) < new Date();
-  const totalOf = (c) => c.status === 'closed' ? N(c.total_amount) : c.days * N(c.daily_price) - N(c.discount) + N(c.extra_charges);
+  const totalOf = (c) => c.status === 'closed' ? N(c.total_amount) : c.days * (N(c.daily_price) + N(c.driver_daily_fee)) - N(c.discount) + N(c.extra_charges);
   const paidOf = (c) => N(c.paid_amount) + N(c.deducted_from_deposit);
   const remOf = (c) => totalOf(c) - paidOf(c);
   const heldOf = (c) => N(c.deposit_amount) - N(c.deducted_from_deposit) - N(c.deposit_refunded) - N(c.fines_deducted);
   function calcClose(c, retAt, kmIn, other, st) {
     const ad = Math.max(1, Math.ceil(((new Date(retAt) - new Date(c.out_at)) / 36e5 - st.grace_hours) / 24 - 1e-6));
     const billed = Math.max(c.days, ad);
-    const base = billed * N(c.daily_price) - N(c.discount) + N(c.extra_charges);
+    const base = billed * (N(c.daily_price) + N(c.driver_daily_fee)) - N(c.discount) + N(c.extra_charges);
     const used = Math.max(0, kmIn - N(c.km_out)), allowed = N(c.km_per_day) * billed, extraKm = Math.max(0, used - allowed), kmCharge = extraKm * N(c.extra_km_fee);
     return { ad, billed, base, used, allowed, extraKm, kmCharge, total: base + kmCharge + other };
   }
@@ -58957,14 +58957,18 @@ document.addEventListener('DOMContentLoaded', () => {
       ${fld('كم مسموح باليوم', inp('km_per_day', v.km_per_day, 'number'))}${fld('سعر الكيلو الزائد', inp('extra_km_fee', v.extra_km_fee, 'number', 'step="any"'))}
       ${c0 ? '' : `${fld('مبلغ التأمين المستلم (يُسترد)', inp('deposit', 0, 'number', 'min="0" step="any"'))}${fld('مدفوع من الإيجار الآن', inp('paid_now', pre ? N(pre.deposit_hint) : 0, 'number', 'min="0" step="any"'))}
         ${fld('الخزينة', sel('cash_account_id', treas.length ? treas : [['', '— لا توجد خزينة —']], treas[0]?.[0]))}${fld('طريقة الدفع', sel('method', METHODS))}`}
+      ${fld('السائق', sel('with_driver', [['0', 'بدون سائق'], ['1', 'مع سائق']], v.driver_name || N(v.driver_daily_fee) ? '1' : '0'))}<div data-drv style="display:contents">${fld('اسم السائق', inp('driver_name', v.driver_name || ''))}${fld('هاتف السائق', inp('driver_phone', v.driver_phone || ''))}${fld('رخصة السائق', inp('driver_license', v.driver_license || ''))}${fld('أجر السائق باليوم', inp('driver_daily_fee', v.driver_daily_fee || 0, 'number', 'min="0" step="any"'))}</div>
+      ${c0 ? '' : `${fld('تقسيط الإيجار — عدد الأقساط (0 = بدون)', inp('inst_n', 0, 'number', 'min="0" max="36"'))}${fld('تاريخ أول قسط', inp('inst_first', dateStr(new Date(Date.now() + 30 * 864e5)), 'date'))}${fld('كل (يوم)', inp('inst_every', 30, 'number', 'min="1"'))}`}
       ${fld('ملاحظات (حالة السيارة، خدوش…)', `<textarea name="notes" rows="2" style="width:100%">${E(v.notes || '')}</textarea>`, true)}
       <div class="field field-full"><div data-prev style="display:flex;gap:18px;flex-wrap:wrap;background:var(--surface-sunken);border-radius:8px;padding:10px 12px;font-size:13px"></div></div>`, {
       big: true,
       init: (ov) => {
         const prev = () => {
-          const d = plannedDays(ov.g('out_at').value, ov.g('due_at').value), t = d * N(ov.g('daily_price').value) - N(ov.g('discount').value) + N(ov.g('extra_charges').value);
+          const d = plannedDays(ov.g('out_at').value, ov.g('due_at').value), t = d * (N(ov.g('daily_price').value) + (ov.g('with_driver').value === '1' ? N(ov.g('driver_daily_fee').value) : 0)) - N(ov.g('discount').value) + N(ov.g('extra_charges').value);
           ov.q('[data-prev]').innerHTML = `<div>عدد الأيام: <b class="num">${isNaN(d) ? '—' : d}</b></div><div>الإجمالي: <b class="num">${F(t)}</b></div><div>الكيلومترات المسموحة: <b class="num">${F(d * N(ov.g('km_per_day').value))}</b></div>${ov._rn && ov._rn.length ? `<div style="width:100%;font-size:12px;color:#0f766e">قواعد الأسعار المطبقة: ${E(ov._rn.join(' + '))}</div>` : ''}`;
         };
+        const drvSync = () => { const on = ov.g('with_driver').value === '1'; ov.q('[data-drv]').style.display = on ? 'contents' : 'none'; prev(); };
+        ov.g('with_driver').onchange = drvSync; ov.g('driver_daily_fee').oninput = prev; ov.q('[data-drv]').style.display = ov.g('with_driver').value === '1' ? 'contents' : 'none';
         let manualPrice = !!(c0 || pre);
         const autoPrice = () => { if (manualPrice) return; const x = byIdCar(ov.g('car_id').value); if (!x) return; const sg = suggestPrice(x, ov.g('out_at').value, ov.g('due_at').value); ov.g('daily_price').value = sg.price; ov._rn = sg.notes; };
         ['out_at', 'due_at', 'daily_price', 'discount', 'extra_charges', 'km_per_day'].forEach(n => ov.g(n).oninput = prev);
@@ -59001,8 +59005,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!cust.d || (!cust.d.national_id && !cust.d.passport_no)) warn.push('لا يوجد رقم قومي أو جواز سفر للعميل');
         if (warn.length && !confirm(warn.join('\n') + '\n\nهل تريد المتابعة؟')) return;
         const days = plannedDays(f.out_at, f.due_at);
-        const total = days * N(f.daily_price) - N(f.discount) + N(f.extra_charges);
-        const base = { customer_id: f.customer_id, car_id: f.car_id, out_at: new Date(f.out_at).toISOString(), due_at: new Date(f.due_at).toISOString(), place: f.place || null, daily_price: N(f.daily_price), days, discount: N(f.discount), extra_charges: N(f.extra_charges), km_out: N(f.km_out), km_per_day: N(f.km_per_day), extra_km_fee: N(f.extra_km_fee), fuel_out: f.fuel_out, witness: f.witness || null, notes: f.notes || null };
+        const drv = f.with_driver === '1', drvFee = drv ? N(f.driver_daily_fee) : 0;
+        const total = days * (N(f.daily_price) + drvFee) - N(f.discount) + N(f.extra_charges);
+        const instN = c0 ? 0 : Math.floor(N(f.inst_n));
+        if (instN > 0 && (!f.inst_first || N(f.inst_every) < 1)) throw new Error('حدد تاريخ أول قسط والفاصل بالأيام');
+        if (instN > 0 && total - paidNow <= 0) throw new Error('لا يوجد مبلغ متبقٍ للتقسيط');
+        const base = { driver_name: drv ? (f.driver_name || null) : null, driver_phone: drv ? (f.driver_phone || null) : null, driver_license: drv ? (f.driver_license || null) : null, driver_daily_fee: drvFee, customer_id: f.customer_id, car_id: f.car_id, out_at: new Date(f.out_at).toISOString(), due_at: new Date(f.due_at).toISOString(), place: f.place || null, daily_price: N(f.daily_price), days, discount: N(f.discount), extra_charges: N(f.extra_charges), km_out: N(f.km_out), km_per_day: N(f.km_per_day), extra_km_fee: N(f.extra_km_fee), fuel_out: f.fuel_out, witness: f.witness || null, notes: f.notes || null };
         if (c0) {
           const { error } = await supabaseClient.from('rental_contracts').update(Object.assign({}, base, { branch_id: car.branch_id })).eq('id', c0.id);
           if (error) throw new Error(dbMsg(error));
@@ -59016,6 +59024,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!cust.d) await supabaseClient.from('rental_customer_details').upsert({ customer_id: cust.id });
         const { data: row, error } = await supabaseClient.from('rental_contracts').insert(Object.assign({}, base, { branch_id: car.branch_id, total_amount: total, created_by: currentProfile.id })).select('*').single();
         if (error) throw new Error(dbMsg(error));
+        if (instN > 0) {
+          const remain = total - paidNow, each = Math.floor(remain / instN * 100) / 100; const rows = [];
+          for (let i = 0; i < instN; i++) { const d = new Date(f.inst_first + 'T00:00:00'); d.setDate(d.getDate() + i * N(f.inst_every)); rows.push({ contract_id: row.id, branch_id: car.branch_id, seq: i + 1, due_date: dateStr(d), amount: i === instN - 1 ? Math.round((remain - each * (instN - 1)) * 100) / 100 : each }); }
+          const ri = await supabaseClient.from('rental_installments').insert(rows); if (ri.error) showToast('تم إنشاء العقد لكن تعذر إنشاء جدول الأقساط: ' + dbMsg(ri.error), true);
+        }
         if (pre && pre.reservation_id) await supabaseClient.from('rental_reservations').update({ status: 'converted', contract_id: row.id }).eq('id', pre.reservation_id);
         let payErr = '';
         try {
@@ -59037,6 +59050,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function viewContract(id) {
     const c = byIdContract(id); if (!c) return;
     const { data: pays } = await supabaseClient.from('rental_payments').select('*, cash_accounts(name)').eq('contract_id', id).order('paid_at');
+    const { data: insts } = await supabaseClient.from('rental_installments').select('*').eq('contract_id', id).order('seq');
     const open = c.status === 'open', held = heldOf(c), r = remOf(c);
     const KIND = { rent: 'إيجار', deposit: 'تأمين', deposit_refund: 'رد تأمين' };
     modal(`عقد رقم ${c.contract_no}`, `
@@ -59047,11 +59061,13 @@ document.addEventListener('DOMContentLoaded', () => {
         <div><span style="color:var(--ink-soft)">${c.returned_at ? 'تم التسليم' : 'موعد التسليم'}</span><br>${fdt(c.returned_at || c.due_at)} ${isLate(c) ? '<span class="bo-badge inactive">متأخر</span>' : ''}</div>
         <div><span style="color:var(--ink-soft)">أيام / سعر اليوم</span><br><span class="num">${c.billed_days || c.days} × ${F(c.daily_price)}</span></div>
         <div><span style="color:var(--ink-soft)">العداد (خروج ← عودة)</span><br><span class="num">${F(c.km_out)} ← ${c.km_in != null ? F(c.km_in) : '—'}</span></div></div>
+        ${c.driver_name || N(c.driver_daily_fee) ? `<div style="margin-top:8px;font-size:12.5px">🧑‍✈️ السائق: <b>${E(c.driver_name || '—')}</b> ${E(c.driver_phone || '')} — أجر ${F(c.driver_daily_fee)}/يوم</div>` : ''}
         ${N(c.fines_deducted) ? `<div style="margin-top:8px;font-size:12.5px;color:#b45309">مخالفات/تلفيات خُصمت من التأمين: <b class="num">${F(c.fines_deducted)}</b></div>` : ''}
         ${c.status === 'closed' && (N(c.km_charge) || N(c.other_charge)) ? `<div style="margin-top:8px;font-size:12.5px;color:var(--ink-soft)">رسوم عند الاستلام: كيلومترات زائدة ${F(c.km_charge)} • أخرى ${F(c.other_charge)} ${E(c.other_note || '')}</div>` : ''}</div>
       <div class="field field-full"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;background:var(--surface-sunken);border-radius:8px;padding:10px 12px">
         <div><span style="font-size:12px;color:var(--ink-soft)">الإجمالي</span><br><b class="num">${F(totalOf(c))}</b></div><div><span style="font-size:12px;color:var(--ink-soft)">المدفوع</span><br><b class="num">${F(paidOf(c))}</b></div>
         <div><span style="font-size:12px;color:var(--ink-soft)">المتبقي</span><br><b class="num">${F(r)}</b></div><div><span style="font-size:12px;color:var(--ink-soft)">تأمين محتجز</span><br><b class="num">${F(held)}</b></div></div></div>
+      ${(insts || []).length ? `<div class="field field-full"><label>جدول الأقساط</label><div class="bo-table-wrap"><table class="bo-table"><thead><tr><th>#</th><th>الاستحقاق</th><th>القسط</th><th>المدفوع</th><th>الحالة</th><th></th></tr></thead><tbody>${insts.map(x => { const left = N(x.amount) - N(x.paid_amount), late = left > 0.0001 && x.due_date < dateStr(new Date()); return `<tr><td class="num">${x.seq}</td><td>${fdOnly(x.due_date)}</td><td class="num">${F(x.amount)}</td><td class="num">${F(x.paid_amount)}</td><td><span class="bo-badge ${left <= 0.0001 ? 'active' : late ? 'inactive' : 'pending'}">${left <= 0.0001 ? 'مدفوع' : late ? 'متأخر' : 'مستحق'}</span></td><td>${left > 0.0001 && c.status !== 'cancelled' ? `<button type="button" class="bo-icon-btn" data-inst="${x.id}" data-left="${left}">تحصيل</button>` : ''}</td></tr>`; }).join('')}</tbody></table></div></div>` : ''}
       <div class="field field-full"><label>الدفعات</label>${(pays || []).length ? `<div class="bo-table-wrap"><table class="bo-table"><thead><tr><th>التاريخ</th><th>البند</th><th>الخزينة</th><th>المبلغ</th></tr></thead><tbody>${pays.map(p => `<tr><td>${fdt(p.paid_at)}</td><td>${KIND[p.kind]}</td><td>${E(p.cash_accounts?.name || '')} ${E(p.method || '')}</td><td class="num">${p.kind === 'deposit_refund' ? '−' : ''}${F(p.amount)}</td></tr>`).join('')}</tbody></table></div>` : '<div style="color:var(--ink-soft)">لا توجد دفعات</div>'}</div>
       ${c.notes ? `<div class="field field-full" style="font-size:12.5px;color:var(--ink-soft)">ملاحظات: ${E(c.notes)}</div>` : ''}`, {
       big: true,
@@ -59061,6 +59077,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ${!pays?.length ? '<button type="button" class="modal-cancel-btn" data-del style="color:var(--danger)">حذف</button>' : ''}`,
       init: (ov) => {
         ov.q('[data-pr]').onclick = () => printContract(id);
+        ov.querySelectorAll('[data-inst]').forEach(b => b.onclick = () => { ov.close(); installmentModal(c, b.dataset.inst, N(b.dataset.left)); });
         const w = ov.q('[data-wa]'); if (w) w.onclick = () => waModal(c.customers.phone, waTemplates(c, { amount: (pays || []).filter(x => x.kind !== 'deposit_refund').slice(-1)[0]?.amount }), 'واتساب — عقد ' + c.contract_no);
         ov.q('[data-cond]').onclick = () => { ov.close(); conditionModal(id); };
         ov.q('[data-sig]').onclick = () => { ov.close(); signatureModal(id); };
@@ -59132,6 +59149,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (deduct > held + 0.0001) throw new Error('الخصم من التأمين أكبر من التأمين المحتجز');
         if ((collect > 0 || refund > 0) && !f.cash_account_id) throw new Error('اختر الخزينة');
         await rpc('rental_close_contract', { p_contract_id: id, p_returned_at: new Date(f.ret_at).toISOString(), p_km_in: N(f.km_in), p_fuel_in: f.fuel_in, p_billed_days: k.billed, p_km_charge: k.kmCharge, p_other_charge: N(f.other), p_other_note: f.other_note || null, p_total: k.total, p_deduct: deduct, p_collect: collect, p_refund: refund, p_method: f.method, p_cash_account_id: f.cash_account_id || null });
+        try { await supabaseClient.from('rental_installments').delete().eq('contract_id', id).eq('paid_amount', 0); const { data: pi } = await supabaseClient.from('rental_installments').select('id, paid_amount, amount').eq('contract_id', id); for (const x of (pi || [])) if (N(x.paid_amount) < N(x.amount)) await supabaseClient.from('rental_installments').update({ amount: N(x.paid_amount) }).eq('id', x.id); } catch (e) { console.error(e); }
         ov.close(); showToast('تم استلام السيارة وإنهاء العقد');
         await Promise.all([loadContracts(), loadCars(), loadBoTreasuries()]); renderContracts(); renderCars(); viewContract(id);
       }
@@ -59159,7 +59177,8 @@ document.addEventListener('DOMContentLoaded', () => {
 <tr><td class="k">رقم الشاسيه</td><td>${E(car.chassis)}</td><td class="k">عداد الخروج / الوقود</td><td>${F(c.km_out)} كم — ${E(c.fuel_out)}</td></tr>
 <tr><td class="k">التاريخ</td><td>${fdt(c.out_at).slice(0, 10)}</td><td class="k">وقت الخروج</td><td>${ftime(c.out_at)}</td></tr>
 <tr><td class="k">يوم تسليم السيارة للمعرض</td><td>${fdt(c.due_at).slice(0, 10)}</td><td class="k">الوقت</td><td>${ftime(c.due_at)}</td></tr>
-<tr><td class="k">إيجار اليوم</td><td><b>${F(c.daily_price)}</b> جنيه</td><td class="k">عدد الأيام</td><td>${c.days}${N(c.discount) ? ' — خصم ' + F(c.discount) : ''}${N(c.extra_charges) ? ' + رسوم ' + F(c.extra_charges) : ''}</td></tr>
+<tr><td class="k">إيجار اليوم</td><td><b>${F(c.daily_price)}</b> جنيه</td><td class="k">عدد الأيام</td><td>${c.days}${N(c.driver_daily_fee) ? ' (+ أجر سائق ' + F(c.driver_daily_fee) + '/يوم)' : ''}${N(c.discount) ? ' — خصم ' + F(c.discount) : ''}${N(c.extra_charges) ? ' + رسوم ' + F(c.extra_charges) : ''}</td></tr>
+${c.driver_name || N(c.driver_daily_fee) ? `<tr><td class="k">السائق</td><td>${E(c.driver_name || '—')} ${c.driver_phone ? '— ' + E(c.driver_phone) : ''}</td><td class="k">رخصة السائق</td><td>${E(c.driver_license || '—')}</td></tr>` : ''}
 <tr><td class="k">الإجمالي</td><td><b>${F(totalOf(c))}</b> جنيه</td><td class="k">التأمين المدفوع</td><td>${N(c.deposit_amount) ? F(c.deposit_amount) + ' جنيه' : '—'}</td></tr>
 <tr><td class="k">المدفوع</td><td><b>${F(paidOf(c))}</b> جنيه</td><td class="k">المتبقي</td><td><b>${F(remOf(c))}</b> جنيه</td></tr>
 ${c.notes ? `<tr><td class="k">حالة السيارة</td><td colspan="3">${E(c.notes)}</td></tr>` : ''}
@@ -59348,6 +59367,12 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
       if (isLate(c)) { const h = Math.floor((Date.now() - new Date(c.due_at)) / 36e5); A.push({ sev: 'bad', type: 'late', key: -h, title: `عقد ${c.contract_no} متأخر — ${cu.name || ''}`, detail: `${car.plate || ''} • موعد التسليم ${fdt(c.due_at)} (تأخير ${h >= 24 ? Math.floor(h / 24) + ' يوم' : h + ' ساعة'})`, contract: c.id, phone: cu.phone }); }
       else { const h = (new Date(c.due_at) - Date.now()) / 36e5; if (h <= 24) A.push({ sev: 'warn', type: 'due', key: h, title: `عقد ${c.contract_no} يستحق التسليم قريباً — ${cu.name || ''}`, detail: `${car.plate || ''} • ${fdt(c.due_at)}`, contract: c.id, phone: cu.phone }); }
     });
+    if (loaded.inst) {
+      installments.forEach(x => {
+        const ct = one(x.rental_contracts) || {}; if (ct.status === 'cancelled' || ct.status === 'closed') return; const cu = one(ct.customers) || {}, n = daysUntil(x.due_date), left = N(x.amount) - N(x.paid_amount);
+        if (n <= 3) A.push({ sev: n < 0 ? 'bad' : 'warn', type: 'inst', key: n, title: `قسط ${x.seq} — عقد ${ct.contract_no} — ${cu.name || ''}`, detail: `${F(left)} جنيه • ${n < 0 ? 'متأخر ' + Math.abs(n) + ' يوم' : n === 0 ? 'يستحق اليوم' : 'يستحق بعد ' + n + ' يوم'} (${fdOnly(x.due_date)})`, phone: cu.phone, contract: x.contract_id, instMsg: `مرحباً ${cu.name || ''}، نذكّركم بقسط رقم ${x.seq} من عقد الإيجار رقم ${ct.contract_no} بقيمة ${F(left)} جنيه ${n < 0 ? 'وقد حان موعده بتاريخ' : 'يستحق بتاريخ'} ${fdOnly(x.due_date)}. برجاء التواصل معنا للسداد.` });
+      });
+    }
     if (loaded.res) {
       reservations.filter(r => r.status === 'booked').forEach(r => {
         const cu = one(r.customers) || {}, car = one(r.rental_cars) || {}, h = (new Date(r.start_at) - Date.now()) / 36e5;
@@ -59372,10 +59397,10 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
   }
   function renderAlerts() {
     const box = $id('rentalAlertsList'); if (!box) return;
-    const fl = ($id('rentalAlertsFilter') || {}).value || '', A = computeAlerts().filter(x => !fl || (fl === 'docs' ? (x.type === 'car' || x.type === 'cust') : fl === 'contracts' ? (x.type === 'late' || x.type === 'due' || x.type === 'res') : x.type === fl)), ic = { car: '🚗', oil: '🛢️', late: '⏰', due: '📅', cust: '🪪', res: '📌' };
+    const fl = ($id('rentalAlertsFilter') || {}).value || '', A = computeAlerts().filter(x => !fl || (fl === 'docs' ? (x.type === 'car' || x.type === 'cust') : fl === 'contracts' ? (x.type === 'late' || x.type === 'due' || x.type === 'res' || x.type === 'inst') : x.type === fl)), ic = { car: '🚗', oil: '🛢️', late: '⏰', due: '📅', cust: '🪪', res: '📌', inst: '💳' };
     box.innerHTML = A.length ? A.map((a, i) => `<div data-i="${i}" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--border,#e5e7eb);border-inline-start:4px solid ${a.sev === 'bad' ? '#dc2626' : '#f59e0b'};border-radius:8px;padding:10px 12px;margin-bottom:8px">
       <span style="font-size:20px">${ic[a.type]}</span><div style="flex:1;min-width:200px"><b>${E(a.title)}</b><div style="font-size:12.5px;color:var(--ink-soft)">${E(a.detail)}</div></div>
-      <div class="bo-row-actions">${a.type === 'oil' ? '<button class="bo-icon-btn" data-aa="oil">تم تغيير الزيت</button>' : ''}${a.type === 'car' ? '<button class="bo-icon-btn" data-aa="car">فتح السيارة</button>' : ''}${a.type === 'res' ? '<button class="bo-icon-btn" data-aa="conv">تحويل لعقد</button>' : ''}${a.contract ? '<button class="bo-icon-btn" data-aa="contract">فتح العقد</button>' : ''}${a.phone && (a.type === 'late' || a.type === 'due' || a.type === 'cust' || a.type === 'res') ? '<button class="bo-icon-btn" data-aa="wa">واتساب</button>' : ''}</div></div>`).join('')
+      <div class="bo-row-actions">${a.type === 'oil' ? '<button class="bo-icon-btn" data-aa="oil">تم تغيير الزيت</button>' : ''}${a.type === 'car' ? '<button class="bo-icon-btn" data-aa="car">فتح السيارة</button>' : ''}${a.type === 'res' ? '<button class="bo-icon-btn" data-aa="conv">تحويل لعقد</button>' : ''}${a.contract ? '<button class="bo-icon-btn" data-aa="contract">فتح العقد</button>' : ''}${a.phone && (a.type === 'late' || a.type === 'due' || a.type === 'cust' || a.type === 'res' || a.type === 'inst') ? '<button class="bo-icon-btn" data-aa="wa">واتساب</button>' : ''}</div></div>`).join('')
       : '<div class="bo-empty">لا توجد تنبيهات — كل شيء سليم ✓</div>';
     box._alerts = A; updateAlertBadge();
   }
@@ -59402,7 +59427,7 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
       if (b.dataset.aa === 'oil') maintModal(a.car, 'oil'); else if (b.dataset.aa === 'car') carModal(byIdCar(a.car));
       else if (b.dataset.aa === 'contract') viewContract(a.contract);
       else if (b.dataset.aa === 'conv') convertReservation(a.resId);
-      else if (b.dataset.aa === 'wa') { const c = a.contract ? byIdContract(a.contract) : null; waModal(a.phone, a.type === 'res' ? [['تذكير بموعد الحجز', `مرحباً، نذكّركم بموعد حجز السيارة: ${a.detail}`]] : waTemplates(c, a.type === 'cust' ? { licenseFor: a.custName, licenseDate: a.licDate } : null), 'واتساب'); }
+      else if (b.dataset.aa === 'wa') { const c = a.contract ? byIdContract(a.contract) : null; waModal(a.phone, a.type === 'inst' ? [['تذكير بقسط', a.instMsg]] : a.type === 'res' ? [['تذكير بموعد الحجز', `مرحباً، نذكّركم بموعد حجز السيارة: ${a.detail}`]] : waTemplates(c, a.type === 'cust' ? { licenseFor: a.custName, licenseDate: a.licDate } : null), 'واتساب'); }
     });
   }
 
@@ -59509,13 +59534,13 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
         ov.q('[data-cash]').outerHTML = fld('الخزينة', sel('cash_account_id', treas.length ? treas : [['', '— لا توجد خزينة —']], treas[0]?.[0]));
         const prev = () => {
           const nd = plannedDays(c.out_at, ov.g('new_due').value), add = nd - c.days;
-          ov.q('[data-prev]').innerHTML = `<div>الأيام بعد التمديد: <b class="num">${isNaN(nd) ? '—' : nd}</b></div><div>أيام مضافة: <b class="num">${isNaN(add) ? '—' : add}</b></div><div>مبلغ التمديد: <b class="num">${F(isNaN(add) ? 0 : add * N(c.daily_price))}</b></div><div>الإجمالي الجديد: <b class="num">${F(isNaN(nd) ? 0 : nd * N(c.daily_price) - N(c.discount) + N(c.extra_charges))}</b></div>`;
+          ov.q('[data-prev]').innerHTML = `<div>الأيام بعد التمديد: <b class="num">${isNaN(nd) ? '—' : nd}</b></div><div>أيام مضافة: <b class="num">${isNaN(add) ? '—' : add}</b></div><div>مبلغ التمديد: <b class="num">${F(isNaN(add) ? 0 : add * (N(c.daily_price) + N(c.driver_daily_fee)))}</b></div><div>الإجمالي الجديد: <b class="num">${F(isNaN(nd) ? 0 : nd * (N(c.daily_price) + N(c.driver_daily_fee)) - N(c.discount) + N(c.extra_charges))}</b></div>`;
         };
         ov.g('new_due').oninput = prev; prev();
       },
       onSubmit: async (ov, f) => {
         if (!f.new_due || new Date(f.new_due) <= new Date(c.due_at)) throw new Error('الموعد الجديد يجب أن يكون بعد موعد التسليم الحالي');
-        const nd = plannedDays(c.out_at, f.new_due), total = nd * N(c.daily_price) - N(c.discount) + N(c.extra_charges), pay = N(f.pay);
+        const nd = plannedDays(c.out_at, f.new_due), total = nd * (N(c.daily_price) + N(c.driver_daily_fee)) - N(c.discount) + N(c.extra_charges), pay = N(f.pay);
         if (pay > 0 && !f.cash_account_id) throw new Error('اختر الخزينة');
         const line = `تمديد ${fdOnly(dateStr(new Date()))}: من ${fdt(c.due_at)} إلى ${fdt(f.new_due)} (+${nd - c.days} يوم)`;
         const { error } = await supabaseClient.from('rental_contracts').update({ due_at: new Date(f.new_due).toISOString(), days: nd, total_amount: total, notes: (c.notes ? c.notes + '\n' : '') + line }).eq('id', id).eq('status', 'open');
@@ -59542,7 +59567,7 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
     if (!rentalDashEligible()) { box.style.display = 'none'; return; }
     box.style.display = '';
     try {
-      await Promise.all([loadCars(), loadContracts(), loadRentalCustomers(), loadSettings(), loadReservations()]);
+      await Promise.all([loadCars(), loadContracts(), loadRentalCustomers(), loadSettings(), loadReservations(), loadInstallments()]);
       const t0 = new Date(); t0.setHours(0, 0, 0, 0); const t1 = new Date(t0); t1.setDate(t1.getDate() + 1);
       const [pr, er] = await Promise.all([
         supabaseClient.from('rental_payments').select('kind, amount').gte('paid_at', t0.toISOString()).lt('paid_at', t1.toISOString()),
@@ -59979,6 +60004,26 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
     });
   }
 
+  // ==================== الأقساط ====================
+  let installments = [];
+  async function loadInstallments() {
+    const { data, error } = await supabaseClient.from('rental_installments').select('*, rental_contracts(contract_no, status, customers(name, phone), rental_cars(plate))').limit(5000);
+    if (error) { console.error(error); return; }
+    installments = (data || []).filter(x => N(x.amount) - N(x.paid_amount) > 0.0001); loaded.inst = true;
+  }
+  async function installmentModal(c, instId, left) {
+    const treas = await treasuryOptions(c.branch_id);
+    modal(`تحصيل قسط — عقد ${c.contract_no}`, `
+      <div class="field field-full" style="font-size:13px">المتبقي من القسط: <b class="num">${F(left)}</b></div>
+      ${fld('المبلغ', inp('amount', left, 'number', 'min="0.01" step="0.01" required'))}${fld('الخزينة', sel('cash_account_id', treas.length ? treas : [['', '— لا توجد خزينة —']], treas[0]?.[0]))}${fld('طريقة الدفع', sel('method', METHODS))}`, {
+      onSubmit: async (o, f) => {
+        if (N(f.amount) <= 0) throw new Error('أدخل المبلغ'); if (!f.cash_account_id) throw new Error('اختر الخزينة');
+        await rpc('rental_pay_installment', { p_installment_id: instId, p_amount: N(f.amount), p_method: f.method, p_cash_account_id: f.cash_account_id });
+        o.close(); showToast('تم تحصيل القسط'); await Promise.all([loadContracts(), loadBoTreasuries()]); renderContracts(); viewContract(c.id);
+      }
+    });
+  }
+
   // ---------- ربط الأحداث ----------
   function bind() {
     bind2(); bind3(); bind4(); bind5();
@@ -60016,10 +60061,10 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
     else if (section === 'rental-reservations') { await Promise.all([loadReservations(), loadCars(), loadContracts(), loadSettings()]); renderReservations(); }
     else if (section === 'rental-incidents') { await Promise.all([loadIncidents(), loadCars(), loadContracts(), loadSettings()]); renderIncidents(); }
     else if (section === 'rental-reports') { await Promise.all([loadCars(), loadContracts(), loadSettings()]); await renderReports(); }
-    else if (section === 'rental-alerts') { await Promise.all([loadCars(), loadContracts(), loadRentalCustomers(), loadSettings(), loadReservations()]); renderAlerts(); }
+    else if (section === 'rental-alerts') { await Promise.all([loadCars(), loadContracts(), loadRentalCustomers(), loadSettings(), loadReservations(), loadInstallments()]); renderAlerts(); }
     if (section.startsWith('rental-') && section !== 'rental-alerts') updateAlertBadge();
   };
-  window.__rental = { suggestPrice, quoteModal, ruleModal, loadRules, exportExcel, loadReservations, reservationModal, convertReservation, incidentModal, settleIncident, conditionModal, signatureModal, rentalDashRefresh, extendModal, waTemplates, waModal, cashEntryModal, openSettings, renderReports, renderJournal, maintModal, computeAlerts, oilStatus, reloadAll, contractForm, carModal, customerModal, viewContract, closeModal, payModal, printContract, calcClose, S, get cars() { return cars; }, get contracts() { return contracts; } };
+  window.__rental = { loadInstallments, installmentModal, suggestPrice, quoteModal, ruleModal, loadRules, exportExcel, loadReservations, reservationModal, convertReservation, incidentModal, settleIncident, conditionModal, signatureModal, rentalDashRefresh, extendModal, waTemplates, waModal, cashEntryModal, openSettings, renderReports, renderJournal, maintModal, computeAlerts, oilStatus, reloadAll, contractForm, carModal, customerModal, viewContract, closeModal, payModal, printContract, calcClose, S, get cars() { return cars; }, get contracts() { return contracts; } };
   bind();
 })();
 
