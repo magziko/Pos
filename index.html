@@ -3141,6 +3141,8 @@ a { color: inherit; }
               <button class="bo-icon-btn" id="rentalJournalNext" type="button">اليوم التالي ›</button>
               <button class="bo-icon-btn" id="rentalJournalToday" type="button">اليوم</button>
               <button class="bo-icon-btn" id="rentalJournalPrint" type="button">طباعة</button>
+              <button class="bo-add-btn" id="rentalJournalIn" type="button">+ وارد</button>
+              <button class="bo-add-btn" id="rentalJournalOut" type="button" style="background:#b91c1c">+ مصروف</button>
             </div>
           </div>
           <div id="rentalJournalBody"></div>
@@ -3159,7 +3161,7 @@ a { color: inherit; }
         </div>
 
         <div id="bo-section-rental-alerts" style="display:none;">
-          <div class="bo-section-header"><div class="bo-section-title">تنبيهات معرض التأجير</div></div>
+          <div class="bo-section-header"><div class="bo-section-title">تنبيهات معرض التأجير</div><select id="rentalAlertsFilter" style="max-width:200px"><option value="">كل التنبيهات</option><option value="docs">الرخص والتأمين (سيارات وعملاء)</option><option value="oil">غيار الزيت</option><option value="contracts">العقود</option></select></div>
           <div id="rentalAlertsList"><div class="bo-empty">جاري التحميل...</div></div>
         </div>
 
@@ -58582,7 +58584,7 @@ document.addEventListener('DOMContentLoaded', () => {
 المستأجر مسئول عن رخصة السيارة وعن أي تلفيات بها، ويتحمل قيمة استخراج بدل فاقد في حالة فقدها.
 إذا قام المستأجر برد السيارة قبل موعد انتهاء العقد فلا يجوز له المطالبة بقيمة المدة المتبقية.
 أقر المستأجر بأنه اطلع على جميع شروط العقد وجميع الشروط المدونة به ويتحمل كافة الشروط دون جهالة قاطعة للقانون.`;
-  const DEF_SET = { km_per_day: 250, extra_km_fee: 2, grace_hours: 2, alert_days: 30, oil_warn_km: 500, default_oil_km: 5000, default_oil_days: 180, terms: null };
+  const DEF_SET = { km_per_day: 250, extra_km_fee: 2, grace_hours: 2, alert_days: 30, oil_warn_km: 500, default_oil_km: 5000, default_oil_days: 180, terms: null, logo_url: null, shop_name: null };
   const METHODS = ['نقدي', 'تحويل بنكي', 'فيزا', 'إنستاباي / محفظة'];
   const FUEL_LEVELS = ['فارغ', '¼', '½', '¾', 'ممتلئ'];
 
@@ -58643,6 +58645,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const st = S(bid);
     modal('إعدادات عقود التأجير', `
       ${fld('الفرع', `<select name="branch_id"></select>`, true)}
+      ${fld('اسم المعرض (يظهر في العقد)', inp('shop_name', st.shop_name || ''))}
+      ${fld('لوجو المعرض (يظهر أعلى العقد)', `<input type="file" name="logo_file" accept="image/*"><input type="hidden" name="logo_url" value="${E(st.logo_url || '')}"><div data-logo-prev style="margin-top:6px">${st.logo_url ? `<img src="${E(st.logo_url)}" style="max-height:60px"> <button type="button" class="bo-icon-btn" data-logo-del>حذف اللوجو</button>` : ''}</div>`)}
       ${fld('الكيلومترات المسموحة باليوم', inp('km_per_day', st.km_per_day, 'number'))}
       ${fld('سعر الكيلو الزائد (جنيه)', inp('extra_km_fee', st.extra_km_fee, 'number', 'step="any"'))}
       ${fld('مهلة التأخير (ساعات) قبل احتساب يوم إضافي', inp('grace_hours', st.grace_hours, 'number', 'step="any"'))}
@@ -58654,10 +58658,19 @@ document.addEventListener('DOMContentLoaded', () => {
       big: true,
       init: (ov) => {
         const s = ov.g('branch_id'); populateBranchSelect(s, bid, false);
-        s.onchange = () => { const x = S(s.value); ['km_per_day', 'extra_km_fee', 'grace_hours', 'alert_days', 'oil_warn_km', 'default_oil_km', 'default_oil_days'].forEach(k => { ov.g(k).value = x[k]; }); ov.g('terms').value = x.terms || DEFAULT_TERMS; };
+        const prev = () => { const u = ov.g('logo_url').value; ov.q('[data-logo-prev]').innerHTML = u ? `<img src="${u}" style="max-height:60px"> <button type="button" class="bo-icon-btn" data-logo-del>حذف اللوجو</button>` : ''; const d = ov.q('[data-logo-del]'); if (d) d.onclick = () => { ov.g('logo_url').value = ''; prev(); }; };
+        prev();
+        ov.g('logo_file').onchange = () => {
+          const f = ov.g('logo_file').files[0]; if (!f) return;
+          if (!/^image\//.test(f.type)) { ov.fail('اختر ملف صورة'); return; }
+          const img = new Image(), url = URL.createObjectURL(f);
+          img.onload = () => { const k = Math.min(1, 360 / img.width, 140 / img.height), cv = document.createElement('canvas'); cv.width = Math.max(1, Math.round(img.width * k)); cv.height = Math.max(1, Math.round(img.height * k)); cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height); ov.g('logo_url').value = cv.toDataURL('image/png'); URL.revokeObjectURL(url); prev(); };
+          img.onerror = () => ov.fail('تعذر قراءة الصورة'); img.src = url;
+        };
+        s.onchange = () => { const x = S(s.value); ov.g('shop_name').value = x.shop_name || ''; ov.g('logo_url').value = x.logo_url || ''; prev(); ['km_per_day', 'extra_km_fee', 'grace_hours', 'alert_days', 'oil_warn_km', 'default_oil_km', 'default_oil_days'].forEach(k => { ov.g(k).value = x[k]; }); ov.g('terms').value = x.terms || DEFAULT_TERMS; };
       },
       onSubmit: async (ov, f) => {
-        const row = { branch_id: f.branch_id, km_per_day: N(f.km_per_day), extra_km_fee: N(f.extra_km_fee), grace_hours: N(f.grace_hours), alert_days: N(f.alert_days), oil_warn_km: N(f.oil_warn_km), default_oil_km: N(f.default_oil_km), default_oil_days: N(f.default_oil_days), terms: f.terms || null, updated_at: new Date().toISOString() };
+        const row = { branch_id: f.branch_id, km_per_day: N(f.km_per_day), extra_km_fee: N(f.extra_km_fee), grace_hours: N(f.grace_hours), alert_days: N(f.alert_days), oil_warn_km: N(f.oil_warn_km), default_oil_km: N(f.default_oil_km), default_oil_days: N(f.default_oil_days), terms: f.terms || null, shop_name: f.shop_name || null, logo_url: f.logo_url || null, updated_at: new Date().toISOString() };
         const { error } = await supabaseClient.from('rental_settings').upsert(row);
         if (error) throw error;
         settingsRows[row.branch_id] = row; ov.close(); showToast('تم حفظ الإعدادات');
@@ -59071,8 +59084,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const d = one(cu?.rental_customer_details) || {}; const st = S(c.branch_id);
     const { data: br } = await supabaseClient.from('branches').select('name, address, phone').eq('id', c.branch_id).single();
     const terms = (st.terms || DEFAULT_TERMS).split('\n').map(x => x.trim()).filter(Boolean).map(t => E(t).replace(/\{kmPerDay\}/g, F(c.km_per_day)).replace(/\{extraKmFee\}/g, F(c.extra_km_fee)).replace(/\{carValue\}/g, car.car_value ? F(car.car_value) : '................'));
-    const shop = br?.name || '', dots = '&nbsp;'.repeat(60);
-    const html = `<div class="tag"><b>${E(shop)}</b><span>${E(br?.address || '')} ${br?.phone ? '— ت: ' + E(br.phone) : ''}</span></div>
+    const shop = st.shop_name || br?.name || '', dots = '&nbsp;'.repeat(60);
+    const html = `${st.logo_url ? `<div style="text-align:center;margin-bottom:4px"><img src="${E(st.logo_url)}" style="max-height:80px;max-width:60%"></div>` : ''}<div class="tag"><b>${E(shop)}</b><span>${E(br?.address || '')} ${br?.phone ? '— ت: ' + E(br.phone) : ''}</span></div>
 <h1>عقد إيجار سيارة</h1><div class="sub">رقم العقد: <b>${c.contract_no}</b> — تحريراً في ${fdt(c.out_at).slice(0, 10)}</div>
 <table class="fl">
 <tr><td class="k">اسم المستأجر</td><td colspan="3">${E(cu?.name)}</td></tr>
@@ -59083,8 +59096,9 @@ document.addEventListener('DOMContentLoaded', () => {
 <tr><td class="k">رقم الشاسيه</td><td>${E(car.chassis)}</td><td class="k">عداد الخروج / الوقود</td><td>${F(c.km_out)} كم — ${E(c.fuel_out)}</td></tr>
 <tr><td class="k">التاريخ</td><td>${fdt(c.out_at).slice(0, 10)}</td><td class="k">وقت الخروج</td><td>${ftime(c.out_at)}</td></tr>
 <tr><td class="k">يوم تسليم السيارة للمعرض</td><td>${fdt(c.due_at).slice(0, 10)}</td><td class="k">الوقت</td><td>${ftime(c.due_at)}</td></tr>
-<tr><td class="k">سعر اليوم × الأيام</td><td>${F(c.daily_price)} × ${c.days}${N(c.discount) ? ' — خصم ' + F(c.discount) : ''}${N(c.extra_charges) ? ' + رسوم ' + F(c.extra_charges) : ''}</td><td class="k">إجمالي الإيجار</td><td><b>${F(totalOf(c))}</b> جنيه</td></tr>
-<tr><td class="k">التأمين المدفوع</td><td>${N(c.deposit_amount) ? F(c.deposit_amount) : '—'}</td><td class="k">المدفوع / المتبقي</td><td>${F(paidOf(c))} / ${F(remOf(c))}</td></tr>
+<tr><td class="k">إيجار اليوم</td><td><b>${F(c.daily_price)}</b> جنيه</td><td class="k">عدد الأيام</td><td>${c.days}${N(c.discount) ? ' — خصم ' + F(c.discount) : ''}${N(c.extra_charges) ? ' + رسوم ' + F(c.extra_charges) : ''}</td></tr>
+<tr><td class="k">الإجمالي</td><td><b>${F(totalOf(c))}</b> جنيه</td><td class="k">التأمين المدفوع</td><td>${N(c.deposit_amount) ? F(c.deposit_amount) + ' جنيه' : '—'}</td></tr>
+<tr><td class="k">المدفوع</td><td><b>${F(paidOf(c))}</b> جنيه</td><td class="k">المتبقي</td><td><b>${F(remOf(c))}</b> جنيه</td></tr>
 ${c.notes ? `<tr><td class="k">حالة السيارة</td><td colspan="3">${E(c.notes)}</td></tr>` : ''}
 </table>
 <h2>شروط تسليم السيارة للمعرض</h2><ol>${terms.map(t => `<li>${t}</li>`).join('')}</ol>
@@ -59114,22 +59128,33 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
   // ==================== اليوميات (الخزينة) ====================
   const PAY_KIND = { rent: ['إيجار', 1], deposit: ['تأمين مستلم', 1], deposit_refund: ['تأمين مردود', -1] };
   let journalData = null;
+  const IN_CATS = ['إيراد آخر', 'عمولة', 'غرامة / مخالفة محصلة', 'بيع خردة / قطع', 'إيداع من المالك'];
+  const OUT_CATS = ['وقود', 'غسيل وتنظيف', 'مخالفات مرور', 'إيجار المعرض', 'كهرباء ومياه', 'رواتب وأجور', 'مصروفات نثرية', 'أخرى'];
+  function journalItems(rows, entries) {
+    const items = rows.map(p => {
+      const k = PAY_KIND[p.kind] || [p.kind, 1], c = one(p.rental_contracts) || {}, cu = one(c.customers) || {}, car = one(c.rental_cars) || {};
+      return { at: p.paid_at, what: k[0], who: cu.name || '', car: car.plate || '', ref: c.contract_no ? 'عقد ' + c.contract_no : '', method: p.method || '', treasury: one(p.cash_accounts)?.name || '', note: p.note || '', sg: k[1], amount: N(p.amount) };
+    });
+    (entries || []).forEach(e => items.push({ at: e.created_at, what: (e.direction === 'in' ? 'وارد: ' : 'مصروف: ') + e.category, who: '', car: '', ref: '', method: '', treasury: one(e.cash_accounts)?.name || '', note: e.note, sg: e.direction === 'in' ? 1 : -1, amount: N(e.amount) }));
+    return items.sort((a, b) => new Date(a.at) - new Date(b.at));
+  }
   async function renderJournal() {
     const body = $id('rentalJournalBody'); if (!body) return;
     const di = $id('rentalJournalDate'); if (!di.value) di.value = dateStr(new Date());
     const day = di.value;
     const start = new Date(day + 'T00:00:00'), end = new Date(start); end.setDate(end.getDate() + 1);
     body.innerHTML = '<div class="bo-empty">جاري التحميل...</div>';
-    const [a, b] = await Promise.all([
+    const [a, e, b] = await Promise.all([
       supabaseClient.from('rental_payments').select('*, cash_accounts(name), rental_contracts(contract_no, customers(name), rental_cars(brand, model, plate))')
         .gte('paid_at', start.toISOString()).lt('paid_at', end.toISOString()).order('paid_at'),
+      supabaseClient.from('rental_cash_entries').select('*, cash_accounts(name)').gte('created_at', start.toISOString()).lt('created_at', end.toISOString()).order('created_at'),
       supabaseClient.rpc('rental_journal_opening', { p_before: start.toISOString() })
     ]);
-    if (a.error || b.error) { console.error(a.error || b.error); body.innerHTML = '<div class="bo-empty">تعذر تحميل اليومية</div>'; return; }
-    const rows = a.data || [], opening = N(b.data);
+    if (a.error || e.error || b.error) { console.error(a.error || e.error || b.error); body.innerHTML = '<div class="bo-empty">تعذر تحميل اليومية</div>'; return; }
+    const items = journalItems(a.data || [], e.data || []), opening = N(b.data);
     let inn = 0, out = 0; const byMethod = {};
-    rows.forEach(p => { const sg = (PAY_KIND[p.kind] || ['', 1])[1], v = N(p.amount); if (sg > 0) inn += v; else out += v; byMethod[p.method || '—'] = (byMethod[p.method || '—'] || 0) + sg * v; });
-    journalData = { day, rows, opening, inn, out };
+    items.forEach(p => { if (p.sg > 0) inn += p.amount; else out += p.amount; const m = p.method || 'نقدي'; byMethod[m] = (byMethod[m] || 0) + p.sg * p.amount; });
+    journalData = { day, items, opening, inn, out };
     const card = (l, v, c) => `<div class="bo-stat-card" style="flex:1;min-width:150px;border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:10px 14px"><div style="font-size:12px;color:var(--ink-soft)">${l}</div><div class="num" style="font-size:20px;font-weight:700;${c ? 'color:' + c : ''}">${F(v)}</div></div>`;
     body.innerHTML = `
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
@@ -59137,25 +59162,34 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
       </div>
       ${Object.keys(byMethod).length ? `<div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:10px">حسب طريقة الدفع: ${Object.entries(byMethod).map(([m, v]) => `${E(m)} <b class="num">${F(v)}</b>`).join(' • ')}</div>` : ''}
       <div class="bo-table-wrap"><table class="bo-table">
-        <thead><tr><th>الوقت</th><th>العقد</th><th>العميل</th><th>السيارة</th><th>البند</th><th>طريقة الدفع</th><th>الخزينة</th><th>وارد</th><th>صادر</th></tr></thead>
-        <tbody>${rows.length ? rows.map(p => {
-          const k = PAY_KIND[p.kind] || [p.kind, 1], c = one(p.rental_contracts) || {}, cu = one(c.customers) || {}, car = one(c.rental_cars) || {};
-          return `<tr><td class="num">${ftime(p.paid_at)}</td><td class="num">${E(c.contract_no || '')}</td><td>${E(cu.name || '—')}</td><td>${E(car.plate || '—')}</td><td>${k[0]}${p.note ? `<div style="font-size:11.5px;color:var(--ink-soft)">${E(p.note)}</div>` : ''}</td><td>${E(p.method || '—')}</td><td>${E(one(p.cash_accounts)?.name || '—')}</td>
-            <td class="num">${k[1] > 0 ? F(p.amount) : ''}</td><td class="num">${k[1] < 0 ? F(p.amount) : ''}</td></tr>`;
-        }).join('') : '<tr><td colspan="9" class="bo-empty">لا توجد حركات في هذا اليوم</td></tr>'}</tbody>
+        <thead><tr><th>الوقت</th><th>البند</th><th>البيان (من أين / لماذا)</th><th>العقد</th><th>العميل / السيارة</th><th>الطريقة</th><th>الخزينة</th><th>وارد</th><th>صادر</th></tr></thead>
+        <tbody>${items.length ? items.map(p => `<tr><td class="num">${ftime(p.at)}</td><td>${E(p.what)}</td><td>${E(p.note)}</td><td>${E(p.ref)}</td><td>${E(p.who)}${p.car ? ' — ' + E(p.car) : ''}</td><td>${E(p.method)}</td><td>${E(p.treasury)}</td>
+            <td class="num">${p.sg > 0 ? F(p.amount) : ''}</td><td class="num">${p.sg < 0 ? F(p.amount) : ''}</td></tr>`).join('') : '<tr><td colspan="9" class="bo-empty">لا توجد حركات في هذا اليوم</td></tr>'}</tbody>
       </table></div>
-      <div style="font-size:12px;color:var(--ink-soft);margin-top:8px">الأرقام تخص حركات عقود التأجير فقط. رصيد الخزينة الكلي يظهر في شاشة الخزائن.</div>`;
+      <div style="font-size:12px;color:var(--ink-soft);margin-top:8px">تشمل دفعات العقود والوارد/المصروف اليدوي المسجل من هنا. رصيد الخزينة الكلي يظهر في شاشة الخزائن.</div>`;
+  }
+  async function cashEntryModal(dir) {
+    const treas = await treasuryOptions(currentProfile.branch_id);
+    modal(dir === 'in' ? 'تسجيل وارد في الخزينة' : 'تسجيل مصروف من الخزينة', `
+      ${fld('الخزينة', sel('cash_account_id', treas.length ? treas : [['', '— لا توجد خزينة —']], treas[0]?.[0]))}${fld('التصنيف', sel('category', dir === 'in' ? IN_CATS : OUT_CATS))}
+      ${fld('المبلغ', inp('amount', '', 'number', 'min="0.01" step="0.01" required'))}
+      ${fld(dir === 'in' ? 'البيان — الوارد من أين؟ (إلزامي)' : 'البيان — المصروف لماذا؟ (إلزامي)', inp('note', '', 'text', 'required maxlength="200"'), true)}`, {
+      onSubmit: async (ov, f) => {
+        if (N(f.amount) <= 0) throw new Error('أدخل المبلغ'); if (!f.cash_account_id) throw new Error('اختر الخزينة'); if (!f.note) throw new Error('اكتب البيان');
+        await rpc('rental_cash_entry', { p_cash_account_id: f.cash_account_id, p_direction: dir, p_amount: N(f.amount), p_category: f.category, p_note: f.note });
+        ov.close(); showToast('تم التسجيل في الخزينة'); await loadBoTreasuries(); renderJournal();
+      }
+    });
   }
   function printJournal() {
     if (!journalData) return;
     const j = journalData, win = window.open('', '_blank', 'width=900,height=900'); if (!win) { showToast('اسمح بالنوافذ المنبثقة للطباعة', true); return; }
+    const st = S(currentProfile.branch_id);
     win.document.write(`<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>يومية ${j.day}</title><style>body{font-family:Tahoma,Arial,sans-serif;padding:20px;font-size:13px}table{width:100%;border-collapse:collapse;margin-top:10px}th,td{border:1px solid #999;padding:5px 7px;text-align:right}th{background:#eee}.s{display:flex;gap:20px;margin:10px 0}@media print{.np{display:none}}</style></head><body>
-      <h2>يومية الخزينة — معرض التأجير — ${fdOnly(j.day)}</h2>
+      ${st.logo_url ? `<div style="text-align:center"><img src="${E(st.logo_url)}" style="max-height:70px"></div>` : ''}
+      <h2>يومية الخزينة — ${E(st.shop_name || 'معرض التأجير')} — ${fdOnly(j.day)}</h2>
       <div class="s"><div>رصيد أول اليوم: <b>${F(j.opening)}</b></div><div>وارد: <b>${F(j.inn)}</b></div><div>صادر: <b>${F(j.out)}</b></div><div>رصيد آخر اليوم: <b>${F(j.opening + j.inn - j.out)}</b></div></div>
-      <table><thead><tr><th>الوقت</th><th>العقد</th><th>العميل</th><th>السيارة</th><th>البند</th><th>الطريقة</th><th>وارد</th><th>صادر</th></tr></thead><tbody>${j.rows.map(p => {
-        const k = PAY_KIND[p.kind] || [p.kind, 1], c = one(p.rental_contracts) || {}, cu = one(c.customers) || {}, car = one(c.rental_cars) || {};
-        return `<tr><td>${ftime(p.paid_at)}</td><td>${E(c.contract_no || '')}</td><td>${E(cu.name || '')}</td><td>${E(car.plate || '')}</td><td>${k[0]}</td><td>${E(p.method || '')}</td><td>${k[1] > 0 ? F(p.amount) : ''}</td><td>${k[1] < 0 ? F(p.amount) : ''}</td></tr>`;
-      }).join('')}</tbody></table>
+      <table><thead><tr><th>الوقت</th><th>البند</th><th>البيان</th><th>العقد</th><th>العميل / السيارة</th><th>وارد</th><th>صادر</th></tr></thead><tbody>${j.items.map(p => `<tr><td>${ftime(p.at)}</td><td>${E(p.what)}</td><td>${E(p.note)}</td><td>${E(p.ref)}</td><td>${E(p.who)} ${E(p.car)}</td><td>${p.sg > 0 ? F(p.amount) : ''}</td><td>${p.sg < 0 ? F(p.amount) : ''}</td></tr>`).join('')}</tbody></table>
       <p class="np"><button onclick="window.print()">طباعة</button></p><script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>`);
     win.document.close();
   }
@@ -59267,7 +59301,7 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
   }
   function renderAlerts() {
     const box = $id('rentalAlertsList'); if (!box) return;
-    const A = computeAlerts(), ic = { car: '🚗', oil: '🛢️', late: '⏰', due: '📅', cust: '🪪' };
+    const fl = ($id('rentalAlertsFilter') || {}).value || '', A = computeAlerts().filter(x => !fl || (fl === 'docs' ? (x.type === 'car' || x.type === 'cust') : fl === 'contracts' ? (x.type === 'late' || x.type === 'due') : x.type === fl)), ic = { car: '🚗', oil: '🛢️', late: '⏰', due: '📅', cust: '🪪' };
     box.innerHTML = A.length ? A.map((a, i) => `<div data-i="${i}" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--border,#e5e7eb);border-inline-start:4px solid ${a.sev === 'bad' ? '#dc2626' : '#f59e0b'};border-radius:8px;padding:10px 12px;margin-bottom:8px">
       <span style="font-size:20px">${ic[a.type]}</span><div style="flex:1;min-width:200px"><b>${E(a.title)}</b><div style="font-size:12.5px;color:var(--ink-soft)">${E(a.detail)}</div></div>
       <div class="bo-row-actions">${a.type === 'oil' ? '<button class="bo-icon-btn" data-aa="oil">تم تغيير الزيت</button>' : ''}${a.type === 'car' ? '<button class="bo-icon-btn" data-aa="car">فتح السيارة</button>' : ''}${a.contract ? '<button class="bo-icon-btn" data-aa="contract">فتح العقد</button>' : ''}${a.phone && (a.type === 'late' || a.type === 'due' || a.type === 'cust') ? '<button class="bo-icon-btn" data-aa="wa">واتساب</button>' : ''}</div></div>`).join('')
@@ -59283,6 +59317,8 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
     on('rentalJournalNext', 'click', () => { const d = new Date($id('rentalJournalDate').value + 'T00:00:00'); d.setDate(d.getDate() + 1); $id('rentalJournalDate').value = dateStr(d); renderJournal(); });
     on('rentalJournalToday', 'click', () => { $id('rentalJournalDate').value = dateStr(new Date()); renderJournal(); });
     on('rentalJournalPrint', 'click', printJournal);
+    on('rentalJournalIn', 'click', () => cashEntryModal('in')); on('rentalJournalOut', 'click', () => cashEntryModal('out'));
+    on('rentalAlertsFilter', 'change', renderAlerts);
     on('addRentalMaintBtn', 'click', () => maintModal(null, 'service'));
     on('rentalOilSearch', 'input', renderOil);
     $id('rentalOilTableBody').addEventListener('click', (e) => {
@@ -59394,7 +59430,7 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
     else if (section === 'rental-alerts') { await Promise.all([loadCars(), loadContracts(), loadRentalCustomers(), loadSettings()]); renderAlerts(); }
     if (section.startsWith('rental-') && section !== 'rental-alerts') updateAlertBadge();
   };
-  window.__rental = { renderReports, renderJournal, maintModal, computeAlerts, oilStatus, reloadAll, contractForm, carModal, customerModal, viewContract, closeModal, payModal, printContract, calcClose, S, get cars() { return cars; }, get contracts() { return contracts; } };
+  window.__rental = { cashEntryModal, openSettings, renderReports, renderJournal, maintModal, computeAlerts, oilStatus, reloadAll, contractForm, carModal, customerModal, viewContract, closeModal, payModal, printContract, calcClose, S, get cars() { return cars; }, get contracts() { return contracts; } };
   bind();
 })();
 
