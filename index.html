@@ -1869,6 +1869,8 @@ a { color: inherit; }
             <button class="bo-add-btn" id="dashApplyRangeBtn">تطبيق</button>
           </div>
 
+          <div id="rentalDashCard" style="display:none; margin-bottom:14px; padding:12px; border:1px solid var(--border,#e5e7eb); border-radius:12px;"></div>
+
           <div class="report-cards">
             <div class="report-card">
               <div class="report-card-label">مبيعات الفترة</div>
@@ -58697,7 +58699,7 @@ document.addEventListener('DOMContentLoaded', () => {
     rentalCustomers = (data || []).map(c => Object.assign({}, c, { d: one(c.rental_customer_details) || {} })); loaded.customers = true;
   }
   async function fetchAllCustomers() {
-    const { data, error } = await supabaseClient.from('customers').select('id, name, phone, rental_customer_details(customer_id, is_blacklisted, license_expiry, national_id, passport_no, license_no)').order('name').limit(3000);
+    const { data, error } = await supabaseClient.from('customers').select('id, name, phone, rental_customer_details(customer_id, is_blacklisted, license_expiry, national_id, passport_no, license_no, notes)').order('name').limit(3000);
     if (error) { console.error(error); return []; }
     return (data || []).map(c => Object.assign({}, c, { d: one(c.rental_customer_details) }));
   }
@@ -58903,6 +58905,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const custOpts = [['', '— اختر العميل —'], ...pickers.map(x => [x.id, x.name + (x.phone ? ' — ' + x.phone : '') + (x.d ? '' : ' (بدون بيانات تأجير)')])];
     modal(c0 ? `تعديل عقد ${c0.contract_no}` : 'عقد إيجار جديد', `
       ${fld('العميل (المستأجر)', `<div style="display:flex;gap:6px">${sel('customer_id', custOpts, v.customer_id)}<button type="button" class="bo-icon-btn" data-newcust style="white-space:nowrap">+ جديد</button></div>`, true)}
+      <div class="field field-full" data-bl style="display:none;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-radius:8px;padding:8px 12px;font-weight:700"></div>
       ${fld('السيارة', sel('car_id', avail.map(x => [x.id, carName(x) + ' — ' + F(x.daily_price) + '/يوم']), v.car_id))}${fld('الشاهد / الضامن', inp('witness', v.witness || ''))}
       ${fld('تاريخ ووقت الخروج', inp('out_at', toInput(v.out_at), 'datetime-local', 'required'))}${fld('موعد التسليم المتفق عليه', inp('due_at', toInput(v.due_at), 'datetime-local', 'required'))}
       ${fld('مكان التسليم', inp('place', v.place || ''))}${fld('مستوى الوقود عند الخروج', sel('fuel_out', FUEL_LEVELS, v.fuel_out))}
@@ -58920,6 +58923,8 @@ document.addEventListener('DOMContentLoaded', () => {
           ov.q('[data-prev]').innerHTML = `<div>عدد الأيام: <b class="num">${isNaN(d) ? '—' : d}</b></div><div>الإجمالي: <b class="num">${F(t)}</b></div><div>الكيلومترات المسموحة: <b class="num">${F(d * N(ov.g('km_per_day').value))}</b></div>`;
         };
         ['out_at', 'due_at', 'daily_price', 'discount', 'extra_charges', 'km_per_day'].forEach(n => ov.g(n).oninput = prev);
+        const blChk = () => { const x = pickers.find(p => p.id === ov.g('customer_id').value), bx = ov.q('[data-bl]'); const bad = !!(x && x.d && x.d.is_blacklisted); bx.style.display = bad ? '' : 'none'; bx.textContent = bad ? '⛔ هذا العميل في القائمة السوداء — لن يُسمح بإنشاء العقد' + (x.d.notes ? ' — ' + x.d.notes : '') : ''; };
+        ov.g('customer_id').addEventListener('change', blChk); blChk();
         ov.g('car_id').onchange = async () => {
           const x = byIdCar(ov.g('car_id').value); if (!x) return;
           ov.g('daily_price').value = x.daily_price; ov.g('km_out').value = x.odometer;
@@ -58944,7 +58949,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!c0 && (dep > 0 || paidNow > 0) && !f.cash_account_id) er.push('اختر الخزينة لتسجيل الدفعة');
         if (er.length) throw new Error(er.join(' • '));
         const warn = [];
-        if (cust.d?.is_blacklisted) warn.push('العميل في القائمة السوداء');
+        if (cust.d?.is_blacklisted) throw new Error('العميل في القائمة السوداء — لا يمكن إنشاء عقد له' + (cust.d.notes ? ' (' + cust.d.notes + ')' : ''));
         if (cust.d?.license_expiry && cust.d.license_expiry < f.due_at.slice(0, 10)) warn.push('رخصة قيادة العميل تنتهي قبل نهاية العقد (' + fdOnly(cust.d.license_expiry) + ')');
         if (!cust.d || (!cust.d.national_id && !cust.d.passport_no)) warn.push('لا يوجد رقم قومي أو جواز سفر للعميل');
         if (warn.length && !confirm(warn.join('\n') + '\n\nهل تريد المتابعة؟')) return;
@@ -58996,13 +59001,14 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="field field-full"><label>الدفعات</label>${(pays || []).length ? `<div class="bo-table-wrap"><table class="bo-table"><thead><tr><th>التاريخ</th><th>البند</th><th>الخزينة</th><th>المبلغ</th></tr></thead><tbody>${pays.map(p => `<tr><td>${fdt(p.paid_at)}</td><td>${KIND[p.kind]}</td><td>${E(p.cash_accounts?.name || '')} ${E(p.method || '')}</td><td class="num">${p.kind === 'deposit_refund' ? '−' : ''}${F(p.amount)}</td></tr>`).join('')}</tbody></table></div>` : '<div style="color:var(--ink-soft)">لا توجد دفعات</div>'}</div>
       ${c.notes ? `<div class="field field-full" style="font-size:12.5px;color:var(--ink-soft)">ملاحظات: ${E(c.notes)}</div>` : ''}`, {
       big: true,
-      btns: `<button type="button" class="modal-cancel-btn" data-pr>طباعة العقد</button>${c.customers?.phone ? '<button type="button" class="modal-cancel-btn" data-wa>واتساب</button>' : ''}
+      btns: `<button type="button" class="modal-cancel-btn" data-pr>طباعة العقد</button>${c.customers?.phone ? '<button type="button" class="modal-cancel-btn" data-wa>واتساب</button>' : ''}${open ? '<button type="button" class="modal-cancel-btn" data-ext>تمديد</button>' : ''}
         ${c.status !== 'cancelled' ? '<button type="button" class="modal-cancel-btn" data-pay>+ دفعة</button>' : ''}
         ${open ? '<button type="button" class="modal-cancel-btn" data-ed>تعديل</button><button type="button" class="submit-btn" data-end>استلام السيارة وإنهاء العقد</button>' : ''}
         ${!pays?.length ? '<button type="button" class="modal-cancel-btn" data-del style="color:var(--danger)">حذف</button>' : ''}`,
       init: (ov) => {
         ov.q('[data-pr]').onclick = () => printContract(id);
-        const w = ov.q('[data-wa]'); if (w) w.onclick = () => window.open('https://wa.me/' + waPhone(c.customers.phone) + '?text=' + encodeURIComponent(`مرحباً ${c.customers.name}، بخصوص عقد إيجار السيارة رقم ${c.contract_no}`), '_blank');
+        const w = ov.q('[data-wa]'); if (w) w.onclick = () => waModal(c.customers.phone, waTemplates(c, { amount: (pays || []).filter(x => x.kind !== 'deposit_refund').slice(-1)[0]?.amount }), 'واتساب — عقد ' + c.contract_no);
+        const ex = ov.q('[data-ext]'); if (ex) ex.onclick = () => { ov.close(); extendModal(id); };
         const p = ov.q('[data-pay]'); if (p) p.onclick = () => { ov.close(); payModal(id); };
         const e = ov.q('[data-ed]'); if (e) e.onclick = () => { ov.close(); contractForm(c); };
         const en = ov.q('[data-end]'); if (en) en.onclick = () => { ov.close(); closeModal(id); };
@@ -59288,7 +59294,7 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
       const openIds = new Set(contracts.filter(c => c.status === 'open').map(c => c.customer_id));
       rentalCustomers.filter(c => openIds.has(c.id) && c.d.license_expiry).forEach(c => {
         const s = S(currentProfile.branch_id), n = daysUntil(c.d.license_expiry);
-        if (n <= s.alert_days) A.push({ sev: n < 0 ? 'bad' : 'warn', type: 'cust', key: n, title: `رخصة قيادة العميل ${c.name}`, detail: n < 0 ? `منتهية منذ ${Math.abs(n)} يوم` : `تنتهي بعد ${n} يوم`, phone: c.phone });
+        if (n <= s.alert_days) A.push({ sev: n < 0 ? 'bad' : 'warn', type: 'cust', key: n, title: `رخصة قيادة العميل ${c.name}`, detail: n < 0 ? `منتهية منذ ${Math.abs(n)} يوم` : `تنتهي بعد ${n} يوم`, phone: c.phone, custName: c.name, licDate: fdOnly(c.d.license_expiry) });
       });
     }
     return A.sort((a, b) => (a.sev === b.sev ? a.key - b.key : a.sev === 'bad' ? -1 : 1));
@@ -59330,7 +59336,7 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
       const a = $id('rentalAlertsList')._alerts[+row.dataset.i]; if (!a) return;
       if (b.dataset.aa === 'oil') maintModal(a.car, 'oil'); else if (b.dataset.aa === 'car') carModal(byIdCar(a.car));
       else if (b.dataset.aa === 'contract') viewContract(a.contract);
-      else if (b.dataset.aa === 'wa') window.open('https://wa.me/' + waPhone(a.phone) + '?text=' + encodeURIComponent('مرحباً، بخصوص: ' + a.title), '_blank');
+      else if (b.dataset.aa === 'wa') { const c = a.contract ? byIdContract(a.contract) : null; waModal(a.phone, waTemplates(c, a.type === 'cust' ? { licenseFor: a.custName, licenseDate: a.licDate } : null), 'واتساب'); }
     });
   }
 
@@ -59393,6 +59399,109 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
     on('rentalRepMonth', 'click', () => { $id('rentalRepFrom').value = ''; $id('rentalRepTo').value = ''; renderReports(); });
   }
 
+  // ==================== واتساب (قوالب رسائل) ====================
+  function waTemplates(c, ctx) {
+    const st = S(c ? c.branch_id : currentProfile.branch_id), shop = st.shop_name || 'المعرض';
+    const cu = c ? (one(c.customers) || {}) : {}, car = c ? (one(c.rental_cars) || {}) : {};
+    const carT = car.brand ? `${car.brand} ${car.model} (${car.plate})` : '';
+    const T = [];
+    if (c) {
+      T.push(['تذكير بموعد التسليم', `مرحباً ${cu.name || ''}،\nنذكّركم بأن موعد تسليم السيارة ${carT} (عقد رقم ${c.contract_no}) هو ${fdt(c.due_at)}.\nللتمديد برجاء التواصل معنا قبل الموعد.\n${shop}`]);
+      T.push(['تنبيه بتأخر التسليم', `مرحباً ${cu.name || ''}،\nنفيدكم بأن موعد تسليم السيارة ${carT} (عقد رقم ${c.contract_no}) كان ${fdt(c.due_at)} وقد تجاوزتم الموعد.\nبرجاء التواصل معنا فوراً لترتيب التسليم أو التمديد. يُحتسب يوم إضافي عن التأخير حسب شروط العقد.\n${shop}`]);
+      T.push(['إيصال دفعة', `مرحباً ${cu.name || ''}،\nتم استلام مبلغ ${ctx && ctx.amount ? F(ctx.amount) + ' جنيه' : '................'} على عقد رقم ${c.contract_no} (${carT}).\nإجمالي العقد ${F(totalOf(c))} • المدفوع ${F(paidOf(c))} • المتبقي ${F(remOf(c))}.\nشكراً لتعاملكم مع ${shop}.`]);
+      T.push(['شكر بعد الاستلام', `مرحباً ${cu.name || ''}،\nشكراً لاختياركم ${shop}. تم استلام السيارة ${carT} وإنهاء العقد رقم ${c.contract_no}. نتمنى رؤيتكم قريباً.`]);
+    }
+    if (ctx && ctx.licenseFor) T.push(['قرب انتهاء رخصة القيادة', `مرحباً ${ctx.licenseFor}،\nنود تنبيهكم بأن رخصة القيادة الخاصة بكم تنتهي بتاريخ ${ctx.licenseDate || ''}. برجاء تجديدها قبل التعاقد القادم.\n${shop}`]);
+    return T;
+  }
+  function waModal(phone, templates, title) {
+    if (!phone) { showToast('لا يوجد رقم هاتف للعميل', true); return; }
+    const ov = modal(title || 'إرسال رسالة واتساب', `
+      ${fld('القالب', sel('tpl', templates.map((t, i) => [i, t[0]]), 0), true)}
+      ${fld('نص الرسالة (يمكن تعديله)', `<textarea name="msg" rows="7" style="width:100%">${E(templates[0] ? templates[0][1] : '')}</textarea>`, true)}`, {
+      btns: '', onSubmit: async (o, f) => { window.open('https://wa.me/' + waPhone(phone) + '?text=' + encodeURIComponent(f.msg), '_blank'); o.close(); }
+    });
+    ov.g('tpl').onchange = () => { ov.g('msg').value = templates[+ov.g('tpl').value][1]; };
+    const sb = ov.q('.submit-btn'); if (sb) sb.textContent = 'فتح واتساب';
+    return ov;
+  }
+
+  // ==================== تمديد العقد ====================
+  function extendModal(id) {
+    const c = byIdContract(id); if (!c || c.status !== 'open') return;
+    const newDue0 = new Date(c.due_at); newDue0.setDate(newDue0.getDate() + 1);
+    modal(`تمديد عقد ${c.contract_no}`, `
+      <div class="field field-full" style="font-size:13px">موعد التسليم الحالي: <b>${fdt(c.due_at)}</b> • عدد الأيام: <b class="num">${c.days}</b> • سعر اليوم: <b class="num">${F(c.daily_price)}</b></div>
+      ${fld('موعد التسليم الجديد', inp('new_due', toInput(newDue0), 'datetime-local', 'required'), true)}
+      <div class="field field-full"><div data-prev style="display:flex;gap:18px;flex-wrap:wrap;background:var(--surface-sunken);border-radius:8px;padding:10px 12px;font-size:13px"></div></div>
+      ${fld('تحصيل الآن (اختياري)', inp('pay', 0, 'number', 'min="0" step="any"'))}${fld('طريقة الدفع', sel('method', METHODS))}
+      <div data-cash>${''}</div>`, {
+      big: true,
+      init: async (ov) => {
+        const treas = await treasuryOptions(c.branch_id);
+        ov.q('[data-cash]').outerHTML = fld('الخزينة', sel('cash_account_id', treas.length ? treas : [['', '— لا توجد خزينة —']], treas[0]?.[0]));
+        const prev = () => {
+          const nd = plannedDays(c.out_at, ov.g('new_due').value), add = nd - c.days;
+          ov.q('[data-prev]').innerHTML = `<div>الأيام بعد التمديد: <b class="num">${isNaN(nd) ? '—' : nd}</b></div><div>أيام مضافة: <b class="num">${isNaN(add) ? '—' : add}</b></div><div>مبلغ التمديد: <b class="num">${F(isNaN(add) ? 0 : add * N(c.daily_price))}</b></div><div>الإجمالي الجديد: <b class="num">${F(isNaN(nd) ? 0 : nd * N(c.daily_price) - N(c.discount) + N(c.extra_charges))}</b></div>`;
+        };
+        ov.g('new_due').oninput = prev; prev();
+      },
+      onSubmit: async (ov, f) => {
+        if (!f.new_due || new Date(f.new_due) <= new Date(c.due_at)) throw new Error('الموعد الجديد يجب أن يكون بعد موعد التسليم الحالي');
+        const nd = plannedDays(c.out_at, f.new_due), total = nd * N(c.daily_price) - N(c.discount) + N(c.extra_charges), pay = N(f.pay);
+        if (pay > 0 && !f.cash_account_id) throw new Error('اختر الخزينة');
+        const line = `تمديد ${fdOnly(dateStr(new Date()))}: من ${fdt(c.due_at)} إلى ${fdt(f.new_due)} (+${nd - c.days} يوم)`;
+        const { error } = await supabaseClient.from('rental_contracts').update({ due_at: new Date(f.new_due).toISOString(), days: nd, total_amount: total, notes: (c.notes ? c.notes + '\n' : '') + line }).eq('id', id).eq('status', 'open');
+        if (error) throw new Error(dbMsg(error));
+        let payErr = '';
+        if (pay > 0) { try { await rpc('rental_record_payment', { p_contract_id: id, p_kind: 'rent', p_amount: pay, p_method: f.method, p_cash_account_id: f.cash_account_id, p_note: 'دفعة تمديد' }); } catch (x) { payErr = x.message || 'تعذر تسجيل الدفعة'; } }
+        ov.close(); await Promise.all([loadContracts(), loadBoTreasuries()]); renderContracts(); renderCars();
+        showToast(payErr ? 'تم التمديد لكن تعذر تسجيل الدفعة: ' + payErr : 'تم تمديد العقد', !!payErr); viewContract(id);
+      }
+    });
+  }
+
+  // ==================== كارت الصفحة الرئيسية (لنشاط التأجير فقط) ====================
+  function rentalDashEligible() {
+    try {
+      const branch = boBranchesList.find(b => b.id === currentProfile.branch_id);
+      const bt = boBusinessTypes.find(x => x.id === branch?.business_type_id);
+      const es = bt && bt.settings && bt.settings.enabled_sections;
+      return Array.isArray(es) && es.includes('rental-contracts') && hasBoScreenPermission('rental-contracts');
+    } catch (e) { return false; }
+  }
+  async function rentalDashRefresh() {
+    const box = $id('rentalDashCard'); if (!box) return;
+    if (!rentalDashEligible()) { box.style.display = 'none'; return; }
+    box.style.display = '';
+    try {
+      await Promise.all([loadCars(), loadContracts(), loadRentalCustomers(), loadSettings()]);
+      const t0 = new Date(); t0.setHours(0, 0, 0, 0); const t1 = new Date(t0); t1.setDate(t1.getDate() + 1);
+      const [pr, er] = await Promise.all([
+        supabaseClient.from('rental_payments').select('kind, amount').gte('paid_at', t0.toISOString()).lt('paid_at', t1.toISOString()),
+        supabaseClient.from('rental_cash_entries').select('direction, amount').gte('created_at', t0.toISOString()).lt('created_at', t1.toISOString())
+      ]);
+      let inn = 0, out = 0;
+      (pr.data || []).forEach(p => { if (p.kind === 'deposit_refund') out += N(p.amount); else inn += N(p.amount); });
+      (er.data || []).forEach(p => { if (p.direction === 'out') out += N(p.amount); else inn += N(p.amount); });
+      const fleet = cars.filter(c => c.status !== 'sold'), st = fleet.map(carStatus);
+      const rented = st.filter(x => x === 'rented').length, avail = st.filter(x => x === 'available').length, maint = st.filter(x => x === 'maintenance').length;
+      const late = contracts.filter(isLate).length, al = computeAlerts();
+      const cell = (l, v, go, col) => `<div data-go="${go}" style="cursor:pointer;flex:1;min-width:130px;border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:10px 14px"><div style="font-size:12px;color:var(--ink-soft)">${l}</div><div class="num" style="font-size:22px;font-weight:700;${col ? 'color:' + col : ''}">${v}</div></div>`;
+      box.innerHTML = `<div style="font-weight:700;margin-bottom:8px">🚗 معرض التأجير</div><div style="display:flex;gap:10px;flex-wrap:wrap">
+        ${cell('مؤجرة الآن', rented, 'rental-contracts')}${cell('متاحة', avail, 'rental-cars', '#0f766e')}${cell('صيانة', maint, 'rental-oil')}${cell('عقود متأخرة', late, 'rental-contracts', late ? '#b91c1c' : '')}${cell('تنبيهات', al.length, 'rental-alerts', al.length ? '#b45309' : '')}${cell('وارد اليوم', F(inn), 'rental-journal', '#0f766e')}${cell('صادر اليوم', F(out), 'rental-journal', '#b91c1c')}</div>`;
+      box.querySelectorAll('[data-go]').forEach(el => el.onclick = () => { const b = document.querySelector(`[data-section="${el.dataset.go}"]`); if (b) b.click(); });
+      updateAlertBadge();
+    } catch (e) { console.error(e); }
+  }
+  (function hookDashboard() {
+    const orig = window.loadDashboard;
+    if (typeof orig === 'function' && !orig.__rentalHooked) {
+      const w = async function () { const r = await orig.apply(this, arguments); rentalDashRefresh(); return r; };
+      w.__rentalHooked = true; window.loadDashboard = w;
+    }
+  })();
+
   // ---------- ربط الأحداث ----------
   function bind() {
     bind2(); bind3();
@@ -59430,7 +59539,7 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
     else if (section === 'rental-alerts') { await Promise.all([loadCars(), loadContracts(), loadRentalCustomers(), loadSettings()]); renderAlerts(); }
     if (section.startsWith('rental-') && section !== 'rental-alerts') updateAlertBadge();
   };
-  window.__rental = { cashEntryModal, openSettings, renderReports, renderJournal, maintModal, computeAlerts, oilStatus, reloadAll, contractForm, carModal, customerModal, viewContract, closeModal, payModal, printContract, calcClose, S, get cars() { return cars; }, get contracts() { return contracts; } };
+  window.__rental = { rentalDashRefresh, extendModal, waTemplates, waModal, cashEntryModal, openSettings, renderReports, renderJournal, maintModal, computeAlerts, oilStatus, reloadAll, contractForm, carModal, customerModal, viewContract, closeModal, payModal, printContract, calcClose, S, get cars() { return cars; }, get contracts() { return contracts; } };
   bind();
 })();
 
