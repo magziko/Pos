@@ -3211,7 +3211,7 @@ a { color: inherit; }
             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
               <label style="font-size:12px">من</label><input type="date" id="rentalRepFrom" style="max-width:150px;">
               <label style="font-size:12px">إلى</label><input type="date" id="rentalRepTo" style="max-width:150px;">
-              <select id="rentalRepType" style="max-width:230px"><option value="summary">ملخص الأداء</option><option value="trend">الإيراد الشهري (12 شهر)</option><option value="receivables">المستحقات والمتأخرات</option><option value="customers">تقرير العملاء</option><option value="fleet">توفر السيارات والإشغال</option><option value="expiry">الرخص والتأمين المنتهية</option><option value="costs">تكاليف السيارات</option><option value="incidents">المخالفات والحوادث</option><option value="cash">حركة الخزينة اليومية</option></select>
+              <select id="rentalRepType" style="max-width:230px"><option value="summary">ملخص الأداء</option><option value="trend">الإيراد الشهري (12 شهر)</option><option value="receivables">المستحقات والمتأخرات</option><option value="customers">تقرير العملاء</option><option value="fleet">توفر السيارات والإشغال</option><option value="expiry">الرخص والتأمين المنتهية</option><option value="costs">تكاليف السيارات</option><option value="incidents">المخالفات والحوادث</option><option value="cash">حركة الخزينة اليومية</option><option value="register">سجل العقود</option><option value="due">مواعيد التسليم والمرتجعات</option><option value="deposits">التأمينات المحتجزة</option><option value="roi">عائد السيارات على الاستثمار</option><option value="reservations">تقرير الحجوزات</option><option value="analysis">تحليل الأسعار والفئات</option></select>
               <button class="bo-icon-btn" id="rentalRepMonth" type="button">الشهر الحالي</button>
               <button class="bo-icon-btn" id="rentalRepPrint" type="button">طباعة</button>
               <button class="bo-icon-btn" id="rentalRepExcelCur" type="button">تصدير هذا التقرير</button>
@@ -60063,7 +60063,7 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
   };
 
   // ==================== تقارير إضافية ====================
-  const REP_TITLES = { summary: 'ملخص الأداء', trend: 'الإيراد الشهري (آخر 12 شهر)', receivables: 'المستحقات والمتأخرات', customers: 'تقرير العملاء', fleet: 'جدول توفر السيارات والإشغال', expiry: 'الرخص والتأمين المنتهية', costs: 'تكاليف السيارات', incidents: 'المخالفات والحوادث', cash: 'حركة الخزينة اليومية' };
+  const REP_TITLES = { summary: 'ملخص الأداء', trend: 'الإيراد الشهري (آخر 12 شهر)', receivables: 'المستحقات والمتأخرات', customers: 'تقرير العملاء', fleet: 'جدول توفر السيارات والإشغال', expiry: 'الرخص والتأمين المنتهية', costs: 'تكاليف السيارات', incidents: 'المخالفات والحوادث', cash: 'حركة الخزينة اليومية', register: 'سجل العقود', due: 'مواعيد التسليم والمرتجعات', deposits: 'التأمينات المحتجزة', roi: 'عائد السيارات على الاستثمار', reservations: 'تقرير الحجوزات', analysis: 'تحليل الأسعار والفئات' };
   const kp = (items) => `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">${items.map(([l, v, c, plain]) => `<div style="flex:1;min-width:150px;border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:10px 14px"><div style="font-size:12px;color:var(--ink-soft)">${l}</div><div class="num" style="font-size:20px;font-weight:700;${c ? 'color:' + c : ''}">${plain ? v : F(v)}</div></div>`).join('')}</div>`;
   const tbl = (heads, rows, empty) => `<div class="bo-table-wrap"><table class="bo-table"><thead><tr>${heads.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.length ? rows.map(r => `<tr>${r.map(c => `<td${typeof c === 'number' ? ' class="num"' : ''}>${typeof c === 'number' ? F(c) : (c == null ? '' : c)}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${heads.length}" class="bo-empty">${empty || 'لا توجد بيانات'}</td></tr>`}</tbody></table></div>`;
   const h3 = (t) => `<h3 style="margin:16px 0 8px">${t}</h3>`;
@@ -60189,6 +60189,59 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
         h3('حسب البند') + tbl(['البند', 'الصافي'], Object.entries(cat).sort((x, y) => Math.abs(y[1]) - Math.abs(x[1])).map(([k, v]) => [E(k), v]));
     }
   };
+
+  Object.assign(REPS, {
+    async register({ a, b }) {
+      const rows = contracts.filter(c => inR(c.out_at, a, b)).sort((x, y) => new Date(y.out_at) - new Date(x.out_at));
+      const live = rows.filter(c => c.status !== 'cancelled');
+      const ST = { open: 'مفتوح', closed: 'مغلق', cancelled: 'ملغي' };
+      return kp([['عدد العقود', live.length, '', true], ['إجمالي القيمة', live.reduce((x, c) => x + totalOf(c), 0)], ['المحصل', live.reduce((x, c) => x + paidOf(c), 0), '#0f766e'], ['المتبقي', live.reduce((x, c) => x + Math.max(0, remOf(c)), 0), '#b45309']]) +
+        tbl(['العقد', 'التاريخ', 'العميل', 'السيارة', 'الأيام', 'سعر اليوم', 'الإجمالي', 'المدفوع', 'المتبقي', 'الحالة'], rows.map(c => [String(c.contract_no), fdt(c.out_at), E(custName(c)), E((one(c.rental_cars) || {}).plate || ''), String(c.days || ''), N(c.daily_price), totalOf(c), paidOf(c), c.status === 'cancelled' ? 0 : remOf(c), ST[c.status] || c.status]), 'لا توجد عقود في الفترة');
+    },
+    async due() {
+      const now = Date.now(), open = contracts.filter(c => c.status === 'open'), hrs = (c) => (new Date(c.due_at) - now) / 36e5;
+      const late = open.filter(c => hrs(c) < 0), today = open.filter(c => hrs(c) >= 0 && hrs(c) < 24), soon = open.filter(c => hrs(c) >= 24 && hrs(c) < 72);
+      const row = (c) => { const h = hrs(c), cu = one(c.customers) || {}; return [String(c.contract_no), E(cu.name || ''), E(cu.phone || ''), E(carName(one(c.rental_cars) || byIdCar(c.car_id))), fdt(c.due_at), h < 0 ? 'متأخر ' + Math.ceil(-h / 24) + ' يوم' : h < 24 ? 'اليوم' : 'خلال ' + Math.ceil(h / 24) + ' يوم', remOf(c)]; };
+      const H = ['العقد', 'العميل', 'الهاتف', 'السيارة', 'موعد التسليم', 'الحالة', 'المتبقي'];
+      return kp([['متأخرة', late.length, '#b91c1c', true], ['اليوم', today.length, '#b45309', true], ['خلال 3 أيام', soon.length, '', true], ['عقود مفتوحة', open.length, '', true]]) +
+        h3('متأخرة عن موعد التسليم') + tbl(H, late.sort((x, y) => new Date(x.due_at) - new Date(y.due_at)).map(row), 'لا توجد') +
+        h3('تسليم خلال 24 ساعة') + tbl(H, today.map(row), 'لا توجد') + h3('تسليم خلال 3 أيام') + tbl(H, soon.map(row), 'لا توجد');
+    },
+    async deposits() {
+      const list = contracts.filter(c => c.status !== 'cancelled' && Math.max(0, heldOf(c)) > 0.009).sort((x, y) => heldOf(y) - heldOf(x));
+      const tot = list.reduce((x, c) => x + heldOf(c), 0), ofClosed = list.filter(c => c.status === 'closed').reduce((x, c) => x + heldOf(c), 0);
+      return kp([['إجمالي التأمين المحتجز', tot, '#b45309'], ['على عقود مفتوحة', tot - ofClosed], ['على عقود مغلقة (يجب ردها)', ofClosed, '#b91c1c'], ['عدد العقود', list.length, '', true]]) +
+        tbl(['العقد', 'العميل', 'السيارة', 'الحالة', 'التأمين المستلم', 'المخصوم', 'المردود', 'المحتجز'], list.map(c => [String(c.contract_no), E(custName(c)), E((one(c.rental_cars) || {}).plate || ''), c.status === 'open' ? 'مفتوح' : 'مغلق', N(c.deposit_amount), N(c.deducted_from_deposit) + N(c.fines_deducted), N(c.deposit_refunded), heldOf(c)]), 'لا توجد تأمينات محتجزة');
+    },
+    async roi() {
+      const { data, error } = await supabaseClient.from('rental_maintenance').select('car_id, cost').limit(50000); if (error) throw error;
+      const cost = {}; (data || []).forEach(x => { cost[x.car_id] = (cost[x.car_id] || 0) + N(x.cost); });
+      const rows = cars.filter(c => c.status !== 'sold').map(car => {
+        const rev = contracts.filter(c => c.car_id === car.id && c.status !== 'cancelled').reduce((x, c) => x + totalOf(c), 0), mc = cost[car.id] || 0, net = rev - mc, v = N(car.car_value);
+        return { car, rev, mc, net, v, pct: v ? net / v * 100 : null };
+      }).sort((x, y) => y.net - x.net);
+      const tn = rows.reduce((x, r) => x + r.net, 0), tv = rows.reduce((x, r) => x + r.v, 0);
+      return kp([['إجمالي الإيراد (منذ البداية)', rows.reduce((x, r) => x + r.rev, 0)], ['إجمالي التكاليف', rows.reduce((x, r) => x + r.mc, 0), '#b91c1c'], ['الصافي', tn, '#0f766e'], ['نسبة العائد على قيمة الأسطول', tv ? (tn / tv * 100).toFixed(1) + '%' : '—', '', true]]) +
+        tbl(['السيارة', 'قيمتها', 'الإيراد', 'التكاليف', 'الصافي', 'العائد %'], rows.map(r => [E(carName(r.car)), r.v, r.rev, r.mc, r.net, r.pct == null ? '—' : r.pct.toFixed(1) + '%']), 'لا توجد سيارات') +
+        '<div style="font-size:12px;color:var(--ink-soft);margin-top:8px">العائد = (الإيراد − التكاليف) ÷ قيمة السيارة التقديرية المسجلة في بياناتها، عن كامل المدة المسجلة بالنظام (وليس الفترة المحددة).</div>';
+    },
+    async reservations({ a, b }) {
+      const rows = reservations.filter(r => inR(r.start_at, a, b)), cnt = (s) => rows.filter(r => r.status === s).length;
+      const ST = { booked: 'محجوز', converted: 'تحوّل لعقد', cancelled: 'ملغي' }, done = cnt('converted'), den = done + cnt('cancelled');
+      return kp([['إجمالي الحجوزات', rows.length, '', true], ['محجوزة (قادمة)', cnt('booked'), '#b45309', true], ['تحوّلت لعقود', done, '#0f766e', true], ['ملغاة', cnt('cancelled'), '#b91c1c', true], ['نسبة التحويل', den ? (done / den * 100).toFixed(0) + '%' : '—', '', true]]) +
+        tbl(['بداية الحجز', 'نهايته', 'العميل', 'السيارة', 'عربون', 'الحالة'], rows.map(r => [fdt(r.start_at), fdt(r.end_at), E((one(r.customers) || {}).name || ''), E(carName(one(r.rental_cars))), N(r.deposit_hint), ST[r.status] || r.status]), 'لا توجد حجوزات في الفترة');
+    },
+    async analysis({ a, b }) {
+      const live = contracts.filter(c => c.status !== 'cancelled' && inR(c.out_at, a, b)), cat = {};
+      live.forEach(c => { const k = (one(c.rental_cars) || byIdCar(c.car_id) || {}).category || '—', o = (cat[k] = cat[k] || { n: 0, d: 0, rev: 0 }); o.n++; o.d += N(c.days); o.rev += totalOf(c); });
+      const days = live.reduce((x, c) => x + N(c.days), 0), disc = live.reduce((x, c) => x + N(c.discount), 0), ext = live.reduce((x, c) => x + N(c.extra_charges), 0), drv = live.reduce((x, c) => x + N(c.days) * N(c.driver_daily_fee), 0);
+      const rev = live.reduce((x, c) => x + totalOf(c), 0), w = {}; live.forEach(c => { const k = new Date(c.out_at).getDay(); w[k] = (w[k] || 0) + 1; });
+      const WD = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+      return kp([['متوسط مدة العقد (يوم)', live.length ? (days / live.length).toFixed(1) : '—', '', true], ['متوسط سعر اليوم الفعلي', days ? rev / days : 0], ['إجمالي الخصومات', disc, '#b45309'], ['رسوم إضافية', ext], ['إيراد السائقين', drv]]) +
+        h3('حسب فئة السيارة') + tbl(['الفئة', 'العقود', 'الأيام', 'الإيراد', 'متوسط اليوم'], Object.entries(cat).sort((x, y) => y[1].rev - x[1].rev).map(([k, o]) => [E(k), String(o.n), String(o.d), o.rev, o.d ? o.rev / o.d : 0]), 'لا توجد عقود') +
+        h3('أيام الأسبوع الأكثر طلباً (بدء العقد)') + tbl(['اليوم', 'عدد العقود'], WD.map((n, i) => [n, String(w[i] || 0)]));
+    }
+  });
   async function renderRepType() {
     const type = ($id('rentalRepType') || {}).value || 'summary';
     if (type === 'summary') return renderReports();
