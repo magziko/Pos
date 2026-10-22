@@ -3211,9 +3211,11 @@ a { color: inherit; }
             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
               <label style="font-size:12px">من</label><input type="date" id="rentalRepFrom" style="max-width:150px;">
               <label style="font-size:12px">إلى</label><input type="date" id="rentalRepTo" style="max-width:150px;">
+              <select id="rentalRepType" style="max-width:230px"><option value="summary">ملخص الأداء</option><option value="trend">الإيراد الشهري (12 شهر)</option><option value="receivables">المستحقات والمتأخرات</option><option value="customers">تقرير العملاء</option><option value="fleet">توفر السيارات والإشغال</option><option value="expiry">الرخص والتأمين المنتهية</option><option value="costs">تكاليف السيارات</option><option value="incidents">المخالفات والحوادث</option><option value="cash">حركة الخزينة اليومية</option></select>
               <button class="bo-icon-btn" id="rentalRepMonth" type="button">الشهر الحالي</button>
               <button class="bo-icon-btn" id="rentalRepPrint" type="button">طباعة</button>
-              <button class="bo-icon-btn" id="rentalRepExcel" type="button">تصدير Excel</button>
+              <button class="bo-icon-btn" id="rentalRepExcelCur" type="button">تصدير هذا التقرير</button>
+              <button class="bo-icon-btn" id="rentalRepExcel" type="button">تصدير كل البيانات</button>
             </div>
           </div>
           <div id="rentalReportsBody"></div>
@@ -59495,9 +59497,9 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
   }
   function bind3() {
     const on = (id, ev, fn) => { const el = $id(id); if (el) el.addEventListener(ev, fn); };
-    on('rentalRepFrom', 'change', renderReports); on('rentalRepTo', 'change', renderReports); on('rentalRepPrint', 'click', printReports);
+    on('rentalRepFrom', 'change', renderRepType); on('rentalRepTo', 'change', renderRepType); on('rentalRepPrint', 'click', printCurrentReport); on('rentalRepType', 'change', renderRepType); on('rentalRepExcelCur', 'click', exportCurrentReport);
     on('rentalRepExcel', 'click', exportExcel);
-    on('rentalRepMonth', 'click', () => { $id('rentalRepFrom').value = ''; $id('rentalRepTo').value = ''; renderReports(); });
+    on('rentalRepMonth', 'click', () => { $id('rentalRepFrom').value = ''; $id('rentalRepTo').value = ''; renderRepType(); });
   }
 
   // ==================== واتساب (قوالب رسائل) ====================
@@ -60060,6 +60062,157 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
     b.style.display = on ? 'flex' : 'none';
   };
 
+  // ==================== تقارير إضافية ====================
+  const REP_TITLES = { summary: 'ملخص الأداء', trend: 'الإيراد الشهري (آخر 12 شهر)', receivables: 'المستحقات والمتأخرات', customers: 'تقرير العملاء', fleet: 'جدول توفر السيارات والإشغال', expiry: 'الرخص والتأمين المنتهية', costs: 'تكاليف السيارات', incidents: 'المخالفات والحوادث', cash: 'حركة الخزينة اليومية' };
+  const kp = (items) => `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">${items.map(([l, v, c, plain]) => `<div style="flex:1;min-width:150px;border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:10px 14px"><div style="font-size:12px;color:var(--ink-soft)">${l}</div><div class="num" style="font-size:20px;font-weight:700;${c ? 'color:' + c : ''}">${plain ? v : F(v)}</div></div>`).join('')}</div>`;
+  const tbl = (heads, rows, empty) => `<div class="bo-table-wrap"><table class="bo-table"><thead><tr>${heads.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.length ? rows.map(r => `<tr>${r.map(c => `<td${typeof c === 'number' ? ' class="num"' : ''}>${typeof c === 'number' ? F(c) : (c == null ? '' : c)}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${heads.length}" class="bo-empty">${empty || 'لا توجد بيانات'}</td></tr>`}</tbody></table></div>`;
+  const h3 = (t) => `<h3 style="margin:16px 0 8px">${t}</h3>`;
+  const inR = (d, a, b) => { const x = new Date(d); return x >= a && x < b; };
+  const custName = (c) => (one(c.customers) || {}).name || '—';
+  function barSvg(labels, vals, color) {
+    const W = 640, H = 200, pad = 28, max = Math.max(1, ...vals), bw = (W - pad * 2) / vals.length;
+    return `<svg viewBox="0 0 ${W} ${H + 24}" style="width:100%;max-width:760px;background:#fff;border:1px solid var(--border,#e5e7eb);border-radius:8px">${vals.map((v, i) => { const h = Math.round(v / max * (H - 30)); const x = pad + i * bw + 6; return `<rect x="${x}" y="${H - h}" width="${bw - 12}" height="${h}" rx="3" fill="${color || '#0f766e'}"/><text x="${x + (bw - 12) / 2}" y="${H - h - 4}" text-anchor="middle" font-size="9" fill="#444">${v ? F(Math.round(v)) : ''}</text><text x="${x + (bw - 12) / 2}" y="${H + 14}" text-anchor="middle" font-size="9" fill="#666">${labels[i]}</text>`; }).join('')}</svg>`;
+  }
+  const REPS = {
+    async trend() {
+      const now = new Date(), months = []; for (let i = 11; i >= 0; i--) months.push(new Date(now.getFullYear(), now.getMonth() - i, 1));
+      const start = months[0], key = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1);
+      const [pr, mr] = await Promise.all([
+        supabaseClient.from('rental_payments').select('paid_at, amount').eq('kind', 'rent').gte('paid_at', start.toISOString()).limit(50000),
+        supabaseClient.from('rental_maintenance').select('done_at, cost').gte('done_at', dateStr(start)).limit(50000)
+      ]);
+      if (pr.error || mr.error) throw (pr.error || mr.error);
+      const rows = months.map(m => ({ k: key(m), label: pad(m.getMonth() + 1) + '/' + String(m.getFullYear()).slice(2), col: 0, cost: 0, n: 0 }));
+      const idx = Object.fromEntries(rows.map(r => [r.k, r]));
+      (pr.data || []).forEach(p => { const r = idx[key(new Date(p.paid_at))]; if (r) r.col += N(p.amount); });
+      (mr.data || []).forEach(x => { const r = idx[String(x.done_at).slice(0, 7)]; if (r) r.cost += N(x.cost); });
+      contracts.filter(c => c.status !== 'cancelled').forEach(c => { const r = idx[key(new Date(c.out_at))]; if (r) r.n++; });
+      const tc = rows.reduce((x, r) => x + r.col, 0), tm = rows.reduce((x, r) => x + r.cost, 0);
+      const best = rows.reduce((b, r) => (r.col > b.col ? r : b), rows[0]);
+      return kp([['إجمالي المحصل (12 شهر)', tc, '#0f766e'], ['تكاليف السيارات', tm, '#b91c1c'], ['الصافي', tc - tm], ['أفضل شهر', best.col ? best.label : '—', '', true]]) + barSvg(rows.map(r => r.label), rows.map(r => r.col)) + h3('التفصيل') +
+        tbl(['الشهر', 'عدد العقود', 'المحصل', 'التكاليف', 'الصافي'], rows.map(r => [r.label, String(r.n), r.col, r.cost, r.col - r.cost]));
+    },
+    async receivables() {
+      const open = contracts.filter(c => c.status !== 'cancelled' && remOf(c) > 0.009);
+      const ref = (c) => new Date(c.status === 'closed' ? (c.returned_at || c.due_at) : c.due_at);
+      const age = (c) => Math.floor((Date.now() - ref(c)) / 864e5);
+      const total = open.reduce((x, c) => x + remOf(c), 0), b0 = open.filter(c => age(c) <= 0), b1 = open.filter(c => age(c) > 0 && age(c) <= 30), b2 = open.filter(c => age(c) > 30);
+      const sm = (l) => l.reduce((x, c) => x + remOf(c), 0);
+      const held = contracts.filter(c => c.status !== 'cancelled').reduce((x, c) => x + Math.max(0, heldOf(c)), 0);
+      const lateInst = loaded.inst ? installments.filter(x => x.due_date < dateStr(new Date())) : [];
+      return kp([['إجمالي المتبقي على العملاء', total, '#b45309'], ['لم يستحق بعد', sm(b0)], ['متأخر حتى 30 يوم', sm(b1), '#b45309'], ['متأخر أكثر من 30 يوم', sm(b2), '#b91c1c'], ['تأمينات محتجزة (التزام)', held]]) +
+        h3('عقود عليها متبقي') + tbl(['العقد', 'العميل', 'السيارة', 'الحالة', 'الإجمالي', 'المدفوع', 'المتبقي', 'التأخير (يوم)'],
+          open.sort((x, y) => age(y) - age(x)).map(c => [String(c.contract_no), E(custName(c)), E((one(c.rental_cars) || {}).plate || ''), c.status === 'open' ? 'مفتوح' : 'مغلق', totalOf(c), paidOf(c), remOf(c), age(c) > 0 ? String(age(c)) : '—']), 'لا توجد مستحقات 👌') +
+        h3('أقساط متأخرة') + tbl(['العقد', 'العميل', 'القسط', 'الاستحقاق', 'المتبقي'], lateInst.map(x => { const ct = one(x.rental_contracts) || {}; return [String(ct.contract_no || ''), E((one(ct.customers) || {}).name || ''), String(x.seq), fdOnly(x.due_date), N(x.amount) - N(x.paid_amount)]; }), 'لا توجد أقساط متأخرة');
+    },
+    async customers({ a, b }) {
+      const map = {};
+      contracts.filter(c => c.status !== 'cancelled' && inR(c.out_at, a, b)).forEach(c => { const k = c.customer_id, o = (map[k] = map[k] || { name: custName(c), phone: (one(c.customers) || {}).phone || '', n: 0, rev: 0, paid: 0, rem: 0, last: null }); o.n++; o.rev += totalOf(c); o.paid += paidOf(c); o.rem += Math.max(0, remOf(c)); if (!o.last || new Date(c.out_at) > o.last) o.last = new Date(c.out_at); });
+      const rows = Object.values(map).sort((x, y) => y.rev - x.rev);
+      const lastBy = {}; contracts.filter(c => c.status !== 'cancelled').forEach(c => { const t = new Date(c.out_at); if (!lastBy[c.customer_id] || t > lastBy[c.customer_id]) lastBy[c.customer_id] = t; });
+      const cut = Date.now() - 90 * 864e5;
+      const dormant = loaded.customers ? rentalCustomers.filter(c => !(lastBy[c.id] && lastBy[c.id].getTime() > cut)) : [];
+      const bl = loaded.customers ? rentalCustomers.filter(c => c.d.is_blacklisted) : [];
+      const repeat = rows.filter(r => r.n > 1).length;
+      return kp([['عملاء تعاقدوا في الفترة', rows.length, '', true], ['عملاء متكررون', repeat, '#0f766e', true], ['إجمالي الإيراد', rows.reduce((x, r) => x + r.rev, 0)], ['متبقي عليهم', rows.reduce((x, r) => x + r.rem, 0), '#b45309']]) +
+        h3('العملاء في الفترة') + tbl(['العميل', 'الهاتف', 'عقود', 'الإيراد', 'المدفوع', 'المتبقي', 'آخر عقد'], rows.map(r => [E(r.name), E(r.phone), String(r.n), r.rev, r.paid, r.rem, fdOnly(dateStr(r.last))]), 'لا توجد عقود في الفترة') +
+        h3('عملاء بدون إيجار منذ 90 يوماً (للتسويق)') + tbl(['العميل', 'الهاتف', 'آخر إيجار'], dormant.map(c => [E(c.name), E(c.phone || ''), lastBy[c.id] ? fdOnly(dateStr(lastBy[c.id])) : 'لم يستأجر']), 'لا يوجد') +
+        h3('القائمة السوداء') + tbl(['العميل', 'الهاتف', 'ملاحظة'], bl.map(c => [E(c.name), E(c.phone || ''), E(c.d.notes || '')]), 'لا يوجد عملاء محظورون');
+    },
+    async fleet({ a, b, days }) {
+      const list = cars.filter(c => c.status !== 'sold'), N14 = 14, today = new Date(); today.setHours(0, 0, 0, 0);
+      const dayCols = Array.from({ length: N14 }, (_, i) => { const d = new Date(today); d.setDate(d.getDate() + i); return d; });
+      const resv = loaded.res ? reservations.filter(r => r.status === 'booked') : [];
+      const cell = (car, d) => {
+        const s = d.getTime(), e = s + 864e5;
+        const ct = contracts.find(c => c.car_id === car.id && c.status === 'open' && new Date(c.out_at) < e && Math.max(new Date(c.due_at), Date.now()) >= s);
+        if (ct) return `<td title="عقد ${ct.contract_no}" style="background:#fecaca;text-align:center;font-size:10px">${ct.contract_no}</td>`;
+        const rv = resv.find(r => r.car_id === car.id && new Date(r.start_at) < e && new Date(r.end_at) >= s);
+        if (rv) return `<td title="حجز" style="background:#fde68a;text-align:center;font-size:10px">حجز</td>`;
+        if (car.status === 'maintenance') return `<td style="background:#e5e7eb;text-align:center;font-size:10px">صيانة</td>`;
+        return `<td style="background:#d1fae5"></td>`;
+      };
+      const grid = `<div class="bo-table-wrap"><table class="bo-table"><thead><tr><th>السيارة</th>${dayCols.map(d => `<th style="font-size:10px;text-align:center">${pad(d.getDate())}/${pad(d.getMonth() + 1)}</th>`).join('')}</tr></thead><tbody>${list.map(car => `<tr><td><b>${E(car.brand)} ${E(car.model)}</b><div style="font-size:11px;color:var(--ink-soft)">${E(car.plate)}</div></td>${dayCols.map(d => cell(car, d)).join('')}</tr>`).join('')}</tbody></table></div><div style="font-size:12px;margin:6px 0"><span style="background:#d1fae5;padding:1px 8px">متاحة</span> <span style="background:#fecaca;padding:1px 8px">مؤجرة (رقم العقد)</span> <span style="background:#fde68a;padding:1px 8px">محجوزة</span> <span style="background:#e5e7eb;padding:1px 8px">صيانة</span></div>`;
+      const grp = {};
+      list.forEach(car => {
+        const key = car.brand || '—'; const g = (grp[key] = grp[key] || { n: 0, rd: 0, rev: 0 }); g.n++;
+        contracts.filter(c => c.car_id === car.id && c.status !== 'cancelled').forEach(c => { const s = Math.max(new Date(c.out_at), a), e = Math.min(new Date(c.returned_at || Date.now()), b); if (e > s) g.rd += (e - s) / 864e5; if (inR(c.out_at, a, b)) g.rev += totalOf(c); });
+      });
+      const rows = Object.entries(grp).sort((x, y) => y[1].rev - x[1].rev).map(([k, g]) => [E(k), String(g.n), g.rd.toFixed(1), Math.min(100, g.rd / (g.n * days) * 100).toFixed(0) + '%', g.rev]);
+      const free = list.filter(c => carStatus(c) === 'available').length;
+      return kp([['سيارات المعرض', list.length, '', true], ['متاحة الآن', free, '#0f766e', true], ['مؤجرة الآن', list.filter(c => carStatus(c) === 'rented').length, '', true]]) + h3('توفر السيارات — الأسبوعان القادمان') + grid +
+        h3('الإشغال حسب الماركة في الفترة المحددة') + tbl(['الماركة', 'عدد السيارات', 'أيام التأجير', 'الإشغال', 'الإيراد'], rows);
+    },
+    async expiry() {
+      const items = [], push = (type, name, d, extra) => { if (!d) return; const n = daysUntil(d); if (n <= 90) items.push({ type, name, d, n, extra }); };
+      cars.filter(c => c.status !== 'sold').forEach(c => { push('رخصة سيارة', carName(c), c.license_expiry); push('تأمين سيارة', carName(c), c.insurance_expiry); push('فحص سيارة', carName(c), c.inspection_expiry); });
+      if (loaded.customers) rentalCustomers.forEach(c => push('رخصة قيادة عميل', c.name, c.d.license_expiry));
+      items.sort((x, y) => x.n - y.n);
+      const exp = items.filter(i => i.n < 0).length, soon = items.filter(i => i.n >= 0 && i.n <= 30).length;
+      return kp([['منتهية', exp, '#b91c1c', true], ['تنتهي خلال 30 يوم', soon, '#b45309', true], ['خلال 90 يوم', items.length - exp - soon, '', true]]) +
+        tbl(['النوع', 'البند', 'تاريخ الانتهاء', 'المتبقي', 'الحالة'], items.map(i => [i.type, E(i.name), fdOnly(i.d), String(i.n), i.n < 0 ? '<span class="bo-badge inactive">منتهية</span>' : i.n <= 30 ? '<span class="bo-badge pending">قريبة</span>' : '<span class="bo-badge neutral">قادمة</span>']), 'لا توجد انتهاءات خلال 90 يوم 👌');
+    },
+    async costs({ a, b }) {
+      const { data, error } = await supabaseClient.from('rental_maintenance').select('car_id, kind, cost, done_at').gte('done_at', dateStr(a)).lt('done_at', dateStr(b)).limit(50000);
+      if (error) throw error; const rows = data || [], total = rows.reduce((x, r) => x + N(r.cost), 0);
+      const byKind = {}, byCar = {}; rows.forEach(r => { (byKind[r.kind] = byKind[r.kind] || { n: 0, s: 0 }); byKind[r.kind].n++; byKind[r.kind].s += N(r.cost); (byCar[r.car_id] = byCar[r.car_id] || { n: 0, s: 0 }); byCar[r.car_id].n++; byCar[r.car_id].s += N(r.cost); });
+      const nc = cars.filter(c => c.status !== 'sold').length || 1;
+      return kp([['إجمالي التكاليف', total, '#b91c1c'], ['عدد البنود', rows.length, '', true], ['متوسط التكلفة للسيارة', total / nc]]) +
+        h3('حسب النوع') + tbl(['النوع', 'العدد', 'الإجمالي', 'النسبة'], Object.entries(byKind).sort((x, y) => y[1].s - x[1].s).map(([k, v]) => [MAINT_KIND[k] || k, String(v.n), v.s, total ? (v.s / total * 100).toFixed(0) + '%' : '—'])) +
+        h3('حسب السيارة') + tbl(['السيارة', 'العدد', 'الإجمالي'], Object.entries(byCar).sort((x, y) => y[1].s - x[1].s).map(([id, v]) => [E(carName(byIdCar(id))), String(v.n), v.s]));
+    },
+    async incidents({ a, b }) {
+      if (!incidents.length) await loadIncidents();
+      const rows = incidents.filter(i => inR(i.occurred_at, a, b)), total = rows.reduce((x, i) => x + N(i.amount), 0);
+      const open = rows.filter(i => i.status === 'open'), openSum = open.reduce((x, i) => x + N(i.amount), 0);
+      const byKind = {}; rows.forEach(i => { (byKind[i.kind] = byKind[i.kind] || { n: 0, s: 0 }); byKind[i.kind].n++; byKind[i.kind].s += N(i.amount); });
+      const byCust = {}; rows.forEach(i => { const n = (one(i.customers) || {}).name || 'على المعرض (بدون عقد)'; (byCust[n] = byCust[n] || { n: 0, s: 0 }); byCust[n].n++; byCust[n].s += N(i.amount); });
+      return kp([['عدد السجلات', rows.length, '', true], ['إجمالي المبالغ', total], ['مفتوحة (لم تُسوَّ)', openSum, '#b45309'], ['تمت تسويتها', rows.filter(i => i.status === 'settled').reduce((x, i) => x + N(i.amount), 0), '#0f766e']]) +
+        h3('حسب النوع') + tbl(['النوع', 'العدد', 'المبلغ'], Object.entries(byKind).map(([k, v]) => [INC_KIND[k], String(v.n), v.s])) +
+        h3('حسب العميل') + tbl(['العميل', 'العدد', 'المبلغ'], Object.entries(byCust).sort((x, y) => y[1].s - x[1].s).map(([k, v]) => [E(k), String(v.n), v.s])) +
+        h3('التفاصيل') + tbl(['التاريخ', 'النوع', 'السيارة', 'العميل', 'المبلغ', 'المسؤول', 'الحالة'], rows.map(i => [fdt(i.occurred_at), INC_KIND[i.kind], E((one(i.rental_cars) || {}).plate || ''), E((one(i.customers) || {}).name || '—'), N(i.amount), i.responsible === 'customer' ? 'العميل' : 'المعرض', INC_ST[i.status][0]]), 'لا توجد سجلات');
+    },
+    async cash({ a, b }) {
+      const [pr, er] = await Promise.all([
+        supabaseClient.from('rental_payments').select('kind, amount, method, paid_at').gte('paid_at', a.toISOString()).lt('paid_at', b.toISOString()).limit(50000),
+        supabaseClient.from('rental_cash_entries').select('direction, amount, category, created_at').gte('created_at', a.toISOString()).lt('created_at', b.toISOString()).limit(50000)
+      ]);
+      if (pr.error || er.error) throw (pr.error || er.error);
+      const days = {}, meth = {}, cat = {}; let tin = 0, tout = 0;
+      const add = (d, v, sg, m, c) => { const k = dateStr(new Date(d)); const o = (days[k] = days[k] || { i: 0, o: 0 }); if (sg > 0) { o.i += v; tin += v; } else { o.o += v; tout += v; } if (m) meth[m] = (meth[m] || 0) + sg * v; if (c) cat[c] = (cat[c] || 0) + sg * v; };
+      (pr.data || []).forEach(p => add(p.paid_at, N(p.amount), p.kind === 'deposit_refund' ? -1 : 1, p.method || 'نقدي', p.kind === 'rent' ? 'إيجار' : p.kind === 'deposit' ? 'تأمين مستلم' : 'تأمين مردود'));
+      (er.data || []).forEach(e => add(e.created_at, N(e.amount), e.direction === 'in' ? 1 : -1, null, (e.direction === 'in' ? 'وارد: ' : 'مصروف: ') + e.category));
+      const ks = Object.keys(days).sort();
+      return kp([['إجمالي الوارد', tin, '#0f766e'], ['إجمالي الصادر', tout, '#b91c1c'], ['الصافي', tin - tout]]) +
+        h3('يومياً') + tbl(['اليوم', 'وارد', 'صادر', 'الصافي'], ks.map(k => [fdOnly(k), days[k].i, days[k].o, days[k].i - days[k].o]), 'لا توجد حركات') +
+        h3('حسب طريقة الدفع') + tbl(['الطريقة', 'الصافي'], Object.entries(meth).map(([k, v]) => [E(k), v])) +
+        h3('حسب البند') + tbl(['البند', 'الصافي'], Object.entries(cat).sort((x, y) => Math.abs(y[1]) - Math.abs(x[1])).map(([k, v]) => [E(k), v]));
+    }
+  };
+  async function renderRepType() {
+    const type = ($id('rentalRepType') || {}).value || 'summary';
+    if (type === 'summary') return renderReports();
+    const box = $id('rentalReportsBody'); box.innerHTML = '<div class="bo-empty">جاري التحميل...</div>';
+    try {
+      await Promise.all([loaded.customers ? 0 : loadRentalCustomers(), loaded.res ? 0 : loadReservations(), loaded.inst ? 0 : loadInstallments()]);
+      box.innerHTML = await REPS[type](repRange());
+    } catch (e) { console.error(e); box.innerHTML = '<div class="bo-empty">تعذر تحميل التقرير</div>'; }
+  }
+  function printCurrentReport() {
+    const type = $id('rentalRepType').value; if (type === 'summary') { printReports(); return; }
+    const win = window.open('', '_blank', 'width=900,height=900'); if (!win) { showToast('اسمح بالنوافذ المنبثقة للطباعة', true); return; }
+    const st = S(currentProfile.branch_id), r = repRange();
+    win.document.write(`<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>${REP_TITLES[type]}</title><style>body{font-family:Tahoma,Arial,sans-serif;padding:16px;font-size:12.5px}table{width:100%;border-collapse:collapse;margin:6px 0}th,td{border:1px solid #999;padding:4px 6px;text-align:right}th{background:#eee}h3{margin:12px 0 4px}.no-print{display:none}</style></head><body>${st.logo_url ? `<div style="text-align:center"><img src="${E(st.logo_url)}" style="max-height:60px"></div>` : ''}<h2>${E(st.shop_name || 'معرض التأجير')} — ${REP_TITLES[type]}</h2><div style="font-size:12px">من ${fdOnly(dateStr(r.a))} إلى ${fdOnly(dateStr(new Date(r.b - 864e5)))}</div>${$id('rentalReportsBody').innerHTML}<script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>`);
+    win.document.close();
+  }
+  function exportCurrentReport() {
+    if (typeof XLSX === 'undefined') { showToast('مكتبة Excel غير متاحة', true); return; }
+    const type = $id('rentalRepType').value; if (type === 'summary') { exportExcel(); return; }
+    const tables = [...$id('rentalReportsBody').querySelectorAll('table')]; if (!tables.length) { showToast('لا توجد بيانات للتصدير', true); return; }
+    const wb = XLSX.utils.book_new(); tables.forEach((t, i) => XLSX.utils.book_append_sheet(wb, XLSX.utils.table_to_sheet(t), ('جدول ' + (i + 1)).slice(0, 31)));
+    XLSX.writeFile(wb, `rental_${type}_${dateStr(new Date())}.xlsx`); showToast('تم تصدير التقرير');
+  }
+
   // ---------- ربط الأحداث ----------
   function bind() {
     bind2(); bind3(); bind4(); bind5();
@@ -60097,11 +60250,11 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
     else if (section === 'rental-pricing') { await Promise.all([loadRules(), loadCars()]); renderRules(); }
     else if (section === 'rental-reservations') { await Promise.all([loadReservations(), loadCars(), loadContracts(), loadSettings()]); renderReservations(); }
     else if (section === 'rental-incidents') { await Promise.all([loadIncidents(), loadCars(), loadContracts(), loadSettings()]); renderIncidents(); }
-    else if (section === 'rental-reports') { await Promise.all([loadCars(), loadContracts(), loadSettings()]); await renderReports(); }
+    else if (section === 'rental-reports') { await Promise.all([loadCars(), loadContracts(), loadSettings(), loadRentalCustomers(), loadReservations(), loadInstallments()]); await renderRepType(); }
     else if (section === 'rental-alerts') { await Promise.all([loadCars(), loadContracts(), loadRentalCustomers(), loadSettings(), loadReservations(), loadInstallments()]); renderAlerts(); }
     if (section.startsWith('rental-') && section !== 'rental-alerts') updateAlertBadge();
   };
-  window.__rental = { rentalPosButtonRefresh: window.rentalPosButtonRefresh, loadInstallments, installmentModal, suggestPrice, quoteModal, ruleModal, loadRules, exportExcel, loadReservations, reservationModal, convertReservation, incidentModal, settleIncident, conditionModal, signatureModal, rentalDashRefresh, extendModal, waTemplates, waModal, cashEntryModal, openSettings, renderReports, renderJournal, maintModal, computeAlerts, oilStatus, reloadAll, contractForm, carModal, customerModal, viewContract, closeModal, payModal, printContract, calcClose, S, get cars() { return cars; }, get contracts() { return contracts; } };
+  window.__rental = { renderRepType, REPS, rentalPosButtonRefresh: window.rentalPosButtonRefresh, loadInstallments, installmentModal, suggestPrice, quoteModal, ruleModal, loadRules, exportExcel, loadReservations, reservationModal, convertReservation, incidentModal, settleIncident, conditionModal, signatureModal, rentalDashRefresh, extendModal, waTemplates, waModal, cashEntryModal, openSettings, renderReports, renderJournal, maintModal, computeAlerts, oilStatus, reloadAll, contractForm, carModal, customerModal, viewContract, closeModal, payModal, printContract, calcClose, S, get cars() { return cars; }, get contracts() { return contracts; } };
   bind();
 })();
 
