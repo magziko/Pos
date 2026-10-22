@@ -1374,6 +1374,7 @@ a { color: inherit; }
         <button class="return-topbar-btn" id="cashDropBtn" style="display:none;" title="سحب نقدي من الدرج لخزنة الفرع"><span class="return-topbar-icon">💵</span><span class="return-topbar-label">سحب نقدي</span></button>
         <button class="close-shift-btn" id="closeShiftBtn" style="display:none;" title="إغلاق الوردية"><span class="topbar-btn-icon">🔒</span><span class="topbar-btn-label">إغلاق الوردية</span></button>
         <button class="return-topbar-btn" id="myAttendanceBtn" style="display:none;" title="الحضور والانصراف"><span class="return-topbar-icon">🕒</span><span class="return-topbar-label">الحضور والانصراف</span></button>
+        <button class="return-topbar-btn" id="rentalQuickBtn" style="display:none;" title="تأجير سريع"><span class="return-topbar-icon">🚗</span><span class="return-topbar-label">تأجير سريع</span></button>
         <button class="return-topbar-btn" id="posTablesNavBtn" style="display:none;" title="الطاولات"><span class="return-topbar-icon">🍽️</span><span class="return-topbar-label">الطاولات</span></button>
         <button class="logout-btn" id="backofficeBtn" style="display:none;" title="لوحة التحكم"><span class="topbar-btn-icon">🖥️</span><span class="topbar-btn-label">لوحة التحكم</span></button>
         <button class="logout-btn" id="logoutBtn" title="تسجيل الخروج"><span class="topbar-btn-icon">⏻</span><span class="topbar-btn-label">تسجيل الخروج</span></button>
@@ -17229,6 +17230,7 @@ async function enterPos() {
   if (appIsOnline) {
     try { await Promise.all([loadBoBranches(), loadBoBusinessTypes()]); } catch (err) { console.error(err); }
     applyShoeFeatureVisibility();
+    if (typeof window.rentalPosButtonRefresh === 'function') window.rentalPosButtonRefresh();
     filterProductsForCurrentBusinessType();
     if (activeCategory !== 'all' && !allProducts.some(p => !p.parent_product_id && p.category_id === activeCategory)) {
       activeCategory = 'all';
@@ -53675,9 +53677,13 @@ async function refreshIncomeStatement() {
     // فروق العملة المحققة من مدفوعات موردي الاستيراد (موجب = ربح، سالب = خسارة)
     const realizedFx = await computeImportFxRealized(fromDate, toDate, branchId);
 
+    // إيرادات/مصروفات نشاط تأجير السيارات (لو متاحة) — بتتحسب في موديول التأجير
+    let rentalFx = { revenue: 0, expense: 0, carCosts: 0 };
+    try { if (typeof window.rentalIncomeForStatement === 'function') rentalFx = await window.rentalIncomeForStatement(fromDate, toDate, branchId); } catch (e) { console.error(e); }
+
     const netSales = totalSales - totalReturns;
     const grossProfit = netSales - netCOGS;
-    const netProfit = grossProfit - totalExpenses - totalSalaries + realizedFx;
+    const netProfit = grossProfit + rentalFx.revenue - rentalFx.expense - rentalFx.carCosts - totalExpenses - totalSalaries + realizedFx;
 
     const rows = [
       { label: 'إجمالي المبيعات', value: totalSales, type: 'normal' },
@@ -53685,6 +53691,9 @@ async function refreshIncomeStatement() {
       { label: 'صافي المبيعات', value: netSales, type: 'subtotal' },
       { label: 'تكلفة البضاعة المباعة (صافي المرتجعات)', value: netCOGS, type: 'deduct' },
       { label: 'إجمالي الربح (هامش الربح)', value: grossProfit, type: 'subtotal' },
+      ...(rentalFx.revenue ? [{ label: 'إيرادات التأجير (إيجار محصّل + تأمين مخصوم + إيرادات أخرى)', value: rentalFx.revenue, type: 'normal' }] : []),
+      ...(rentalFx.expense ? [{ label: 'مصروفات التأجير (من يومية الخزينة)', value: rentalFx.expense, type: 'deduct' }] : []),
+      ...(rentalFx.carCosts ? [{ label: 'تكاليف سيارات التأجير (صيانة / أقساط / تأمين)', value: rentalFx.carCosts, type: 'deduct' }] : []),
       { label: 'المصروفات', value: totalExpenses, type: 'deduct' },
       { label: 'الرواتب', value: totalSalaries, type: 'deduct' },
       ...(Math.abs(realizedFx) >= 0.005 ? [{ label: 'فروق العملة المحققة (ربح + / خسارة −)', value: realizedFx, type: 'normal' }] : []),
@@ -60024,6 +60033,33 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
     });
   }
 
+  // ---------- ربط قائمة الدخل في النظام ----------
+  window.rentalIncomeForStatement = async function (fromDate, toDate, branchId) {
+    const zero = { revenue: 0, expense: 0, carCosts: 0 };
+    const f = `${fromDate}T00:00:00`, t = `${toDate}T23:59:59`, sc = (q) => applyBranchScope(q, branchId, 'branch_id');
+    const [p, e, m, c, i] = await Promise.all([
+      sc(supabaseClient.from('rental_payments').select('amount').eq('kind', 'rent').gte('paid_at', f).lte('paid_at', t)),
+      sc(supabaseClient.from('rental_cash_entries').select('direction, amount').gte('created_at', f).lte('created_at', t)),
+      sc(supabaseClient.from('rental_maintenance').select('cost').gte('done_at', fromDate).lte('done_at', toDate)),
+      sc(supabaseClient.from('rental_contracts').select('deducted_from_deposit').eq('status', 'closed').gte('returned_at', f).lte('returned_at', t)),
+      sc(supabaseClient.from('rental_incidents').select('amount').eq('settle_mode', 'deposit').gte('settled_at', f).lte('settled_at', t))
+    ]);
+    if (p.error || e.error || m.error || c.error || i.error) { console.error(p.error || e.error || m.error || c.error || i.error); return zero; }
+    const sum = (rows, k) => (rows || []).reduce((x, r) => x + N(r[k]), 0);
+    const inc = (e.data || []).filter(x => x.direction === 'in'), out = (e.data || []).filter(x => x.direction === 'out');
+    return { revenue: sum(p.data, 'amount') + sum(inc, 'amount') + sum(c.data, 'deducted_from_deposit') + sum(i.data, 'amount'), expense: sum(out, 'amount'), carCosts: sum(m.data, 'cost') };
+  };
+
+  // ---------- زر "تأجير سريع" في شاشة الكاشير (لنشاط التأجير فقط) ----------
+  window.rentalPosButtonRefresh = function () {
+    const b = $id('rentalQuickBtn'); if (!b) return; let on = false;
+    try {
+      const bt = getCurrentBranchBusinessType(), es = bt && bt.settings && bt.settings.enabled_sections;
+      on = Array.isArray(es) && es.includes('rental-contracts') && hasBoScreenPermission('rental-contracts') && hasBoActionPermission('rental-contracts', 'add');
+    } catch (e) { on = false; }
+    b.style.display = on ? 'flex' : 'none';
+  };
+
   // ---------- ربط الأحداث ----------
   function bind() {
     bind2(); bind3(); bind4(); bind5();
@@ -60032,6 +60068,7 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
     on('addRentalCustomerBtn', 'click', () => customerModal(null));
     on('addRentalContractBtn', 'click', () => contractForm(null));
     on('rentalSettingsBtn', 'click', openSettings);
+    on('rentalQuickBtn', 'click', async () => { await Promise.all([loadSettings(), loadCars(), loadContracts()]); contractForm(null); });
     on('rentalCarSearch', 'input', renderCars); on('rentalCarStatusFilter', 'change', renderCars);
     on('rentalCustomerSearch', 'input', renderCustomers);
     on('rentalContractSearch', 'input', renderContracts); on('rentalContractStatusFilter', 'change', renderContracts);
@@ -60064,7 +60101,7 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
     else if (section === 'rental-alerts') { await Promise.all([loadCars(), loadContracts(), loadRentalCustomers(), loadSettings(), loadReservations(), loadInstallments()]); renderAlerts(); }
     if (section.startsWith('rental-') && section !== 'rental-alerts') updateAlertBadge();
   };
-  window.__rental = { loadInstallments, installmentModal, suggestPrice, quoteModal, ruleModal, loadRules, exportExcel, loadReservations, reservationModal, convertReservation, incidentModal, settleIncident, conditionModal, signatureModal, rentalDashRefresh, extendModal, waTemplates, waModal, cashEntryModal, openSettings, renderReports, renderJournal, maintModal, computeAlerts, oilStatus, reloadAll, contractForm, carModal, customerModal, viewContract, closeModal, payModal, printContract, calcClose, S, get cars() { return cars; }, get contracts() { return contracts; } };
+  window.__rental = { rentalPosButtonRefresh: window.rentalPosButtonRefresh, loadInstallments, installmentModal, suggestPrice, quoteModal, ruleModal, loadRules, exportExcel, loadReservations, reservationModal, convertReservation, incidentModal, settleIncident, conditionModal, signatureModal, rentalDashRefresh, extendModal, waTemplates, waModal, cashEntryModal, openSettings, renderReports, renderJournal, maintModal, computeAlerts, oilStatus, reloadAll, contractForm, carModal, customerModal, viewContract, closeModal, payModal, printContract, calcClose, S, get cars() { return cars; }, get contracts() { return contracts; } };
   bind();
 })();
 
