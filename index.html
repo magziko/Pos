@@ -3168,7 +3168,7 @@ a { color: inherit; }
         </div>
 
         <div id="bo-section-rental-alerts" style="display:none;">
-          <div class="bo-section-header"><div class="bo-section-title">تنبيهات معرض التأجير</div><select id="rentalAlertsFilter" style="max-width:200px"><option value="">كل التنبيهات</option><option value="docs">الرخص والتأمين (سيارات وعملاء)</option><option value="oil">غيار الزيت</option><option value="contracts">العقود</option></select></div>
+          <div class="bo-section-header"><div class="bo-section-title">تنبيهات معرض التأجير</div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="bo-icon-btn" id="rentalRemindersBtn" type="button">📲 مركز التذكيرات</button><select id="rentalAlertsFilter" style="max-width:200px"><option value="">كل التنبيهات</option><option value="docs">الرخص والتأمين (سيارات وعملاء)</option><option value="oil">غيار الزيت</option><option value="contracts">العقود</option></select></div></div>
           <div id="rentalAlertsList"><div class="bo-empty">جاري التحميل...</div></div>
         </div>
 
@@ -3216,6 +3216,7 @@ a { color: inherit; }
               <button class="bo-icon-btn" id="rentalRepPrint" type="button">طباعة</button>
               <button class="bo-icon-btn" id="rentalRepExcelCur" type="button">تصدير هذا التقرير</button>
               <button class="bo-icon-btn" id="rentalRepExcel" type="button">تصدير كل البيانات</button>
+              <button class="bo-icon-btn" id="rentalRepBackup" type="button">نسخة احتياطية (JSON)</button>
             </div>
           </div>
           <div id="rentalRepHub"></div>
@@ -53682,12 +53683,12 @@ async function refreshIncomeStatement() {
     const realizedFx = await computeImportFxRealized(fromDate, toDate, branchId);
 
     // إيرادات/مصروفات نشاط تأجير السيارات (لو متاحة) — بتتحسب في موديول التأجير
-    let rentalFx = { revenue: 0, expense: 0, carCosts: 0 };
+    let rentalFx = { revenue: 0, expense: 0, carCosts: 0, carSaleGain: 0 };
     try { if (typeof window.rentalIncomeForStatement === 'function') rentalFx = await window.rentalIncomeForStatement(fromDate, toDate, branchId); } catch (e) { console.error(e); }
 
     const netSales = totalSales - totalReturns;
     const grossProfit = netSales - netCOGS;
-    const netProfit = grossProfit + rentalFx.revenue - rentalFx.expense - rentalFx.carCosts - totalExpenses - totalSalaries + realizedFx;
+    const netProfit = grossProfit + rentalFx.revenue - rentalFx.expense - rentalFx.carCosts + (rentalFx.carSaleGain || 0) - totalExpenses - totalSalaries + realizedFx;
 
     const rows = [
       { label: 'إجمالي المبيعات', value: totalSales, type: 'normal' },
@@ -53698,6 +53699,7 @@ async function refreshIncomeStatement() {
       ...(rentalFx.revenue ? [{ label: 'إيرادات التأجير (إيجار محصّل + تأمين مخصوم + إيرادات أخرى)', value: rentalFx.revenue, type: 'normal' }] : []),
       ...(rentalFx.expense ? [{ label: 'مصروفات التأجير (من يومية الخزينة)', value: rentalFx.expense, type: 'deduct' }] : []),
       ...(rentalFx.carCosts ? [{ label: 'تكاليف سيارات التأجير (صيانة / أقساط / تأمين)', value: rentalFx.carCosts, type: 'deduct' }] : []),
+      ...(rentalFx.carSaleGain ? [{ label: rentalFx.carSaleGain >= 0 ? 'ربح بيع سيارات التأجير' : 'خسارة بيع سيارات التأجير', value: Math.abs(rentalFx.carSaleGain), type: rentalFx.carSaleGain >= 0 ? 'normal' : 'deduct' }] : []),
       { label: 'المصروفات', value: totalExpenses, type: 'deduct' },
       { label: 'الرواتب', value: totalSalaries, type: 'deduct' },
       ...(Math.abs(realizedFx) >= 0.005 ? [{ label: 'فروق العملة المحققة (ربح + / خسارة −)', value: realizedFx, type: 'normal' }] : []),
@@ -58640,7 +58642,7 @@ document.addEventListener('DOMContentLoaded', () => {
 المستأجر مسئول عن رخصة السيارة وعن أي تلفيات بها، ويتحمل قيمة استخراج بدل فاقد في حالة فقدها.
 إذا قام المستأجر برد السيارة قبل موعد انتهاء العقد فلا يجوز له المطالبة بقيمة المدة المتبقية.
 أقر المستأجر بأنه اطلع على جميع شروط العقد وجميع الشروط المدونة به ويتحمل كافة الشروط دون جهالة قاطعة للقانون.`;
-  const DEF_SET = { km_per_day: 250, extra_km_fee: 2, grace_hours: 2, alert_days: 30, oil_warn_km: 500, default_oil_km: 5000, default_oil_days: 180, terms: null, logo_url: null, shop_name: null };
+  const DEF_SET = { km_per_day: 250, extra_km_fee: 2, grace_hours: 2, alert_days: 30, oil_warn_km: 500, default_oil_km: 5000, default_oil_days: 180, terms: null, logo_url: null, shop_name: null, vat_rate: 0, tax_no: null };
   const METHODS = ['نقدي', 'تحويل بنكي', 'فيزا', 'إنستاباي / محفظة'];
   const FUEL_LEVELS = ['فارغ', '¼', '½', '¾', 'ممتلئ'];
 
@@ -58710,6 +58712,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ${fld('تنبيه الزيت قبل الموعد بـ (كم)', inp('oil_warn_km', st.oil_warn_km, 'number'))}
       ${fld('غيار الزيت الافتراضي كل (كم)', inp('default_oil_km', st.default_oil_km, 'number'))}
       ${fld('أو كل (يوم)', inp('default_oil_days', st.default_oil_days, 'number'))}
+      ${fld('نسبة ضريبة القيمة المضافة % (0 = معطّلة — الأسعار تُعتبر شاملة الضريبة)', inp('vat_rate', st.vat_rate || 0, 'number', 'min="0" max="100" step="any"'))}${fld('الرقم الضريبي للمعرض', inp('tax_no', st.tax_no || ''))}
       ${fld('شروط العقد (بند في كل سطر — يمكن استخدام {kmPerDay} {extraKmFee} {carValue})', `<textarea name="terms" rows="11" style="width:100%">${E(st.terms || DEFAULT_TERMS)}</textarea>`, true)}`, {
       big: true,
       init: (ov) => {
@@ -58723,10 +58726,10 @@ document.addEventListener('DOMContentLoaded', () => {
           img.onload = () => { const k = Math.min(1, 360 / img.width, 140 / img.height), cv = document.createElement('canvas'); cv.width = Math.max(1, Math.round(img.width * k)); cv.height = Math.max(1, Math.round(img.height * k)); cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height); ov.g('logo_url').value = cv.toDataURL('image/png'); URL.revokeObjectURL(url); prev(); };
           img.onerror = () => ov.fail('تعذر قراءة الصورة'); img.src = url;
         };
-        s.onchange = () => { const x = S(s.value); ov.g('shop_name').value = x.shop_name || ''; ov.g('logo_url').value = x.logo_url || ''; prev(); ['km_per_day', 'extra_km_fee', 'grace_hours', 'alert_days', 'oil_warn_km', 'default_oil_km', 'default_oil_days'].forEach(k => { ov.g(k).value = x[k]; }); ov.g('terms').value = x.terms || DEFAULT_TERMS; };
+        s.onchange = () => { const x = S(s.value); ov.g('shop_name').value = x.shop_name || ''; ov.g('logo_url').value = x.logo_url || ''; prev(); ['km_per_day', 'extra_km_fee', 'grace_hours', 'alert_days', 'oil_warn_km', 'default_oil_km', 'default_oil_days'].forEach(k => { ov.g(k).value = x[k]; }); ov.g('vat_rate').value = x.vat_rate || 0; ov.g('tax_no').value = x.tax_no || ''; ov.g('terms').value = x.terms || DEFAULT_TERMS; };
       },
       onSubmit: async (ov, f) => {
-        const row = { branch_id: f.branch_id, km_per_day: N(f.km_per_day), extra_km_fee: N(f.extra_km_fee), grace_hours: N(f.grace_hours), alert_days: N(f.alert_days), oil_warn_km: N(f.oil_warn_km), default_oil_km: N(f.default_oil_km), default_oil_days: N(f.default_oil_days), terms: f.terms || null, shop_name: f.shop_name || null, logo_url: f.logo_url || null, updated_at: new Date().toISOString() };
+        const row = { branch_id: f.branch_id, km_per_day: N(f.km_per_day), extra_km_fee: N(f.extra_km_fee), grace_hours: N(f.grace_hours), alert_days: N(f.alert_days), oil_warn_km: N(f.oil_warn_km), default_oil_km: N(f.default_oil_km), default_oil_days: N(f.default_oil_days), vat_rate: Math.min(100, Math.max(0, N(f.vat_rate))), tax_no: (f.tax_no || '').trim() || null, terms: f.terms || null, shop_name: f.shop_name || null, logo_url: f.logo_url || null, updated_at: new Date().toISOString() };
         const { error } = await supabaseClient.from('rental_settings').upsert(row);
         if (error) throw error;
         settingsRows[row.branch_id] = row; ov.close(); showToast('تم حفظ الإعدادات');
@@ -58772,6 +58775,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const totalOf = (c) => c.status === 'closed' ? N(c.total_amount) : c.days * (N(c.daily_price) + N(c.driver_daily_fee)) - N(c.discount) + N(c.extra_charges);
   const paidOf = (c) => N(c.paid_amount) + N(c.deducted_from_deposit);
   const remOf = (c) => totalOf(c) - paidOf(c);
+  const commissionOf = (c) => !c.agent_name ? 0 : c.commission_mode === 'percent' ? Math.round(totalOf(c) * N(c.commission_value)) / 100 : N(c.commission_value);
+  const vatRate = (c) => N(S(c.branch_id).vat_rate);
+  const vatOf = (c) => { const r = vatRate(c); return r > 0 ? Math.round(totalOf(c) * r / (100 + r) * 100) / 100 : 0; };
   const heldOf = (c) => N(c.deposit_amount) - N(c.deducted_from_deposit) - N(c.deposit_refunded) - N(c.fines_deducted);
   function calcClose(c, retAt, kmIn, other, st) {
     const ad = Math.max(1, Math.ceil(((new Date(retAt) - new Date(c.out_at)) / 36e5 - st.grace_hours) / 24 - 1e-6));
@@ -58799,6 +58805,44 @@ document.addEventListener('DOMContentLoaded', () => {
   function waPhone(p) { p = String(p || '').replace(/\D/g, ''); if (/^0\d/.test(p)) p = '20' + p.slice(1); return p; }
   const rpc = async (fn, args) => { const { data, error } = await supabaseClient.rpc(fn, args); if (error) throw error; return data; };
 
+  // ==================== بيع سيارة ====================
+  async function carLifetime(car) {
+    const { data, error } = await supabaseClient.from('rental_maintenance').select('cost').eq('car_id', car.id).limit(50000); if (error) throw error;
+    const costs = (data || []).reduce((x, r) => x + N(r.cost), 0);
+    const rev = contracts.filter(c => c.car_id === car.id && c.status !== 'cancelled').reduce((x, c) => x + totalOf(c), 0);
+    return { rev, costs };
+  }
+  async function sellModal(car) {
+    if (!loaded.contracts) await loadContracts();
+    if (openOf(car.id)) { showToast('لا يمكن بيع سيارة عليها عقد مفتوح — أغلق العقد أولاً', true); return; }
+    const [lt, treas] = await Promise.all([carLifetime(car), treasuryOptions(car.branch_id)]);
+    const pp = car.purchase_price == null ? null : N(car.purchase_price);
+    const ov = modal('بيع سيارة — ' + carName(car), `
+      ${fld('تاريخ البيع', inp('sold_at', dateStr(new Date()), 'date', 'required'))}${fld('سعر البيع', inp('sold_price', '', 'number', 'min="0" step="any" required'))}
+      ${fld('المشتري', inp('sold_to', ''))}${fld('الخزينة المستلمة للمبلغ', sel('cash_account_id', [['', '— بدون إدخال للخزينة —']].concat(treas), treas[0] ? treas[0][0] : ''))}
+      ${fld('ملاحظات', inp('note', ''), true)}
+      <div class="field field-full" data-prev style="background:var(--surface-sunken);border-radius:8px;padding:10px 12px;font-size:13px"></div>
+      <div class="field field-full" style="font-size:12px;color:var(--ink-soft)">بعد البيع تُخرج السيارة من الأسطول (لا تظهر في العقود والتنبيهات) ويبقى سجلها وتقاريرها. يمكن التراجع عن البيع لاحقاً.</div>`, {
+      onSubmit: async (o, f) => {
+        if (f.sold_price === '' || N(f.sold_price) < 0) throw new Error('أدخل سعر البيع');
+        if (!confirm(`تأكيد بيع ${carName(car)} بمبلغ ${F(f.sold_price)} جنيه؟`)) return;
+        await rpc('rental_sell_car', { p_car_id: car.id, p_price: N(f.sold_price), p_date: f.sold_at, p_buyer: f.sold_to || null, p_cash_account_id: f.cash_account_id || null, p_note: f.note || null }).catch(e => { throw new Error(dbMsg(e)); });
+        o.close(); showToast('تم تسجيل البيع'); await loadCars(); renderCars();
+      }
+    });
+    const prev = () => {
+      const sp = N(ov.g('sold_price').value), gain = pp == null ? null : sp - pp, net = lt.rev - lt.costs;
+      ov.q('[data-prev]').innerHTML = `إيراد التأجير طوال المدة: <b class="num">${F(lt.rev)}</b> • التكاليف: <b class="num">${F(lt.costs)}</b> • صافي التشغيل: <b class="num">${F(net)}</b><br>` +
+        (pp == null ? '<span style="color:#b45309">سعر الشراء غير مسجل في بيانات السيارة — لا يمكن حساب الربح الكلي (عدّل السيارة وأضفه).</span>' :
+          `سعر الشراء: <b class="num">${F(pp)}</b> • ${gain >= 0 ? 'ربح' : 'خسارة'} البيع: <b class="num" style="color:${gain >= 0 ? '#0f766e' : '#b91c1c'}">${F(gain)}</b><br>إجمالي ربح السيارة (تشغيل + بيع): <b class="num" style="color:${net + gain >= 0 ? '#0f766e' : '#b91c1c'}">${F(net + gain)}</b>`);
+    };
+    ov.g('sold_price').addEventListener('input', prev); prev();
+  }
+  async function unsellCar(car) {
+    if (!confirm(`التراجع عن بيع ${carName(car)}؟ سيُخصم مبلغ البيع من الخزينة التي استلمته وتعود السيارة متاحة.`)) return;
+    try { await rpc('rental_unsell_car', { p_car_id: car.id }); showToast('تم التراجع عن البيع'); await loadCars(); renderCars(); } catch (e) { showToast(dbMsg(e), true); }
+  }
+
   // ==================== السيارات ====================
   function renderCars() {
     const tb = $id('rentalCarsTableBody'); if (!tb) return;
@@ -58813,7 +58857,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <td>${expBadge(c.license_expiry, s)}</td><td>${expBadge(c.insurance_expiry, s)}</td>
         <td>${o ? `<span class="bo-badge ${o.left <= 0 ? 'inactive' : o.left <= o.warn ? 'pending' : 'neutral'}">${F(o.next)} كم</span>` : '—'}</td>
         <td><span class="bo-badge ${CAR_ST[st][1]}">${CAR_ST[st][0]}</span></td>
-        <td><div class="bo-row-actions"><button class="bo-icon-btn" data-ra="file">السجل</button><button class="bo-icon-btn" data-action="edit" data-ra="edit">تعديل</button><button class="bo-icon-btn danger" data-action="delete" data-ra="delete">حذف</button></div></td></tr>`;
+        <td><div class="bo-row-actions"><button class="bo-icon-btn" data-ra="file">السجل</button>${c.status === 'sold' ? (c.sold_at ? '<button class="bo-icon-btn" data-action="edit" data-ra="unsell">تراجع عن البيع</button>' : '') : '<button class="bo-icon-btn" data-action="edit" data-ra="sell">بيع</button>'}<button class="bo-icon-btn" data-action="edit" data-ra="edit">تعديل</button><button class="bo-icon-btn danger" data-action="delete" data-ra="delete">حذف</button></div></td></tr>`;
     }).join('');
     tb.querySelectorAll('tr[data-id]').forEach(tr => applyRowActionPerm(tr, 'rental-cars'));
   }
@@ -58821,7 +58865,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const c = car || { brand: '', model: '', year: new Date().getFullYear(), color: '', plate: '', chassis: '', motor: '', transmission: 'automatic', fuel: 'بنزين 92', seats: 5, category: 'اقتصادية', daily_price: '', car_value: '', odometer: 0, status: 'available', license_expiry: '', insurance_expiry: '', inspection_expiry: '', last_oil_km: '', last_oil_date: '', oil_interval_km: '', oil_interval_days: '', image_url: '', notes: '' };
     const st = S(c.branch_id);
     modal(car ? 'تعديل سيارة' : 'سيارة جديدة', `
-      ${fld('الفرع', `<select name="branch_id" required></select>`)}${fld('الحالة', sel('status', [['available', 'متاحة'], ['maintenance', 'في الصيانة'], ['sold', 'مباعة / خارج الخدمة']], c.status))}
+      ${fld('الفرع', `<select name="branch_id" required></select>`)}${fld('الحالة', sel('status', [['available', 'متاحة'], ['maintenance', 'في الصيانة'], ['sold', 'خارج الخدمة (للبيع استخدم زر «بيع»)']], c.status))}
       ${fld('الماركة', `<input name="brand" list="rentalDlBrands" value="${E(c.brand)}" autocomplete="off" required><datalist id="rentalDlBrands">${Object.keys(BRANDS).map(b => `<option>${E(b)}</option>`).join('')}</datalist>`)}
       ${fld('الموديل', `<input name="model" list="rentalDlModels" value="${E(c.model)}" autocomplete="off" required><datalist id="rentalDlModels"></datalist>`)}
       ${fld('سنة الصنع', inp('year', c.year, 'number'))}${fld('اللون', inp('color', c.color))}
@@ -58831,6 +58875,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ${fld('الفئة', sel('category', ['اقتصادية', 'عائلية', 'فاخرة', 'دفع رباعي', 'ميني باص', 'أخرى'], c.category))}${fld('رابط الصورة (اختياري)', inp('image_url', c.image_url, 'text', 'style="direction:ltr;text-align:right"'))}
       ${fld('سعر الإيجار اليومي', inp('daily_price', c.daily_price, 'number', 'min="0" step="any" required'))}${fld('قراءة العداد الحالية (كم)', inp('odometer', c.odometer, 'number', 'min="0"'))}
       ${fld('قيمة السيارة التقديرية (تظهر في بند الفقد بالعقد)', inp('car_value', c.car_value ?? '', 'number', 'step="any"'))}<div></div>
+      ${fld('سعر الشراء (لحساب الربح عند البيع)', inp('purchase_price', c.purchase_price ?? '', 'number', 'step="any" min="0"'))}${fld('تاريخ الشراء', inp('purchase_date', c.purchase_date || '', 'date'))}
       ${fld('انتهاء رخصة السيارة', inp('license_expiry', c.license_expiry || '', 'date'))}${fld('انتهاء التأمين', inp('insurance_expiry', c.insurance_expiry || '', 'date'))}
       ${fld('انتهاء الفحص الفني (اختياري)', inp('inspection_expiry', c.inspection_expiry || '', 'date'))}<div></div>
       ${fld('عداد آخر تغيير زيت (كم)', inp('last_oil_km', c.last_oil_km ?? '', 'number'))}${fld('تاريخ آخر تغيير زيت', inp('last_oil_date', c.last_oil_date || '', 'date'))}
@@ -58844,7 +58889,7 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       onSubmit: async (ov, f) => {
         const nz = (v) => v === '' ? null : N(v);
-        const payload = { branch_id: f.branch_id, status: f.status, brand: f.brand, model: f.model, year: nz(f.year), color: f.color || null, plate: f.plate, chassis: f.chassis || null, motor: f.motor || null, transmission: f.transmission, fuel: f.fuel, seats: nz(f.seats), category: f.category, image_url: f.image_url || null, daily_price: N(f.daily_price), odometer: N(f.odometer), car_value: nz(f.car_value), license_expiry: f.license_expiry || null, insurance_expiry: f.insurance_expiry || null, inspection_expiry: f.inspection_expiry || null, last_oil_km: nz(f.last_oil_km), last_oil_date: f.last_oil_date || null, oil_interval_km: nz(f.oil_interval_km), oil_interval_days: nz(f.oil_interval_days), notes: f.notes || null };
+        const payload = { branch_id: f.branch_id, status: f.status, brand: f.brand, model: f.model, year: nz(f.year), color: f.color || null, plate: f.plate, chassis: f.chassis || null, motor: f.motor || null, transmission: f.transmission, fuel: f.fuel, seats: nz(f.seats), category: f.category, image_url: f.image_url || null, daily_price: N(f.daily_price), odometer: N(f.odometer), car_value: nz(f.car_value), purchase_price: nz(f.purchase_price), purchase_date: f.purchase_date || null, license_expiry: f.license_expiry || null, insurance_expiry: f.insurance_expiry || null, inspection_expiry: f.inspection_expiry || null, last_oil_km: nz(f.last_oil_km), last_oil_date: f.last_oil_date || null, oil_interval_km: nz(f.oil_interval_km), oil_interval_days: nz(f.oil_interval_days), notes: f.notes || null };
         if (!payload.brand || !payload.model || !payload.plate) throw new Error('الماركة والموديل واللوحة مطلوبة');
         const q = car ? supabaseClient.from('rental_cars').update(payload).eq('id', car.id) : supabaseClient.from('rental_cars').insert(payload);
         const { error } = await q;
@@ -59013,6 +59058,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ${c0 ? '' : `${fld('مبلغ التأمين المستلم (يُسترد)', inp('deposit', 0, 'number', 'min="0" step="any"'))}${fld('مدفوع من الإيجار الآن', inp('paid_now', pre ? N(pre.deposit_hint) : 0, 'number', 'min="0" step="any"'))}
         ${fld('الخزينة', sel('cash_account_id', treas.length ? treas : [['', '— لا توجد خزينة —']], treas[0]?.[0]))}${fld('طريقة الدفع', sel('method', METHODS))}`}
       ${fld('السائق', sel('with_driver', [['0', 'بدون سائق'], ['1', 'مع سائق']], v.driver_name || N(v.driver_daily_fee) ? '1' : '0'))}<div data-drv style="display:contents">${fld('اسم السائق', inp('driver_name', v.driver_name || ''))}${fld('هاتف السائق', inp('driver_phone', v.driver_phone || ''))}${fld('رخصة السائق', inp('driver_license', v.driver_license || ''))}${fld('أجر السائق باليوم', inp('driver_daily_fee', v.driver_daily_fee || 0, 'number', 'min="0" step="any"'))}</div>
+      ${v.commission_paid_at ? `<div class="field field-full" style="font-size:12.5px;color:var(--ink-soft)">🤝 الوسيط: <b>${E(v.agent_name || '')}</b> — العمولة مصروفة (${F(v.commission_paid_amount)}) ولا يمكن تعديلها.</div>` : `${fld('الوسيط / السمسار (اختياري)', inp('agent_name', v.agent_name || ''))}${fld('هاتف الوسيط', inp('agent_phone', v.agent_phone || '', 'tel', 'style="direction:ltr;text-align:right"'))}${fld('نوع العمولة', sel('commission_mode', [['fixed', 'مبلغ ثابت'], ['percent', 'نسبة % من إجمالي العقد']], v.commission_mode || 'fixed'))}${fld('قيمة العمولة', inp('commission_value', v.commission_value ?? '', 'number', 'min="0" step="any"'))}`}
       ${c0 ? '' : `${fld('تقسيط الإيجار — عدد الأقساط (0 = بدون)', inp('inst_n', 0, 'number', 'min="0" max="36"'))}${fld('تاريخ أول قسط', inp('inst_first', dateStr(new Date(Date.now() + 30 * 864e5)), 'date'))}${fld('كل (يوم)', inp('inst_every', 30, 'number', 'min="1"'))}`}
       ${fld('ملاحظات (حالة السيارة، خدوش…)', `<textarea name="notes" rows="2" style="width:100%">${E(v.notes || '')}</textarea>`, true)}
       <div class="field field-full"><div data-prev style="display:flex;gap:18px;flex-wrap:wrap;background:var(--surface-sunken);border-radius:8px;padding:10px 12px;font-size:13px"></div></div>`, {
@@ -59066,6 +59112,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (instN > 0 && (!f.inst_first || N(f.inst_every) < 1)) throw new Error('حدد تاريخ أول قسط والفاصل بالأيام');
         if (instN > 0 && total - paidNow <= 0) throw new Error('لا يوجد مبلغ متبقٍ للتقسيط');
         const base = { driver_name: drv ? (f.driver_name || null) : null, driver_phone: drv ? (f.driver_phone || null) : null, driver_license: drv ? (f.driver_license || null) : null, driver_daily_fee: drvFee, customer_id: f.customer_id, car_id: f.car_id, out_at: new Date(f.out_at).toISOString(), due_at: new Date(f.due_at).toISOString(), place: f.place || null, daily_price: N(f.daily_price), days, discount: N(f.discount), extra_charges: N(f.extra_charges), km_out: N(f.km_out), km_per_day: N(f.km_per_day), extra_km_fee: N(f.extra_km_fee), fuel_out: f.fuel_out, witness: f.witness || null, notes: f.notes || null };
+        if (!(c0 && c0.commission_paid_at)) { const an = (f.agent_name || '').trim(); Object.assign(base, an ? { agent_name: an, agent_phone: f.agent_phone || null, commission_mode: f.commission_mode || 'fixed', commission_value: N(f.commission_value) } : { agent_name: null, agent_phone: null, commission_mode: null, commission_value: null }); }
         if (c0) {
           const { error } = await supabaseClient.from('rental_contracts').update(Object.assign({}, base, { branch_id: car.branch_id })).eq('id', c0.id);
           if (error) throw new Error(dbMsg(error));
@@ -59102,6 +59149,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const byIdCar = (id) => cars.find(x => x.id === id);
   const byIdContract = (id) => contracts.find(x => x.id === id);
 
+  async function commissionModal(id) {
+    const c = byIdContract(id); if (!c) return;
+    const treas = await treasuryOptions(c.branch_id), amt = commissionOf(c);
+    if (c.status === 'open' && !confirm('العقد لا يزال مفتوحاً وإجمالي العقد قد يتغير عند الإغلاق. هل تريد صرف العمولة الآن؟')) return viewContract(id);
+    modal(`صرف عمولة — عقد ${c.contract_no}`, `
+      <div class="field field-full" style="font-size:13px">الوسيط: <b>${E(c.agent_name)}</b> ${E(c.agent_phone || '')}</div>
+      ${fld('الخزينة', sel('cash_account_id', treas, treas[0] ? treas[0][0] : ''))}${fld('المبلغ', inp('amount', amt, 'number', 'min="0" step="any" required'))}
+      <div class="field field-full" style="font-size:12px;color:var(--ink-soft)">يُسجَّل مصروف في يومية الخزينة بند «عمولة وسيط» ويدخل في مصروفات التأجير.</div>`, {
+      onSubmit: async (o, f) => {
+        if (N(f.amount) <= 0) throw new Error('أدخل المبلغ');
+        await rpc('rental_pay_commission', { p_contract_id: id, p_cash_account_id: f.cash_account_id, p_amount: N(f.amount) }).catch(e => { throw new Error(dbMsg(e)); });
+        o.close(); showToast('تم صرف العمولة'); await loadContracts(); renderContracts && renderContracts(); viewContract(id);
+      }
+    });
+  }
   async function viewContract(id) {
     const c = byIdContract(id); if (!c) return;
     const { data: pays } = await supabaseClient.from('rental_payments').select('*, cash_accounts(name)').eq('contract_id', id).order('paid_at');
@@ -59118,6 +59180,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div><span style="color:var(--ink-soft)">أيام / سعر اليوم</span><br><span class="num">${c.billed_days || c.days} × ${F(c.daily_price)}</span></div>
         <div><span style="color:var(--ink-soft)">العداد (خروج ← عودة)</span><br><span class="num">${F(c.km_out)} ← ${c.km_in != null ? F(c.km_in) : '—'}</span></div></div>
         ${c.driver_name || N(c.driver_daily_fee) ? `<div style="margin-top:8px;font-size:12.5px">🧑‍✈️ السائق: <b>${E(c.driver_name || '—')}</b> ${E(c.driver_phone || '')} — أجر ${F(c.driver_daily_fee)}/يوم</div>` : ''}
+        ${c.agent_name ? `<div style="margin-top:8px;font-size:12.5px">🤝 الوسيط: <b>${E(c.agent_name)}</b> ${E(c.agent_phone || '')} — عمولة ${c.commission_mode === 'percent' ? N(c.commission_value) + '% = ' : ''}<b class="num">${F(c.commission_paid_at ? c.commission_paid_amount : commissionOf(c))}</b> ${c.commission_paid_at ? '<span class="bo-badge active">مصروفة ' + fdOnly(dateStr(new Date(c.commission_paid_at))) + '</span>' : c.status === 'closed' ? '<span class="bo-badge pending">مستحقة</span>' : '<span class="bo-badge neutral">بعد إغلاق العقد</span>'} ${!c.commission_paid_at && c.status !== 'cancelled' ? '<button type="button" class="bo-icon-btn" data-comm>صرف العمولة</button>' : ''}</div>` : ''}
         ${N(c.fines_deducted) ? `<div style="margin-top:8px;font-size:12.5px;color:#b45309">مخالفات/تلفيات خُصمت من التأمين: <b class="num">${F(c.fines_deducted)}</b></div>` : ''}
         <div style="margin-top:8px;font-size:12px;color:var(--ink-soft)">أنشأه: <b>${E(staffName(c.created_by))}</b>${c.status === 'closed' ? ` • أغلقه: <b>${E(staffName(c.closed_by))}</b>` : ''}</div>
         ${c.status === 'closed' && (N(c.km_charge) || N(c.other_charge)) ? `<div style="margin-top:8px;font-size:12.5px;color:var(--ink-soft)">رسوم عند الاستلام: كيلومترات زائدة ${F(c.km_charge)} • أخرى ${F(c.other_charge)} ${E(c.other_note || '')}</div>` : ''}</div>
@@ -59140,6 +59203,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ov.q('[data-sig]').onclick = () => { ov.close(); signatureModal(id); };
         const ex = ov.q('[data-ext]'); if (ex) ex.onclick = () => { ov.close(); extendModal(id); };
         const p = ov.q('[data-pay]'); if (p) p.onclick = () => { ov.close(); payModal(id); };
+        const cm = ov.q('[data-comm]'); if (cm) cm.onclick = () => { ov.close(); commissionModal(id); };
         const e = ov.q('[data-ed]'); if (e) e.onclick = () => { ov.close(); contractForm(c); };
         const en = ov.q('[data-end]'); if (en) en.onclick = () => { ov.close(); closeModal(id); };
         const d = ov.q('[data-del]'); if (d) d.onclick = async () => {
@@ -59238,6 +59302,7 @@ document.addEventListener('DOMContentLoaded', () => {
 ${c.driver_name || N(c.driver_daily_fee) ? `<tr><td class="k">السائق</td><td>${E(c.driver_name || '—')} ${c.driver_phone ? '— ' + E(c.driver_phone) : ''}</td><td class="k">رخصة السائق</td><td>${E(c.driver_license || '—')}</td></tr>` : ''}
 <tr><td class="k">الإجمالي</td><td><b>${F(totalOf(c))}</b> جنيه</td><td class="k">التأمين المدفوع</td><td>${N(c.deposit_amount) ? F(c.deposit_amount) + ' جنيه' : '—'}</td></tr>
 <tr><td class="k">المدفوع</td><td><b>${F(paidOf(c))}</b> جنيه</td><td class="k">المتبقي</td><td><b>${F(remOf(c))}</b> جنيه</td></tr>
+${vatRate(c) > 0 ? `<tr><td class="k">الصافي قبل الضريبة</td><td>${F(totalOf(c) - vatOf(c))} جنيه</td><td class="k">ضريبة القيمة المضافة (${vatRate(c)}%)</td><td>${F(vatOf(c))} جنيه (الإجمالي شامل الضريبة)</td></tr>${st.tax_no ? `<tr><td class="k">الرقم الضريبي</td><td colspan="3">${E(st.tax_no)}</td></tr>` : ''}` : ''}
 ${c.notes ? `<tr><td class="k">حالة السيارة</td><td colspan="3">${E(c.notes)}</td></tr>` : ''}
 </table>
 <h2>شروط تسليم السيارة للمعرض</h2><ol>${terms.map(t => `<li>${t}</li>`).join('')}</ol>
@@ -59490,7 +59555,7 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
     on('rentalJournalToday', 'click', () => { $id('rentalJournalDate').value = dateStr(new Date()); renderJournal(); });
     on('rentalJournalPrint', 'click', printJournal);
     on('rentalJournalIn', 'click', () => cashEntryModal('in')); on('rentalJournalOut', 'click', () => cashEntryModal('out'));
-    on('rentalAlertsFilter', 'change', renderAlerts);
+    on('rentalAlertsFilter', 'change', renderAlerts); on('rentalRemindersBtn', 'click', remindersCenter); on('rentalRepBackup', 'click', backupAll);
     on('addRentalMaintBtn', 'click', () => maintModal(null, 'service'));
     on('rentalOilSearch', 'input', renderOil);
     $id('rentalOilTableBody').addEventListener('click', (e) => {
@@ -60102,19 +60167,20 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
 
   // ---------- ربط قائمة الدخل في النظام ----------
   window.rentalIncomeForStatement = async function (fromDate, toDate, branchId) {
-    const zero = { revenue: 0, expense: 0, carCosts: 0 };
+    const zero = { revenue: 0, expense: 0, carCosts: 0, carSaleGain: 0 };
     const f = `${fromDate}T00:00:00`, t = `${toDate}T23:59:59`, sc = (q) => applyBranchScope(q, branchId, 'branch_id');
-    const [p, e, m, c, i] = await Promise.all([
+    const [p, e, m, c, i, sv] = await Promise.all([
       sc(supabaseClient.from('rental_payments').select('amount').eq('kind', 'rent').gte('paid_at', f).lte('paid_at', t)),
       sc(supabaseClient.from('rental_cash_entries').select('direction, amount').gte('created_at', f).lte('created_at', t)),
       sc(supabaseClient.from('rental_maintenance').select('cost').gte('done_at', fromDate).lte('done_at', toDate)),
       sc(supabaseClient.from('rental_contracts').select('deducted_from_deposit').eq('status', 'closed').gte('returned_at', f).lte('returned_at', t)),
-      sc(supabaseClient.from('rental_incidents').select('amount').eq('settle_mode', 'deposit').gte('settled_at', f).lte('settled_at', t))
+      sc(supabaseClient.from('rental_incidents').select('amount').eq('settle_mode', 'deposit').gte('settled_at', f).lte('settled_at', t)),
+      sc(supabaseClient.from('rental_cars').select('sold_price, purchase_price').eq('status', 'sold').gte('sold_at', fromDate).lte('sold_at', toDate))
     ]);
     if (p.error || e.error || m.error || c.error || i.error) { console.error(p.error || e.error || m.error || c.error || i.error); return zero; }
     const sum = (rows, k) => (rows || []).reduce((x, r) => x + N(r[k]), 0);
     const inc = (e.data || []).filter(x => x.direction === 'in'), out = (e.data || []).filter(x => x.direction === 'out');
-    return { revenue: sum(p.data, 'amount') + sum(inc, 'amount') + sum(c.data, 'deducted_from_deposit') + sum(i.data, 'amount'), expense: sum(out, 'amount'), carCosts: sum(m.data, 'cost') };
+    return { revenue: sum(p.data, 'amount') + sum(inc, 'amount') + sum(c.data, 'deducted_from_deposit') + sum(i.data, 'amount'), expense: sum(out, 'amount'), carCosts: sum(m.data, 'cost'), carSaleGain: sv.error ? 0 : (sv.data || []).filter(x => x.purchase_price != null).reduce((s, x) => s + N(x.sold_price) - N(x.purchase_price), 0) };
   };
 
   // ---------- زر "تأجير سريع" في شاشة الكاشير (لنشاط التأجير فقط) ----------
@@ -60128,7 +60194,7 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
   };
 
   // ==================== تقارير إضافية ====================
-  const REP_TITLES = { summary: 'ملخص الأداء', trend: 'الإيراد الشهري (آخر 12 شهر)', receivables: 'المستحقات والمتأخرات', customers: 'تقرير العملاء', fleet: 'جدول توفر السيارات والإشغال', expiry: 'الرخص والتأمين المنتهية', costs: 'تكاليف السيارات', incidents: 'المخالفات والحوادث', cash: 'حركة الخزينة اليومية', register: 'سجل العقود', due: 'مواعيد التسليم والمرتجعات', deposits: 'التأمينات المحتجزة', roi: 'عائد السيارات على الاستثمار', reservations: 'تقرير الحجوزات', analysis: 'تحليل الأسعار والفئات', compare: 'مقارنة بالفترة السابقة', staff: 'أداء الموظفين', occupancy: 'الإشغال اليومي', installments: 'الأقساط القادمة', fleetstate: 'حالة الأسطول' };
+  const REP_TITLES = { summary: 'ملخص الأداء', trend: 'الإيراد الشهري (آخر 12 شهر)', receivables: 'المستحقات والمتأخرات', customers: 'تقرير العملاء', fleet: 'جدول توفر السيارات والإشغال', expiry: 'الرخص والتأمين المنتهية', costs: 'تكاليف السيارات', incidents: 'المخالفات والحوادث', cash: 'حركة الخزينة اليومية', register: 'سجل العقود', due: 'مواعيد التسليم والمرتجعات', deposits: 'التأمينات المحتجزة', roi: 'عائد السيارات على الاستثمار', reservations: 'تقرير الحجوزات', analysis: 'تحليل الأسعار والفئات', compare: 'مقارنة بالفترة السابقة', vat: 'ضريبة القيمة المضافة', commissions: 'عمولات الوسطاء', sales: 'السيارات المباعة', staff: 'أداء الموظفين', occupancy: 'الإشغال اليومي', installments: 'الأقساط القادمة', fleetstate: 'حالة الأسطول' };
   const kp = (items) => `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">${items.map(([l, v, c, plain]) => `<div style="flex:1;min-width:150px;border:1px solid var(--border,#e5e7eb);border-radius:10px;padding:10px 14px"><div style="font-size:12px;color:var(--ink-soft)">${l}</div><div class="num" style="font-size:20px;font-weight:700;${c ? 'color:' + c : ''}">${plain ? v : F(v)}</div></div>`).join('')}</div>`;
   const tbl = (heads, rows, empty) => `<div class="bo-table-wrap"><table class="bo-table"><thead><tr>${heads.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.length ? rows.map(r => `<tr>${r.map(c => `<td${typeof c === 'number' ? ' class="num"' : ''}>${typeof c === 'number' ? F(c) : (c == null ? '' : c)}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${heads.length}" class="bo-empty">${empty || 'لا توجد بيانات'}</td></tr>`}</tbody></table></div>`;
   const h3 = (t) => `<h3 style="margin:16px 0 8px">${t}</h3>`;
@@ -60378,12 +60444,46 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
         '<div style="font-size:12px;color:var(--ink-soft);margin-top:8px">يُسجَّل اسم الموظف تلقائياً لكل عقد ودفعة وحركة خزينة. الحركات القديمة قبل التفعيل قد تظهر "غير محدد". العقود المقفلة قبل التفعيل لا يُنسب إغلاقها لأحد.</div>';
     }
   });
+  Object.assign(REPS, {
+    async vat({ a, b }) {
+      const list = contracts.filter(c => c.status !== 'cancelled' && inR(c.out_at, a, b));
+      const on = list.filter(c => vatRate(c) > 0), tot = on.reduce((s, c) => s + totalOf(c), 0), vat = on.reduce((s, c) => s + vatOf(c), 0);
+      if (!on.length) return '<div class="bo-empty">لا توجد عقود خاضعة للضريبة في الفترة. فعّل الضريبة من إعدادات العقود (نسبة الضريبة).</div>';
+      return kp([['إجمالي العقود (شامل الضريبة)', tot], ['الصافي قبل الضريبة', tot - vat], ['الضريبة المستحقة', vat, '#b45309'], ['عدد العقود', on.length, '', true]]) +
+        tbl(['العقد', 'التاريخ', 'العميل', 'الإجمالي', 'الصافي', 'النسبة', 'الضريبة'], on.map(c => [String(c.contract_no), fdOnly(dateStr(new Date(c.out_at))), E(custName(c)), totalOf(c), totalOf(c) - vatOf(c), vatRate(c) + '%', vatOf(c)])) +
+        '<div style="font-size:12px;color:var(--ink-soft);margin-top:8px">الحساب بافتراض أن أسعار العقود شاملة الضريبة (الضريبة = الإجمالي × النسبة ÷ (100 + النسبة)) وعلى أساس إجمالي العقد وليس المحصّل. هذا تقرير مساعد وليس إقراراً ضريبياً — راجع محاسبك. لا يتضمن ضريبة المشتريات.</div>';
+    }
+  });
+  Object.assign(REPS, {
+    async commissions({ a, b }) {
+      const list = contracts.filter(c => c.agent_name && c.status !== 'cancelled' && inR(c.out_at, a, b));
+      const amt = (c) => c.commission_paid_at ? N(c.commission_paid_amount) : commissionOf(c), by = {};
+      list.forEach(c => { const o = (by[c.agent_name] = by[c.agent_name] || { n: 0, v: 0, tot: 0, paid: 0, due: 0 }); o.n++; o.v += totalOf(c); o.tot += amt(c); if (c.commission_paid_at) o.paid += amt(c); else if (c.status === 'closed') o.due += amt(c); });
+      const T = Object.values(by).reduce((s, o) => ({ tot: s.tot + o.tot, paid: s.paid + o.paid, due: s.due + o.due }), { tot: 0, paid: 0, due: 0 });
+      return kp([['إجمالي العمولات', T.tot], ['مصروفة', T.paid, '#0f766e'], ['مستحقة (عقود مغلقة)', T.due, '#b45309'], ['عدد الوسطاء', Object.keys(by).length, '', true]]) +
+        h3('حسب الوسيط') + tbl(['الوسيط', 'عقود', 'قيمة العقود', 'العمولة', 'المصروف', 'المستحق'], Object.entries(by).sort((x, y) => y[1].tot - x[1].tot).map(([k, o]) => [E(k), String(o.n), o.v, o.tot, o.paid, o.due]), 'لا توجد عقود بوسطاء في الفترة') +
+        h3('التفاصيل') + tbl(['العقد', 'الوسيط', 'العميل', 'قيمة العقد', 'العمولة', 'الحالة'], list.map(c => [String(c.contract_no), E(c.agent_name), E(custName(c)), totalOf(c), amt(c), c.commission_paid_at ? 'مصروفة' : c.status === 'closed' ? 'مستحقة' : 'العقد مفتوح']), 'لا توجد');
+    }
+  });
+  Object.assign(REPS, {
+    async sales({ a, b }) {
+      const { data, error } = await supabaseClient.from('rental_cars').select('*').eq('status', 'sold').not('sold_at', 'is', null).gte('sold_at', dateStr(a)).lt('sold_at', dateStr(b)).order('sold_at', { ascending: false }).limit(2000);
+      if (error) throw error;
+      const { data: mm } = await supabaseClient.from('rental_maintenance').select('car_id, cost').limit(50000);
+      const cost = {}; (mm || []).forEach(x => { cost[x.car_id] = (cost[x.car_id] || 0) + N(x.cost); });
+      const rows = (data || []).map(c => { const rev = contracts.filter(k => k.car_id === c.id && k.status !== 'cancelled').reduce((x, k) => x + totalOf(k), 0), net = rev - (cost[c.id] || 0), gain = c.purchase_price == null ? null : N(c.sold_price) - N(c.purchase_price); return { c, rev, net, gain, total: gain == null ? null : net + gain }; });
+      const known = rows.filter(r => r.gain != null);
+      return kp([['عدد السيارات المباعة', rows.length, '', true], ['إجمالي البيع', rows.reduce((s, r) => s + N(r.c.sold_price), 0)], ['ربح/خسارة البيع', known.reduce((s, r) => s + r.gain, 0), '#0f766e'], ['صافي التشغيل', rows.reduce((s, r) => s + r.net, 0)], ['إجمالي الربح', known.reduce((s, r) => s + r.total, 0), '#0f766e']]) +
+        tbl(['السيارة', 'تاريخ البيع', 'المشتري', 'سعر الشراء', 'سعر البيع', 'ربح/خسارة البيع', 'صافي التشغيل', 'إجمالي الربح'], rows.map(r => [E(carName(r.c)), fdOnly(r.c.sold_at), E(r.c.sold_to || ''), r.c.purchase_price == null ? '—' : N(r.c.purchase_price), N(r.c.sold_price), r.gain == null ? '—' : r.gain, r.net, r.total == null ? '—' : r.total]), 'لا توجد سيارات مباعة في الفترة') +
+        '<div style="font-size:12px;color:var(--ink-soft);margin-top:8px">ربح البيع = سعر البيع − سعر الشراء (يُسجَّل في بيانات السيارة). صافي التشغيل = إيراد عقودها − تكاليفها طوال المدة. السيارات بدون سعر شراء لا يُحسب لها ربح.</div>';
+    }
+  });
   const REP_GROUPS = [
     ['نظرة عامة', [['summary', '📊', 'ملخص الأداء', 'العقود والإيراد والإشغال وأداء كل سيارة'], ['compare', '⚖️', 'مقارنة بالفترة السابقة', 'هل تحسّن الإيراد أم تراجع؟'], ['trend', '📈', 'الإيراد الشهري', 'آخر 12 شهراً برسم بياني']]],
-    ['المالية والتحصيل', [['cash', '💰', 'حركة الخزينة اليومية', 'وارد وصادر كل يوم وحسب البند'], ['receivables', '⏳', 'المستحقات والمتأخرات', 'المتبقي على العملاء حسب التأخير'], ['installments', '🗓️', 'الأقساط القادمة', 'المتأخرة والمستحقة خلال 60 يوماً'], ['deposits', '🔒', 'التأمينات المحتجزة', 'ما يجب رده للعملاء'], ['costs', '🧾', 'تكاليف السيارات', 'صيانة وأقساط وتأمين حسب النوع والسيارة']]],
+    ['المالية والتحصيل', [['cash', '💰', 'حركة الخزينة اليومية', 'وارد وصادر كل يوم وحسب البند'], ['receivables', '⏳', 'المستحقات والمتأخرات', 'المتبقي على العملاء حسب التأخير'], ['installments', '🗓️', 'الأقساط القادمة', 'المتأخرة والمستحقة خلال 60 يوماً'], ['deposits', '🔒', 'التأمينات المحتجزة', 'ما يجب رده للعملاء'], ['commissions', '🤝', 'عمولات الوسطاء', 'المصروفة والمستحقة لكل وسيط'], ['vat', '🧮', 'ضريبة القيمة المضافة', 'الضريبة المستحقة على العقود'], ['costs', '🧾', 'تكاليف السيارات', 'صيانة وأقساط وتأمين حسب النوع والسيارة']]],
     ['العقود والعملاء', [['register', '📑', 'سجل العقود', 'كل عقود الفترة بالتفصيل'], ['due', '⏰', 'مواعيد التسليم', 'المتأخرة واليوم وخلال 3 أيام'], ['customers', '👥', 'تقرير العملاء', 'الأفضل والخاملون والقائمة السوداء'], ['reservations', '📌', 'تقرير الحجوزات', 'ونسبة التحويل إلى عقود'], ['analysis', '🔍', 'تحليل الأسعار والفئات', 'الخصومات ومتوسط المدة وأيام الذروة']]],
     ['المتابعة والرقابة', [['staff', '🧑‍💼', 'أداء الموظفين', 'من أنشأ العقود وحصّل المبالغ وأغلق العقود']]],
-    ['السيارات', [['fleet', '🚗', 'توفر السيارات', 'جدول الأسبوعين القادمين والإشغال بالماركة'], ['occupancy', '📉', 'الإشغال اليومي', 'نسبة الإشغال لكل يوم في الفترة'], ['fleetstate', '🛠️', 'حالة الأسطول', 'الحالة والعداد والزيت والرخص'], ['roi', '🏦', 'عائد الاستثمار', 'صافي كل سيارة مقابل قيمتها'], ['expiry', '📅', 'الرخص والتأمين', 'المنتهية والقريبة'], ['incidents', '🚨', 'المخالفات والحوادث', 'حسب النوع والعميل والحالة']]]
+    ['السيارات', [['fleet', '🚗', 'توفر السيارات', 'جدول الأسبوعين القادمين والإشغال بالماركة'], ['occupancy', '📉', 'الإشغال اليومي', 'نسبة الإشغال لكل يوم في الفترة'], ['fleetstate', '🛠️', 'حالة الأسطول', 'الحالة والعداد والزيت والرخص'], ['roi', '🏦', 'عائد الاستثمار', 'صافي كل سيارة مقابل قيمتها'], ['sales', '🏷️', 'السيارات المباعة', 'ربح أو خسارة كل سيارة بعد البيع'], ['expiry', '📅', 'الرخص والتأمين', 'المنتهية والقريبة'], ['incidents', '🚨', 'المخالفات والحوادث', 'حسب النوع والعميل والحالة']]]
   ];
   function renderRepHub() {
     const hub = $id('rentalRepHub'); if (!hub) return;
@@ -60415,6 +60515,61 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
     XLSX.writeFile(wb, `rental_${type}_${dateStr(new Date())}.xlsx`); showToast('تم تصدير التقرير');
   }
 
+  // ==================== مركز التذكيرات + النسخة الاحتياطية ====================
+  const remKeyToday = () => 'rentalRemSent:' + dateStr(new Date());
+  const remSentGet = () => { try { return JSON.parse(localStorage.getItem(remKeyToday()) || '{}'); } catch (e) { return {}; } };
+  const remSentSet = (k) => { try { const s = remSentGet(); s[k] = 1; localStorage.setItem(remKeyToday(), JSON.stringify(s)); } catch (e) { /* التخزين غير متاح */ } };
+  function reminderItems() {
+    const R = [], shopOf = (bid) => S(bid).shop_name || 'المعرض';
+    contracts.filter(c => c.status === 'open').forEach(c => {
+      const cu = one(c.customers) || {}; if (!cu.phone) return; const h = (new Date(c.due_at) - Date.now()) / 36e5, T = waTemplates(c);
+      if (isLate(c)) R.push({ key: 'late:' + c.id, kind: 'تأخر تسليم', name: cu.name, phone: cu.phone, text: T[1][1], sev: 'bad' });
+      else if (h <= 24) R.push({ key: 'due:' + c.id, kind: 'موعد تسليم', name: cu.name, phone: cu.phone, text: T[0][1], sev: 'warn' });
+    });
+    if (loaded.inst) installments.forEach(x => {
+      const ct = one(x.rental_contracts) || {}; if (ct.status === 'cancelled' || ct.status === 'closed') return; const cu = one(ct.customers) || {}; if (!cu.phone) return;
+      const n = daysUntil(x.due_date), left = N(x.amount) - N(x.paid_amount); if (n > 3 || left <= 0) return;
+      R.push({ key: 'inst:' + x.id, kind: n < 0 ? 'قسط متأخر' : 'قسط مستحق', name: cu.name, phone: cu.phone, sev: n < 0 ? 'bad' : 'warn',
+        text: `مرحباً ${cu.name || ''}،\nنذكّركم بقسط رقم ${x.seq} على عقد رقم ${ct.contract_no} بمبلغ ${F(left)} جنيه ${n < 0 ? 'وكان مستحقاً بتاريخ ' : 'يستحق بتاريخ '}${fdOnly(x.due_date)}.\nنرجو السداد في أقرب وقت. ${shopOf(x.branch_id)}` });
+    });
+    if (loaded.res) reservations.filter(r => r.status === 'booked').forEach(r => {
+      const cu = one(r.customers) || {}, car = one(r.rental_cars) || {}, h = (new Date(r.start_at) - Date.now()) / 36e5; if (!cu.phone || h < 0 || h > 24) return;
+      R.push({ key: 'res:' + r.id, kind: 'تذكير بحجز', name: cu.name, phone: cu.phone, sev: 'warn',
+        text: `مرحباً ${cu.name || ''}،\nنذكّركم بحجز السيارة ${car.brand || ''} ${car.model || ''} (${car.plate || ''}) غداً ${fdt(r.start_at)}.\nنتطلع لخدمتكم. ${shopOf(r.branch_id)}` });
+    });
+    if (loaded.customers) {
+      const openIds = new Set(contracts.filter(c => c.status === 'open').map(c => c.customer_id));
+      rentalCustomers.filter(c => openIds.has(c.id) && c.phone && c.d.license_expiry).forEach(c => {
+        const n = daysUntil(c.d.license_expiry); if (n > S(currentProfile.branch_id).alert_days) return;
+        R.push({ key: 'lic:' + c.id, kind: 'رخصة قيادة', name: c.name, phone: c.phone, sev: n < 0 ? 'bad' : 'warn', text: waTemplates(null, { licenseFor: c.name, licenseDate: fdOnly(c.d.license_expiry) })[0][1] });
+      });
+    }
+    return R.sort((x, y) => (x.sev === y.sev ? 0 : x.sev === 'bad' ? -1 : 1));
+  }
+  async function remindersCenter() {
+    await Promise.all([loaded.contracts ? 0 : loadContracts(), loaded.customers ? 0 : loadRentalCustomers(), loaded.res ? 0 : loadReservations(), loaded.inst ? 0 : loadInstallments()]);
+    const items = reminderItems(), sent = remSentGet();
+    const row = (r, i) => `<tr data-k="${E(r.key)}" style="${sent[r.key] ? 'opacity:.5' : ''}"><td><span class="bo-badge ${r.sev === 'bad' ? 'inactive' : 'pending'}">${r.kind}</span></td><td><b>${E(r.name || '')}</b><div class="num" style="font-size:11.5px;color:var(--ink-soft)">${E(r.phone)}</div></td><td style="font-size:12px;color:var(--ink-soft);max-width:340px">${E(r.text.split('\n').slice(1, 2).join(' '))}</td><td>${sent[r.key] ? '✓ تم' : `<button type="button" class="bo-icon-btn" data-i="${i}">واتساب</button>`}</td></tr>`;
+    const ov = modal('مركز التذكيرات — اليوم', `<div class="field field-full">${items.length ? `<div style="font-size:13px;margin-bottom:8px" data-cnt></div><div class="bo-table-wrap"><table class="bo-table"><thead><tr><th>النوع</th><th>العميل</th><th>الرسالة</th><th></th></tr></thead><tbody>${items.map(row).join('')}</tbody></table></div><div style="font-size:12px;color:var(--ink-soft);margin-top:8px">كل زر يفتح واتساب برسالة جاهزة تضغط عليها «إرسال» بنفسك. (الإرسال الآلي بالكامل يحتاج حساب واتساب للأعمال API.) يُحفظ ما أُرسل اليوم على هذا الجهاز.</div>` : '<div class="bo-empty">لا توجد تذكيرات اليوم 👌</div>'}</div>`, { big: true, btns: items.length ? '<button type="button" class="modal-cancel-btn" data-next>إرسال التالي</button>' : '', onSubmit: async (o) => o.close() });
+    const sb = ov.q('.submit-btn'); if (sb) sb.textContent = 'إغلاق';
+    const upd = () => { const s = remSentGet(), c = ov.q('[data-cnt]'); if (c) c.innerHTML = `المتبقي للإرسال: <b>${items.filter(r => !s[r.key]).length}</b> من ${items.length}`; };
+    const send = (i) => { const r = items[i]; window.open('https://wa.me/' + waPhone(r.phone) + '?text=' + encodeURIComponent(r.text), '_blank'); remSentSet(r.key); const tr = ov.q(`tr[data-k="${r.key}"]`); if (tr) { tr.style.opacity = '.5'; tr.lastElementChild.textContent = '✓ تم'; } upd(); };
+    ov.addEventListener('click', (e) => { const b = e.target.closest('button[data-i]'); if (b) send(+b.dataset.i); });
+    const nx = ov.q('[data-next]'); if (nx) nx.onclick = () => { const s = remSentGet(), i = items.findIndex(r => !s[r.key]); if (i < 0) { showToast('تم إرسال كل التذكيرات'); return; } send(i); };
+    upd(); return ov;
+  }
+  async function backupAll() {
+    const T = ['rental_settings', 'rental_cars', 'rental_customer_details', 'rental_contracts', 'rental_payments', 'rental_installments', 'rental_maintenance', 'rental_cash_entries', 'rental_reservations', 'rental_incidents', 'rental_price_rules'];
+    showToast('جاري تجهيز النسخة الاحتياطية...');
+    const out = { app: 'rental', exported_at: new Date().toISOString(), note: 'لا تتضمن صور حالة السيارة. تتضمن توقيعات العملاء داخل جدول العقود.', tables: {} };
+    for (const t of T) { const { data, error } = await supabaseClient.from(t).select('*').limit(100000); if (error) { showToast('تعذر قراءة ' + t, true); return; } out.tables[t] = data || []; }
+    const { data: cu } = await supabaseClient.from('customers').select('id, name, phone, address').limit(100000);
+    const ids = new Set((out.tables.rental_customer_details || []).map(x => x.customer_id)); out.tables.customers = (cu || []).filter(c => ids.has(c.id));
+    const blob = new Blob([JSON.stringify(out)], { type: 'application/json' }), a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = `rental_backup_${dateStr(new Date())}.json`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    showToast(`تم تنزيل النسخة الاحتياطية (${Object.values(out.tables).reduce((s, r) => s + r.length, 0)} سجل)`);
+  }
+
   // ---------- ربط الأحداث ----------
   function bind() {
     bind2(); bind3(); bind4(); bind5();
@@ -60430,7 +60585,7 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
     $id('rentalCarsTableBody').addEventListener('click', (e) => {
       const b = e.target.closest('[data-ra]'); const tr = e.target.closest('tr[data-id]'); if (!b || !tr) return;
       const c = byIdCar(tr.dataset.id); if (!c) return;
-      if (b.dataset.ra === 'edit') carModal(c); else if (b.dataset.ra === 'delete') deleteCar(c); else if (b.dataset.ra === 'file') carFile(c);
+      if (b.dataset.ra === 'edit') carModal(c); else if (b.dataset.ra === 'delete') deleteCar(c); else if (b.dataset.ra === 'file') carFile(c); else if (b.dataset.ra === 'sell') sellModal(c); else if (b.dataset.ra === 'unsell') unsellCar(c);
     });
     $id('rentalCustomersTableBody').addEventListener('click', (e) => {
       const b = e.target.closest('[data-ra]'); const tr = e.target.closest('tr[data-id]'); if (!b || !tr) return;
@@ -60457,7 +60612,7 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
     else if (section === 'rental-alerts') { await Promise.all([loadCars(), loadContracts(), loadRentalCustomers(), loadSettings(), loadReservations(), loadInstallments()]); renderAlerts(); }
     if (section.startsWith('rental-') && section !== 'rental-alerts') updateAlertBadge();
   };
-  window.__rental = { maintModal, maintHistory, renderRepType, REPS, rentalPosButtonRefresh: window.rentalPosButtonRefresh, loadInstallments, installmentModal, suggestPrice, quoteModal, ruleModal, loadRules, exportExcel, loadReservations, reservationModal, convertReservation, incidentModal, settleIncident, conditionModal, signatureModal, rentalDashRefresh, extendModal, waTemplates, waModal, cashEntryModal, openSettings, renderReports, renderJournal, maintModal, computeAlerts, oilStatus, reloadAll, contractForm, carModal, customerModal, viewContract, closeModal, payModal, printContract, calcClose, S, get cars() { return cars; }, get contracts() { return contracts; } };
+  window.__rental = { vatOf, vatRate, openSettings, reminderItems, remindersCenter, backupAll, commissionModal, commissionOf, sellModal, unsellCar, maintModal, maintHistory, renderRepType, REPS, rentalPosButtonRefresh: window.rentalPosButtonRefresh, loadInstallments, installmentModal, suggestPrice, quoteModal, ruleModal, loadRules, exportExcel, loadReservations, reservationModal, convertReservation, incidentModal, settleIncident, conditionModal, signatureModal, rentalDashRefresh, extendModal, waTemplates, waModal, cashEntryModal, openSettings, renderReports, renderJournal, maintModal, computeAlerts, oilStatus, reloadAll, contractForm, carModal, customerModal, viewContract, closeModal, payModal, printContract, calcClose, S, get cars() { return cars; }, get contracts() { return contracts; } };
   bind();
 })();
 
