@@ -59363,22 +59363,38 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
       <td><div class="bo-row-actions"><button class="bo-icon-btn" data-ra="oil" data-action="edit">تم تغيير الزيت</button><button class="bo-icon-btn" data-ra="hist">السجل</button></div></td></tr>`).join('');
     tb.querySelectorAll('tr[data-id]').forEach(tr => applyRowActionPerm(tr, 'rental-oil'));
   }
-  function maintModal(carId, kind) {
+  let supplierList = null;
+  async function loadSuppliersForMaint() {
+    if (supplierList) return supplierList;
+    try { supplierList = (await rpc('rental_suppliers_list')) || []; } catch (e) { console.error(e); supplierList = []; }
+    return supplierList;
+  }
+  const supName = (id) => { const s = (supplierList || []).find(x => x.id === id); return s ? s.name : ''; };
+  const PAYMODE = { none: '', credit: 'آجل على المورد', cash: 'مدفوع من الخزينة' };
+  async function maintModal(carId, kind) {
     const list = cars.filter(c => c.status !== 'sold');
     if (!list.length) { showToast('أضف سيارة أولاً', true); return; }
     const first = byIdCar(carId) || list[0];
+    const sups = await loadSuppliersForMaint(), treas0 = await treasuryOptions(first.branch_id);
     const ov0 = modal(kind === 'oil' ? 'تسجيل تغيير زيت' : 'تسجيل صيانة / تكلفة', `
       ${fld('السيارة', sel('car_id', list.map(c => [c.id, carName(c)]), first.id))}${fld('النوع', sel('kind', Object.entries(MAINT_KIND), kind || 'oil'))}
       ${fld('التاريخ', inp('done_at', dateStr(new Date()), 'date', 'required'))}${fld('قراءة العداد (كم)', inp('odometer', first.odometer, 'number', 'min="0" step="1"'))}
       ${fld('التكلفة', inp('cost', '', 'number', 'min="0" step="0.01"'))}${fld('ملاحظة', inp('note', ''))}
-      <div class="field field-full" style="font-size:12px;color:var(--ink-soft)">التكلفة تُسجل في سجل السيارة وتدخل في حساب ربحيتها فقط ولا تخصم من الخزينة تلقائياً.</div>`, {
+      ${sups.length ? fld('المورد / الورشة (اختياري)', sel('supplier_id', [['', '— بدون مورد —']].concat(sups.map(s => [s.id, s.name])), '')) + fld('طريقة السداد', sel('pay_mode', [['none', 'تسجيل التكلفة فقط (بدون حركة مالية)'], ['credit', 'آجل — يُضاف على حساب المورد'], ['cash', 'مدفوع الآن من خزينة']], 'none')) + `<div data-cashrow style="display:none">${fld('الخزينة', sel('cash_account_id', treas0, treas0[0] ? treas0[0][0] : ''))}</div>` : ''}
+      <div class="field field-full" data-maintnote style="font-size:12px;color:var(--ink-soft)">التكلفة تُسجل في سجل السيارة وتدخل في حساب ربحيتها. اختر مورداً وطريقة سداد لو تريد تحديث رصيد المورد أو الخزينة تلقائياً.</div>`, {
       onSubmit: async (ov, f) => {
         const car = byIdCar(f.car_id); if (!car) throw new Error('اختر السيارة');
         if (f.kind === 'oil' && f.odometer === '') throw new Error('أدخل قراءة العداد');
         if (f.odometer !== '' && N(f.odometer) < 0) throw new Error('قراءة العداد غير صحيحة');
         if (f.kind === 'oil' && N(f.odometer) < N(car.last_oil_km)) throw new Error('قراءة العداد أقل من آخر تغيير زيت مسجل');
-        const { error } = await supabaseClient.from('rental_maintenance').insert({ branch_id: car.branch_id, car_id: car.id, kind: f.kind, done_at: f.done_at, odometer: f.odometer === '' ? null : N(f.odometer), cost: N(f.cost), note: f.note || null });
-        if (error) throw new Error(dbMsg(error));
+        const mode = f.pay_mode || 'none';
+        if (mode !== 'none') {
+          if (!f.supplier_id) throw new Error('اختر المورد'); if (N(f.cost) <= 0) throw new Error('أدخل التكلفة');
+          await rpc('rental_maint_add', { p_car_id: car.id, p_kind: f.kind, p_done_at: f.done_at, p_odometer: f.odometer === '' ? null : N(f.odometer), p_cost: N(f.cost), p_note: f.note || null, p_supplier_id: f.supplier_id, p_mode: mode, p_cash_account_id: mode === 'cash' ? f.cash_account_id : null }).catch(e => { throw new Error(dbMsg(e)); });
+        } else {
+          const { error } = await supabaseClient.from('rental_maintenance').insert({ branch_id: car.branch_id, car_id: car.id, kind: f.kind, done_at: f.done_at, odometer: f.odometer === '' ? null : N(f.odometer), cost: N(f.cost), note: f.note || null });
+          if (error) throw new Error(dbMsg(error));
+        }
         const upd = {}; if (f.odometer !== '' && N(f.odometer) > N(car.odometer)) upd.odometer = N(f.odometer);
         if (f.kind === 'oil') { upd.last_oil_km = N(f.odometer); upd.last_oil_date = f.done_at; }
         if (Object.keys(upd).length) { const r = await supabaseClient.from('rental_cars').update(upd).eq('id', car.id); if (r.error) throw new Error(dbMsg(r.error)); }
@@ -59387,19 +59403,22 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
     });
     // قراءة العداد تتبع السيارة المختارة
     ov0.g('car_id').onchange = () => { const c = byIdCar(ov0.g('car_id').value); if (c) ov0.g('odometer').value = c.odometer; };
+    if (ov0.g('pay_mode')) ov0.g('pay_mode').onchange = () => { ov0.q('[data-cashrow]').style.display = ov0.g('pay_mode').value === 'cash' ? '' : 'none'; };
   }
   async function maintHistory(carId) {
     const car = byIdCar(carId);
     const { data, error } = await supabaseClient.from('rental_maintenance').select('*').eq('car_id', carId).order('done_at', { ascending: false }).limit(200);
     if (error) { showToast('تعذر تحميل السجل', true); return; }
+    await loadSuppliersForMaint();
     const rows = data || [], total = rows.reduce((a, x) => a + N(x.cost), 0);
-    const ov = modal('سجل صيانة — ' + carName(car), `<div class="field field-full">${rows.length ? `<div class="bo-table-wrap"><table class="bo-table"><thead><tr><th>التاريخ</th><th>النوع</th><th>العداد</th><th>التكلفة</th><th>ملاحظة</th><th></th></tr></thead><tbody>${rows.map(x => `<tr><td>${fdOnly(x.done_at)}</td><td>${MAINT_KIND[x.kind] || x.kind}</td><td class="num">${x.odometer != null ? F(x.odometer) : '—'}</td><td class="num">${F(x.cost)}</td><td>${E(x.note || '')}</td><td><button type="button" class="bo-icon-btn danger" data-action="delete" data-del="${x.id}">حذف</button></td></tr>`).join('')}</tbody></table></div><div style="margin-top:8px;font-size:13px">إجمالي التكلفة: <b class="num">${F(total)}</b></div>` : '<div class="bo-empty">لا يوجد سجل</div>'}</div>`, {});
+    const ov = modal('سجل صيانة — ' + carName(car), `<div class="field field-full">${rows.length ? `<div class="bo-table-wrap"><table class="bo-table"><thead><tr><th>التاريخ</th><th>النوع</th><th>العداد</th><th>التكلفة</th><th>ملاحظة</th><th></th></tr></thead><tbody>${rows.map(x => `<tr><td>${fdOnly(x.done_at)}</td><td>${MAINT_KIND[x.kind] || x.kind}</td><td class="num">${x.odometer != null ? F(x.odometer) : '—'}</td><td class="num">${F(x.cost)}</td><td>${E(x.note || '')}${x.pay_mode && x.pay_mode !== 'none' ? `<div style="font-size:11.5px;color:var(--ink-soft)">${PAYMODE[x.pay_mode]}${supName(x.supplier_id) ? ' — ' + E(supName(x.supplier_id)) : ''}</div>` : ''}</td><td><button type="button" class="bo-icon-btn danger" data-action="delete" data-del="${x.id}">حذف</button></td></tr>`).join('')}</tbody></table></div><div style="margin-top:8px;font-size:13px">إجمالي التكلفة: <b class="num">${F(total)}</b></div>` : '<div class="bo-empty">لا يوجد سجل</div>'}</div>`, {});
     ov.querySelectorAll('[data-del]').forEach(b => {
       if (!hasBoActionPermission('rental-oil', 'delete')) { b.style.display = 'none'; return; }
       b.onclick = async () => {
-        if (!confirm('حذف سجل الصيانة؟ (لن يتغير آخر تغيير زيت المسجل في السيارة)')) return;
-        const r = await supabaseClient.from('rental_maintenance').delete().eq('id', b.dataset.del);
-        if (r.error) { showToast(dbMsg(r.error), true); return; } ov.close(); showToast('تم الحذف'); maintHistory(carId);
+        const row = rows.find(x => x.id === b.dataset.del), linked = row && row.pay_mode && row.pay_mode !== 'none';
+        if (!confirm('حذف سجل الصيانة؟ (لن يتغير آخر تغيير زيت المسجل في السيارة)' + (linked ? '\nسيتم عكس أثره على ' + (row.pay_mode === 'credit' ? 'رصيد المورد.' : 'الخزينة.') : ''))) return;
+        try { if (linked) await rpc('rental_maint_delete', { p_id: b.dataset.del }); else { const r = await supabaseClient.from('rental_maintenance').delete().eq('id', b.dataset.del); if (r.error) throw r.error; } }
+        catch (e) { showToast(dbMsg(e), true); return; } ov.close(); showToast('تم الحذف'); maintHistory(carId);
       };
     });
   }
@@ -60199,12 +60218,13 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
         tbl(['النوع', 'البند', 'تاريخ الانتهاء', 'المتبقي', 'الحالة'], items.map(i => [i.type, E(i.name), fdOnly(i.d), String(i.n), i.n < 0 ? '<span class="bo-badge inactive">منتهية</span>' : i.n <= 30 ? '<span class="bo-badge pending">قريبة</span>' : '<span class="bo-badge neutral">قادمة</span>']), 'لا توجد انتهاءات خلال 90 يوم 👌');
     },
     async costs({ a, b }) {
-      const { data, error } = await supabaseClient.from('rental_maintenance').select('car_id, kind, cost, done_at').gte('done_at', dateStr(a)).lt('done_at', dateStr(b)).limit(50000);
+      const { data, error } = await supabaseClient.from('rental_maintenance').select('car_id, kind, cost, done_at, supplier_id, pay_mode').gte('done_at', dateStr(a)).lt('done_at', dateStr(b)).limit(50000);
       if (error) throw error; const rows = data || [], total = rows.reduce((x, r) => x + N(r.cost), 0);
       const byKind = {}, byCar = {}; rows.forEach(r => { (byKind[r.kind] = byKind[r.kind] || { n: 0, s: 0 }); byKind[r.kind].n++; byKind[r.kind].s += N(r.cost); (byCar[r.car_id] = byCar[r.car_id] || { n: 0, s: 0 }); byCar[r.car_id].n++; byCar[r.car_id].s += N(r.cost); });
-      const nc = cars.filter(c => c.status !== 'sold').length || 1;
+      const nc = cars.filter(c => c.status !== 'sold').length || 1; await loadSuppliersForMaint();
       return kp([['إجمالي التكاليف', total, '#b91c1c'], ['عدد البنود', rows.length, '', true], ['متوسط التكلفة للسيارة', total / nc]]) +
         h3('حسب النوع') + tbl(['النوع', 'العدد', 'الإجمالي', 'النسبة'], Object.entries(byKind).sort((x, y) => y[1].s - x[1].s).map(([k, v]) => [MAINT_KIND[k] || k, String(v.n), v.s, total ? (v.s / total * 100).toFixed(0) + '%' : '—'])) +
+        (rows.some(r => r.supplier_id) ? h3('حسب المورد') + tbl(['المورد', 'العدد', 'الإجمالي', 'آجل (غير مسدد)'], Object.entries(rows.filter(r => r.supplier_id).reduce((o, r) => { const k = r.supplier_id; (o[k] = o[k] || { n: 0, s: 0, c: 0 }); o[k].n++; o[k].s += N(r.cost); if (r.pay_mode === 'credit') o[k].c += N(r.cost); return o; }, {})).sort((x, y) => y[1].s - x[1].s).map(([id, v]) => [E(supName(id) || 'مورد'), String(v.n), v.s, v.c])) : '') +
         h3('حسب السيارة') + tbl(['السيارة', 'العدد', 'الإجمالي'], Object.entries(byCar).sort((x, y) => y[1].s - x[1].s).map(([id, v]) => [E(carName(byIdCar(id))), String(v.n), v.s]));
     },
     async incidents({ a, b }) {
@@ -60437,7 +60457,7 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
     else if (section === 'rental-alerts') { await Promise.all([loadCars(), loadContracts(), loadRentalCustomers(), loadSettings(), loadReservations(), loadInstallments()]); renderAlerts(); }
     if (section.startsWith('rental-') && section !== 'rental-alerts') updateAlertBadge();
   };
-  window.__rental = { renderRepType, REPS, rentalPosButtonRefresh: window.rentalPosButtonRefresh, loadInstallments, installmentModal, suggestPrice, quoteModal, ruleModal, loadRules, exportExcel, loadReservations, reservationModal, convertReservation, incidentModal, settleIncident, conditionModal, signatureModal, rentalDashRefresh, extendModal, waTemplates, waModal, cashEntryModal, openSettings, renderReports, renderJournal, maintModal, computeAlerts, oilStatus, reloadAll, contractForm, carModal, customerModal, viewContract, closeModal, payModal, printContract, calcClose, S, get cars() { return cars; }, get contracts() { return contracts; } };
+  window.__rental = { maintModal, maintHistory, renderRepType, REPS, rentalPosButtonRefresh: window.rentalPosButtonRefresh, loadInstallments, installmentModal, suggestPrice, quoteModal, ruleModal, loadRules, exportExcel, loadReservations, reservationModal, convertReservation, incidentModal, settleIncident, conditionModal, signatureModal, rentalDashRefresh, extendModal, waTemplates, waModal, cashEntryModal, openSettings, renderReports, renderJournal, maintModal, computeAlerts, oilStatus, reloadAll, contractForm, carModal, customerModal, viewContract, closeModal, payModal, printContract, calcClose, S, get cars() { return cars; }, get contracts() { return contracts; } };
   bind();
 })();
 
