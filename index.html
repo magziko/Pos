@@ -14784,10 +14784,18 @@ let supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KE
 function clearTenantLocalData() {
   try { Object.keys(localStorage).filter(k => k.startsWith('off_') || k === 'pos_held_orders').forEach(k => localStorage.removeItem(k)); } catch (e) { /* تجاهل */ }
 }
+// عدد العمليات الأوفلاين المعلّقة (off_outbox) — تُقرأ مباشرة من التخزين لأن هذه الدالة تعمل قبل تعريف OFF/getOutbox
+function pendingOfflineOpsCount() {
+  try { const q = JSON.parse(localStorage.getItem('off_outbox') || '[]'); return Array.isArray(q) ? q.length : 0; } catch (e) { return 0; }
+}
 // يعيد: 'same' (لا تغيير) | 'reload' (تم الحفظ — أعد تحميل الصفحة) | { error }
 async function applyTenantCode(raw) {
   const code = (raw || '').trim().toLowerCase(), current = ACTIVE_TENANT ? ACTIVE_TENANT.code : '';
   if (code === current) return 'same';
+  // حماية من فقدان البيانات: لو فيه فواتير/مرتجعات/ورديات أوفلاين لسه ما اتزامنتش لقاعدة العميل الحالي،
+  // نرفض التبديل (مسح off_outbox معناه ضياعها). لازم تتزامن الأول من نفس الجهاز بالحساب القديم.
+  const pending = pendingOfflineOpsCount();
+  if (pending > 0) return { error: 'لا يمكن تغيير كود المعرض: يوجد ' + pending + ' عملية أوفلاين لم تتم مزامنتها للمعرض الحالي. سجّل الدخول بحسابك الحالي مع توفر الإنترنت حتى تتم المزامنة، ثم غيّر الكود.' };
   if (!code) { try { localStorage.removeItem('pos_tenant'); } catch (e) { /* تجاهل */ } clearTenantLocalData(); return 'reload'; }
   if (!/^[a-z0-9][a-z0-9_-]{2,30}$/.test(code)) return { error: 'كود المعرض غير صحيح' };
   const { data, error } = await masterClient.rpc('get_tenant_config', { p_code: code });
@@ -15774,7 +15782,7 @@ async function getUserExpiryDate(userId) {
 (async function boot() {
   try {
     const qc = new URLSearchParams(location.search).get('c');
-    if (qc) { const r = await applyTenantCode(qc); history.replaceState(null, '', location.pathname); if (r === 'reload') { location.reload(); return; } }
+    if (qc) { const r = await applyTenantCode(qc); history.replaceState(null, '', location.pathname); if (r === 'reload') { location.reload(); return; } if (r && r.error) setTimeout(() => { try { showToast(r.error, true); } catch (e) { /* تجاهل */ } }, 1500); }
   } catch (e) { console.error('tenant link error', e); }
   ensureOfflineBanner();
   appIsOnline = await checkRealConnectivity();
