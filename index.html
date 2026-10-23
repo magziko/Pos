@@ -1591,6 +1591,7 @@ a { color: inherit; }
       <div class="bo-sidebar-backdrop" id="boSidebarBackdrop"></div>
       <div class="bo-sidebar" id="boSidebar">
         <button class="bo-nav-item active" data-section="dashboard">الرئيسية</button>
+        <label id="boShowAllWrap" style="display:none;margin:4px 12px 8px;font-size:12px;cursor:pointer;align-items:center;gap:6px;color:var(--ink-soft)"><input type="checkbox" id="boShowAllToggle" style="width:auto"> عرض كل الشاشات (مدير)</label>
 
         <!-- 1. الأصناف والمخزون -->
         <div class="bo-nav-group" id="stockNavGroup">
@@ -22853,8 +22854,20 @@ function hasBoScreenPermission(section) {
 // وليس له أي علاقة بإخفاء شاشات الفروع اللي بالفعل بتستخدمه. لو النشاط لسه
 // ما اتخصّصش (enabled_sections = null)، الافتراضي هو الإظهار الكامل (توافق
 // مع الفروع الحالية اللي متعرفتش تخصّص لسه).
+// مفتاح للمدير: عرض كل الشاشات بغض النظر عن نشاط الفرع (الافتراضي: مفعّل للمدير).
+// لا يغيّر إعدادات الأنشطة نفسها — فقط يتجاوز التصفية في واجهة المدير.
+function boIsAdminUser() {
+  return !!currentProfile && (currentProfile.roles?.name === 'admin' || (currentProfile.roles?.permissions || {}).all === true);
+}
+function boShowAllScreens() {
+  try {
+    if (!boIsAdminUser()) return false;
+    return localStorage.getItem('pos_show_all_screens') !== '0';
+  } catch (e) { return false; }
+}
 function isBoSectionEnabledForActivity(section) {
   if (ACTIVITY_FILTER_EXEMPT_SECTIONS.has(section)) return true;
+  if (boShowAllScreens()) return true;
   const branch = boBranchesList.find(b => b.id === currentProfile.branch_id);
   const businessType = boBusinessTypes.find(bt => bt.id === branch?.business_type_id);
   if (!businessType) return true;
@@ -23087,7 +23100,19 @@ function hasBoReportPermission(sectionId, reportKey) {
   return true;
 }
 
+document.addEventListener('change', function (e) {
+  if (!e.target || e.target.id !== 'boShowAllToggle') return;
+  try { localStorage.setItem('pos_show_all_screens', e.target.checked ? '1' : '0'); } catch (err) { /* تجاهل */ }
+  applyBoPermissions();
+  if (typeof applyReportActivityGating === 'function') applyReportActivityGating();
+});
 function applyBoPermissions() {
+  const showAllWrap = document.getElementById('boShowAllWrap');
+  if (showAllWrap) {
+    const isAdminAll = boIsAdminUser();
+    showAllWrap.style.display = isAdminAll ? 'flex' : 'none';
+    const cb = document.getElementById('boShowAllToggle'); if (cb) cb.checked = boShowAllScreens();
+  }
   document.querySelectorAll('[data-section]').forEach(btn => {
     const section = btn.dataset.section;
     btn.style.display = hasBoScreenPermission(section) ? '' : 'none';
