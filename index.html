@@ -1282,6 +1282,8 @@ a { color: inherit; }
       </div>
       <div class="error-msg" id="loginError"></div>
       <form id="loginForm">
+        <div class="field" id="loginTenantField" style="display:none"><label for="loginTenant">كود المعرض</label>
+          <input type="text" id="loginTenant" autocomplete="off" placeholder="اتركه فارغاً للدخول على النظام الرئيسي" style="direction:ltr; text-align:right;"><div id="loginTenantInfo" style="font-size:12px;margin-top:4px"></div></div>
         <div class="field"><label for="loginUsername">اسم المستخدم</label>
           <input type="text" id="loginUsername" required autocomplete="username" placeholder="اسم المستخدم (أو بريدك الإلكتروني القديم)" style="direction:ltr; text-align:right;"></div>
         <div class="field"><label for="loginPassword">كلمة المرور</label>
@@ -1289,6 +1291,7 @@ a { color: inherit; }
         <button type="submit" class="submit-btn" id="loginSubmitBtn">دخول</button>
       </form>
       <p class="footnote">إذا نسيت بيانات الدخول، يرجى التواصل مع مدير النظام</p>
+      <p class="footnote"><button class="link-btn" type="button" id="loginTenantToggle">دخول بكود معرض</button></p>
       <p class="footnote"><button class="link-btn" type="button" onclick="showPinLogin()">الدخول بدون إنترنت (PIN)</button></p>
       <p class="footnote"><button class="link-btn" onclick="showView('register')">أول مرة تستخدم النظام؟ أنشئ حساب مدير</button></p>
     </div>
@@ -1335,6 +1338,7 @@ a { color: inherit; }
       <div class="notice">هذه الصفحة مخصصة للإعداد الأولي فقط. بعد إنشاء حسابك، يُفضّل إزالة هذا الرابط، وإنشاء باقي حسابات الموظفين من لوحة التحكم بعد ذلك.</div>
       <div class="error-msg" id="regError"></div>
       <div class="success-msg" id="regSuccess"></div>
+      <div id="regTenantInfo" style="font-size:12.5px;margin:0 0 8px;color:#0f766e"></div>
       <form id="registerForm">
         <div class="field"><label for="regFullName">الاسم الكامل</label>
           <input type="text" id="regFullName" required placeholder="مثال: أحمد محمد"></div>
@@ -14761,9 +14765,39 @@ a { color: inherit; }
 // Supabase client — عدّل هذه القيم بمشروعك من Supabase Dashboard
 // Settings > API > Project URL / anon public key
 // ============================================================
-const SUPABASE_URL = 'https://aagyaxicphooldhwycko.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhZ3lheGljcGhvb2xkaHd5Y2tvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1ODI0MTQsImV4cCI6MjEwMTE1ODQxNH0.IXId6VALd6WwufMwyHjwK12zYXAozPOXUdyjM4omUh4';
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+/* tenant_start */
+// ---- تعدد العملاء (Multi-Tenant): كل عميل له قاعدة Supabase مستقلة ----
+// MASTER = القاعدة الرئيسية (فيها جدول tenants ودالة get_tenant_config فقط للبحث بالكود).
+// لو لا يوجد كود معرض محفوظ على هذا الجهاز يعمل النظام على القاعدة الرئيسية كما كان.
+const MASTER_URL = 'https://aagyaxicphooldhwycko.supabase.co';
+const MASTER_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhZ3lheGljcGhvb2xkaHd5Y2tvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1ODI0MTQsImV4cCI6MjEwMTE1ODQxNH0.IXId6VALd6WwufMwyHjwK12zYXAozPOXUdyjM4omUh4';
+let SUPABASE_URL = MASTER_URL, SUPABASE_ANON_KEY = MASTER_KEY, ACTIVE_TENANT = null;
+(function () {
+  try {
+    const t = JSON.parse(localStorage.getItem('pos_tenant') || 'null');
+    if (t && t.code && t.key && /^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(t.url || '')) { SUPABASE_URL = t.url; SUPABASE_ANON_KEY = t.key; ACTIVE_TENANT = t; }
+  } catch (e) { /* التخزين غير متاح */ }
+})();
+const masterClient = window.supabase.createClient(MASTER_URL, MASTER_KEY, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
+let supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+function clearTenantLocalData() {
+  try { Object.keys(localStorage).filter(k => k.startsWith('off_') || k === 'pos_held_orders').forEach(k => localStorage.removeItem(k)); } catch (e) { /* تجاهل */ }
+}
+// يعيد: 'same' (لا تغيير) | 'reload' (تم الحفظ — أعد تحميل الصفحة) | { error }
+async function applyTenantCode(raw) {
+  const code = (raw || '').trim().toLowerCase(), current = ACTIVE_TENANT ? ACTIVE_TENANT.code : '';
+  if (code === current) return 'same';
+  if (!code) { try { localStorage.removeItem('pos_tenant'); } catch (e) { /* تجاهل */ } clearTenantLocalData(); return 'reload'; }
+  if (!/^[a-z0-9][a-z0-9_-]{2,30}$/.test(code)) return { error: 'كود المعرض غير صحيح' };
+  const { data, error } = await masterClient.rpc('get_tenant_config', { p_code: code });
+  if (error) return { error: 'تعذر الاتصال للتحقق من كود المعرض' };
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row || !row.supabase_url || !row.supabase_anon_key) return { error: 'كود المعرض غير صحيح أو غير مفعّل' };
+  try { localStorage.setItem('pos_tenant', JSON.stringify({ code, name: row.name, url: row.supabase_url, key: row.supabase_anon_key })); } catch (e) { return { error: 'تعذر حفظ الإعداد على هذا المتصفح' }; }
+  clearTenantLocalData();
+  return 'reload';
+}
+/* tenant_end */
 
 // Supabase بيجدّد التوكن تلقائيًا فى الخلفية بين الحين والتاني (والـ refresh token يتغيّر
 // معاه فى كل مرة، وميصلحش يُستخدم مرة تانية). لو ماتابعناش هذا التجديد، الكاش المحفوظ وقت
@@ -15737,6 +15771,10 @@ async function getUserExpiryDate(userId) {
 // طالما فيه جلسة وبروفايل محفوظين من آخر دخول أونلاين)
 // ------------------------------------------------------------
 (async function boot() {
+  try {
+    const qc = new URLSearchParams(location.search).get('c');
+    if (qc) { const r = await applyTenantCode(qc); history.replaceState(null, '', location.pathname); if (r === 'reload') { location.reload(); return; } }
+  } catch (e) { console.error('tenant link error', e); }
   ensureOfflineBanner();
   appIsOnline = await checkRealConnectivity();
   updateOfflineBanner();
@@ -15771,6 +15809,22 @@ async function getUserExpiryDate(userId) {
 // ------------------------------------------------------------
 // تسجيل الدخول
 // ------------------------------------------------------------
+/* tenant_ui_start */
+const loginTenantEl = document.getElementById('loginTenant');
+(function () {
+  const field = document.getElementById('loginTenantField'), info = document.getElementById('loginTenantInfo'), tg = document.getElementById('loginTenantToggle');
+  const ri = document.getElementById('regTenantInfo'); if (ri) ri.textContent = ACTIVE_TENANT ? 'سيُنشأ الحساب على قاعدة المعرض: ' + (ACTIVE_TENANT.name || ACTIVE_TENANT.code) : '';
+  if (ACTIVE_TENANT) { field.style.display = ''; loginTenantEl.value = ACTIVE_TENANT.code; info.textContent = '✓ ' + (ACTIVE_TENANT.name || ACTIVE_TENANT.code); info.style.color = '#0f766e'; }
+  tg.addEventListener('click', () => { field.style.display = field.style.display === 'none' ? '' : 'none'; if (field.style.display !== 'none') loginTenantEl.focus(); });
+  loginTenantEl.addEventListener('change', async () => {
+    info.textContent = 'جاري التحقق...'; info.style.color = '';
+    const r = await applyTenantCode(loginTenantEl.value);
+    if (r === 'reload') location.reload();
+    else if (r === 'same') { info.textContent = ACTIVE_TENANT ? '✓ ' + (ACTIVE_TENANT.name || ACTIVE_TENANT.code) : ''; info.style.color = '#0f766e'; }
+    else { info.textContent = r.error; info.style.color = '#b91c1c'; }
+  });
+})();
+/* tenant_ui_end */
 const loginForm = document.getElementById('loginForm');
 const loginError = document.getElementById('loginError');
 const loginSubmitBtn = document.getElementById('loginSubmitBtn');
@@ -15781,6 +15835,12 @@ loginForm.addEventListener('submit', async (e) => {
   loginSubmitBtn.disabled = true;
   loginSubmitBtn.textContent = 'جاري الدخول...';
 
+  const tenantTyped = (loginTenantEl.value || '').trim().toLowerCase();
+  if (tenantTyped !== (ACTIVE_TENANT ? ACTIVE_TENANT.code : '')) {
+    const tr = await applyTenantCode(tenantTyped);
+    if (tr === 'reload') { location.reload(); return; }
+    if (tr && tr.error) { loginError.textContent = tr.error; loginError.classList.add('show'); loginSubmitBtn.disabled = false; loginSubmitBtn.textContent = 'دخول'; return; }
+  }
   const username = document.getElementById('loginUsername').value.trim();
   const password = document.getElementById('loginPassword').value;
   const email = loginIdentifierToEmail(username);
