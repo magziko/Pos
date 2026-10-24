@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لوحة مالك البرنامج</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{
+  --bg:#f4f6f5; --surface:#fff; --fg:#16211e; --muted:#5b6b67; --line:#d8e0dd;
+  --accent:#0f6b5c; --accent-fg:#fff; --accent-soft:#e0f0ec;
+  --ok:#17803d; --ok-soft:#e1f4e7; --warn:#935f00; --warn-soft:#fbefcf; --bad:#b4281e; --bad-soft:#fbe3e0; --info:#1d5fa8; --info-soft:#e0ecf9;
+  --code:#ecf0ee; --shadow:0 8px 30px rgba(0,0,0,.18);
+  --font:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif; --mono:'IBM Plex Mono',ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0f1615; --surface:#162120; --fg:#e6eeec; --muted:#9db0ab; --line:#2a3b38;
+  --accent:#4fc4ac; --accent-fg:#06201a; --accent-soft:#17332e;
+  --ok:#5fcf86; --ok-soft:#14301f; --warn:#e5b94a; --warn-soft:#352b10; --bad:#ff8b80; --bad-soft:#3a1916; --info:#7db6f2; --info-soft:#14283d;
+  --code:#1d2b29; --shadow:0 8px 30px rgba(0,0,0,.6); color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.7 var(--font)}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:16px max(16px,env(safe-area-inset-right,0px)) 48px max(16px,env(safe-area-inset-left,0px))}
+header.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:14px 0}
+header.top h1{margin:0;font-size:1.3rem}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:16px}
+.tab{background:none;border:0;border-bottom:3px solid transparent;padding:10px 14px;cursor:pointer;color:var(--muted);font-weight:600}
+.tab[aria-selected=true]{color:var(--accent);border-color:var(--accent)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 14px;cursor:pointer;font-weight:600}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.sm{padding:3px 10px;font-size:.85rem}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.bar .grow{flex:1;min-width:160px}
+input[type=text],input[type=number],input[type=date],input[type=email],input[type=password],input[type=url],select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+textarea{min-height:64px;resize:vertical}
+label.f{display:flex;flex-direction:column;gap:3px;font-size:.88rem;color:var(--muted);min-width:0}
+.ltr{direction:ltr;text-align:left;font-family:var(--mono);font-size:.9em}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:720px}
+th,td{padding:9px 12px;text-align:right;border-bottom:1px solid var(--line);vertical-align:middle}
+th{background:var(--accent-soft);font-size:.85rem;white-space:nowrap}
+tr:last-child td{border-bottom:0}
+tbody tr.clk{cursor:pointer} tbody tr.clk:hover{background:var(--accent-soft)}
+.pill{display:inline-block;padding:0 10px;border-radius:99px;font-size:.8rem;font-weight:700;white-space:nowrap}
+.p-trial{background:var(--info-soft);color:var(--info)} .p-free{background:var(--code);color:var(--muted)}
+.p-active{background:var(--ok-soft);color:var(--ok)} .p-grace{background:var(--warn-soft);color:var(--warn)}
+.p-expired{background:var(--bad-soft);color:var(--bad)} .p-suspended{background:var(--bad);color:#fff}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)} .small{font-size:.85rem}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px 12px;z-index:50}
+.modal{background:var(--bg);border-radius:12px;width:100%;max-width:860px;box-shadow:var(--shadow);padding:16px max(16px,env(safe-area-inset-right,0px)) 20px max(16px,env(safe-area-inset-left,0px))}
+.modal h2{margin:0 0 12px;font-size:1.2rem;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.sec{margin-bottom:14px} .sec h3{margin:0 0 8px;font-size:1rem}
+.mods{display:grid;gap:4px 14px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.mods label{display:flex;gap:6px;align-items:center;font-size:.9rem}
+.toast{position:fixed;bottom:max(16px,env(safe-area-inset-bottom,0px));inset-inline:16px;margin:auto;max-width:420px;background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;z-index:99;text-align:center}
+.toast.err{background:var(--bad);color:#fff}
+.login{max-width:380px;margin:12vh auto;display:flex;flex-direction:column;gap:12px}
+.ro .wr{display:none!important}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.kv div{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.kv b{display:block;font-size:1.05rem}
+.diff{font-size:.82rem;color:var(--muted);max-width:360px;overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+<div id="app" class="wrap"></div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+/* ===== الإعدادات: المفتاح العام (anon) فقط. لا تضع هنا أي مفتاح سري أبدًا ===== */
+const OWNER_DB_URL = 'https://aagyaxicphooldhwycko.supabase.co';
+const OWNER_DB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhZ3lheGljcGhvb2xkaHd5Y2tvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU1ODI0MTQsImV4cCI6MjEwMTE1ODQxNH0.IXId6VALd6WwufMwyHjwK12zYXAozPOXUdyjM4omUh4';
+const DEFAULT_APP_URL = 'https://magziko.github.io/Pos/';
+
+const sb = window.supabase.createClient(OWNER_DB_URL, OWNER_DB_ANON, { auth: { persistSession: true, autoRefreshToken: true } });
+const $ = (s, r = document) => r.querySelector(s);
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const today = () => new Date().toLocaleDateString('en-CA');
+const addDays = (iso, n) => { const d = new Date((iso || today()) + 'T00:00:00'); d.setDate(d.getDate() + n); return d.toLocaleDateString('en-CA'); };
+const daysBetween = (a, b) => Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000);
+const STATUS = { trial: 'تجريبي', free: 'مجاني', active: 'مشترك', grace: 'فترة سماح', expired: 'منتهي', suspended: 'موقوف' };
+const KIND = { core: 'أساسية', activity: 'نشاط', addon: 'إضافة' };
+const pill = s => `<span class="pill p-${esc(s)}">${esc(STATUS[s] || s || '-')}</span>`;
+
+const S = { role: null, tab: 'clients', plans: [], mods: [], planMods: {}, tenants: [], ents: {}, subs: {}, ovr: {}, rules: [], audit: [], usage: {}, filter: { q: '', st: '' } };
+const canWrite = () => S.role === 'owner';
+
+function toast(msg, err) {
+  const t = $('#toast'); t.textContent = msg; t.className = 'toast' + (err ? ' err' : ''); t.hidden = false;
+  clearTimeout(toast._t); toast._t = setTimeout(() => { t.hidden = true; }, err ? 6000 : 2800);
+}
+const fail = (e, ctx) => { console.error(ctx, e); toast((ctx ? ctx + ': ' : '') + (e && e.message ? e.message : e), true); };
+
+/* ---------------- الدخول ---------------- */
+function renderLogin(msg) {
+  $('#app').className = 'wrap';
+  $('#app').innerHTML = `<form class="login card" id="loginForm">
+    <h1 style="margin:0">لوحة مالك البرنامج</h1>
+    <p class="muted small" style="margin:0">دخول المالك فقط.</p>
+    ${msg ? `<div class="pill p-expired" style="border-radius:8px;padding:6px 10px">${esc(msg)}</div>` : ''}
+    <label class="f">البريد الإلكتروني<input id="lgEmail" type="email" autocomplete="username" required class="ltr"></label>
+    <label class="f">كلمة المرور<input id="lgPass" type="password" autocomplete="current-password" required></label>
+    <button class="btn primary" id="lgBtn" type="submit">دخول</button></form>`;
+  $('#loginForm').onsubmit = async e => {
+    e.preventDefault(); const b = $('#lgBtn'); b.disabled = true; b.textContent = 'جاري الدخول...';
+    const { error } = await sb.auth.signInWithPassword({ email: $('#lgEmail').value.trim(), password: $('#lgPass').value });
+    if (error) { renderLogin('بيانات الدخول غير صحيحة'); return; }
+    await boot();
+  };
+}
+async function boot() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return renderLogin();
+  const { data, error } = await sb.from('owner_admins').select('role').eq('user_id', session.user.id).maybeSingle();
+  if (error || !data) { await sb.auth.signOut(); return renderLogin('هذا الحساب ليس مالكًا. اطلب إضافته في جدول owner_admins.'); }
+  S.role = data.role;
+  await loadAll(); renderShell();
+}
+async function logout() { await sb.auth.signOut(); S.role = null; renderLogin(); }
+
+/* ---------------- تحميل البيانات ---------------- */
+async function loadAll() {
+  const q = t => sb.from(t).select('*');
+  const [pl, md, pm, tn, su, ov, ru, us] = await Promise.all([
+    q('plans').order('kind').order('max_users', { nullsFirst: false }), q('modules_catalog').order('sort_order'), q('plan_modules'),
+    q('tenants').order('created_at', { ascending: false }),
+    q('tenant_subscriptions').order('starts_on', { ascending: false }).order('created_at', { ascending: false }),
+    q('tenant_overrides'), q('order_count_rules').order('module_key'),
+    q('usage_snapshots').order('taken_at', { ascending: false }).limit(500)]);
+  for (const r of [pl, md, pm, tn, su, ov, ru, us]) if (r.error) return fail(r.error, 'تحميل البيانات');
+  S.plans = pl.data; S.mods = md.data; S.tenants = tn.data; S.rules = ru.data;
+  S.planMods = {}; pm.data.forEach(r => (S.planMods[r.plan_code] ||= []).push(r.module_key));
+  S.subs = {}; su.data.forEach(r => (S.subs[r.tenant_id] ||= []).push(r));
+  S.ovr = {}; ov.data.forEach(r => { S.ovr[r.tenant_id] = r; });
+  S.usage = {}; us.data.forEach(r => { if (!S.usage[r.tenant_id]) S.usage[r.tenant_id] = r; });
+  await loadEntitlements();
+}
+async function loadEntitlements() {
+  const res = await Promise.all(S.tenants.map(t => sb.rpc('compute_entitlement', { p_tenant: t.id })));
+  S.ents = {}; S.tenants.forEach((t, i) => { S.ents[t.id] = res[i].data || null; });
+}
+async function loadAudit() {
+  const { data, error } = await sb.from('audit_log').select('*').order('at', { ascending: false }).limit(150);
+  if (error) return fail(error, 'السجل'); S.audit = data;
+}
+// تحديث الحالة المخزنة في tenants لتطابق الحالة المحسوبة (ما عدا الموقوف)
+async function syncStatus(id) {
+  const { data } = await sb.rpc('compute_entitlement', { p_tenant: id });
+  const t = S.tenants.find(x => x.id === id);
+  if (data && t && t.status !== 'suspended' && data.status !== t.status && data.status !== 'grace') await sb.from('tenants').update({ status: data.status }).eq('id', id);
+}
+const refresh = async keepId => { await loadAll(); renderShell(); if (keepId) openTenant(keepId); };
+
+/* ---------------- الهيكل العام ---------------- */
+function renderShell() {
+  $('#app').className = 'wrap' + (canWrite() ? '' : ' ro');
+  $('#app').innerHTML = `<header class="top"><h1>لوحة مالك البرنامج</h1>
+    <div class="bar" style="margin:0"><span class="muted small">${S.role === 'owner' ? 'مالك' : 'دعم فني (قراءة فقط)'}</span>
+    <button class="btn sm" id="btnRefresh">تحديث</button><button class="btn sm" id="btnOut">خروج</button></div></header>
+    <div class="tabs" role="tablist">${[['clients', 'العملاء'], ['plans', 'الباقات'], ['rules', 'تعريف الطلب'], ['audit', 'سجل التغييرات']]
+      .map(([k, l]) => `<button class="tab" role="tab" data-tab="${k}" aria-selected="${S.tab === k}">${l}</button>`).join('')}</div>
+    <main id="view"></main>`;
+  $('#btnOut').onclick = logout; $('#btnRefresh').onclick = () => refresh();
+  document.querySelectorAll('.tab').forEach(b => b.onclick = async () => { S.tab = b.dataset.tab; if (S.tab === 'audit') await loadAudit(); renderShell(); });
+  ({ clients: viewClients, plans: viewPlans, rules: viewRules, audit: viewAudit })[S.tab]();
+}
+
+/* ---------------- العملاء ---------------- */
+const limTxt = v => v == null ? '∞' : v;
+function viewClients() {
+  const f = S.filter, q = f.q.trim().toLowerCase();
+  const rows = S.tenants.filter(t => {
+    const e = S.ents[t.id]; const st = t.status === 'suspended' ? 'suspended' : (e ? e.status : t.status);
+    return (!f.st || st === f.st) && (!q || (t.name + ' ' + t.code + ' ' + (t.contact_name || '') + ' ' + (t.phone || '')).toLowerCase().includes(q));
+  });
+  const cnt = {}; S.tenants.forEach(t => { const e = S.ents[t.id]; const s = t.status === 'suspended' ? 'suspended' : (e ? e.status : t.status); cnt[s] = (cnt[s] || 0) + 1; });
+  $('#view').innerHTML = `
+    <div class="kv" style="margin-bottom:12px"><div><span class="muted small">كل العملاء</span><b class="num">${S.tenants.length}</b></div>
+    ${Object.keys(STATUS).map(s => `<div><span class="muted small">${STATUS[s]}</span><b class="num">${cnt[s] || 0}</b></div>`).join('')}</div>
+    <div class="bar"><input class="grow" id="fq" type="text" placeholder="بحث بالاسم أو الكود أو الهاتف" value="${esc(f.q)}">
+      <select id="fst" style="width:auto"><option value="">كل الحالات</option>${Object.keys(STATUS).map(s => `<option value="${s}" ${f.st === s ? 'selected' : ''}>${STATUS[s]}</option>`).join('')}</select>
+      <button class="btn" id="btnCsv">تصدير CSV</button><button class="btn primary wr" id="btnNew">+ عميل جديد</button></div>
+    <div class="tw"><table><thead><tr><th>العميل</th><th>الكود</th><th>الحالة</th><th>الباقة</th><th>ينتهي</th><th>مستخدمين</th><th>فروع</th><th>أوردرات</th></tr></thead><tbody>
+    ${rows.map(t => { const e = S.ents[t.id] || {}, L = e.limits || {}, st = t.status === 'suspended' ? 'suspended' : (e.status || t.status);
+      const left = e.ends_on ? daysBetween(today(), e.ends_on) : null;
+      return `<tr class="clk" data-id="${t.id}"><td><b>${esc(t.name)}</b><div class="muted small">${esc(t.contact_name || '')} ${esc(t.phone || '')}</div></td>
+      <td class="ltr">${esc(t.code)}</td><td>${pill(st)}</td><td>${esc(e.plan_name || '-')}</td>
+      <td class="num">${e.ends_on ? esc(e.ends_on) + `<div class="small ${left < 0 ? 'muted' : left <= 7 ? '' : 'muted'}">${left < 0 ? 'منذ ' + (-left) + ' يوم' : 'بعد ' + left + ' يوم'}</div>` : (e.plan ? 'مفتوح' : '-')}</td>
+      <td class="num">${limTxt(L.users)}</td><td class="num">${limTxt(L.branches)}</td><td class="num">${limTxt(L.orders)} <span class="muted small">${L.orders_period === 'monthly' ? 'شهري' : L.orders_period === 'total' ? 'إجمالي' : ''}</span></td></tr>`; }).join('')
+      || `<tr><td colspan="8" class="empty">${S.tenants.length ? 'لا نتائج مطابقة' : 'لا يوجد عملاء بعد. اضغط «عميل جديد» لإضافة أول عميل.'}</td></tr>`}
+    </tbody></table></div>`;
+  $('#fq').oninput = e => { S.filter.q = e.target.value; const p = e.target.selectionStart; viewClients(); const i = $('#fq'); i.focus(); i.setSelectionRange(p, p); };
+  $('#fst').onchange = e => { S.filter.st = e.target.value; viewClients(); };
+  $('#btnCsv').onclick = exportCsv; if ($('#btnNew')) $('#btnNew').onclick = () => openTenant(null);
+  document.querySelectorAll('tr.clk').forEach(r => r.onclick = () => openTenant(r.dataset.id));
+}
+function exportCsv() {
+  const head = ['الاسم', 'الكود', 'المسؤول', 'الهاتف', 'البريد', 'الحالة', 'الباقة', 'بداية', 'نهاية', 'مستخدمين', 'فروع', 'أوردرات', 'فترة الأوردرات'];
+  const rows = S.tenants.map(t => { const e = S.ents[t.id] || {}, L = e.limits || {}; return [t.name, t.code, t.contact_name, t.phone, t.email, t.status === 'suspended' ? 'suspended' : e.status, e.plan_name, e.starts_on, e.ends_on, L.users, L.branches, L.orders, L.orders_period]; });
+  const csv = '﻿' + [head, ...rows].map(r => r.map(c => '"' + String(c ?? '').replace(/"/g, '""') + '"').join(',')).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); a.download = 'clients-' + today() + '.csv'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+/* ---------------- نافذة العميل ---------------- */
+function closeModal() { const m = $('#modal'); if (m) m.remove(); }
+function modal(html) { closeModal(); const d = document.createElement('div'); d.id = 'modal'; d.className = 'modal-bg' + (canWrite() ? '' : ' ro'); d.innerHTML = `<div class="modal" role="dialog" aria-modal="true">${html}</div>`; d.addEventListener('mousedown', e => { if (e.target === d) closeModal(); }); document.body.appendChild(d); return d; }
+const appUrl = () => { try { return localStorage.getItem('owner_app_url') || DEFAULT_APP_URL; } catch (e) { return DEFAULT_APP_URL; } };
+const val = id => { const v = $('#' + id).value.trim(); return v === '' ? null : v; };
+const numOrNull = id => { const v = $('#' + id).value.trim(); return v === '' ? null : Number(v); };
+
+function openTenant(id) {
+  const t = id ? S.tenants.find(x => x.id === id) : { code: '', name: '', status: 'trial' };
+  const e = (id && S.ents[id]) || {}, subs = (id && S.subs[id]) || [], o = (id && S.ovr[id]) || {};
+  const curPlan = S.plans.find(p => p.plan_code === (e.plan || 'trial')) || S.plans[0];
+  const eff = new Set(e.modules || []), inPlan = new Set(S.planMods[curPlan?.plan_code] || []);
+  const link = t.code ? appUrl().replace(/\/?$/, '/') + '?c=' + t.code : '';
+  const actCount = S.mods.filter(m => m.kind === 'activity' && eff.has(m.module_key)).length;
+  const actMax = e.limits ? e.limits.activity_modules : null;
+  modal(`<h2><span>${id ? esc(t.name) : 'عميل جديد'} ${id ? pill(t.status === 'suspended' ? 'suspended' : e.status) : ''}</span><button class="btn sm" id="mClose">إغلاق</button></h2>
+  <div class="sec card"><h3>بيانات العميل</h3><div class="grid">
+    <label class="f">اسم النشاط<input id="tName" type="text" value="${esc(t.name)}"></label>
+    <label class="f">كود العميل (حروف إنجليزية صغيرة وأرقام)<input id="tCode" class="ltr" type="text" value="${esc(t.code)}" ${id ? 'readonly' : ''}></label>
+    <label class="f">اسم المسؤول<input id="tContact" type="text" value="${esc(t.contact_name)}"></label>
+    <label class="f">الهاتف<input id="tPhone" class="ltr" type="text" value="${esc(t.phone)}"></label>
+    <label class="f">البريد<input id="tEmail" class="ltr" type="email" value="${esc(t.email)}"></label>
+    <label class="f">نوع النشاط<input id="tBiz" type="text" value="${esc(t.business_type)}"></label>
+    <label class="f">رابط مشروع Supabase للعميل<input id="tUrl" class="ltr" type="url" placeholder="https://xxxx.supabase.co" value="${esc(t.supabase_url)}"></label>
+    <label class="f">المفتاح العام (anon) فقط<input id="tKey" class="ltr" type="text" value="${esc(t.supabase_anon_key)}"></label></div>
+    <label class="f" style="margin-top:8px">ملاحظات<textarea id="tNotes">${esc(t.notes)}</textarea></label>
+    ${id ? `<div class="bar" style="margin-top:8px"><span class="muted small">رابط دخول العميل:</span><code class="ltr grow" style="background:var(--code);padding:3px 8px;border-radius:6px;overflow-wrap:anywhere">${esc(link)}</code><button class="btn sm" id="cpLink">نسخ</button></div>
+    <label class="f">رابط البرنامج الأساسي (يُحفظ على هذا المتصفح)<input id="appUrl" class="ltr" type="url" value="${esc(appUrl())}"></label>` : ''}
+    <div class="bar wr" style="margin-top:10px">${id ? '' : `<label class="f">الباقة الأولى<select id="nPlan">${S.plans.map(p => `<option value="${esc(p.plan_code)}">${esc(p.name)}</option>`).join('')}</select></label>`}
+    <button class="btn primary" id="saveT">${id ? 'حفظ البيانات' : 'إضافة العميل'}</button></div></div>
+  ${id ? `
+  <div class="sec card"><h3>الاشتراك</h3>
+    <div class="kv"><div><span class="muted small">الباقة</span><b>${esc(e.plan_name || '-')}</b></div><div><span class="muted small">من</span><b class="num">${esc(e.starts_on || '-')}</b></div>
+    <div><span class="muted small">إلى</span><b class="num">${esc(e.ends_on || 'مفتوح')}</b></div><div><span class="muted small">سماح (يوم)</span><b class="num">${esc(e.grace_days ?? '-')}</b></div></div>
+    <div class="grid wr" style="margin-top:10px">
+      <label class="f">الباقة<select id="sPlan">${S.plans.map(p => `<option value="${esc(p.plan_code)}" ${p.plan_code === e.plan ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select></label>
+      <label class="f">بداية<input id="sFrom" type="date" value="${today()}"></label>
+      <label class="f">نهاية (فارغ = مفتوح)<input id="sTo" type="date"></label>
+      <label class="f">أيام السماح (فارغ = من الباقة)<input id="sGrace" type="number" min="0"></label></div>
+    <label class="f wr" style="margin-top:6px">ملاحظة (الدفع، رقم الإيصال...)<input id="sNote" type="text"></label>
+    <div class="bar wr" style="margin-top:8px"><button class="btn primary" id="saveS">حفظ كاشتراك جديد</button><span class="muted small">تمديد سريع:</span>
+      <button class="btn sm" data-ext="7">+7 أيام</button><button class="btn sm" data-ext="30">+30 يوم</button><button class="btn sm" data-ext="365">+سنة</button>
+      <button class="btn sm" id="renew">تجديد بمدة الباقة</button></div>
+    ${subs.length ? `<details style="margin-top:8px"><summary class="small muted">سجل الاشتراكات (${subs.length})</summary><div class="tw" style="margin-top:6px"><table style="min-width:520px"><thead><tr><th>الباقة</th><th>من</th><th>إلى</th><th>ملاحظة</th></tr></thead><tbody>
+      ${subs.map(s => `<tr><td>${esc((S.plans.find(p => p.plan_code === s.plan_code) || {}).name || s.plan_code)}</td><td class="num">${esc(s.starts_on)}</td><td class="num">${esc(s.ends_on || 'مفتوح')}</td><td>${esc(s.note || '')}</td></tr>`).join('')}</tbody></table></div></details>` : '<p class="muted small">لا اشتراك مسجل بعد.</p>'}</div>
+  <div class="sec card"><h3>الحدود والوحدات المسموحة</h3>
+    <p class="muted small" style="margin:0 0 8px">اترك الحد فارغًا ليأخذ قيمة الباقة (${esc(curPlan?.name || '')}: مستخدمين ${limTxt(curPlan?.max_users)}، فروع ${limTxt(curPlan?.max_branches)}، أوردرات ${limTxt(curPlan?.max_orders)}).</p>
+    <div class="grid"><label class="f">أقصى مستخدمين<input id="oUsers" type="number" min="0" value="${esc(o.max_users ?? '')}"></label>
+    <label class="f">أقصى فروع<input id="oBr" type="number" min="0" value="${esc(o.max_branches ?? '')}"></label>
+    <label class="f">أقصى أوردرات (${e.limits?.orders_period === 'monthly' ? 'شهريًا' : e.limits?.orders_period === 'total' ? 'إجمالي' : 'بلا حد'})<input id="oOrd" type="number" min="0" value="${esc(o.max_orders ?? '')}"></label></div>
+    <h3 style="margin-top:12px">الوحدات والأنشطة ${actMax != null ? `<span class="small ${actCount > actMax ? 'pill p-expired' : 'muted'}">أنشطة مفعلة ${actCount} من ${actMax}</span>` : ''}</h3>
+    <div class="mods">${S.mods.map(m => `<label><input type="checkbox" class="mchk" data-k="${esc(m.module_key)}" ${eff.has(m.module_key) ? 'checked' : ''}> ${esc(m.title)} <span class="muted small">(${KIND[m.kind]}${inPlan.has(m.module_key) ? ' • من الباقة' : ''})</span></label>`).join('')}</div>
+    <div class="bar wr" style="margin-top:10px"><button class="btn primary" id="saveO">حفظ الحدود والوحدات</button></div>
+    <p class="muted small" style="margin-bottom:0">ملاحظة: هذه الإعدادات تُحفظ هنا. دفعها إلى قاعدة العميل وفرضها هناك هي المرحلة التالية.</p></div>
+  <div class="sec card wr"><h3>الإيقاف</h3><p class="muted small" style="margin:0 0 8px">الإيقاف يمنع الدخول الجديد ولا يمس بيانات العميل.</p>
+    ${t.status === 'suspended' ? '<button class="btn primary" id="unsus">إعادة تفعيل العميل</button>' : '<button class="btn danger" id="sus">إيقاف العميل</button>'}</div>
+  <div class="sec card"><h3>آخر التغييرات</h3><div id="tAudit" class="small muted">جاري التحميل...</div></div>` : ''}`);
+  $('#mClose').onclick = closeModal;
+  if (!id) return void ($('#saveT').onclick = createTenant);
+  $('#saveT').onclick = () => saveTenant(id);
+  $('#cpLink').onclick = () => { navigator.clipboard.writeText(link).then(() => toast('تم نسخ الرابط'), () => toast('انسخ الرابط يدويًا', true)); };
+  $('#appUrl').onchange = e => { try { localStorage.setItem('owner_app_url', e.target.value.trim()); } catch (x) { /* تجاهل */ } openTenant(id); };
+  $('#saveS').onclick = () => saveSub(id, { plan: $('#sPlan').value, from: $('#sFrom').value || today(), to: $('#sTo').value || null, grace: numOrNull('sGrace'), note: val('sNote') });
+  document.querySelectorAll('[data-ext]').forEach(b => b.onclick = () => extend(id, Number(b.dataset.ext)));
+  $('#renew').onclick = () => renew(id);
+  $('#saveO').onclick = () => saveOverrides(id, curPlan.plan_code, inPlan);
+  if ($('#sus')) $('#sus').onclick = () => setSuspended(id, true); if ($('#unsus')) $('#unsus').onclick = () => setSuspended(id, false);
+  sb.from('audit_log').select('*').eq('tenant_id', id).order('at', { ascending: false }).limit(15).then(({ data }) => {
+    const el = $('#tAudit'); if (!el) return;
+    el.innerHTML = (data || []).length ? `<div class="tw"><table style="min-width:480px"><tbody>${data.map(r => `<tr><td class="num">${esc(new Date(r.at).toLocaleString('ar-EG'))}</td><td>${esc(r.table_name)}</td><td>${esc(r.action)}</td><td class="diff">${esc(diffKeys(r))}</td></tr>`).join('')}</tbody></table></div>` : 'لا تغييرات مسجلة.';
+  });
+}
+function diffKeys(r) {
+  if (r.action !== 'UPDATE' || !r.before || !r.after) return '';
+  return Object.keys(r.after).filter(k => JSON.stringify(r.after[k]) !== JSON.stringify(r.before[k]) && k !== 'updated_at').map(k => k + ': ' + JSON.stringify(r.before[k]) + ' → ' + JSON.stringify(r.after[k])).join(' | ').slice(0, 300);
+}
+function readTenantForm() {
+  return { name: val('tName'), contact_name: val('tContact'), phone: val('tPhone'), email: val('tEmail'), business_type: val('tBiz'), supabase_url: val('tUrl'), supabase_anon_key: val('tKey'), notes: val('tNotes') };
+}
+function validTenant(p, code) {
+  if (!p.name) return 'اكتب اسم النشاط';
+  if (code !== undefined && !/^[a-z0-9][a-z0-9_-]{2,30}$/.test(code)) return 'الكود: 3 إلى 31 حرفًا إنجليزيًا صغيرًا أو أرقامًا أو - _';
+  if (!p.supabase_url || !/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(p.supabase_url)) return 'رابط Supabase غير صحيح (مثال: https://abcd.supabase.co)';
+  if (!p.supabase_anon_key) return 'ضع المفتاح العام (anon) للعميل';
+  if (/service_role/.test(atobSafe(p.supabase_anon_key))) return 'هذا مفتاح service_role السري. ممنوع وضعه هنا. استخدم مفتاح anon فقط.';
+  return null;
+}
+function atobSafe(k) { try { return atob(k.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')); } catch (e) { return ''; } }
+async function createTenant() {
+  const p = readTenantForm(), code = ($('#tCode').value || '').trim().toLowerCase(), err = validTenant(p, code);
+  if (err) return toast(err, true);
+  const btn = $('#saveT'); btn.disabled = true;
+  const { data, error } = await sb.from('tenants').insert({ ...p, code }).select().single();
+  if (error) { btn.disabled = false; return fail(/duplicate|unique/i.test(error.message) ? new Error('الكود مستخدم بالفعل') : error, 'إضافة العميل'); }
+  const plan = S.plans.find(x => x.plan_code === $('#nPlan').value);
+  const ends = plan && plan.duration_days ? addDays(today(), plan.duration_days) : null;
+  const r = await sb.from('tenant_subscriptions').insert({ tenant_id: data.id, plan_code: plan.plan_code, starts_on: today(), ends_on: ends, note: 'اشتراك أولي' });
+  if (r.error) fail(r.error, 'الاشتراك');
+  await syncStatus(data.id); toast('تمت إضافة العميل'); await refresh(data.id);
+}
+async function saveTenant(id) {
+  const p = readTenantForm(), err = validTenant(p); if (err) return toast(err, true);
+  const { error } = await sb.from('tenants').update(p).eq('id', id); if (error) return fail(error, 'حفظ البيانات');
+  toast('تم حفظ البيانات'); await refresh(id);
+}
+async function saveSub(id, s) {
+  if (s.to && s.to < s.from) return toast('تاريخ النهاية قبل البداية', true);
+  const { error } = await sb.from('tenant_subscriptions').insert({ tenant_id: id, plan_code: s.plan, starts_on: s.from, ends_on: s.to, grace_days: s.grace, note: s.note });
+  if (error) return fail(error, 'حفظ الاشتراك');
+  await syncStatus(id); toast('تم حفظ الاشتراك'); await refresh(id);
+}
+async function extend(id, days) {
+  const e = S.ents[id]; if (!e || !e.plan) return toast('لا اشتراك للتمديد. احفظ اشتراكًا أولًا', true);
+  const base = e.ends_on && e.ends_on > today() ? e.ends_on : today();
+  await saveSub(id, { plan: e.plan, from: today(), to: addDays(base, days), grace: null, note: 'تمديد ' + days + ' يوم' });
+}
+async function renew(id) {
+  const e = S.ents[id]; if (!e || !e.plan) return toast('لا اشتراك للتجديد. احفظ اشتراكًا أولًا', true);
+  const p = S.plans.find(x => x.plan_code === e.plan); if (!p.duration_days) return toast('هذه الباقة بلا مدة', true);
+  const base = e.ends_on && e.ends_on > today() ? e.ends_on : today();
+  await saveSub(id, { plan: e.plan, from: today(), to: addDays(base, p.duration_days), grace: null, note: 'تجديد' });
+}
+async function saveOverrides(id, planCode, inPlan) {
+  const extra = [], removed = [];
+  document.querySelectorAll('.mchk').forEach(c => { const k = c.dataset.k; if (c.checked && !inPlan.has(k)) extra.push(k); if (!c.checked && inPlan.has(k)) removed.push(k); });
+  if (removed.includes('admin')) return toast('لا يمكن إزالة وحدة الإدارة (المستخدمون والفروع)', true);
+  const row = { tenant_id: id, max_users: numOrNull('oUsers'), max_branches: numOrNull('oBr'), max_orders: numOrNull('oOrd'), extra_modules: extra, removed_modules: removed, updated_at: new Date().toISOString() };
+  const { error } = await sb.from('tenant_overrides').upsert(row); if (error) return fail(error, 'حفظ الحدود');
+  toast('تم حفظ الحدود والوحدات'); await refresh(id);
+}
+async function setSuspended(id, on) {
+  const { error } = await sb.from('tenants').update({ status: on ? 'suspended' : 'active' }).eq('id', id); if (error) return fail(error, 'تغيير الحالة');
+  if (!on) await syncStatus(id); toast(on ? 'تم إيقاف العميل' : 'تمت إعادة التفعيل'); await refresh(id);
+}
+
+/* ---------------- الباقات ---------------- */
+function viewPlans() {
+  $('#view').innerHTML = `<div class="bar"><span class="muted small grow">الباقات الحالية تنطبق على العملاء الذين يستخدمونها. القيمة الفارغة تعني غير محدود.</span><button class="btn primary wr" id="newPlan">+ باقة جديدة</button></div>
+  <div class="tw"><table><thead><tr><th>الباقة</th><th>النوع</th><th>المدة</th><th>مستخدمين</th><th>فروع</th><th>أوردرات</th><th>أنشطة</th><th>سماح</th><th>السعر</th><th>عملاء</th></tr></thead><tbody>
+  ${S.plans.map(p => { const n = S.tenants.filter(t => (S.ents[t.id] || {}).plan === p.plan_code).length;
+    return `<tr class="clk" data-p="${esc(p.plan_code)}"><td><b>${esc(p.name)}</b> <span class="ltr muted small">${esc(p.plan_code)}</span>${p.is_active ? '' : ' <span class="pill p-free">معطلة</span>'}</td>
+    <td>${{ trial: 'تجريبية', free: 'مجانية', paid: 'مدفوعة' }[p.kind]}</td><td class="num">${p.duration_days ? p.duration_days + ' يوم' : 'مفتوحة'}</td>
+    <td class="num">${limTxt(p.max_users)}</td><td class="num">${limTxt(p.max_branches)}</td><td class="num">${limTxt(p.max_orders)} <span class="muted small">${{ monthly: 'شهري', total: 'إجمالي', none: '' }[p.orders_period]}</span></td>
+    <td class="num">${limTxt(p.max_activity_modules)}</td><td class="num">${p.grace_days}</td><td class="num">${p.price_monthly ?? '-'} ${p.price_monthly ? esc(p.currency) : ''}</td><td class="num">${n}</td></tr>`; }).join('')}
+  </tbody></table></div>`;
+  document.querySelectorAll('tr.clk').forEach(r => r.onclick = () => openPlan(r.dataset.p));
+  if ($('#newPlan')) $('#newPlan').onclick = () => openPlan(null);
+}
+function openPlan(code) {
+  const p = code ? S.plans.find(x => x.plan_code === code) : { plan_code: '', name: '', kind: 'paid', duration_days: 30, max_users: 5, max_branches: 1, max_orders: 1000, orders_period: 'monthly', max_activity_modules: 1, grace_days: 7, currency: 'EGP', is_active: true, features: {} };
+  const mods = new Set(S.planMods[code] || ['admin']);
+  const num = (id, l, v, extra = '') => `<label class="f">${l}<input id="${id}" type="number" min="0" value="${esc(v ?? '')}" ${extra}></label>`;
+  modal(`<h2><span>${code ? 'تعديل باقة: ' + esc(p.name) : 'باقة جديدة'}</span><button class="btn sm" id="mClose">إغلاق</button></h2>
+  <div class="card sec"><div class="grid">
+    <label class="f">كود الباقة (إنجليزي)<input id="pCode" class="ltr" type="text" value="${esc(p.plan_code)}" ${code ? 'readonly' : ''}></label>
+    <label class="f">الاسم<input id="pName" type="text" value="${esc(p.name)}"></label>
+    <label class="f">النوع<select id="pKind">${[['trial', 'تجريبية'], ['free', 'مجانية'], ['paid', 'مدفوعة']].map(([k, l]) => `<option value="${k}" ${p.kind === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+    ${num('pDur', 'المدة بالأيام (فارغ = مفتوحة)', p.duration_days)}${num('pUsers', 'أقصى مستخدمين (فارغ = بلا حد)', p.max_users)}${num('pBr', 'أقصى فروع (فارغ = بلا حد)', p.max_branches)}
+    ${num('pOrd', 'أقصى أوردرات (فارغ = بلا حد)', p.max_orders)}
+    <label class="f">فترة حساب الأوردرات<select id="pPer">${[['monthly', 'شهريًا'], ['total', 'إجمالي'], ['none', 'بلا حد']].map(([k, l]) => `<option value="${k}" ${p.orders_period === k ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+    ${num('pAct', 'عدد الأنشطة المسموحة (فارغ = كلها)', p.max_activity_modules)}${num('pGrace', 'أيام السماح بعد الانتهاء', p.grace_days)}${num('pPrice', 'السعر الشهري', p.price_monthly, 'step="0.01"')}
+    <label class="f">العملة<input id="pCur" type="text" value="${esc(p.currency)}"></label>
+    <label class="f">الحالة<select id="pAct2"><option value="1" ${p.is_active ? 'selected' : ''}>مفعلة</option><option value="0" ${p.is_active ? '' : 'selected'}>معطلة (لا تظهر للعملاء الجدد)</option></select></label></div>
+    <h3 style="margin-top:12px">الوحدات في هذه الباقة</h3>
+    <div class="mods">${S.mods.map(m => `<label><input type="checkbox" class="pchk" data-k="${esc(m.module_key)}" ${mods.has(m.module_key) ? 'checked' : ''}> ${esc(m.title)} <span class="muted small">(${KIND[m.kind]})</span></label>`).join('')}</div>
+    <div class="bar wr" style="margin-top:12px"><button class="btn primary" id="savePlan">حفظ الباقة</button></div></div>`);
+  $('#mClose').onclick = closeModal;
+  $('#savePlan').onclick = async () => {
+    const pc = code || ($('#pCode').value || '').trim().toLowerCase();
+    if (!/^[a-z0-9_-]{2,30}$/.test(pc)) return toast('كود الباقة غير صحيح', true);
+    if (!val('pName')) return toast('اكتب اسم الباقة', true);
+    const row = { plan_code: pc, name: val('pName'), kind: $('#pKind').value, duration_days: numOrNull('pDur'), max_users: numOrNull('pUsers'), max_branches: numOrNull('pBr'), max_orders: numOrNull('pOrd'), orders_period: $('#pPer').value, max_activity_modules: numOrNull('pAct'), grace_days: numOrNull('pGrace') ?? 0, price_monthly: numOrNull('pPrice'), currency: val('pCur') || 'EGP', is_active: $('#pAct2').value === '1' };
+    const keys = [...document.querySelectorAll('.pchk')].filter(c => c.checked).map(c => c.dataset.k);
+    if (!keys.includes('admin')) return toast('وحدة الإدارة لازمة في كل باقة', true);
+    const r1 = code ? await sb.from('plans').update(row).eq('plan_code', pc) : await sb.from('plans').insert(row);
+    if (r1.error) return fail(r1.error, 'حفظ الباقة');
+    const d = await sb.from('plan_modules').delete().eq('plan_code', pc); if (d.error) return fail(d.error, 'حفظ الوحدات');
+    const i = await sb.from('plan_modules').insert(keys.map(k => ({ plan_code: pc, module_key: k }))); if (i.error) return fail(i.error, 'حفظ الوحدات');
+    toast('تم حفظ الباقة'); closeModal(); await refresh();
+  };
+}
+
+/* ---------------- تعريف الطلب ---------------- */
+function viewRules() {
+  $('#view').innerHTML = `<p class="muted small">يحدد ما يُحسب «أوردر» لكل نشاط. هذه القواعد ستُستخدم عند تفعيل حد الأوردرات في قواعد العملاء. غير المحسوب لا يُعدّ ولا يُمنع.</p>
+  <div class="tw"><table><thead><tr><th>الوحدة</th><th>الجدول</th><th>الحالات المحسوبة</th><th>يُحسب؟</th><th>ملاحظة</th></tr></thead><tbody>
+  ${S.rules.map(r => `<tr><td>${esc((S.mods.find(m => m.module_key === r.module_key) || {}).title || r.module_key)}</td><td class="ltr">${esc(r.table_name)}</td><td class="ltr">${esc((r.counted_statuses || []).join(', ') || '-')}</td>
+  <td><input type="checkbox" class="rchk" data-m="${esc(r.module_key)}" data-t="${esc(r.table_name)}" ${r.counts ? 'checked' : ''} ${canWrite() ? '' : 'disabled'}></td><td class="small">${esc(r.note || '')}</td></tr>`).join('')}</tbody></table></div>`;
+  document.querySelectorAll('.rchk').forEach(c => c.onchange = async () => {
+    const { error } = await sb.from('order_count_rules').update({ counts: c.checked }).eq('module_key', c.dataset.m).eq('table_name', c.dataset.t);
+    if (error) { c.checked = !c.checked; return fail(error, 'حفظ'); } toast('تم الحفظ');
+    const r = S.rules.find(x => x.module_key === c.dataset.m && x.table_name === c.dataset.t); if (r) r.counts = c.checked;
+  });
+}
+
+/* ---------------- السجل ---------------- */
+function viewAudit() {
+  const name = id => (S.tenants.find(t => t.id === id) || {}).name || '-';
+  $('#view').innerHTML = `<p class="muted small">آخر 150 تغييرًا إداريًا. السجل للإضافة فقط ولا يمكن تعديله أو حذفه.</p><div class="tw"><table><thead><tr><th>الوقت</th><th>العميل</th><th>الجدول</th><th>العملية</th><th>التفاصيل</th></tr></thead><tbody>
+  ${S.audit.map(r => `<tr><td class="num">${esc(new Date(r.at).toLocaleString('ar-EG'))}</td><td>${esc(name(r.tenant_id))}</td><td class="ltr">${esc(r.table_name)}</td><td>${esc({ INSERT: 'إضافة', UPDATE: 'تعديل', DELETE: 'حذف' }[r.action] || r.action)}</td><td class="diff">${esc(diffKeys(r))}</td></tr>`).join('') || '<tr><td colspan="5" class="empty">لا تغييرات بعد</td></tr>'}</tbody></table></div>`;
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+sb.auth.onAuthStateChange(ev => { if (ev === 'SIGNED_OUT' && S.role) { S.role = null; renderLogin(); } });
+boot();
+</script>
+</body>
+</html>
