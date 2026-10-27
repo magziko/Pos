@@ -15731,6 +15731,8 @@ async function getUserProfile(userId) {
     } catch (e) { data.user_expires_at = null; }
     offSet(OFF.profile, { userId, profile: data });
     const { data: { session: currentSession } } = await supabaseClient.auth.getSession();
+    data.auth_email = (currentSession && currentSession.user && currentSession.user.email) || null;
+    offSet(OFF.profile, { userId, profile: data });
     cachePinProfile(data, currentSession);
     return data;
   } catch (err) {
@@ -22832,8 +22834,15 @@ function applyBranchScope(query, branchId, column) {
   return query.in(column, allowed.length ? allowed : ['00000000-0000-0000-0000-000000000000']);
 }
 
+// مالك المنصة (صاحب البرنامج) فقط — شاشة أنواع الأنشطة لا يراها أي مدير عميل.
+// الحماية الفعلية على القاعدة: سياسة business_types_write تتحقق من نفس الإيميل.
+const PLATFORM_OWNER_EMAIL = 'magziko@gmail.com';
+function isPlatformOwner() {
+  return !!currentProfile && String(currentProfile.auth_email || '').toLowerCase() === PLATFORM_OWNER_EMAIL;
+}
 function hasBoPermission(permKey) {
   if (!permKey) return true;
+  if (permKey === 'platform_owner') return isPlatformOwner();
   const perms = currentProfile.roles?.permissions || {};
   return perms.all === true || perms[permKey] === true;
 }
@@ -22845,6 +22854,7 @@ function hasBoPermission(permKey) {
 function hasBoScreenPermission(section) {
   const moduleKey = SECTION_PERMISSION_MAP[section];
   if (!moduleKey) return true;
+  if (moduleKey === 'platform_owner') return isPlatformOwner();
   const perms = currentProfile.roles?.permissions || {};
   if (perms.all === true) return true;
   if (perms.read_only === true) return true;
