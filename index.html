@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>نظام نقاط البيع</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0F6B5C">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="نقاط البيع">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
@@ -60753,5 +60761,32 @@ ol{margin:4px 0;padding-inline-start:20px}li{margin-bottom:1px}.tag{display:flex
 })();
 
 /* rental_module_end */</script>
+<script>
+/* PWA: تسجيل الـ Service Worker + زر تثبيت التطبيق (يظهر فقط حيث يدعمه المتصفح) */
+(function () {
+  try {
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+      window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () { /* تجاهل */ }); });
+    }
+  } catch (e) { /* تجاهل */ }
+  var deferred = null, btn = null;
+  function standalone() { return (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true; }
+  function removeBtn() { if (btn && btn.parentNode) btn.parentNode.removeChild(btn); btn = null; }
+  window.addEventListener('beforeinstallprompt', function (ev) {
+    ev.preventDefault(); deferred = ev;
+    if (standalone() || btn) return;
+    btn = document.createElement('button');
+    btn.type = 'button'; btn.textContent = 'تثبيت التطبيق';
+    btn.style.cssText = 'position:fixed;bottom:14px;left:14px;z-index:99999;padding:10px 16px;border:0;border-radius:999px;background:#0F6B5C;color:#fff;font:600 14px Tajawal,Tahoma,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.25);cursor:pointer';
+    btn.onclick = function () {
+      if (!deferred) return;
+      deferred.prompt();
+      deferred.userChoice.then(function () { deferred = null; removeBtn(); }, function () { removeBtn(); });
+    };
+    document.body.appendChild(btn);
+  });
+  window.addEventListener('appinstalled', function () { deferred = null; removeBtn(); });
+})();
+</script>
 </body>
 </html>
