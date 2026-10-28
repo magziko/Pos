@@ -262,11 +262,12 @@ function openTenant(id) {
     <p class="muted small" style="margin:0 0 8px">اترك الحد فارغًا ليأخذ قيمة الباقة (${esc(curPlan?.name || '')}: مستخدمين ${limTxt(curPlan?.max_users)}، فروع ${limTxt(curPlan?.max_branches)}، أوردرات ${limTxt(curPlan?.max_orders)}).</p>
     <div class="grid"><label class="f">أقصى مستخدمين<input id="oUsers" type="number" min="0" value="${esc(o.max_users ?? '')}"></label>
     <label class="f">أقصى فروع<input id="oBr" type="number" min="0" value="${esc(o.max_branches ?? '')}"></label>
+    <label class="f">أقصى أنشطة مدفوعة (فارغ = من الباقة: ${limTxt(curPlan?.max_activity_modules)})<input id="oAct" type="number" min="0" value="${esc(o.max_activity_modules ?? '')}"></label>
     <label class="f">أقصى أوردرات (${e.limits?.orders_period === 'monthly' ? 'شهريًا' : e.limits?.orders_period === 'total' ? 'إجمالي' : 'بلا حد'})<input id="oOrd" type="number" min="0" value="${esc(o.max_orders ?? '')}"></label></div>
     <h3 style="margin-top:12px">الوحدات والأنشطة ${actMax != null ? `<span class="small ${actCount > actMax ? 'pill p-expired' : 'muted'}">أنشطة مفعلة ${actCount} من ${actMax}</span>` : ''}</h3>
     <div class="mods">${S.mods.map(m => `<label><input type="checkbox" class="mchk" data-k="${esc(m.module_key)}" ${eff.has(m.module_key) ? 'checked' : ''}> ${esc(m.title)} <span class="muted small">(${KIND[m.kind]}${inPlan.has(m.module_key) ? ' • من الباقة' : ''})</span></label>`).join('')}</div>
     <div class="bar wr" style="margin-top:10px"><button class="btn primary" id="saveO">حفظ الحدود والوحدات</button></div>
-    <p class="muted small" style="margin-bottom:0">ملاحظة: هذه الإعدادات تُحفظ هنا. دفعها إلى قاعدة العميل وفرضها هناك هي المرحلة التالية.</p></div>
+    <p class="muted small" style="margin-bottom:0">ملاحظة: التعديل يصل إلى قاعدة العميل تلقائيًا خلال 10 دقائق، وهناك تُرفض أي فروع بأنشطة خارج الباقة. فتح نشاط لعميل = علّم مديوله من القائمة أعلاه ثم احفظ.</p></div>
   <div class="sec card wr"><h3>الإيقاف</h3><p class="muted small" style="margin:0 0 8px">الإيقاف يمنع الدخول الجديد ولا يمس بيانات العميل.</p>
     ${t.status === 'suspended' ? '<button class="btn primary" id="unsus">إعادة تفعيل العميل</button>' : '<button class="btn danger" id="sus">إيقاف العميل</button>'}</div>
   <div class="sec card"><h3>آخر التغييرات</h3><div id="tAudit" class="small muted">جاري التحميل...</div></div>` : ''}`);
@@ -339,7 +340,7 @@ async function saveOverrides(id, planCode, inPlan) {
   const extra = [], removed = [];
   document.querySelectorAll('.mchk').forEach(c => { const k = c.dataset.k; if (c.checked && !inPlan.has(k)) extra.push(k); if (!c.checked && inPlan.has(k)) removed.push(k); });
   if (removed.includes('admin')) return toast('لا يمكن إزالة وحدة الإدارة (المستخدمون والفروع)', true);
-  const row = { tenant_id: id, max_users: numOrNull('oUsers'), max_branches: numOrNull('oBr'), max_orders: numOrNull('oOrd'), extra_modules: extra, removed_modules: removed, updated_at: new Date().toISOString() };
+  const row = { tenant_id: id, max_users: numOrNull('oUsers'), max_branches: numOrNull('oBr'), max_orders: numOrNull('oOrd'), max_activity_modules: numOrNull('oAct'), extra_modules: extra, removed_modules: removed, updated_at: new Date().toISOString() };
   const { error } = await sb.from('tenant_overrides').upsert(row); if (error) return fail(error, 'حفظ الحدود');
   toast('تم حفظ الحدود والوحدات'); await refresh(id);
 }
