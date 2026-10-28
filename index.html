@@ -14956,6 +14956,19 @@ function showView(name) {
 let regBusinessTypesList = [];
 let regBusinessTypesLoaded = false;
 
+// الأنشطة المتاحة في باقة العميل (تُحسب في قاعدة العميل نفسها — نفس منطق الـ Trigger الذي يرفض الباقي).
+// لو الدالة غير موجودة (قاعدة غير مربوطة بباقة) نرجع null ونعرض كل الأنشطة كالمعتاد.
+async function fetchActivityAvailability() {
+  try {
+    const { data, error } = await supabaseClient.rpc('get_activity_availability');
+    if (error || !Array.isArray(data)) return null;
+    const map = {};
+    data.forEach(r => { map[r.business_type_id] = { allowed: r.allowed !== false, reason: r.reason || '' }; });
+    return map;
+  } catch (e) { return null; }
+}
+const ACTIVITY_LOCKED_SUFFIX = ' — غير متاح في باقتك';
+
 async function populateRegisterBusinessTypeSelect() {
   const sel = document.getElementById('regBusinessType');
   const wrap = document.getElementById('regBusinessTypeWrap');
@@ -14979,10 +14992,12 @@ async function populateRegisterBusinessTypeSelect() {
     return;
   }
 
+  const regAvail = await fetchActivityAvailability();
   sel.innerHTML = '<option value="">اختر نشاط النظام...</option>' +
-    regBusinessTypesList.map(bt =>
-      `<option value="${bt.id}">${escapeHtml(bt.settings?.icon ? bt.settings.icon + ' ' : '')}${escapeHtml(bt.name)}</option>`
-    ).join('');
+    regBusinessTypesList.map(bt => {
+      const locked = regAvail && regAvail[bt.id] && regAvail[bt.id].allowed === false;
+      return `<option value="${bt.id}"${locked ? ' disabled' : ''}>${escapeHtml(bt.settings?.icon ? bt.settings.icon + ' ' : '')}${escapeHtml(bt.name)}${locked ? ACTIVITY_LOCKED_SUFFIX : ''}</option>`;
+    }).join('');
   sel.setAttribute('required', 'required');
   if (wrap) wrap.style.display = '';
 }
@@ -15732,6 +15747,7 @@ async function getUserProfile(userId) {
     offSet(OFF.profile, { userId, profile: data });
     const { data: { session: currentSession } } = await supabaseClient.auth.getSession();
     data.auth_email = (currentSession && currentSession.user && currentSession.user.email) || null;
+    if (!window.__entSyncAsked) { window.__entSyncAsked = true; try { supabaseClient.rpc('request_entitlement_sync').then(() => {}, () => {}); } catch (e) { /* تجاهل */ } }
     offSet(OFF.profile, { userId, profile: data });
     cachePinProfile(data, currentSession);
     return data;
@@ -16075,6 +16091,12 @@ registerForm.addEventListener('submit', async (e) => {
   const businessTypeId = document.getElementById('regBusinessType').value || null;
 
   try {
+    if (businessTypeId) {
+      const av = await fetchActivityAvailability();
+      if (av && av[businessTypeId] && av[businessTypeId].allowed === false) {
+        throw new Error(av[businessTypeId].reason || 'هذا النشاط غير متاح في باقتك الحالية');
+      }
+    }
     const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email, password });
     if (signUpError) throw signUpError;
 
@@ -32892,6 +32914,17 @@ function populateBranchBusinessTypeSelect(currentBusinessTypeId) {
       `<option value="${bt.id}">${escapeHtml(bt.settings?.icon ? bt.settings.icon + ' ' : '')}${escapeHtml(bt.name)}</option>`
     ).join('');
   sel.value = currentBusinessTypeId || '';
+  // تعطيل الأنشطة الخارجة عن الباقة (الحماية الفعلية في قاعدة البيانات)
+  fetchActivityAvailability().then(av => {
+    if (!av) return;
+    Array.from(sel.options).forEach(o => {
+      const a = o.value && av[o.value];
+      if (a && a.allowed === false && o.value !== currentBusinessTypeId) {
+        o.disabled = true;
+        if (!o.textContent.endsWith(ACTIVITY_LOCKED_SUFFIX)) o.textContent += ACTIVITY_LOCKED_SUFFIX;
+      }
+    });
+  });
 }
 
 let businessTypesSearchTerm = '';
