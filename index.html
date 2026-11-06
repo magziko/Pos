@@ -15827,7 +15827,7 @@ async function getUserExpiryDate(userId) {
           loginError.classList.add('show');
           return;
         }
-        enterPos();
+        enterLanding();
         return;
       }
     }
@@ -15924,7 +15924,7 @@ loginForm.addEventListener('submit', async (e) => {
   needsReloginToSync = false;
   loginSubmitBtn.disabled = false;
   loginSubmitBtn.textContent = 'دخول';
-  enterPos();
+  enterLanding();
 });
 
 // ------------------------------------------------------------
@@ -16073,7 +16073,7 @@ async function submitPinLogin() {
   }
 
   updateOfflineBanner();
-  enterPos();
+  enterLanding();
 }
 
 // ------------------------------------------------------------
@@ -22140,9 +22140,40 @@ let productsSelectedIds = new Set(); // الأصناف المحددة حاليً
 let currentProductModifierOptionPrices = {}; // { option_id: price } لمجموعات "سعر مستقل لكل صنف" الخاصة بالصنف المفتوح حاليًا
 let currentProductTierPrices = {}; // { price_tier_id: price } أسعار الشرائح الخاصة بالصنف المفتوح حاليًا
 
+// الشاشة الافتتاحية المحددة لنشاط الفرع (تُضبط من enterLanding وتُستهلك مرة واحدة)
+var boLandingOverride = null;
+
+// تحديد شاشة الدخول الأولى بحسب نشاط الفرع: إذا حدّد نوع النشاط شاشة افتتاحية
+// (الإعداد landing_section في إعدادات نوع النشاط) وكان للمستخدم صلاحية عليها،
+// تُفتح لوحة التحكم عليها مباشرة. وفي غير ذلك (لا إعداد، لا صلاحية، أو لا اتصال)
+// تُفتح شاشة البيع كما كانت.
+async function enterLanding() {
+  try {
+    if (currentProfile && currentProfile.branch_id && navigator.onLine !== false) {
+      const { data, error } = await supabaseClient
+        .from('branches')
+        .select('business_types(settings)')
+        .eq('id', currentProfile.branch_id)
+        .maybeSingle();
+      const target = !error ? data?.business_types?.settings?.landing_section : null;
+      if (target && boAllSections.includes(target) && hasBoScreenPermission(target)) {
+        boLandingOverride = target;
+        await enterBackoffice();
+        return;
+      }
+    }
+  } catch (err) {
+    console.error('landing error', err);
+  }
+  boLandingOverride = null;
+  enterPos();
+}
+
 async function enterBackoffice() {
   showView('backoffice');
   userNavigatedDuringBoLoad = false;
+  const preferredLanding = boLandingOverride;
+  boLandingOverride = null;
   const myLoadToken = ++boLoadToken; // بصمة هذا الاستدعاء بالذات
   if (!boInitialized) {
     document.getElementById('boBranchLabel').textContent = currentProfile.branches?.name || 'بدون فرع';
@@ -22206,7 +22237,7 @@ async function enterBackoffice() {
   applyAcademyFeatureVisibility();
   applyVenueFeatureVisibility();
   applyImportExportFeatureVisibility();
-  const landingSection = firstAllowedSection();
+  const landingSection = (preferredLanding && hasBoScreenPermission(preferredLanding)) ? preferredLanding : firstAllowedSection();
   if (!landingSection) {
     alert('ليس لديك صلاحية للوصول إلى أي قسم في لوحة التحكم');
     showView('pos');
